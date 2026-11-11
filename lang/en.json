@@ -88,15 +88,15 @@
             "Hint": "Rotations per second."
           },
           "scale": {
-            "Name": "Scale",
-            "Hint": "Size relative to the token. A 2×2 token gets a 2×2-sized marker."
+            "Name": "Size beyond the token",
+            "Hint": "0 = same size as the token, 0.45 = 45% larger. A 2×2 token gets a marker twice as big."
           },
           "opacity": {
             "Name": "Opacity"
           },
           "followArtScale": {
             "Name": "Follow token art scale",
-            "Hint": "Also grow with the token's art scale (e.g. PF2e Scale 2)."
+            "Hint": "Also multiply by the token's art scale. Art with empty space around it (e.g. PF2e Scale 2) then gets a bigger marker than other tokens."
           },
           "above": {
             "Name": "Draw above tokens",
@@ -123,15 +123,15 @@
             "Hint": "Rotations per second."
           },
           "scale": {
-            "Name": "Scale",
-            "Hint": "Size relative to the token. A 2×2 token gets a 2×2-sized marker."
+            "Name": "Size beyond the token",
+            "Hint": "0 = same size as the token, 0.45 = 45% larger. A 2×2 token gets a marker twice as big."
           },
           "opacity": {
             "Name": "Opacity"
           },
           "followArtScale": {
             "Name": "Follow token art scale",
-            "Hint": "Also grow with the token's art scale (e.g. PF2e Scale 2)."
+            "Hint": "Also multiply by the token's art scale. Art with empty space around it (e.g. PF2e Scale 2) then gets a bigger marker than other tokens."
           },
           "above": {
             "Name": "Draw above tokens",

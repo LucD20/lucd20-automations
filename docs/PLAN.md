@@ -81,13 +81,17 @@ Settings lists will be refined while building each feature.
 *Replaces part of Combat Booster.* ✅ v0.6.0
 - A rotating image **under** the token of the active combatant (same canvas
   layer as token art, just below the token, at its elevation).
-- Size follows the token: grid size × max(width, height) × 1.4 × scale (a 2×2
-  token gets a 2×2-sized marker), × the token art scale (on by default).
+- Size follows the token's footprint: grid size × max(width, height) ×
+  (1 + scale). Scale 0 = the token's size, 0.45 = 45 % larger; identical for
+  every token of the same size (a 2×2 token gets a marker twice as big).
+- "Follow token art scale" is **off** by default: art with padding (PF2e
+  iconics at Scale 2) made markers bigger on some tokens and hidden under the
+  art on others (fixed in v0.7.2).
 - Only shown while combat runs and only on tokens this user can see.
 - Images: Combat Booster's markers (MIT, credited) in `assets/markers/`;
   default `blueRunes.webp` (all systems).
 - Defaults: rotation speed 0.1 rotations/second (0–3), scale 0.45 (0–3, in
-  0.05 steps), follow art scale on.
+  0.05 steps), follow art scale off.
 - Switching it on turns off Foundry's own turn marker; switching it off turns
   Foundry's back on (only if we turned it off).
 - Settings: image · color (original/sepia/grayscale/tint) · tint · rotation

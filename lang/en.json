@@ -319,7 +319,8 @@
             "Hint": "Only for hazards without a minimum proficiency (older Core Rulebook p. 520)."
           },
           "showAreas": {
-            "Name": "Show hazard areas to the GM"
+            "Name": "Show hazard areas to the GM",
+            "Hint": "Ctrl+H hides or shows them on your screen."
           }
         }
       },
@@ -569,7 +570,7 @@
       "FoundDefault": "Found something...",
       "Speaker": "Search",
       "Found": "found it",
-      "Missed": "missed",
+      "Missed": "Missed",
       "RankTooLow": "needs {rank}",
       "NobodyRolled": "Nobody could roll.",
       "CardDC": "DC {dc}",
@@ -633,7 +634,24 @@
       "ResetAllDone": "Search reset for every spot on this scene.",
       "NoSpots": "No hazards or search spots here.",
       "NoSpotsSub": "Place a search spot, or add a hazard with a Stealth DC.",
-      "HazardButton": "Search detection"
+      "HazardButton": "Search detection",
+      "Degree": {
+        "criticalSuccess": "Critical success",
+        "success": "Success",
+        "failure": "Failure",
+        "criticalFailure": "Critical failure"
+      },
+      "Secret": "Secret",
+      "FoundBy": "Found by {names}.",
+      "NotFound": "Not found.",
+      "AlreadyRolled": "Already rolled",
+      "NobodyRolledYet": "Nobody has rolled for this yet.",
+      "Forget": "Remove: this character can search here again",
+      "ForgetFor": "Let {name} search here again",
+      "ToggleAreas": "Show/hide hazard areas (LucD20)",
+      "ToggleAreasHint": "Hide the hazard detection outlines on your screen; press again to show them.",
+      "AreasHidden": "Hazard areas hidden (Ctrl+H to show).",
+      "AreasShown": "Hazard areas shown."
     }
   }
 }

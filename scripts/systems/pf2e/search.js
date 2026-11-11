@@ -1,7 +1,7 @@
 import { MODULE_ID, localize } from "../../core/constants.js";
 import { defineFeature, getFeature } from "../../core/registry.js";
 import { appElement } from "../../core/dom.js";
-import { initSearchSockets, isSearching, pathPoints, pixelsPerUnit, searchSpot } from "./search-engine.js";
+import { footprintPoints, initSearchSockets, isSearching, pathFootprint, pixelsPerUnit, searchSpot } from "./search-engine.js";
 import { hazardDefaults, hazardSpot, sceneHazards, sceneRegionSpots } from "./search-spots.js";
 import { SearchManager, SpotPlacer, editSpot } from "./search-ui.js";
 
@@ -85,6 +85,8 @@ function checkHazards(actor, points, how) {
 /* -------------------------------------------- */
 
 const areas = { layer: null, timer: null };
+const AREAS_HIDDEN_KEY = "hazardDetection_areasHidden";
+const areasHidden = () => !!game.settings.get(MODULE_ID, AREAS_HIDDEN_KEY);
 
 function clearAreas() {
   if (areas.layer && !areas.layer.destroyed) {
@@ -98,7 +100,7 @@ function drawAreas() {
   areas.timer = null;
   clearAreas();
   const feature = getFeature("hazardDetection");
-  if (!feature?.active || !feature.get("showAreas") || !game.user.isGM || !canvas?.ready) return;
+  if (!feature?.active || !feature.get("showAreas") || areasHidden() || !game.user.isGM || !canvas?.ready) return;
   const layer = new PIXI.Container();
   layer.eventMode = "none";
   (canvas.interface ?? canvas.controls ?? canvas.stage).addChild(layer);
@@ -168,7 +170,7 @@ function onUpdateToken(doc, changes) {
   const from = lastPositions.get(doc.id);
   lastPositions.set(doc.id, to);
   if (!game.user.isActiveGM || !isPC(doc.actor)) return;
-  const points = pathPoints(from, to);
+  const points = pathFootprint(from, to, doc);
   if (getFeature("searchAutomation")?.active) checkRegions(doc.actor, points, "entered");
   checkHazards(doc.actor, points, "entered");
 }
@@ -180,7 +182,7 @@ function onUpdateWall(wall, changes) {
   // Re-check after the walls have been updated on the canvas.
   setTimeout(() => {
     for (const token of canvas.scene?.tokens ?? []) {
-      if (isPC(token.actor)) checkHazards(token.actor, [tokenCentre(token)], "door");
+      if (isPC(token.actor)) checkHazards(token.actor, footprintPoints(tokenCentre(token), token), "door");
     }
   }, 200);
 }
@@ -189,7 +191,7 @@ function onUpdateActor(actor, changes) {
   if (!game.user.isActiveGM || !isPC(actor) || !foundry.utils.hasProperty(changes, "system.exploration")) return;
   for (const token of actor.getActiveTokens?.(false, true) ?? []) {
     if (token.parent !== canvas.scene) continue;
-    const point = [tokenCentre(token)];
+    const point = footprintPoints(tokenCentre(token), token);
     if (getFeature("searchAutomation")?.active) checkRegions(actor, point, "entered");
     checkHazards(actor, point, "entered");
   }
@@ -296,6 +298,24 @@ defineFeature({
     defaultRange: { kind: "number", min: 0, step: 5, default: 50 },
     nonSearching: { kind: "boolean", default: false },
     showAreas: { kind: "boolean", default: true }
+  },
+
+  init(feature) {
+    // Ctrl+H: show/hide the hazard areas on the GM's screen (remembered per client).
+    game.settings.register(MODULE_ID, AREAS_HIDDEN_KEY, { scope: "client", config: false, type: Boolean, default: false });
+    game.keybindings.register(MODULE_ID, "toggleHazardAreas", {
+      name: "LUCD20.Search.ToggleAreas",
+      hint: "LUCD20.Search.ToggleAreasHint",
+      editable: [{ key: "KeyH", modifiers: ["Control"] }],
+      restricted: true,
+      onDown: () => {
+        if (!feature.active || !game.user.isGM) return false;
+        const hidden = !areasHidden();
+        game.settings.set(MODULE_ID, AREAS_HIDDEN_KEY, hidden).then(() => scheduleAreas());
+        ui.notifications.info(localize(hidden ? "LUCD20.Search.AreasHidden" : "LUCD20.Search.AreasShown"));
+        return true;
+      }
+    });
   },
 
   enable(feature) {

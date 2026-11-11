@@ -360,16 +360,25 @@ Code: `scripts/systems/pf2e/search*.js` (engine, spots, windows, features).
 - **Who rolls**: the party's characters (or every player character).
   Characters below the spot's **minimum proficiency** (Perception rank) don't
   roll.
-- **The roll**: PF2e's own Perception check, **secret** (GM-only message), as
-  the **Search** action (`action: "search"`, roll option `action:search`), so
-  feats and items that change Search apply.
+- **The roll**: PF2e's own Perception check, **secret**, as the **Search**
+  action (`action: "search"`, roll option `action:search`), so feats and items
+  that change Search apply. The rolls make **no chat messages of their own**
+  (v0.13.1): everything goes into **one private card** for the GM.
+- **Any part of the token counts** (v0.13.1): a token is inside a spot or area
+  as soon as part of it touches it (corners, edge midpoints and centre are
+  checked, all along the move).
 - **One failed roll per character per spot.** Reset per spot or for the whole
-  scene in the Search Spots manager.
+  scene in the Search Spots manager. Each spot remembers **who already rolled**
+  (total, found or missed); the spot's window lists them with a **remove**
+  button so that character can search again (removing the last finder marks
+  the spot not found).
 - **On a find**: pause (option), pan **everyone's** camera to the finder(s)
   and the spot (option), **"Found something..."** floats over the finder's
   token for everyone (text is an option), a **private chat card** for the GM
   (who found it, the rolls vs DC, who couldn't roll, the GM note). The spot
-  stops detecting.
+  stops detecting. The **private card** lists every roll (formula, natural
+  d20, total, degree of success and margin), who couldn't roll (rank), the
+  outcome and the GM note.
 
 **Search Automation (search spots)**
 - **Place search spot** (Token controls tool button): drag a rectangle on the
@@ -398,7 +407,8 @@ Code: `scripts/systems/pf2e/search*.js` (engine, spots, windows, features).
   opening, or by switching to Search while inside). Then **every** Searching
   character rolls, **even outside the area**.
 - On a find the hazard token is **revealed** (unhidden).
-- The GM sees each active hazard's area as a faint outline (option).
+- The GM sees each active hazard's area as a faint outline (option);
+  **Ctrl+H** hides/shows them on the GM's screen (remembered per client).
 - **Non-Searching characters also roll** (option, **off by default**): only
   for hazards with no minimum proficiency. The older Core Rulebook (p. 520)
   has non-Searching characters roll for those; GM Core's wording couldn't be

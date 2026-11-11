@@ -83,6 +83,8 @@ export async function rollForSpot(spot, { allowNonSearching = false } = {}) {
         messageMode: "gm",
         rollMode: "gmroll",
         skipDialog: true,
+        // The rolls go into one private card instead of one message each.
+        createMessage: false,
         label: localize("LUCD20.Search.RollLabel", { name: spot.label })
       });
     } catch (err) {
@@ -143,17 +145,35 @@ export function initSearchSockets() {
   });
 }
 
+const DEGREES = ["criticalFailure", "failure", "success", "criticalSuccess"];
+
+/** One line per roll: name, formula, natural d20, total, degree and margin. */
+function rollLine({ actor, roll }, dc) {
+  const degree = DEGREES[roll.degreeOfSuccess] ?? (roll.total >= dc ? "success" : "failure");
+  const natural = roll.dice?.find(d => Number(d.faces) === 20)?.results?.find(r => r.active !== false)?.result;
+  const margin = roll.total - dc;
+  return `<li class="lucd20-search-roll ${degree}">
+      <span class="who">${esc(actor.name)}</span>
+      <span class="formula">${esc(roll.formula ?? "")}${natural ? ` <span class="nat">(${natural})</span>` : ""}</span>
+      <span class="total">${roll.total}</span>
+      <span class="degree">${localize(`LUCD20.Search.Degree.${degree}`)} <span class="margin">${margin >= 0 ? "+" : ""}${margin}</span></span>
+    </li>`;
+}
+
 function gmCard(spot, result, how) {
-  const rows = [
-    ...result.finders.map(({ actor, roll }) => `<li class="found"><strong>${esc(actor.name)}</strong> ${roll.total} — ${localize("LUCD20.Search.Found")}</li>`),
-    ...result.failed.map(({ actor, roll }) => `<li class="failed">${esc(actor.name)} ${roll.total} — ${localize("LUCD20.Search.Missed")}</li>`),
-    ...result.skipped.filter(s => s.reason === "rank").map(({ actor }) => `<li class="skipped">${esc(actor.name)} — ${localize("LUCD20.Search.RankTooLow", { rank: localize(`LUCD20.Search.Rank.${RANKS[spot.minRank]}`) })}</li>`)
-  ].join("");
   const found = result.finders.length > 0;
+  const rolls = [...result.finders, ...result.failed].sort((a, b) => b.roll.total - a.roll.total);
+  const cantRoll = result.skipped.filter(s => s.reason === "rank").map(({ actor }) =>
+    `<li class="skipped">${esc(actor.name)} — ${localize("LUCD20.Search.RankTooLow", { rank: localize(`LUCD20.Search.Rank.${RANKS[spot.minRank]}`) })}</li>`).join("");
+  const outcome = found
+    ? localize("LUCD20.Search.FoundBy", { names: esc(result.finders.map(f => f.actor.name).join(", ")) })
+    : localize("LUCD20.Search.NotFound");
   const lines = [
-    `<header><i class="fa-solid ${found ? "fa-eye" : "fa-eye-slash"}"></i> <strong>${esc(spot.label)}</strong></header>`,
+    `<header><i class="fa-solid ${found ? "fa-eye" : "fa-eye-slash"}"></i> <strong>${esc(spot.label)}</strong><span class="secret">${localize("LUCD20.Search.Secret")}</span></header>`,
     `<p class="lucd20-search-meta">${localize("LUCD20.Search.CardDC", { dc: spot.dc })}${spot.minRank ? ` · ${localize(`LUCD20.Search.Rank.${RANKS[spot.minRank]}`)}` : ""} · ${localize(`LUCD20.Search.How.${how}`)}</p>`,
-    rows ? `<ul>${rows}</ul>` : `<p>${localize("LUCD20.Search.NobodyRolled")}</p>`,
+    rolls.length ? `<ol class="lucd20-search-rolls">${rolls.map(r => rollLine(r, spot.dc)).join("")}</ol>` : "",
+    cantRoll ? `<ul class="lucd20-search-skipped">${cantRoll}</ul>` : "",
+    `<p class="lucd20-search-outcome ${found ? "found" : "missed"}">${outcome}</p>`,
     found && spot.note ? `<p class="lucd20-search-note"><i class="fa-solid fa-note-sticky"></i> ${esc(spot.note)}</p>` : "",
     found && !result.finders.some(f => tokenOf(f.actor)) ? `<p><em>${esc(settings().text)}</em></p>` : ""
   ];
@@ -176,7 +196,11 @@ export async function searchSpot(spot, { save, where, how, allowNonSearching = f
 
   const failed = [...new Set([...spot.failed, ...result.failed.map(f => f.actor.id)])];
   const found = result.finders.length > 0;
-  await save({ failed, found });
+  const rolls = { ...(spot.rolls ?? {}) };
+  for (const { actor, roll } of [...result.finders, ...result.failed]) {
+    rolls[actor.id] = { name: actor.name, total: roll.total, success: roll.degreeOfSuccess >= 2 };
+  }
+  await save({ failed, found, rolls });
 
   const s = settings();
   if (s.card && (found || result.failed.length)) await gmCard(spot, result, how);
@@ -213,6 +237,25 @@ export function pathPoints(from, to) {
   const step = (canvas.dimensions?.size ?? 100) / 2;
   const n = Math.max(1, Math.ceil(Math.hypot(to.x - from.x, to.y - from.y) / step));
   return Array.from({ length: n + 1 }, (_, i) => ({ x: from.x + ((to.x - from.x) * i) / n, y: from.y + ((to.y - from.y) * i) / n }));
+}
+
+/**
+ * Points covering a token's footprint (corners, edge midpoints and centre,
+ * slightly inset) for a token whose centre is at `centre`. Any of them inside
+ * an area means part of the token touches it.
+ */
+export function footprintPoints(centre, doc) {
+  const size = canvas.dimensions?.size ?? 100;
+  const hw = ((doc?.width ?? 1) * size) / 2 - 2;
+  const hh = ((doc?.height ?? 1) * size) / 2 - 2;
+  const pts = [];
+  for (const fx of [-1, 0, 1]) for (const fy of [-1, 0, 1]) pts.push({ x: centre.x + fx * hw, y: centre.y + fy * hh });
+  return pts;
+}
+
+/** Footprint points along a move: every sampled centre on the path, with the token's whole footprint. */
+export function pathFootprint(from, to, doc) {
+  return pathPoints(from, to).flatMap(c => footprintPoints(c, doc));
 }
 
 /** Pixels per scene distance unit (feet in PF2e). */

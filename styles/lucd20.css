@@ -1638,3 +1638,55 @@ button.lucd20-lock.mode-lock {
 .lucd20-search-card li.found strong { color: #3f8f57; }
 .lucd20-search-card li.skipped { opacity: 0.7; }
 .lucd20-search-card .lucd20-search-note { margin: 4px 0 0; padding: 4px 6px; border-left: 3px solid #ee9b3a; background: rgba(238, 155, 58, 0.1); }
+
+/* Search: single private card with the rolls, "Already rolled" list ------- */
+
+.lucd20-search-card header .secret {
+  margin-left: auto;
+  padding: 0 6px;
+  border-radius: 3px;
+  background: #7d1f1f;
+  color: #fff;
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.lucd20-search-card .lucd20-search-rolls {
+  margin: 0 0 6px;
+  padding: 0;
+  list-style: none;
+}
+
+.lucd20-search-card .lucd20-search-roll {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  grid-template-areas: "who total degree" "formula total degree";
+  align-items: center;
+  column-gap: 8px;
+  padding: 3px 6px;
+  border-left: 3px solid #888;
+  border-radius: 3px;
+  background: rgba(127, 127, 127, 0.1);
+}
+
+.lucd20-search-card .lucd20-search-roll + .lucd20-search-roll { margin-top: 3px; }
+.lucd20-search-card .lucd20-search-roll .who { grid-area: who; font-weight: bold; }
+.lucd20-search-card .lucd20-search-roll .formula { grid-area: formula; font-size: 11px; opacity: 0.75; }
+.lucd20-search-card .lucd20-search-roll .total { grid-area: total; font-size: 18px; font-weight: bold; font-variant-numeric: tabular-nums; }
+.lucd20-search-card .lucd20-search-roll .degree { grid-area: degree; font-size: 12px; text-align: right; }
+.lucd20-search-card .lucd20-search-roll .margin { opacity: 0.75; }
+.lucd20-search-card .lucd20-search-roll.criticalSuccess { border-left-color: #2e7d46; }
+.lucd20-search-card .lucd20-search-roll.success { border-left-color: #3f8f57; }
+.lucd20-search-card .lucd20-search-roll.failure { border-left-color: #b3433b; }
+.lucd20-search-card .lucd20-search-roll.criticalFailure { border-left-color: #7d1f1f; }
+.lucd20-search-card .lucd20-search-skipped { margin: 0 0 4px; padding-left: 18px; font-size: 12px; opacity: 0.75; }
+.lucd20-search-card .lucd20-search-outcome { margin: 0; font-weight: bold; }
+.lucd20-search-card .lucd20-search-outcome.found { color: #3f8f57; }
+
+.lucd20-loot-app .lucd20-search-rolled-list h4 { margin: 4px 0; border: none; color: var(--ll-text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+.lucd20-loot-app .lucd20-search-rolled-list ol { margin: 0; padding: 0; list-style: none; }
+.lucd20-loot-app .lucd20-search-rolled { display: flex; align-items: center; gap: 8px; min-height: 32px; padding: 2px 0; border-bottom: 1px solid var(--ll-border); }
+.lucd20-loot-app .lucd20-search-rolled .name { flex: 1; font-weight: 600; }
+.lucd20-loot-app .pill.missed { color: var(--ll-danger-text); border-color: var(--ll-danger-border); }

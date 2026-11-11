@@ -50,11 +50,13 @@ export function hazardSpot(tokenDoc, defaults) {
     note: flags.note ?? "",
     found: !!flags.found,
     failed: flags.failed ?? [],
+    rolls: flags.rolls ?? {},
     get centre() {
       return tokenCentre(tokenDoc);
     },
+    /** Only the changed fields are sent; Foundry merges them into the stored flags. */
     async save(patch) {
-      await tokenDoc.update({ [`flags.${MODULE_ID}.${HAZARD_FLAG}`]: { ...flags, ...patch } });
+      await tokenDoc.update({ [`flags.${MODULE_ID}.${HAZARD_FLAG}`]: patch });
     },
     /** Inside the area: within range of the token's edge, and not behind a wall. */
     contains(point) {
@@ -127,13 +129,14 @@ export function regionSpot(regionDoc) {
     note: flags.note ?? "",
     found: !!flags.found,
     failed: flags.failed ?? [],
+    rolls: flags.rolls ?? {},
     get centre() {
       const pts = shapes.map(s => (s.type === "rectangle" ? { x: s.x + s.width / 2, y: s.y + s.height / 2 } : { x: s.x ?? 0, y: s.y ?? 0 }));
       if (!pts.length) return null;
       return { x: pts.reduce((a, p) => a + p.x, 0) / pts.length, y: pts.reduce((a, p) => a + p.y, 0) / pts.length };
     },
     async save(patch) {
-      await regionDoc.update({ [`flags.${MODULE_ID}.${REGION_FLAG}`]: { ...flags, ...patch } });
+      await regionDoc.update({ [`flags.${MODULE_ID}.${REGION_FLAG}`]: patch });
     },
     contains(point) {
       const solid = shapes.filter(s => !s.hole);

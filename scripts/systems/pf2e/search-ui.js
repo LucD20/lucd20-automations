@@ -23,13 +23,54 @@ export class SpotConfigWindow extends AnswerWindow {
     classes: ["lucd20-loot-app", "lucd20-search-config"],
     window: { title: "LUCD20.Search.ConfigTitle", icon: "fa-solid fa-magnifying-glass" },
     position: { width: 380, height: "auto" },
-    actions: { save: SpotConfigWindow.#onSave, cancel: SpotConfigWindow.#onCancel }
+    actions: { save: SpotConfigWindow.#onSave, cancel: SpotConfigWindow.#onCancel, forget: SpotConfigWindow.#onForget }
   };
 
   /** mode: "new" | "region" | "hazard"; values: current settings. Resolves with the new values or null. */
-  setup({ mode, values }) {
+  setup({ mode, values, spot = null }) {
     this.mode = mode;
     this.values = values;
+    this.spot = spot;
+  }
+
+  /** Characters who already rolled for this spot (older data: only failures are known). */
+  #rolled() {
+    const spot = this.spot;
+    if (!spot) return [];
+    const rolls = { ...(spot.rolls ?? {}) };
+    for (const id of spot.failed ?? []) rolls[id] ??= { name: game.actors.get(id)?.name ?? id, total: null, success: false };
+    return Object.entries(rolls).map(([id, r]) => ({ id, ...r })).sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  #rolledHTML() {
+    if (!this.spot) return "";
+    const rows = this.#rolled().map(r => `
+      <li class="lucd20-search-rolled" data-actor="${esc(r.id)}">
+        <span class="name">${esc(r.name)}</span>
+        <span class="pill ${r.success ? "found" : "missed"}">${r.success ? icon("fa-eye") : icon("fa-eye-slash")} ${localize(r.success ? "LUCD20.Search.Status.found" : "LUCD20.Search.Missed")}${r.total !== null ? ` · ${r.total}` : ""}</span>
+        <button type="button" class="ll-btn ll-btn-square" data-action="forget" data-tooltip="${esc(localize("LUCD20.Search.Forget"))}" aria-label="${esc(localize("LUCD20.Search.ForgetFor", { name: r.name }))}">${icon("fa-xmark")}</button>
+      </li>`).join("");
+    return `<section class="lucd20-search-rolled-list">
+        <h4>${localize("LUCD20.Search.AlreadyRolled")}</h4>
+        ${rows ? `<ol>${rows}</ol>` : `<p class="hint">${localize("LUCD20.Search.NobodyRolledYet")}</p>`}
+      </section>`;
+  }
+
+  /** Remove one character's roll so they can search this spot again. */
+  static async #onForget(event, target) {
+    const id = target.closest("[data-actor]")?.dataset.actor;
+    const spot = this.spot;
+    if (!id || !spot) return;
+    const rolls = { ...(spot.rolls ?? {}) };
+    delete rolls[id];
+    const failed = (spot.failed ?? []).filter(f => f !== id);
+    // Still found only if someone else who found it remains.
+    const found = spot.found && Object.values(rolls).some(r => r.success);
+    // Flags merge on update: send the whole object with the removed key gone.
+    await spot.save({ rolls: null });
+    await spot.save({ rolls, failed, found });
+    Object.assign(spot, { rolls, failed, found });
+    this.render();
   }
 
   get title() {
@@ -51,6 +92,7 @@ export class SpotConfigWindow extends AnswerWindow {
         <label class="row"><span>${localize("LUCD20.Search.Field.dc")}</span><input type="number" name="dc" min="0" step="1" value="${Number.isFinite(v.dc) ? v.dc : ""}" required></label>
         <label class="row"><span>${localize("LUCD20.Search.Field.minRank")}</span><select name="minRank">${ranks}</select></label>
         <label class="row column"><span>${localize("LUCD20.Search.Field.note")}</span><textarea name="note" rows="3" placeholder="${esc(localize("LUCD20.Search.Field.notePlaceholder"))}">${esc(v.note ?? "")}</textarea></label>
+        ${this.#rolledHTML()}
         <footer class="lucd20-loot-footer is-dialog">
           <button type="submit" class="ll-btn ll-btn-footer ll-btn-primary" data-action="save">${icon("fa-floppy-disk")}<span>${localize(this.mode === "new" ? "LUCD20.Search.Create" : "LUCD20.Search.Save")}</span></button>
           <button type="button" class="ll-btn ll-btn-footer" data-action="cancel">${icon("fa-xmark")}<span>${localize("LUCD20.LootPile.Cancel")}</span></button>
@@ -98,14 +140,15 @@ export class SpotConfigWindow extends AnswerWindow {
 /* -------------------------------------------- */
 
 export async function editSpot(spot) {
-  const values = await SpotConfigWindow.wait({ mode: spot.kind === "hazard" ? "hazard" : "region", values: { ...spot } });
+  const values = await SpotConfigWindow.wait({ mode: spot.kind === "hazard" ? "hazard" : "region", values: { ...spot }, spot });
   if (!values) return;
   await spot.save(values);
   if (spot.kind === "region") await spot.doc.update({ name: regionName(values.label) });
 }
 
 export async function resetSpot(spot) {
-  await spot.save({ found: false, failed: [] });
+  await spot.save({ rolls: null });
+  await spot.save({ found: false, failed: [], rolls: {} });
 }
 
 /** Roll now (Theater of Mind): every Searching character rolls against the spot. */

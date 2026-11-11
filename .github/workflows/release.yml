@@ -1,0 +1,42 @@
+# Builds module.zip and attaches it (plus a versioned module.json) to a GitHub release.
+# Usage: create a release on GitHub with a tag like v0.1.0 and publish it.
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set version and URLs in module.json
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          VERSION="${TAG#v}"
+          jq --arg v "$VERSION" \
+             --arg m "https://github.com/$REPO/releases/latest/download/module.json" \
+             --arg d "https://github.com/$REPO/releases/download/$TAG/module.zip" \
+             '.version = $v | .manifest = $m | .download = $d' module.json > module.tmp
+          mv module.tmp module.json
+
+      - name: Build module.zip
+        run: |
+          paths=()
+          for p in module.json README.md LICENSE scripts lang styles templates packs; do
+            [ -e "$p" ] && paths+=("$p")
+          done
+          zip -r module.zip "${paths[@]}"
+
+      - name: Upload release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: gh release upload "$TAG" module.json module.zip --clobber

@@ -221,9 +221,12 @@ Settings lists will be refined while building each feature.
   startup and replace its darkness color with the slider's.
 - Other systems: the same, implemented by the module (same approach as PF2e:
   `_isVisionSource` returns false for the GM, `CONFIG.Canvas.darknessColor`).
-- **Out-of-Sight Outlines** (GM): tokens that no player-owned token has line
-  of sight to (walls), and hidden tokens, get a **dashed outline colored by
-  disposition**. Circle or square. Only while GM Vision is on (option).
+- **Out-of-Sight Outlines** (GM): while the GM looks through tokens (GM
+  Vision off), tokens the GM **can't currently see** (behind walls, in
+  darkness, out of range) are drawn as a **dashed outline colored by
+  disposition**, above fog and darkness. With GM Vision on everything is
+  visible, so nothing is outlined. Circle or square. (v0.10.1: was "tokens no
+  player can see", which outlined everything while the whole map was visible.)
 - Both are GM-only and hidden from players' settings window.
 
 ### 🗂️ Sheets & Windows

@@ -13,8 +13,9 @@ import { defineFeature, getFeature } from "../core/registry.js";
  * system's own GM vision is used (its setting, keybinding and icon) and only
  * its color is replaced by ours (scripts/systems/pf2e/gm-vision.js).
  *
- * Out-of-Sight Outlines: tokens that no player-owned token has line of sight
- * to get a dashed outline colored by disposition.
+ * Out-of-Sight Outlines: while the GM looks through tokens (real vision),
+ * tokens the GM can't currently see are drawn as a dashed outline colored by
+ * disposition, so the GM still knows where they are.
  */
 
 const PF2E_LOOK = 0xd1ccff;
@@ -110,7 +111,7 @@ function onSceneControls(controls) {
 /* -------------------------------------------- */
 
 const OUTLINE = "lucd20OutOfSight";
-const outlines = { feature: null, timer: null };
+const outlines = { feature: null, timer: null, layer: null };
 
 function dispositionColor(doc) {
   const colors = CONFIG.Canvas?.dispositionColors ?? {};
@@ -123,32 +124,15 @@ function dispositionColor(doc) {
   }
 }
 
-function blocked(from, to) {
-  const backend = CONFIG.Canvas?.polygonBackends?.sight;
-  if (!backend?.testCollision) return false;
-  try {
-    return !!backend.testCollision(from, to, { type: "sight", mode: "any" });
-  } catch {
-    return false;
-  }
-}
-
-/** Can any player-owned token see this token (line of sight to its centre or near its corners)? */
-function seenByPlayers(token, viewers) {
-  if (token.document.hidden) return false;
-  const { x, y, w, h } = token;
-  const inset = Math.min(w, h) * 0.2;
-  const points = [
-    { x: x + w / 2, y: y + h / 2 },
-    { x: x + inset, y: y + inset }, { x: x + w - inset, y: y + inset },
-    { x: x + inset, y: y + h - inset }, { x: x + w - inset, y: y + h - inset }
-  ];
-  return viewers.some(viewer => {
-    if (viewer === token) return true;
-    if ("level" in viewer.document && viewer.document.level !== token.document.level) return false;
-    const origin = viewer.center ?? { x: viewer.x + viewer.w / 2, y: viewer.y + viewer.h / 2 };
-    return points.some(p => !blocked(origin, p));
-  });
+/**
+ * Is this token currently hidden from the GM's own view? (Real vision through
+ * selected tokens: behind walls, in darkness, out of range.) With GM Vision on
+ * the GM sees everything, so nothing is outlined.
+ */
+function hiddenFromMe(token) {
+  if (!token || token.destroyed) return false;
+  const visible = typeof token.isVisible === "boolean" ? token.isVisible : token.visible !== false;
+  return !visible;
 }
 
 function drawDashed(g, token, color, shape) {
@@ -183,41 +167,59 @@ function drawDashed(g, token, color, shape) {
   }
 }
 
+/**
+ * Outlines live in their own container on the interface layer (above fog and
+ * darkness), not inside the token: Foundry hides tokens the GM can't see,
+ * and the outline must stay visible exactly then.
+ */
+function outlineLayer() {
+  if (outlines.layer && !outlines.layer.destroyed && outlines.layer.parent) return outlines.layer;
+  const parent = canvas.interface ?? canvas.controls ?? canvas.stage;
+  if (!parent) return null;
+  const layer = new PIXI.Container();
+  layer.name = OUTLINE;
+  layer.eventMode = "none";
+  parent.addChild(layer);
+  outlines.layer = layer;
+  return layer;
+}
+
 function clearOutlines() {
-  for (const token of canvas?.tokens?.placeables ?? []) {
-    const g = token.getChildByName?.(OUTLINE) ?? token.children?.find(c => c.name === OUTLINE);
-    if (g) {
-      token.removeChild(g);
-      g.destroy();
-    }
+  const layer = outlines.layer;
+  if (!layer || layer.destroyed) return;
+  for (const child of layer.removeChildren()) child.destroy();
+}
+
+function destroyLayer() {
+  const layer = outlines.layer;
+  outlines.layer = null;
+  if (layer && !layer.destroyed) {
+    layer.parent?.removeChild(layer);
+    layer.destroy({ children: true });
   }
 }
 
 function updateOutlines() {
   outlines.timer = null;
   const feature = outlines.feature;
-  if (!feature?.active || !canvas?.ready) return;
+  if (!feature?.active || !canvas?.ready || !game.user.isGM) return;
+  const layer = outlineLayer();
+  if (!layer) return;
   clearOutlines();
-  if (!game.user.isGM) return;
-  if (feature.get("onlyWithGMVision") && !isGMVisionOn()) return;
-
-  const tokens = canvas.tokens.placeables;
-  const viewers = tokens.filter(t => t.actor?.hasPlayerOwner && !t.document.hidden && t.document.sight?.enabled !== false);
   const shape = feature.get("shape");
-  for (const token of tokens) {
-    if (token.actor?.hasPlayerOwner) continue;
-    if (seenByPlayers(token, viewers)) continue;
+  for (const token of canvas.tokens?.placeables ?? []) {
+    if (!hiddenFromMe(token)) continue;
     const g = new PIXI.Graphics();
-    g.name = OUTLINE;
     g.eventMode = "none";
     drawDashed(g, token, dispositionColor(token.document), shape);
-    token.addChild(g);
+    g.position.set(token.x, token.y);
+    layer.addChild(g);
   }
 }
 
 function scheduleOutlines() {
   if (outlines.timer) return;
-  outlines.timer = setTimeout(updateOutlines, 120);
+  outlines.timer = setTimeout(updateOutlines, 100);
 }
 
 /* -------------------------------------------- */
@@ -301,7 +303,6 @@ defineFeature({
   gmOnly: true,
   defaultEnabled: false,
   settings: {
-    onlyWithGMVision: { kind: "boolean", default: true },
     shape: {
       kind: "select",
       default: "circle",
@@ -313,9 +314,14 @@ defineFeature({
     outlines.feature = feature;
     if (!game.user.isGM) return;
     for (const hook of [
-      "canvasReady", "refreshToken", "drawToken", "createToken", "updateToken", "deleteToken",
-      "createWall", "updateWall", "deleteWall", "sightRefresh", "lucd20.gmVisionChanged"
+      "canvasReady", "refreshToken", "drawToken", "createToken", "updateToken", "deleteToken", "controlToken",
+      "createWall", "updateWall", "deleteWall", "sightRefresh", "visibilityRefresh", "lucd20.gmVisionChanged"
     ]) feature.on(hook, scheduleOutlines);
+    feature.on("canvasTearDown", () => {
+      clearTimeout(outlines.timer);
+      outlines.timer = null;
+      outlines.layer = null; // destroyed with the canvas
+    });
     // PF2e's GM vision is a client setting: follow its changes.
     feature.on("clientSettingChanged", key => {
       if (key === "pf2e.gmVision") scheduleOutlines();
@@ -324,7 +330,7 @@ defineFeature({
     feature.onCleanup(() => {
       clearTimeout(outlines.timer);
       outlines.timer = null;
-      clearOutlines();
+      destroyLayer();
       outlines.feature = null;
     });
   }

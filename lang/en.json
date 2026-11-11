@@ -238,11 +238,8 @@
       },
       "outOfSightOutlines": {
         "Name": "Out-of-Sight Outlines",
-        "Hint": "Tokens that no player-owned token has line of sight to get a dashed outline, colored by disposition.",
+        "Hint": "While you look through tokens (GM Vision off), tokens you can't currently see are shown as a dashed outline colored by disposition, so you still know where they are.",
         "Setting": {
-          "onlyWithGMVision": {
-            "Name": "Only while GM Vision is on"
-          },
           "shape": {
             "Name": "Outline shape"
           }

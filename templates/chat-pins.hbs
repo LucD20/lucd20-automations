@@ -1,0 +1,23 @@
+<div class="lucd20-pins-body">
+  {{#if empty}}
+  <p class="lucd20-pins-empty">{{labels.empty}}</p>
+  {{/if}}
+  <ol class="lucd20-pins-list">
+    {{#each pins}}
+    <li class="lucd20-pin-entry {{#if archived}}archived{{/if}}" data-message-id="{{id}}">
+      <div class="lucd20-pin-controls">
+        {{#if archived}}
+        <span class="lucd20-tag">{{@root.labels.archived}}</span>
+        {{else}}
+        <button type="button" class="icon" data-action="jump" data-tooltip="{{@root.labels.jump}}"><i class="fa-solid fa-location-crosshairs"></i></button>
+        {{/if}}
+        <button type="button" class="icon" data-action="unpin"
+          data-tooltip="{{#if archived}}{{@root.labels.unpinArchived}}{{else}}{{@root.labels.unpin}}{{/if}}">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="lucd20-pin-message" data-message-id="{{id}}"></div>
+    </li>
+    {{/each}}
+  </ol>
+</div>

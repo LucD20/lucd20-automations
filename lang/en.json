@@ -79,7 +79,23 @@
       },
       "turnAnnouncer": {
         "Name": "Turn Announcer",
-        "Hint": "A chat card at each turn with the token image, name and player. Hidden combatants are skipped. Players get a heads-up when they're up next."
+        "Hint": "A chat card at each turn with the token image, name, player and round. Hidden combatants are skipped. Players get a heads-up when they're up next.",
+        "Setting": {
+          "announceNpcs": {
+            "Name": "Announce NPC turns",
+            "Hint": "Hidden NPCs are never announced."
+          },
+          "showPlayerName": {
+            "Name": "Show player name"
+          },
+          "showRound": {
+            "Name": "Show round number"
+          },
+          "headsUp": {
+            "Name": "\"You're up next\" notification",
+            "Hint": "An on-screen notification when your character acts next."
+          }
+        }
       },
       "lootPile": {
         "Name": "Loot Pile",
@@ -87,7 +103,16 @@
       },
       "chatPins": {
         "Name": "Chat Pins",
-        "Hint": "The GM can pin chat messages. Pinned messages survive Clear Chat and are listed in a Pins view."
+        "Hint": "Right-click a message to pin it (GM only). Pinned messages get an outline, survive Clear Chat and are listed in the pin window next to Export Chat Log.",
+        "Setting": {
+          "color": {
+            "Name": "Outline color"
+          },
+          "showToPlayers": {
+            "Name": "Players see pin outlines",
+            "Hint": "Only the GM can pin and open the pin list either way."
+          }
+        }
       },
       "damageLog": {
         "Name": "Damage Log",
@@ -173,7 +198,7 @@
         "none": "Not forced. Click to force this for players.",
         "default": "Default for players (they can change it). Click to edit.",
         "lock": "Locked for players. Click to edit.",
-        "Shortcuts": "(Shift+click: Default · Ctrl+click: Locked)"
+        "Shortcuts": "(Shift+click: Default · Ctrl+click: Locked · again to undo)"
       },
       "Mode": {
         "none": {
@@ -191,8 +216,32 @@
       },
       "Notify": {
         "default": "Default for players: {name}",
-        "lock": "Locked for players: {name}"
+        "lock": "Locked for players: {name}",
+        "none": "No longer forced: {name}"
       }
+    },
+    "ChatPins": {
+      "Pin": "Pin Message",
+      "Unpin": "Unpin Message",
+      "Pinned": "Pinned",
+      "Open": "Pinned Messages",
+      "WindowTitle": "Pinned Messages",
+      "Empty": "No pinned messages. Right-click a chat message and choose Pin Message.",
+      "Jump": "Show in chat",
+      "UnpinArchived": "Unpin (this message was cleared from chat, so it will be deleted)",
+      "Archived": "Cleared from chat",
+      "FlushTitle": "Clear Chat Log",
+      "FlushContent": "Delete every chat message? {count} pinned message(s) will be kept in Pinned Messages.",
+      "Color": {
+        "gold": "Gold",
+        "blue": "Blue"
+      }
+    },
+    "TurnAnnouncer": {
+      "Round": "Round {round}",
+      "Speaker": "Turn",
+      "Unknown": "Unknown creature",
+      "UpNext": "You're up next: {name}"
     }
   }
 }

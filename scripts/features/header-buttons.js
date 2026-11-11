@@ -12,7 +12,7 @@ import { appElement, appHeader, openAppWindows } from "../core/dom.js";
  * Configure Ownership if the sheet doesn't have it.
  */
 
-const state = { enumerating: false, options: null };
+const state = { options: null, observers: new Set() };
 
 function readOptions(feature) {
   return {
@@ -40,23 +40,33 @@ function isPromoted(control) {
 /*  Newer-style windows (ApplicationV2)         */
 /* -------------------------------------------- */
 
-/** Remove promoted entries from the ⋮ menu (they get their own button instead). */
-function onGetHeaderControls(app, controls) {
-  if (state.enumerating || typeof app._headerControlButtons !== "function") return;
-  for (let i = controls.length - 1; i >= 0; i--) {
-    if (isPromoted(controls[i])) controls.splice(i, 1);
+/**
+ * Hide promoted entries inside the rendered ⋮ menu. Foundry's own list is left
+ * untouched (changing it can hide the ⋮ button itself); a MutationObserver
+ * re-applies this whenever Foundry rebuilds the menu.
+ */
+function hidePromotedInMenu(menu) {
+  for (const el of menu.querySelectorAll("[data-action]")) {
+    const control = { action: el.dataset.action, label: (el.querySelector(".control-label") ?? el).textContent.trim() };
+    (el.closest("li") ?? el).classList.toggle("lucd20-promoted-hidden", isPromoted(control));
   }
+}
+
+function watchMenu(app) {
+  const menu = appElement(app)?.querySelector(".controls-dropdown");
+  if (!menu) return;
+  hidePromotedInMenu(menu);
+  if (menu._lucd20Observer) return;
+  const observer = new MutationObserver(() => hidePromotedInMenu(menu));
+  observer.observe(menu, { childList: true, subtree: true });
+  menu._lucd20Observer = observer;
+  state.observers.add(observer);
 }
 
 /** The ⋮ entries this window should show as title-bar buttons (only ones the user may use). */
 function promotedControls(app) {
   if (typeof app._headerControlButtons === "function") {
-    state.enumerating = true;
-    try {
-      return [...app._headerControlButtons()].filter(isPromoted);
-    } finally {
-      state.enumerating = false;
-    }
+    return [...app._headerControlButtons()].filter(isPromoted);
   }
   // Fallback: read the rendered ⋮ menu.
   const root = appElement(app);
@@ -102,6 +112,7 @@ function addButtons(app) {
     button.addEventListener("click", event => runControl(app, control, event, button));
     header.insertBefore(button, anchor);
   }
+  watchMenu(app);
 }
 
 /* -------------------------------------------- */
@@ -143,7 +154,6 @@ defineFeature({
 
   enable(feature) {
     state.options = readOptions(feature);
-    feature.on("getHeaderControlsApplicationV2", onGetHeaderControls);
     feature.on("renderApplicationV2", app => addButtons(app));
     feature.on("getDocumentSheetHeaderButtons", onGetDocumentSheetHeaderButtons);
     for (const app of openAppWindows()) if (app.rendered && typeof app._headerControlButtons === "function") addButtons(app);
@@ -151,6 +161,10 @@ defineFeature({
     feature.onCleanup(() => {
       state.options = null;
       for (const el of document.querySelectorAll("[data-lucd20-promoted]")) el.remove();
+      for (const observer of state.observers) observer.disconnect();
+      state.observers.clear();
+      for (const menu of document.querySelectorAll(".controls-dropdown")) delete menu._lucd20Observer;
+      for (const el of document.querySelectorAll(".lucd20-promoted-hidden")) el.classList.remove("lucd20-promoted-hidden");
     });
   }
 });

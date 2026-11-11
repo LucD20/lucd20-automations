@@ -197,14 +197,16 @@ async function openDialog(fullKey, event) {
   const setting = game.settings.settings.get(fullKey);
   if (!isPerPlayer(setting)) return;
 
+  const current = state.rules[fullKey]?.mode ?? "none";
   const shortcut = event?.shiftKey ? "default" : event?.ctrlKey || event?.metaKey ? "lock" : null;
   if (shortcut) {
-    await saveRule(fullKey, shortcut);
-    ui.notifications?.info(localize(`LUCD20.ForceSettings.Notify.${shortcut}`, { name: settingName(fullKey, setting) }));
+    // Using the shortcut of the mode it is already in turns forcing off.
+    const mode = shortcut === current ? "none" : shortcut;
+    await saveRule(fullKey, mode);
+    ui.notifications?.info(localize(`LUCD20.ForceSettings.Notify.${mode}`, { name: settingName(fullKey, setting) }));
     return;
   }
 
-  const current = state.rules[fullKey]?.mode ?? "none";
   const value = rawGet(setting.namespace, setting.key);
 
   const modes = MODES.map(mode => `

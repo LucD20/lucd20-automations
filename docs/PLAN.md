@@ -87,14 +87,16 @@ Settings lists will be refined while building each feature.
 - Settings: enable · image · rotation speed · scale · opacity.
 
 #### Turn Announcer
-*Replaces Turn Announcer.*
-- On each turn change, posts a **chat card**: token image, name, owning
-  player's name.
-- Hidden combatants: **skipped** (no card). Respects the system's
-  hidden-NPC-name setting.
-- **"You're up next" heads-up**: the owner(s) of the next combatant get a
-  private notification.
-- Settings: enable · show player name · heads-up (per player, default on).
+*Replaces Turn Announcer.* ✅ v0.5.0
+- On each turn change, the active GM's client posts a **chat card**: token
+  image, name, owning player(s), **round number**.
+- **NPC turns are announced** too (option). Hidden and defeated combatants
+  are **skipped**. NPC names follow PF2e's name-visibility rule
+  ("Unknown creature" when players can't see the name).
+- **"You're up next"**: the owner(s) of the next combatant (skipping hidden
+  and defeated) get a simple on-screen notification.
+- Settings: announce NPC turns · show player name · show round number ·
+  "You're up next" (per player).
 
 #### Loot Pile
 *Replaces Combat Booster's "Body pile".*
@@ -114,12 +116,14 @@ Settings lists will be refined while building each feature.
 ### 💬 Chat
 
 #### Chat Pins
-*Replaces DFreds Chat Pins.*
-- **GM only.** Right-click a message → Pin / Unpin.
-- A Pins view lists all pinned messages.
-- "Clear chat" deletes everything except pinned messages; those leave the
-  main log and remain in the Pins view until unpinned.
-- Settings: enable.
+*Replaces DFreds Chat Pins.* ✅ v0.5.0
+- **GM only.** Right-click a message → Pin Message / Unpin Message.
+- Pinned messages get a **gold or blue outline** and a pin icon.
+- A **pin button next to Export Chat Log** opens Pinned Messages (newest
+  first, with "Show in chat" and Unpin).
+- "Clear Chat" deletes everything except pinned messages; those leave the
+  main log and stay in Pinned Messages. Unpinning one of those deletes it.
+- Settings: outline color (gold/blue) · players see pin outlines.
 
 #### Damage Log
 *Replaces Damage Log.*
@@ -187,6 +191,8 @@ Settings lists will be refined while building each feature.
   other items named in "Other ⋮ items" (e.g. `3D Dice Settings`).
 - Older-style sheets (PF2e) already show their buttons; there Configure
   Ownership is added for the GM if missing.
+- Promoted items are only hidden inside the ⋮ menu; Foundry's own list is not
+  changed, so the ⋮ button stays for the remaining items (fixed in v0.5.0).
 - Settings: Prototype Token · Configure Ownership · Other ⋮ items. Per player.
 
 ### 📊 Statistics
@@ -217,7 +223,8 @@ Settings lists will be refined while building each feature.
     with a 🔒 and can't change it.
 - **Only players are affected.** GMs (and Assistant GMs) keep their own values.
 - Shortcuts on the lock button: **Shift+click = Default**, **Ctrl+click =
-  Locked** (no dialog).
+  Locked** (no dialog). Using the shortcut of the current mode again sets it
+  back to Not forced.
 - The Player Settings card lists every forced setting: switch mode, update to
   the GM's current value, or remove.
 - Locks take effect before other modules read their settings, so a reload
@@ -271,7 +278,7 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 | 1 | Core: feature registry, settings window, socket | ✅ v0.2.0 |
 | 2 | Player Settings (force/lock) | ✅ v0.3.0 |
 | 3 | Clean Title Bars, Always Show Header Buttons | ✅ v0.4.0 |
-| 4 | Chat Pins, Turn Announcer | Small, self-contained |
+| 4 | Chat Pins, Turn Announcer | ✅ v0.5.0 |
 | 5 | Turn Marker, Next-Turn Marker | First canvas drawing |
 | 6 | Multi-Token Edit, Folder Drop | Token placement reused by Loot Pile |
 | 7 | Damage Log (generic → PF2e) | Sets the generic + system pattern |

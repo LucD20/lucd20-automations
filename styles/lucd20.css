@@ -504,3 +504,134 @@ button.lucd20-lock.mode-lock {
 .window-app .window-header a.header-button.lucd20-clean {
   margin-left: 8px;
 }
+
+.lucd20-promoted-hidden {
+  display: none !important;
+}
+
+/* Chat Pins ------------------------------------------------------------ */
+
+.chat-message.lucd20-pinned {
+  outline: 2px solid var(--lucd20-pin-color, #d4a017);
+  outline-offset: -2px;
+}
+
+.chat-message.lucd20-pin-gold {
+  --lucd20-pin-color: #d4a017;
+}
+
+.chat-message.lucd20-pin-blue {
+  --lucd20-pin-color: #3a8fd6;
+}
+
+.chat-message .lucd20-pin-icon {
+  margin-right: 4px;
+  color: var(--lucd20-pin-color, #d4a017);
+  font-size: 11px;
+}
+
+#chat .chat-message.lucd20-pin-archived,
+#sidebar .chat-message.lucd20-pin-archived,
+#chat-notifications .chat-message.lucd20-pin-archived,
+.chat-log .chat-message.lucd20-pin-archived {
+  display: none !important;
+}
+
+.chat-message.lucd20-pin-flash {
+  animation: lucd20-pin-flash 1.5s ease-out;
+}
+
+@keyframes lucd20-pin-flash {
+  0%, 40% { box-shadow: 0 0 0 4px var(--lucd20-pin-color, #d4a017); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+.lucd20-pins .window-content {
+  padding: 8px;
+}
+
+.lucd20-pins .lucd20-pins-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lucd20-pins .lucd20-pin-entry {
+  margin-bottom: 10px;
+}
+
+.lucd20-pins .lucd20-pin-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+
+.lucd20-pins .lucd20-pin-controls button {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+  margin: 0;
+  padding: 0;
+}
+
+.lucd20-pins .lucd20-pin-controls .lucd20-tag {
+  margin-right: auto;
+  padding: 1px 6px;
+  border: 1px solid rgba(127, 127, 127, 0.4);
+  border-radius: 999px;
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.lucd20-pins .lucd20-pin-message .chat-message {
+  margin: 0;
+  list-style: none;
+}
+
+.lucd20-pins .lucd20-pins-empty {
+  opacity: 0.75;
+}
+
+/* Turn Announcer ------------------------------------------------------- */
+
+.lucd20-turn-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lucd20-turn-card .lucd20-turn-image {
+  flex: 0 0 52px;
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  border: none;
+}
+
+.lucd20-turn-card .lucd20-turn-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.lucd20-turn-card .lucd20-turn-name {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.lucd20-turn-card .lucd20-turn-player {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.lucd20-turn-card .lucd20-turn-round {
+  align-self: flex-start;
+  padding: 1px 6px;
+  border: 1px solid rgba(127, 127, 127, 0.4);
+  border-radius: 999px;
+  font-size: 11px;
+  white-space: nowrap;
+}

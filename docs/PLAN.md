@@ -350,39 +350,61 @@ as soon as it appears, so it survives reloads)
 
 ### 🔍 Exploration (PF2e only)
 
-*Replaces the Monk's Active Tiles search setup.*
+*Replaces the Monk's Active Tiles search setup.* ✅ v0.13.0
+Code: `scripts/systems/pf2e/search*.js` (engine, spots, windows, features).
 
-#### Search Automation
-- **Who is Searching**: read from the character's exploration activity, as
-  set in the PF2e party sheet's Exploration tab. No more "Search-Trained"
-  effects or fake skills. *(Verify the exact field in 8.7.)*
-- **Proficiency** comes from the character's Perception rank.
-- **Search spots** (secret doors, clues, hidden items) are native **Scene
-  Regions** with a module behavior: DC, minimum proficiency, GM note.
-- The roll is PF2e's own secret Perception roll, flagged as the Search action,
-  so feats and items that affect Search apply automatically.
-- **On success**:
-  1. Pause the game.
-  2. Pan and zoom so the searchers and the found thing are in view.
-  3. Scrolling text **"Found something..."** on the finder's token, seen by
-     all players.
-  4. Disable that spot.
-- **One failed roll per character per spot.** A **Reset Search** button
-  (per spot / per hazard, and scene-wide) clears successes and failures.
-- Settings: enable · pause on find · pan camera · scrolling text.
+**Shared rules (both features)**
+- **Who is Searching**: the exploration activity chosen in PF2e's party sheet
+  (`character.system.exploration` holds the chosen action ids; the Search
+  action has slug `search`). No "Search-Trained" effects.
+- **Who rolls**: the party's characters (or every player character).
+  Characters below the spot's **minimum proficiency** (Perception rank) don't
+  roll.
+- **The roll**: PF2e's own Perception check, **secret** (GM-only message), as
+  the **Search** action (`action: "search"`, roll option `action:search`), so
+  feats and items that change Search apply.
+- **One failed roll per character per spot.** Reset per spot or for the whole
+  scene in the Search Spots manager.
+- **On a find**: pause (option), pan **everyone's** camera to the finder(s)
+  and the spot (option), **"Found something..."** floats over the finder's
+  token for everyone (text is an option), a **private chat card** for the GM
+  (who found it, the rolls vs DC, who couldn't roll, the GM note). The spot
+  stops detecting.
 
-#### Hazard Detection
-- A **Detection** section on the hazard sheet: enable · range · DC
-  (prefilled from the hazard's Stealth) · minimum proficiency.
-- The range is a vision-style area from the hazard: walls block it, and
-  opening a door extends it automatically.
-- Triggered when a Searching character's token is inside the area (by moving
-  in, or by a door opening). Then a secret roll is made for **every**
-  Searching character, even those outside the area (a forgotten token
-  shouldn't be punished).
-- On success: same as Search spots, plus the hazard token is revealed, and
-  detection is switched off for that hazard.
-- Same one-failure-per-character rule and Reset button.
+**Search Automation (search spots)**
+- **Place search spot** (Token controls tool button): drag a rectangle on the
+  map (or click for one square, snapped to the grid). The form opens right
+  away (name, DC, minimum proficiency, GM note) and a GM-only Region is
+  created with those settings in its flags.
+- Trigger: a Searching character's token **enters or passes through** the
+  spot. Then every Searching character rolls.
+- **Search Spots manager** (Token controls): every hazard and spot on the
+  scene with status (Hidden / Found / Off, who failed). Per row: **Roll Search
+  now** (Theater of Mind: every Searching character rolls immediately; with no
+  token on the scene, "Found something..." goes in the chat card), show on the
+  map, edit, reset, delete (spots). Footer: Place search spot, **Reset all**.
+- Settings: pause on a find · pan everyone's camera · private GM card · text
+  over the finder.
+
+**Hazard Detection**
+- **On automatically for every hazard token** (option) with a **default range
+  of 50 ft** (option; **0 = unlimited**), **measured from the token's edge**.
+  **Walls block it**; opening a door extends it automatically.
+- Per hazard (token right-click menu → magnifying glass, GM): detection on/off,
+  range, DC (pre-filled from the hazard's Stealth DC), minimum proficiency
+  (pre-filled from "(trained/expert/master/legendary)" in its Stealth
+  details), GM note. Stored on the token.
+- Trigger: a Searching character's token enters the area (by moving, by a door
+  opening, or by switching to Search while inside). Then **every** Searching
+  character rolls, **even outside the area**.
+- On a find the hazard token is **revealed** (unhidden).
+- The GM sees each active hazard's area as a faint outline (option).
+- **Non-Searching characters also roll** (option, **off by default**): only
+  for hazards with no minimum proficiency. The older Core Rulebook (p. 520)
+  has non-Searching characters roll for those; GM Core's wording couldn't be
+  checked here.
+- Settings: on for every hazard token · default range · non-Searching
+  characters also roll · show hazard areas to the GM.
 
 ---
 
@@ -403,7 +425,7 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 | 8 | Dice Stats (generic → PF2e) | ✅ v0.9.0 |
 | 9 | GM Vision | ✅ v0.10.0 |
 | 10 | Loot Pile + Party Stash | ✅ v0.11.0 |
-| 11 | PF2e Search + Hazard Detection | Largest; reuses parts of 9 and 10 |
+| 11 | PF2e Search + Hazard Detection | ✅ v0.13.0 |
 
 ---
 

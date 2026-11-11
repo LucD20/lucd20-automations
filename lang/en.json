@@ -284,11 +284,44 @@
       },
       "searchAutomation": {
         "Name": "Search Automation",
-        "Hint": "Characters Searching in exploration automatically roll secret Perception checks against hidden things in Search regions."
+        "Hint": "Search spots for hidden doors, clues and Theater of Mind. Place them with the tool button in the Token controls; characters Searching in exploration (PF2e party sheet) roll a secret Perception check when their token enters one.",
+        "Setting": {
+          "pause": {
+            "Name": "Pause the game on a find"
+          },
+          "pan": {
+            "Name": "Pan everyone's camera to the find"
+          },
+          "gmCard": {
+            "Name": "Private chat card for the GM",
+            "Hint": "Who found it, the rolls, the DC and your note."
+          },
+          "foundText": {
+            "Name": "Text over the finder",
+            "Hint": "Empty = \"Found something...\"."
+          }
+        }
       },
       "hazardDetection": {
         "Name": "Hazard Detection",
-        "Hint": "Hazards notice Searching characters within a range that walls block, then trigger secret checks."
+        "Hint": "Hazard tokens notice Searching characters within a range that walls block, measured from the token's edge. Opening a door extends it. Every Searching character then rolls, even outside the area. Set each hazard from its token menu.",
+        "Setting": {
+          "autoEnable": {
+            "Name": "On for every hazard token",
+            "Hint": "Off: only hazards you switch on in their token menu."
+          },
+          "defaultRange": {
+            "Name": "Default range (feet)",
+            "Hint": "Measured from the hazard token's edge. 0 = unlimited (only walls stop it)."
+          },
+          "nonSearching": {
+            "Name": "Non-Searching characters also roll",
+            "Hint": "Only for hazards without a minimum proficiency (older Core Rulebook p. 520)."
+          },
+          "showAreas": {
+            "Name": "Show hazard areas to the GM"
+          }
+        }
       },
       "headerButtons": {
         "Name": "Always Show Header Buttons",
@@ -530,6 +563,77 @@
       "SelectAllFrom": "Select all or none from {name}",
       "GroupCount": "{count} of {total}",
       "Selected": "{count} of {total} items selected"
+    },
+    "Search": {
+      "RollLabel": "Search: {name}",
+      "FoundDefault": "Found something...",
+      "Speaker": "Search",
+      "Found": "found it",
+      "Missed": "missed",
+      "RankTooLow": "needs {rank}",
+      "NobodyRolled": "Nobody could roll.",
+      "CardDC": "DC {dc}",
+      "How": {
+        "entered": "entered the area",
+        "door": "a door opened",
+        "manual": "rolled by the GM"
+      },
+      "Rank": {
+        "untrained": "Untrained",
+        "trained": "Trained",
+        "expert": "Expert",
+        "master": "Master",
+        "legendary": "Legendary"
+      },
+      "ConfigTitle": "Search spot",
+      "NewSpotTitle": "New search spot",
+      "SpotTitle": "Search spot",
+      "HazardTitle": "Hazard: {name}",
+      "Field": {
+        "enabled": "Detection on",
+        "range": "Range (feet)",
+        "rangeHint": "From the token's edge; 0 = unlimited. Walls block it.",
+        "label": "Name",
+        "labelPlaceholder": "e.g. Secret door",
+        "dc": "DC",
+        "minRank": "Minimum proficiency",
+        "note": "GM note",
+        "notePlaceholder": "Shown in your private chat card when it's found."
+      },
+      "Create": "Create search spot",
+      "Save": "Save",
+      "NeedDC": "Enter a DC.",
+      "AlreadyFound": "{name} has already been found.",
+      "NobodyToRoll": "Nobody is Searching (or everyone already failed).",
+      "RegionName": "Search: {label}",
+      "RegionNameDefault": "Search spot",
+      "PlaceHint": "Drag on the map to draw the search spot (or click for one square). Right-click or Esc to cancel.",
+      "Place": "Place search spot",
+      "ManagerTitle": "Search Spots",
+      "ManagerHint": "Hazards and search spots on this scene. The dice button rolls for every Searching character now (Theater of Mind).",
+      "Status": {
+        "found": "Found",
+        "hidden": "Hidden",
+        "off": "Off"
+      },
+      "FailedBy": "Failed: {names}",
+      "Kind": {
+        "hazard": "Hazard",
+        "region": "Search spot"
+      },
+      "RangeFt": "{range} ft",
+      "Unlimited": "unlimited",
+      "RollNow": "Roll Search now",
+      "Pan": "Show on the map",
+      "Edit": "Edit",
+      "Reset": "Reset search",
+      "Delete": "Delete search spot",
+      "DeleteContent": "Delete the search spot <strong>{name}</strong>?",
+      "ResetAll": "Reset all",
+      "ResetAllDone": "Search reset for every spot on this scene.",
+      "NoSpots": "No hazards or search spots here.",
+      "NoSpotsSub": "Place a search spot, or add a hazard with a Stealth DC.",
+      "HazardButton": "Search detection"
     }
   }
 }

@@ -1600,3 +1600,41 @@ button.lucd20-lock.mode-lock {
 .lucd20-loot-app .lucd20-loot-qty input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 .lucd20-loot-app .lucd20-loot-footer.is-dialog { margin: 0 -12px; }
 .lucd20-loot-app .lucd20-loot-footer.is-dialog button.ll-btn { flex: 1; }
+
+/* PF2e Search: spot settings, Search Spots manager, GM card ------------- */
+/* Uses the Loot Pile tokens and buttons (windows carry .lucd20-loot-app). */
+
+.lucd20-loot-app .lucd20-search-form { display: flex; flex-direction: column; gap: 10px; padding: 12px 12px 0; }
+.lucd20-loot-app .lucd20-search-form .row { display: flex; align-items: center; gap: 10px; margin: 0; }
+.lucd20-loot-app .lucd20-search-form .row > span { flex: 1; font-weight: 600; }
+.lucd20-loot-app .lucd20-search-form .row.column { flex-direction: column; align-items: stretch; gap: 4px; }
+.lucd20-loot-app .lucd20-search-form .row.check { gap: 8px; font-weight: 600; }
+.lucd20-loot-app .lucd20-search-form input[type="number"] { flex: none; width: 80px; height: 30px; margin: 0; text-align: center; }
+.lucd20-loot-app .lucd20-search-form input[type="text"],
+.lucd20-loot-app .lucd20-search-form select { flex: 1.4; width: auto; min-width: 0; height: 30px; margin: 0; }
+.lucd20-loot-app .lucd20-search-form textarea { width: 100%; min-height: 64px; margin: 0; resize: vertical; }
+.lucd20-loot-app .lucd20-search-form .hint { margin: -6px 0 0; color: var(--ll-text-muted); font-size: 12px; }
+.lucd20-loot-app .lucd20-search-form .lucd20-loot-footer.is-dialog { margin: 2px -12px 0; }
+
+.lucd20-loot-app .lucd20-search-list { margin: 0; padding: 4px 0 0; list-style: none; }
+.lucd20-loot-app .lucd20-search-row { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 4px; border-bottom: 1px solid var(--ll-border); }
+.lucd20-loot-app .lucd20-search-row:hover { background: var(--ll-bg-hover); }
+.lucd20-loot-app .lucd20-search-row .lucd20-loot-icon { display: grid; place-content: center; color: var(--ll-accent-text); }
+.lucd20-loot-app .lucd20-search-row .who { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.lucd20-loot-app .lucd20-search-row .name { font-weight: 600; overflow-wrap: anywhere; }
+.lucd20-loot-app .lucd20-search-row .sub { color: var(--ll-text-muted); font-size: 12px; }
+.lucd20-loot-app .lucd20-search-row .actions { display: flex; flex: none; gap: 3px; }
+.lucd20-loot-app .lucd20-search-row button.ll-btn { width: 28px; padding: 0; }
+.lucd20-loot-app .pill { flex: none; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border: 1px solid var(--ll-border-strong); border-radius: 10px; font-size: 12px; white-space: nowrap; }
+.lucd20-loot-app .pill.found { border-color: #3f8f57; color: #8fe0a6; }
+.lucd20-loot-app .pill.hidden { color: var(--ll-accent-text); border-color: var(--ll-accent-border); }
+.lucd20-loot-app .pill.off { color: var(--ll-text-muted); }
+
+.lucd20-search-card header { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; font-size: 14px; }
+.lucd20-search-card.found header i { color: #3f8f57; }
+.lucd20-search-card.missed header i { opacity: 0.7; }
+.lucd20-search-card .lucd20-search-meta { margin: 0 0 4px; font-size: 12px; opacity: 0.8; }
+.lucd20-search-card ul { margin: 0 0 4px; padding-left: 18px; }
+.lucd20-search-card li.found strong { color: #3f8f57; }
+.lucd20-search-card li.skipped { opacity: 0.7; }
+.lucd20-search-card .lucd20-search-note { margin: 4px 0 0; padding: 4px 6px; border-left: 3px solid #ee9b3a; background: rgba(238, 155, 58, 0.1); }

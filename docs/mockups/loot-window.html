@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loot Pile windows: mockup (lucd20-automations)</title>
+<style>
+/* ==========================================================================
+   1. Design tokens. Scoped to the app root so they port straight into
+      styles/lucd20.css. See loot-window-notes.md for the Foundry mapping.
+   ========================================================================== */
+.lucd20-loot-app {
+  --ll-bg: #1b1a21;            /* window body */
+  --ll-bg-header: #121117;     /* title bar, footer */
+  --ll-bg-raised: #26252e;     /* group headers, neutral buttons */
+  --ll-bg-sunken: #131217;     /* inputs, icon tiles */
+  --ll-bg-hover: #2d2b36;      /* hovered row */
+  --ll-border: #3b3945;        /* hairlines */
+  --ll-border-strong: #5c596a; /* control outlines */
+  --ll-text: #efe6d8;
+  --ll-text-muted: #b5ab9d;
+  --ll-accent: #ee9b3a;        /* Foundry's warm orange */
+  --ll-accent-text: #f3b469;
+  --ll-accent-border: #a8702f;
+  --ll-primary: #b34a32;       /* filled primary button */
+  --ll-primary-hover: #bf5238;
+  --ll-primary-border: #e07a5f;
+  --ll-danger-text: #ff9a8f;
+  --ll-danger-border: #9c403b;
+  --ll-danger-fill: #a3302b;
+  --ll-radius: 4px;
+  --ll-row: 28px;              /* minimum control height */
+
+  color: var(--ll-text);
+  font-family: Signika, "Segoe UI", "Helvetica Neue", Arial, "Liberation Sans", sans-serif;
+  font-size: 14px;
+  line-height: 1.3;
+}
+.lucd20-loot-app *, .lucd20-loot-app *::before, .lucd20-loot-app *::after { box-sizing: border-box; }
+
+/* ==========================================================================
+   2. Shared pieces: icons, buttons, inputs
+   ========================================================================== */
+.ll-i { width: 14px; height: 14px; flex: none; }
+.ll-art { display: block; width: 100%; height: 100%; }
+
+.ll-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: var(--ll-row);
+  margin: 0;
+  padding: 0 9px;
+  border: 1px solid var(--ll-border-strong);
+  border-radius: var(--ll-radius);
+  background: var(--ll-bg-raised);
+  color: var(--ll-text);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 80ms, border-color 80ms;
+}
+.ll-btn:hover, .ll-btn.is-hover { background: #383643; border-color: #9793a6; }
+.ll-btn:active, .ll-btn.is-active { background: var(--ll-bg-sunken); border-color: #9793a6; box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.6); transform: translateY(1px); }
+.ll-btn:focus-visible, .ll-btn.is-focus,
+.ll-select:focus-visible, .ll-check:focus-visible,
+.lucd20-loot-qty input:focus-visible { outline: 2px solid var(--ll-accent); outline-offset: 2px; }
+.ll-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
+.ll-btn:disabled:hover { background: var(--ll-bg-raised); border-color: var(--ll-border-strong); }
+
+/* Take: the main per-row action, outlined in the accent. */
+.ll-btn-take { background: rgba(238, 155, 58, 0.1); border-color: var(--ll-accent-border); color: var(--ll-accent-text); font-weight: 600; }
+.ll-btn-take:hover, .ll-btn-take.is-hover { background: rgba(238, 155, 58, 0.24); border-color: var(--ll-accent); color: #ffd9a8; }
+.ll-btn-take:active, .ll-btn-take.is-active { background: rgba(238, 155, 58, 0.08); border-color: var(--ll-accent); }
+.ll-btn-take:disabled:hover { background: rgba(238, 155, 58, 0.1); border-color: var(--ll-accent-border); color: var(--ll-accent-text); }
+
+/* Primary: one per window at most. */
+.ll-btn-primary { background: var(--ll-primary); border-color: var(--ll-primary-border); color: #fff; font-weight: 600; }
+.ll-btn-primary:hover, .ll-btn-primary.is-hover { background: var(--ll-primary-hover); border-color: #ffb39e; }
+.ll-btn-primary:active { background: #8f3926; }
+.ll-btn-primary:disabled:hover { background: var(--ll-primary); border-color: var(--ll-primary-border); }
+
+/* Destructive: red outline + trash icon at rest, solid red on hover. */
+.ll-btn-danger { background: rgba(220, 60, 50, 0.1); border-color: var(--ll-danger-border); color: var(--ll-danger-text); }
+.ll-btn-danger:hover, .ll-btn-danger.is-hover { background: var(--ll-danger-fill); border-color: #ff9a8f; color: #fff; }
+.ll-btn-danger:active { background: #7d231f; }
+
+.ll-btn-footer { min-height: 32px; padding: 0 12px; font-size: 14px; }
+.ll-btn-square { width: 30px; min-height: 30px; padding: 0; }
+
+.ll-select {
+  appearance: none;
+  min-width: 0;
+  height: 30px;
+  padding: 0 28px 0 9px;
+  border: 1px solid var(--ll-border-strong);
+  border-radius: var(--ll-radius);
+  background: var(--ll-bg-sunken) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%23efe6d8' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 8px center / 12px;
+  color: var(--ll-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ll-select:hover { border-color: #9793a6; }
+
+.ll-check {
+  appearance: none;
+  display: inline-grid;
+  place-content: center;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border: 1px solid #8b8799;
+  border-radius: 3px;
+  background: var(--ll-bg-sunken);
+  cursor: pointer;
+}
+.ll-check::before { content: ""; width: 11px; height: 11px; background: #1b1a21; transform: scale(0); clip-path: polygon(13% 47%, 0 62%, 40% 100%, 100% 20%, 85% 7%, 38% 70%); }
+.ll-check:checked, .ll-check:indeterminate { border-color: var(--ll-accent); background: var(--ll-accent); }
+.ll-check:checked::before { transform: scale(1); }
+.ll-check:indeterminate::before { transform: scale(1); clip-path: inset(38% 8%); }
+
+/* ==========================================================================
+   3. Loot Pile window
+   ========================================================================== */
+.lucd20-loot-body { display: flex; flex: 1; flex-direction: column; min-height: 0; container-type: inline-size; }
+
+.lucd20-loot-taker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 46px;
+  margin: 0;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--ll-border);
+  background: var(--ll-bg-header);
+}
+.lucd20-loot-taker label, .lucd20-loot-taker .label { flex: none; color: var(--ll-text-muted); font-size: 12px; }
+.lucd20-loot-taker .ll-select { flex: 1; }
+.lucd20-loot-taker-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  height: 30px;
+  padding: 0 10px 0 3px;
+  border: 1px solid var(--ll-border);
+  border-radius: 15px;
+  background: var(--ll-bg-raised);
+}
+.lucd20-loot-hint { align-items: flex-start; color: var(--ll-text-muted); font-size: 12px; line-height: 1.4; }
+.lucd20-loot-hint .ll-i { margin-top: 1px; color: var(--ll-accent-text); }
+
+.lucd20-loot-list { flex: 1; min-height: 0; padding: 0 8px 8px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--ll-border-strong) transparent; }
+.lucd20-loot-list ol { margin: 0; padding: 0; list-style: none; }
+.lucd20-loot-group { margin: 0; }
+
+.lucd20-loot-group-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 -8px 2px;
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--ll-border);
+  background: var(--ll-bg-raised);
+}
+.lucd20-loot-group + .lucd20-loot-group .lucd20-loot-group-header { margin-top: 2px; border-top: 1px solid var(--ll-border); }
+.lucd20-loot-group-header .who { display: flex; flex: 1; flex-wrap: wrap; align-items: baseline; gap: 0 8px; min-width: 0; }
+.lucd20-loot-group-header .npc { font-size: 15px; font-weight: 700; }
+.lucd20-loot-group-header .level, .lucd20-loot-group-header .count { color: var(--ll-text-muted); font-size: 12px; white-space: nowrap; }
+
+.lucd20-loot-portrait { flex: none; width: 32px; height: 32px; overflow: hidden; border: 1px solid #8b8799; border-radius: 50%; background: var(--ll-bg-sunken); }
+.lucd20-loot-portrait.small { width: 24px; height: 24px; }
+
+.lucd20-loot-icon { flex: none; width: 28px; height: 28px; padding: 1px; border: 1px solid var(--ll-border); border-radius: 3px; background: var(--ll-bg-sunken); }
+.lucd20-loot-icon.large { width: 40px; height: 40px; padding: 3px; }
+
+.lucd20-loot-item { display: flex; align-items: center; gap: 8px; min-height: 34px; padding: 2px 4px; border-radius: var(--ll-radius); }
+.lucd20-loot-item:hover, .lucd20-loot-item.is-hover { background: var(--ll-bg-hover); }
+.lucd20-loot-item .name, .lucd20-loot-check .name { flex: 1; min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
+.qty {
+  flex: none;
+  min-width: 30px;
+  padding: 2px 6px;
+  border: 1px solid var(--ll-border-strong);
+  border-radius: 10px;
+  background: var(--ll-bg-sunken);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.lucd20-loot-item .actions { display: flex; flex: none; gap: 4px; }
+
+.lucd20-loot-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; height: 100%; min-height: 180px; padding: 24px; text-align: center; }
+.lucd20-loot-empty .ll-empty-art { width: 56px; height: 56px; margin-bottom: 8px; color: var(--ll-border-strong); }
+.lucd20-loot-empty p { margin: 0; }
+.lucd20-loot-empty .title { font-size: 16px; font-weight: 600; }
+.lucd20-loot-empty .sub { color: var(--ll-text-muted); font-size: 12px; }
+
+.lucd20-loot-footer { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 10px; border-top: 1px solid var(--ll-border); background: var(--ll-bg-header); }
+.lucd20-loot-footer .ll-btn-all { flex: 1 1 100%; }
+.lucd20-loot-footer.is-gm [data-action="delete"] { margin-left: auto; }
+
+/* Narrow windows: drop the word "Party". Wide windows: one footer row. */
+@container (max-width: 399px) { .ll-wide { display: none; } }
+@container (min-width: 540px) {
+  .lucd20-loot-footer.is-gm .ll-btn-all { flex: 1 1 auto; }
+  .lucd20-loot-footer.is-gm [data-action="delete"] { margin-left: 0; }
+}
+
+/* ==========================================================================
+   4. "Loot the fallen" review window
+   ========================================================================== */
+.lucd20-loot-check { display: flex; align-items: center; gap: 8px; min-height: 32px; padding: 2px 4px 2px 2px; border-radius: var(--ll-radius); cursor: pointer; }
+.lucd20-loot-check:hover { background: var(--ll-bg-hover); }
+.lucd20-loot-check:has(.ll-check:not(:checked)) .name { color: var(--ll-text-muted); font-weight: 400; text-decoration: line-through; }
+.lucd20-loot-check:has(.ll-check:not(:checked)) .lucd20-loot-icon,
+.lucd20-loot-check:has(.ll-check:not(:checked)) .qty { opacity: 0.5; }
+.lucd20-loot-footer.is-review .summary { flex: 1 1 100%; color: var(--ll-text-muted); font-size: 12px; }
+.lucd20-loot-footer.is-review .ll-btn-primary { flex: 1; }
+
+/* ==========================================================================
+   5. "How many?" dialog
+   ========================================================================== */
+.lucd20-loot-qty { display: flex; flex-direction: column; gap: 12px; padding: 12px 12px 0; }
+.lucd20-loot-qty .what { display: flex; align-items: center; gap: 10px; }
+.lucd20-loot-qty .what strong { display: block; font-size: 15px; }
+.lucd20-loot-qty .sub, .lucd20-loot-qty .range { color: var(--ll-text-muted); font-size: 12px; }
+.lucd20-loot-qty .field { display: flex; align-items: center; gap: 8px; }
+.lucd20-loot-qty .field label { flex: 1; font-weight: 600; }
+.lucd20-loot-qty .stepper { display: flex; gap: 4px; }
+.lucd20-loot-qty input {
+  appearance: textfield;
+  width: 52px;
+  height: 30px;
+  border: 1px solid var(--ll-border-strong);
+  border-radius: var(--ll-radius);
+  background: var(--ll-bg-sunken);
+  color: var(--ll-text);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.lucd20-loot-qty input::-webkit-inner-spin-button { appearance: none; }
+.lucd20-loot-footer.is-dialog { margin: 0 -12px; }
+.lucd20-loot-footer.is-dialog .ll-btn { flex: 1; }
+
+/* ==========================================================================
+   6. Mockup page chrome (mock-*): not part of the module
+   ========================================================================== */
+html { color-scheme: dark; }
+body {
+  margin: 0;
+  padding: 32px 40px 56px;
+  background: #0b0a10 radial-gradient(ellipse at 30% 0%, #1d1a26 0%, #0b0a10 70%) no-repeat;
+  color: #efe6d8;
+  font-family: Signika, "Segoe UI", "Helvetica Neue", Arial, "Liberation Sans", sans-serif;
+  font-size: 14px;
+}
+.mock-page-header { max-width: 1100px; margin-bottom: 28px; }
+.mock-page-header h1 { margin: 0 0 6px; font-size: 22px; }
+.mock-page-header h1 span { margin-left: 8px; color: #b5ab9d; font-size: 13px; font-weight: 400; }
+.mock-page-header p { margin: 0; color: #b5ab9d; font-size: 13px; line-height: 1.5; }
+.mock-page-header code { padding: 1px 4px; border-radius: 3px; background: #26252e; color: #efe6d8; font-size: 12px; }
+
+.mock-stage { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 40px 32px; }
+.mock-frame { margin: 0; }
+.mock-frame figcaption { display: flex; align-items: flex-start; gap: 10px; width: 100%; max-width: 420px; min-height: 58px; margin-bottom: 10px; }
+.mock-frame figcaption b { flex: none; width: 24px; height: 24px; border-radius: 50%; background: #ee9b3a; color: #1b1a21; font-size: 13px; line-height: 24px; text-align: center; }
+.mock-frame figcaption strong { display: block; font-size: 15px; }
+.mock-frame figcaption small { display: block; margin-top: 2px; color: #b5ab9d; font-size: 12px; line-height: 1.4; }
+
+.mock-window {
+  display: flex;
+  flex-direction: column;
+  width: 420px;
+  height: 560px;
+  overflow: hidden;
+  border: 1px solid #4a4756;
+  border-radius: 6px;
+  background: var(--ll-bg);
+  box-shadow: 0 0 0 1px #000, 0 10px 30px rgba(0, 0, 0, 0.7);
+}
+.mock-window-header { display: flex; flex: none; align-items: center; gap: 8px; height: 36px; padding: 0 6px 0 12px; border-bottom: 1px solid var(--ll-border); background: var(--ll-bg-header); }
+.mock-window-header h1 { flex: 1; margin: 0; overflow: hidden; font-size: 14px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.mock-window-icon { color: var(--ll-text-muted); }
+.mock-window-close { display: grid; place-content: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: var(--ll-radius); background: none; color: var(--ll-text); cursor: pointer; }
+.mock-window-close:hover { background: var(--ll-bg-hover); color: var(--ll-accent-text); }
+.mock-window-content { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+
+.mock-overlay { position: relative; width: 420px; }
+.mock-overlay .is-dimmed { filter: brightness(0.45); pointer-events: none; }
+.mock-overlay .lucd20-loot-qty-dialog { position: absolute; top: 150px; left: 60px; box-shadow: 0 0 0 1px #000, 0 12px 40px #000; }
+
+.mock-cursor { position: absolute; right: 2px; bottom: -13px; z-index: 2; width: 14px; height: 20px; pointer-events: none; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6)); }
+</style>
+</head>
+<body>
+<!-- Icon sprite. UI icons use currentColor; item/NPC art is placeholder only. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- UI icons (24 grid, stroked) -->
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+    <symbol id="i-take" viewBox="0 0 24 24"><path d="M12 3v11m0 0l-4.5-4.5M12 14l4.5-4.5M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-stash" viewBox="0 0 24 24"><path d="M3 11V9a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v2M3 11h18v8H3zM12 10v4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-sheet" viewBox="0 0 24 24"><path d="M13 4H6a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-5M15 4h5v5M20 4l-8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v5M14 11v5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M6 12h12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M6 12h12M12 6v12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 11v6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="7.6" r="1.4" fill="currentColor"/></symbol>
+    <symbol id="i-sack" viewBox="0 0 24 24"><path d="M9 3h6l-1.5 4h-3zM10.5 7C6 9.5 4 13 4 16.5 4 19.5 6.5 21 12 21s8-1.5 8-4.5c0-3.5-2-7-6.5-9.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-skull" viewBox="0 0 24 24"><path d="M12 3a8 8 0 0 0-8 8c0 2.6 1.2 4.6 3 6v3h10v-3c1.8-1.4 3-3.4 3-6a8 8 0 0 0-8-8zM10 20v-2M14 20v-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="12" r="1.7" fill="currentColor"/><circle cx="15" cy="12" r="1.7" fill="currentColor"/></symbol>
+
+    <!-- Placeholder item art (32 grid) -->
+    <symbol id="art-potion" viewBox="0 0 32 32"><path d="M13 4h6v2h-1v6.200c3.2 1.2 5.5 4.2 5.5 7.800a7.5 7.5 0 0 1-15 0c0-3.6 2.3-6.6 5.5-7.800V6h-1z" fill="#35303d" stroke="#cfc6dc" stroke-width="1.2" stroke-linejoin="round"/><path d="M9.6 20a6.4 6.4 0 0 0 12.8 0z" fill="#e0483f"/></symbol>
+    <symbol id="art-ring" viewBox="0 0 32 32"><circle cx="16" cy="19.5" r="7" fill="none" stroke="#e3b23c" stroke-width="3"/><path d="M16 5l4 4-4 4.5-4-4.500z" fill="#6fd3c7" stroke="#d9fff9" stroke-width=".8"/></symbol>
+    <symbol id="art-scimitar" viewBox="0 0 32 32"><path d="M9 24C15 21 22 14 24 4c3 9-3 19-12 23z" fill="#cfd6de" stroke="#f4f7fa" stroke-width=".8" stroke-linejoin="round"/><path d="M5 28l5-5" stroke="#9a6a3c" stroke-width="3" stroke-linecap="round"/><path d="M7 21l5 5" stroke="#e3b23c" stroke-width="2.2" stroke-linecap="round"/></symbol>
+    <symbol id="art-dogslicer" viewBox="0 0 32 32"><path d="M10 21L22 5l4 2-1 5-12 12z" fill="#aab3bd" stroke="#e6ebf0" stroke-width=".8" stroke-linejoin="round"/><circle cx="20.5" cy="10.5" r="1.5" fill="#1b1a21"/><circle cx="16.5" cy="15.5" r="1.5" fill="#1b1a21"/><path d="M5 28l5-5" stroke="#7b5a3a" stroke-width="3" stroke-linecap="round"/></symbol>
+    <symbol id="art-coins" viewBox="0 0 32 32"><g fill="#e3b23c" stroke="#7d5a10" stroke-width="1.2"><ellipse cx="16" cy="23" rx="9.5" ry="4.2"/><ellipse cx="16" cy="18" rx="9.5" ry="4.2"/><ellipse cx="16" cy="13" rx="9.5" ry="4.2"/></g><ellipse cx="16" cy="12.6" rx="5" ry="1.8" fill="#f6d87a"/></symbol>
+    <symbol id="art-armor" viewBox="0 0 32 32"><path d="M10 5l4 2.500h4L22 5l6 5-3.5 4.500L22 13v14H10V13l-2.5 1.500L4 10z" fill="#8b5e3c" stroke="#e0b184" stroke-width="1.2" stroke-linejoin="round"/><path d="M16 9v18M11.5 19h9" stroke="#e0b184" stroke-width="1" opacity=".7"/></symbol>
+    <symbol id="art-bow" viewBox="0 0 32 32"><path d="M10 4v24" stroke="#e8e2d6" stroke-width="1"/><path d="M10 4c14 5 14 19 0 24" fill="none" stroke="#b8804a" stroke-width="2.8" stroke-linecap="round"/></symbol>
+    <symbol id="art-arrows" viewBox="0 0 32 32"><g stroke="#d2a56b" stroke-width="1.8" stroke-linecap="round"><path d="M5 20L18 7M8 26L22 12M12 28l12-12"/></g><g fill="#dfe5ea"><path d="M17 6l6-3-3 6zM21 11l6-3-3 6zM23 15l6-3-3 6z"/></g></symbol>
+
+    <!-- Placeholder portraits (40 grid, clipped round by CSS) -->
+    <symbol id="npc-boss" viewBox="0 0 40 40"><rect width="40" height="40" fill="#4a2f33"/><path d="M11 22L1 15l10 11zM29 22l10-7-10 11z" fill="#6f9c3f"/><ellipse cx="20" cy="24" rx="10" ry="9" fill="#86b34e"/><path d="M12 16l1.5-7 3.5 4 3-6 3 6 3.5-4 1.5 7z" fill="#e3b23c" stroke="#7d5a10" stroke-width=".8"/><circle cx="16" cy="23" r="2" fill="#ffd84a"/><circle cx="24" cy="23" r="2" fill="#ffd84a"/><path d="M15 29q5 3 10 0" fill="none" stroke="#2a3a16" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="npc-warrior" viewBox="0 0 40 40"><rect width="40" height="40" fill="#2f3a44"/><path d="M11 21L1 14l10 11zM29 21l10-7-10 11z" fill="#6f9c3f"/><ellipse cx="20" cy="23" rx="10" ry="9" fill="#86b34e"/><path d="M10 19a10 9 0 0 1 20 0z" fill="#8d949c" stroke="#d5dbe1" stroke-width=".8"/><circle cx="16" cy="23.5" r="2" fill="#ffd84a"/><circle cx="24" cy="23.5" r="2" fill="#ffd84a"/><path d="M15 29q5 2 10 0" fill="none" stroke="#2a3a16" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="npc-unknown" viewBox="0 0 40 40"><rect width="40" height="40" fill="#2a2931"/><circle cx="20" cy="15" r="7" fill="#565363"/><path d="M6 40c0-10 6-15 14-15s14 5 14 15z" fill="#565363"/><path d="M17.5 13.200a2.6 2.6 0 1 1 3.7 2.400c-.8.4-1.2.9-1.2 1.9" fill="none" stroke="#efe6d8" stroke-width="1.7" stroke-linecap="round"/><circle cx="20" cy="20.3" r="1.1" fill="#efe6d8"/></symbol>
+    <symbol id="pc-amiri" viewBox="0 0 40 40"><rect width="40" height="40" fill="#5a2a2a"/><path d="M9 22c-2-12 4-17 11-17s13 5 11 17l-3 8H12z" fill="#2b1a14"/><circle cx="20" cy="18" r="7.5" fill="#c98f6b"/><path d="M6 40c0-9 6-13 14-13s14 4 14 13z" fill="#7a8794"/><path d="M12.5 16c2-5 13-5 15 0-4-1.5-11-1.5-15 0z" fill="#2b1a14"/></symbol>
+  </defs>
+</svg>
+
+<header class="mock-page-header">
+  <h1>Loot Pile windows <span>mockup for lucd20-automations · Foundry V14 dark · PF2e</span></h1>
+  <p>Static mockup. Hover and focus are live; the checkboxes in 6 and the stepper in 4 work. Class names starting with <code>lucd20-loot-</code> / <code>ll-</code> are meant to carry over; <code>mock-</code> is page chrome only.</p>
+</header>
+<main class="mock-stage">
+<figure class="mock-frame">
+<figcaption><b>1</b><span><strong>Loot Pile: player view</strong><small>Taking for Amiri (one character, so no dropdown). 420×560.</small></span></figcaption>
+<div class="mock-window lucd20-loot-app lucd20-loot-window ">
+  <header class="mock-window-header"><svg class="ll-i mock-window-icon" aria-hidden="true"><use href="#i-sack"/></svg><h1>Loot Pile</h1><button type="button" class="mock-window-close" aria-label="Close"><svg class="ll-i" aria-hidden="true"><use href="#i-close"/></svg></button></header>
+  <div class="mock-window-content">
+  <div class="lucd20-loot-body">
+    <div class="lucd20-loot-taker">
+      <span class="label">Taking for</span>
+      <span class="lucd20-loot-taker-chip"><span class="lucd20-loot-portrait small"><svg class="ll-art" aria-hidden="true"><use href="#pc-amiri"/></svg></span><strong>Amiri</strong></span>
+    </div>
+    <div class="lucd20-loot-list">
+      <section class="lucd20-loot-group">
+        <header class="lucd20-loot-group-header">
+          <span class="lucd20-loot-portrait"><svg class="ll-art" aria-hidden="true"><use href="#npc-boss"/></svg></span>
+          <span class="who"><span class="npc">Goblin Boss</span><span class="level">Level 1</span></span>
+        </header>
+        <ol>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-potion"/></svg></span>
+          <span class="name">Healing Potion (Minor)</span>
+          <span class="qty" title="Quantity: 2">×2</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-ring"/></svg></span>
+          <span class="name">Ring of Climbing</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-scimitar"/></svg></span>
+          <span class="name">Scimitar</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        </ol>
+      </section>
+      <section class="lucd20-loot-group">
+        <header class="lucd20-loot-group-header">
+          <span class="lucd20-loot-portrait"><svg class="ll-art" aria-hidden="true"><use href="#npc-warrior"/></svg></span>
+          <span class="who"><span class="npc">Goblin Warrior</span><span class="level">Level -1</span></span>
+        </header>
+        <ol>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-dogslicer"/></svg></span>
+          <span class="name">Dogslicer</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-coins"/></svg></span>
+          <span class="name">Gold Pieces</span>
+          <span class="qty" title="Quantity: 3">×3</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-armor"/></svg></span>
+          <span class="name">Leather Armor</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        </ol>
+      </section>
+      <section class="lucd20-loot-group">
+        <header class="lucd20-loot-group-header">
+          <span class="lucd20-loot-portrait"><svg class="ll-art" aria-hidden="true"><use href="#npc-warrior"/></svg></span>
+          <span class="who"><span class="npc">Goblin Warrior</span><span class="level">Level -1</span></span>
+        </header>
+        <ol>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-arrows"/></svg></span>
+          <span class="name">Arrows</span>
+          <span class="qty" title="Quantity: 20">×20</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-bow"/></svg></span>
+          <span class="name">Shortbow</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        </ol>
+      </section>
+    </div>
+    <footer class="lucd20-loot-footer">
+      <button type="button" class="ll-btn ll-btn-footer ll-btn-all" data-action="stash-all"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span>Send all to Party Stash</span></button>
+    </footer>
+  </div>
+  </div>
+</div>
+</figure>
+
+<figure class="mock-frame">
+<figcaption><b>2</b><span><strong>Loot Pile: GM view</strong><small>Dropdown of all player characters, plus Open sheet and Delete pile. The list scrolls.</small></span></figcaption>
+<div class="mock-window lucd20-loot-app lucd20-loot-window ">
+  <header class="mock-window-header"><svg class="ll-i mock-window-icon" aria-hidden="true"><use href="#i-sack"/></svg><h1>Loot Pile</h1><button type="button" class="mock-window-close" aria-label="Close"><svg class="ll-i" aria-hidden="true"><use href="#i-close"/></svg></button></header>
+  <div class="mock-window-content">
+  <div class="lucd20-loot-body">
+    <div class="lucd20-loot-taker">
+      <label for="g-taker">Taking for</label>
+      <select id="g-taker" class="ll-select">
+        <option selected>Amiri</option><option>Ezren</option><option>Kyra</option><option>Valeros</option>
+      </select>
+    </div>
+    <div class="lucd20-loot-list">
+      <section class="lucd20-loot-group">
+        <header class="lucd20-loot-group-header">
+          <span class="lucd20-loot-portrait"><svg class="ll-art" aria-hidden="true"><use href="#npc-boss"/></svg></span>
+          <span class="who"><span class="npc">Goblin Boss</span><span class="level">Level 1</span></span>
+        </header>
+        <ol>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-potion"/></svg></span>
+          <span class="name">Healing Potion (Minor)</span>
+          <span class="qty" title="Quantity: 2">×2</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-ring"/></svg></span>
+          <span class="name">Ring of Climbing</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-scimitar"/></svg></span>
+          <span class="name">Scimitar</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        </ol>
+      </section>
+      <section class="lucd20-loot-group">
+        <header class="lucd20-loot-group-header">
+          <span class="lucd20-loot-portrait"><svg class="ll-art" aria-hidden="true"><use href="#npc-warrior"/></svg></span>
+          <span class="who"><span class="npc">Goblin Warrior</span><span class="level">Level -1</span></span>
+        </header>
+        <ol>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-dogslicer"/></svg></span>
+          <span class="name">Dogslicer</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-coins"/></svg></span>
+          <span class="name">Gold Pieces</span>
+          <span class="qty" title="Quantity: 3">×3</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-armor"/></svg></span>
+          <span class="name">Leather Armor</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        </ol>
+      </section>
+      <section class="lucd20-loot-group">
+        <header class="lucd20-loot-group-header">
+          <span class="lucd20-loot-portrait"><svg class="ll-art" aria-hidden="true"><use href="#npc-warrior"/></svg></span>
+          <span class="who"><span class="npc">Goblin Warrior</span><span class="level">Level -1</span></span>
+        </header>
+        <ol>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-arrows"/></svg></span>
+          <span class="name">Arrows</span>
+          <span class="qty" title="Quantity: 20">×20</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-bow"/></svg></span>
+          <span class="name">Shortbow</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        </ol>
+      </section>
+    </div>
+    <footer class="lucd20-loot-footer is-gm">
+      <button type="button" class="ll-btn ll-btn-footer ll-btn-all" data-action="stash-all"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span>Send all to Party Stash</span></button>
+      <button type="button" class="ll-btn ll-btn-footer" data-action="sheet"><svg class="ll-i" aria-hidden="true"><use href="#i-sheet"/></svg><span>Open sheet</span></button>
+      <button type="button" class="ll-btn ll-btn-footer ll-btn-danger" data-action="delete"><svg class="ll-i" aria-hidden="true"><use href="#i-trash"/></svg><span>Delete pile</span></button>
+    </footer>
+  </div>
+  </div>
+</div>
+</figure>
+
+<figure class="mock-frame">
+<figcaption><b>3</b><span><strong>Hover, pressed and focus</strong><small>Row 1: row and Take hovered. Row 2: Party Stash pressed. Row 3: keyboard focus on Take.</small></span></figcaption>
+<div class="mock-window lucd20-loot-app lucd20-loot-window ">
+  <header class="mock-window-header"><svg class="ll-i mock-window-icon" aria-hidden="true"><use href="#i-sack"/></svg><h1>Loot Pile</h1><button type="button" class="mock-window-close" aria-label="Close"><svg class="ll-i" aria-hidden="true"><use href="#i-close"/></svg></button></header>
+  <div class="mock-window-content">
+  <div class="lucd20-loot-body">
+    <div class="lucd20-loot-taker">
+      <span class="label">Taking for</span>
+      <span class="lucd20-loot-taker-chip"><span class="lucd20-loot-portrait small"><svg class="ll-art" aria-hidden="true"><use href="#pc-amiri"/></svg></span><strong>Amiri</strong></span>
+    </div>
+    <div class="lucd20-loot-list">
+      <section class="lucd20-loot-group">
+        <header class="lucd20-loot-group-header">
+          <span class="lucd20-loot-portrait"><svg class="ll-art" aria-hidden="true"><use href="#npc-boss"/></svg></span>
+          <span class="who"><span class="npc">Goblin Boss</span><span class="level">Level 1</span></span>
+        </header>
+        <ol>
+        <li class="lucd20-loot-item is-hover">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-potion"/></svg></span>
+          <span class="name">Healing Potion (Minor)</span>
+          <span class="qty" title="Quantity: 2">×2</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take is-hover" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span><svg class="mock-cursor" viewBox="0 0 16 22" aria-hidden="true"><path d="M1 1v17l4.5-4 3 7 2.6-1.1-3-6.9H14z" fill="#fff" stroke="#000" stroke-width="1.2" stroke-linejoin="round"/></svg></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        <li class="lucd20-loot-item is-hover">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-ring"/></svg></span>
+          <span class="name">Ring of Climbing</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn is-active" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span><svg class="mock-cursor" viewBox="0 0 16 22" aria-hidden="true"><path d="M1 1v17l4.5-4 3 7 2.6-1.1-3-6.9H14z" fill="#fff" stroke="#000" stroke-width="1.2" stroke-linejoin="round"/></svg></button>
+          </span>
+        </li>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-scimitar"/></svg></span>
+          <span class="name">Scimitar</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take is-focus" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        </ol>
+      </section>
+      <section class="lucd20-loot-group">
+        <header class="lucd20-loot-group-header">
+          <span class="lucd20-loot-portrait"><svg class="ll-art" aria-hidden="true"><use href="#npc-warrior"/></svg></span>
+          <span class="who"><span class="npc">Goblin Warrior</span><span class="level">Level -1</span></span>
+        </header>
+        <ol>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-dogslicer"/></svg></span>
+          <span class="name">Dogslicer</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-coins"/></svg></span>
+          <span class="name">Gold Pieces</span>
+          <span class="qty" title="Quantity: 3">×3</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-armor"/></svg></span>
+          <span class="name">Leather Armor</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        </ol>
+      </section>
+      <section class="lucd20-loot-group">
+        <header class="lucd20-loot-group-header">
+          <span class="lucd20-loot-portrait"><svg class="ll-art" aria-hidden="true"><use href="#npc-warrior"/></svg></span>
+          <span class="who"><span class="npc">Goblin Warrior</span><span class="level">Level -1</span></span>
+        </header>
+        <ol>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-arrows"/></svg></span>
+          <span class="name">Arrows</span>
+          <span class="qty" title="Quantity: 20">×20</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-bow"/></svg></span>
+          <span class="name">Shortbow</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        </ol>
+      </section>
+    </div>
+    <footer class="lucd20-loot-footer">
+      <button type="button" class="ll-btn ll-btn-footer ll-btn-all" data-action="stash-all"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span>Send all to Party Stash</span></button>
+    </footer>
+  </div>
+  </div>
+</div>
+</figure>
+
+<figure class="mock-frame">
+<figcaption><b>4</b><span><strong>“How many?” prompt</strong><small>Opens when taking from a stack. Defaults to the whole stack; the pile behind is dimmed.</small></span></figcaption>
+<div class="mock-overlay">
+<div class="mock-window lucd20-loot-app lucd20-loot-window is-dimmed">
+  <header class="mock-window-header"><svg class="ll-i mock-window-icon" aria-hidden="true"><use href="#i-sack"/></svg><h1>Loot Pile</h1><button type="button" class="mock-window-close" aria-label="Close"><svg class="ll-i" aria-hidden="true"><use href="#i-close"/></svg></button></header>
+  <div class="mock-window-content">
+  <div class="lucd20-loot-body">
+    <div class="lucd20-loot-taker">
+      <span class="label">Taking for</span>
+      <span class="lucd20-loot-taker-chip"><span class="lucd20-loot-portrait small"><svg class="ll-art" aria-hidden="true"><use href="#pc-amiri"/></svg></span><strong>Amiri</strong></span>
+    </div>
+    <div class="lucd20-loot-list">
+      <section class="lucd20-loot-group">
+        <header class="lucd20-loot-group-header">
+          <span class="lucd20-loot-portrait"><svg class="ll-art" aria-hidden="true"><use href="#npc-boss"/></svg></span>
+          <span class="who"><span class="npc">Goblin Boss</span><span class="level">Level 1</span></span>
+        </header>
+        <ol>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-potion"/></svg></span>
+          <span class="name">Healing Potion (Minor)</span>
+          <span class="qty" title="Quantity: 2">×2</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-ring"/></svg></span>
+          <span class="name">Ring of Climbing</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-scimitar"/></svg></span>
+          <span class="name">Scimitar</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        </ol>
+      </section>
+      <section class="lucd20-loot-group">
+        <header class="lucd20-loot-group-header">
+          <span class="lucd20-loot-portrait"><svg class="ll-art" aria-hidden="true"><use href="#npc-warrior"/></svg></span>
+          <span class="who"><span class="npc">Goblin Warrior</span><span class="level">Level -1</span></span>
+        </header>
+        <ol>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-dogslicer"/></svg></span>
+          <span class="name">Dogslicer</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-coins"/></svg></span>
+          <span class="name">Gold Pieces</span>
+          <span class="qty" title="Quantity: 3">×3</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-armor"/></svg></span>
+          <span class="name">Leather Armor</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        </ol>
+      </section>
+      <section class="lucd20-loot-group">
+        <header class="lucd20-loot-group-header">
+          <span class="lucd20-loot-portrait"><svg class="ll-art" aria-hidden="true"><use href="#npc-warrior"/></svg></span>
+          <span class="who"><span class="npc">Goblin Warrior</span><span class="level">Level -1</span></span>
+        </header>
+        <ol>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-arrows"/></svg></span>
+          <span class="name">Arrows</span>
+          <span class="qty" title="Quantity: 20">×20</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-bow"/></svg></span>
+          <span class="name">Shortbow</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        </ol>
+      </section>
+    </div>
+    <footer class="lucd20-loot-footer">
+      <button type="button" class="ll-btn ll-btn-footer ll-btn-all" data-action="stash-all"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span>Send all to Party Stash</span></button>
+    </footer>
+  </div>
+  </div>
+</div>
+<div class="mock-window lucd20-loot-app lucd20-loot-qty-dialog" style="width:300px;height:auto">
+  <header class="mock-window-header"><svg class="ll-i mock-window-icon" aria-hidden="true"><use href="#i-take"/></svg><h1>How many?</h1><button type="button" class="mock-window-close" aria-label="Close"><svg class="ll-i" aria-hidden="true"><use href="#i-close"/></svg></button></header>
+  <div class="mock-window-content">
+  <form class="lucd20-loot-qty" data-qty data-max="2">
+    <div class="what">
+      <span class="lucd20-loot-icon large"><svg class="ll-art" aria-hidden="true"><use href="#art-potion"/></svg></span>
+      <span><strong>Healing Potion (Minor)</strong><span class="sub">2 in the pile · taking for Amiri</span></span>
+    </div>
+    <div class="field">
+      <label for="qty-input">How many?</label>
+      <span class="stepper">
+        <button type="button" class="ll-btn ll-btn-square" data-step="-1" aria-label="One fewer"><svg class="ll-i" aria-hidden="true"><use href="#i-minus"/></svg></button>
+        <input id="qty-input" type="number" min="1" max="2" step="1" value="2" inputmode="numeric">
+        <button type="button" class="ll-btn ll-btn-square" data-step="1" aria-label="One more"><svg class="ll-i" aria-hidden="true"><use href="#i-plus"/></svg></button>
+      </span>
+      <span class="range">of 2</span>
+    </div>
+    <footer class="lucd20-loot-footer is-dialog">
+      <button type="submit" class="ll-btn ll-btn-footer ll-btn-primary"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span data-take-label>Take 2</span></button>
+      <button type="button" class="ll-btn ll-btn-footer"><svg class="ll-i" aria-hidden="true"><use href="#i-close"/></svg><span>Cancel</span></button>
+    </footer>
+  </form>
+  </div>
+</div>
+</div>
+</figure>
+
+<figure class="mock-frame">
+<figcaption><b>5</b><span><strong>Empty pile</strong><small>GM view, so Delete pile stays available. Send all is disabled.</small></span></figcaption>
+<div class="mock-window lucd20-loot-app lucd20-loot-window ">
+  <header class="mock-window-header"><svg class="ll-i mock-window-icon" aria-hidden="true"><use href="#i-sack"/></svg><h1>Loot Pile</h1><button type="button" class="mock-window-close" aria-label="Close"><svg class="ll-i" aria-hidden="true"><use href="#i-close"/></svg></button></header>
+  <div class="mock-window-content">
+  <div class="lucd20-loot-body">
+    <div class="lucd20-loot-taker">
+      <label for="e-taker">Taking for</label>
+      <select id="e-taker" class="ll-select">
+        <option selected>Amiri</option><option>Ezren</option><option>Kyra</option><option>Valeros</option>
+      </select>
+    </div>
+    <div class="lucd20-loot-list">
+      <div class="lucd20-loot-empty"><svg class="ll-empty-art" aria-hidden="true"><use href="#i-sack"/></svg><p class="title">The pile is empty.</p><p class="sub">Everything has been taken or stashed.</p></div>
+    </div>
+    <footer class="lucd20-loot-footer is-gm">
+      <button type="button" class="ll-btn ll-btn-footer ll-btn-all" data-action="stash-all" disabled><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span>Send all to Party Stash</span></button>
+      <button type="button" class="ll-btn ll-btn-footer" data-action="sheet"><svg class="ll-i" aria-hidden="true"><use href="#i-sheet"/></svg><span>Open sheet</span></button>
+      <button type="button" class="ll-btn ll-btn-footer ll-btn-danger" data-action="delete"><svg class="ll-i" aria-hidden="true"><use href="#i-trash"/></svg><span>Delete pile</span></button>
+    </footer>
+  </div>
+  </div>
+</div>
+</figure>
+
+<figure class="mock-frame">
+<figcaption><b>6</b><span><strong>Loot the fallen (GM, end of combat)</strong><small>Leather Armor unchecked. The checkbox in each NPC header selects all / none.</small></span></figcaption>
+<div class="mock-window lucd20-loot-app lucd20-loot-review-dialog">
+  <header class="mock-window-header"><svg class="ll-i mock-window-icon" aria-hidden="true"><use href="#i-skull"/></svg><h1>Loot the fallen</h1><button type="button" class="mock-window-close" aria-label="Close"><svg class="ll-i" aria-hidden="true"><use href="#i-close"/></svg></button></header>
+  <div class="mock-window-content">
+  <div class="lucd20-loot-body lucd20-loot-review" data-review>
+    <p class="lucd20-loot-hint lucd20-loot-taker"><svg class="ll-i" aria-hidden="true"><use href="#i-info"/></svg><span>Uncheck anything that shouldn't be in the pile. Checked items are moved off the NPCs.</span></p>
+    <div class="lucd20-loot-list">
+      <section class="lucd20-loot-group" data-group>
+        <header class="lucd20-loot-group-header">
+          <input type="checkbox" class="ll-check" data-group-toggle aria-label="Select all or none from Goblin Boss" title="Select all / none">
+          <span class="lucd20-loot-portrait"><svg class="ll-art" aria-hidden="true"><use href="#npc-boss"/></svg></span>
+          <span class="who"><span class="npc">Goblin Boss</span><span class="level">Level 1</span></span>
+          <span class="count" data-group-count></span>
+        </header>
+        <ol>
+          <li><label class="lucd20-loot-check">
+            <input type="checkbox" class="ll-check" data-item checked>
+            <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-potion"/></svg></span>
+            <span class="name">Healing Potion (Minor)</span>
+            <span class="qty" title="Quantity: 2">×2</span>
+          </label></li>
+          <li><label class="lucd20-loot-check">
+            <input type="checkbox" class="ll-check" data-item checked>
+            <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-ring"/></svg></span>
+            <span class="name">Ring of Climbing</span>
+          </label></li>
+          <li><label class="lucd20-loot-check">
+            <input type="checkbox" class="ll-check" data-item checked>
+            <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-scimitar"/></svg></span>
+            <span class="name">Scimitar</span>
+          </label></li>
+        </ol>
+      </section>
+      <section class="lucd20-loot-group" data-group>
+        <header class="lucd20-loot-group-header">
+          <input type="checkbox" class="ll-check" data-group-toggle aria-label="Select all or none from Goblin Warrior" title="Select all / none">
+          <span class="lucd20-loot-portrait"><svg class="ll-art" aria-hidden="true"><use href="#npc-warrior"/></svg></span>
+          <span class="who"><span class="npc">Goblin Warrior</span><span class="level">Level -1</span></span>
+          <span class="count" data-group-count></span>
+        </header>
+        <ol>
+          <li><label class="lucd20-loot-check">
+            <input type="checkbox" class="ll-check" data-item checked>
+            <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-dogslicer"/></svg></span>
+            <span class="name">Dogslicer</span>
+          </label></li>
+          <li><label class="lucd20-loot-check">
+            <input type="checkbox" class="ll-check" data-item checked>
+            <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-coins"/></svg></span>
+            <span class="name">Gold Pieces</span>
+            <span class="qty" title="Quantity: 3">×3</span>
+          </label></li>
+          <li><label class="lucd20-loot-check">
+            <input type="checkbox" class="ll-check" data-item>
+            <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-armor"/></svg></span>
+            <span class="name">Leather Armor</span>
+          </label></li>
+        </ol>
+      </section>
+      <section class="lucd20-loot-group" data-group>
+        <header class="lucd20-loot-group-header">
+          <input type="checkbox" class="ll-check" data-group-toggle aria-label="Select all or none from Goblin Warrior" title="Select all / none">
+          <span class="lucd20-loot-portrait"><svg class="ll-art" aria-hidden="true"><use href="#npc-warrior"/></svg></span>
+          <span class="who"><span class="npc">Goblin Warrior</span><span class="level">Level -1</span></span>
+          <span class="count" data-group-count></span>
+        </header>
+        <ol>
+          <li><label class="lucd20-loot-check">
+            <input type="checkbox" class="ll-check" data-item checked>
+            <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-arrows"/></svg></span>
+            <span class="name">Arrows</span>
+            <span class="qty" title="Quantity: 20">×20</span>
+          </label></li>
+          <li><label class="lucd20-loot-check">
+            <input type="checkbox" class="ll-check" data-item checked>
+            <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-bow"/></svg></span>
+            <span class="name">Shortbow</span>
+          </label></li>
+        </ol>
+      </section>
+    </div>
+    <footer class="lucd20-loot-footer is-review">
+      <span class="summary" data-summary aria-live="polite"></span>
+      <button type="button" class="ll-btn ll-btn-footer ll-btn-primary" data-action="create"><svg class="ll-i" aria-hidden="true"><use href="#i-sack"/></svg><span>Create loot pile</span></button>
+      <button type="button" class="ll-btn ll-btn-footer" data-action="skip"><svg class="ll-i" aria-hidden="true"><use href="#i-close"/></svg><span>Skip</span></button>
+    </footer>
+  </div>
+  </div>
+</div>
+</figure>
+
+<figure class="mock-frame">
+<figcaption><b>7</b><span><strong>Narrow: 360px</strong><small>Player without a character (hint, Take disabled) and an NPC with a hidden name. “Party Stash” shortens to “Stash”.</small></span></figcaption>
+<div class="mock-window lucd20-loot-app lucd20-loot-window " style="width:360px">
+  <header class="mock-window-header"><svg class="ll-i mock-window-icon" aria-hidden="true"><use href="#i-sack"/></svg><h1>Loot Pile</h1><button type="button" class="mock-window-close" aria-label="Close"><svg class="ll-i" aria-hidden="true"><use href="#i-close"/></svg></button></header>
+  <div class="mock-window-content">
+  <div class="lucd20-loot-body">
+    <p class="lucd20-loot-taker lucd20-loot-hint"><svg class="ll-i" aria-hidden="true"><use href="#i-info"/></svg><span>You have no character, so you can't take items yourself. You can still send them to the Party Stash.</span></p>
+    <div class="lucd20-loot-list">
+      <section class="lucd20-loot-group">
+        <header class="lucd20-loot-group-header">
+          <span class="lucd20-loot-portrait"><svg class="ll-art" aria-hidden="true"><use href="#npc-unknown"/></svg></span>
+          <span class="who"><span class="npc">Unknown creature</span><span class="level">Level 1</span></span>
+        </header>
+        <ol>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-potion"/></svg></span>
+          <span class="name">Healing Potion (Minor)</span>
+          <span class="qty" title="Quantity: 2">×2</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take" disabled title="You need a character to take items"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-ring"/></svg></span>
+          <span class="name">Ring of Climbing</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take" disabled title="You need a character to take items"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-scimitar"/></svg></span>
+          <span class="name">Scimitar</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take" disabled title="You need a character to take items"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        </ol>
+      </section>
+      <section class="lucd20-loot-group">
+        <header class="lucd20-loot-group-header">
+          <span class="lucd20-loot-portrait"><svg class="ll-art" aria-hidden="true"><use href="#npc-warrior"/></svg></span>
+          <span class="who"><span class="npc">Goblin Warrior</span><span class="level">Level -1</span></span>
+        </header>
+        <ol>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-dogslicer"/></svg></span>
+          <span class="name">Dogslicer</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take" disabled title="You need a character to take items"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-coins"/></svg></span>
+          <span class="name">Gold Pieces</span>
+          <span class="qty" title="Quantity: 3">×3</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take" disabled title="You need a character to take items"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-armor"/></svg></span>
+          <span class="name">Leather Armor</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take" disabled title="You need a character to take items"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        </ol>
+      </section>
+      <section class="lucd20-loot-group">
+        <header class="lucd20-loot-group-header">
+          <span class="lucd20-loot-portrait"><svg class="ll-art" aria-hidden="true"><use href="#npc-warrior"/></svg></span>
+          <span class="who"><span class="npc">Goblin Warrior</span><span class="level">Level -1</span></span>
+        </header>
+        <ol>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-arrows"/></svg></span>
+          <span class="name">Arrows</span>
+          <span class="qty" title="Quantity: 20">×20</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take" disabled title="You need a character to take items"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-bow"/></svg></span>
+          <span class="name">Shortbow</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take" disabled title="You need a character to take items"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        </ol>
+      </section>
+    </div>
+    <footer class="lucd20-loot-footer">
+      <button type="button" class="ll-btn ll-btn-footer ll-btn-all" data-action="stash-all"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span>Send all to Party Stash</span></button>
+    </footer>
+  </div>
+  </div>
+</div>
+</figure>
+
+<figure class="mock-frame">
+<figcaption><b>8</b><span><strong>Wide: 600px</strong><small>GM view. The footer becomes a single row.</small></span></figcaption>
+<div class="mock-window lucd20-loot-app lucd20-loot-window " style="width:600px">
+  <header class="mock-window-header"><svg class="ll-i mock-window-icon" aria-hidden="true"><use href="#i-sack"/></svg><h1>Loot Pile</h1><button type="button" class="mock-window-close" aria-label="Close"><svg class="ll-i" aria-hidden="true"><use href="#i-close"/></svg></button></header>
+  <div class="mock-window-content">
+  <div class="lucd20-loot-body">
+    <div class="lucd20-loot-taker">
+      <label for="w-taker">Taking for</label>
+      <select id="w-taker" class="ll-select">
+        <option selected>Amiri</option><option>Ezren</option><option>Kyra</option><option>Valeros</option>
+      </select>
+    </div>
+    <div class="lucd20-loot-list">
+      <section class="lucd20-loot-group">
+        <header class="lucd20-loot-group-header">
+          <span class="lucd20-loot-portrait"><svg class="ll-art" aria-hidden="true"><use href="#npc-boss"/></svg></span>
+          <span class="who"><span class="npc">Goblin Boss</span><span class="level">Level 1</span></span>
+        </header>
+        <ol>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-potion"/></svg></span>
+          <span class="name">Healing Potion (Minor)</span>
+          <span class="qty" title="Quantity: 2">×2</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-ring"/></svg></span>
+          <span class="name">Ring of Climbing</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-scimitar"/></svg></span>
+          <span class="name">Scimitar</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        </ol>
+      </section>
+      <section class="lucd20-loot-group">
+        <header class="lucd20-loot-group-header">
+          <span class="lucd20-loot-portrait"><svg class="ll-art" aria-hidden="true"><use href="#npc-warrior"/></svg></span>
+          <span class="who"><span class="npc">Goblin Warrior</span><span class="level">Level -1</span></span>
+        </header>
+        <ol>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-dogslicer"/></svg></span>
+          <span class="name">Dogslicer</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-coins"/></svg></span>
+          <span class="name">Gold Pieces</span>
+          <span class="qty" title="Quantity: 3">×3</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-armor"/></svg></span>
+          <span class="name">Leather Armor</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        </ol>
+      </section>
+      <section class="lucd20-loot-group">
+        <header class="lucd20-loot-group-header">
+          <span class="lucd20-loot-portrait"><svg class="ll-art" aria-hidden="true"><use href="#npc-warrior"/></svg></span>
+          <span class="who"><span class="npc">Goblin Warrior</span><span class="level">Level -1</span></span>
+        </header>
+        <ol>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-arrows"/></svg></span>
+          <span class="name">Arrows</span>
+          <span class="qty" title="Quantity: 20">×20</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        <li class="lucd20-loot-item">
+          <span class="lucd20-loot-icon"><svg class="ll-art" aria-hidden="true"><use href="#art-bow"/></svg></span>
+          <span class="name">Shortbow</span>
+          <span class="actions">
+            <button type="button" class="ll-btn ll-btn-take" data-action="take"><svg class="ll-i" aria-hidden="true"><use href="#i-take"/></svg><span>Take</span></button>
+            <button type="button" class="ll-btn" data-action="stash" aria-label="Send to Party Stash" title="Send to Party Stash"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span><span class="ll-wide">Party </span>Stash</span></button>
+          </span>
+        </li>
+        </ol>
+      </section>
+    </div>
+    <footer class="lucd20-loot-footer is-gm">
+      <button type="button" class="ll-btn ll-btn-footer ll-btn-all" data-action="stash-all"><svg class="ll-i" aria-hidden="true"><use href="#i-stash"/></svg><span>Send all to Party Stash</span></button>
+      <button type="button" class="ll-btn ll-btn-footer" data-action="sheet"><svg class="ll-i" aria-hidden="true"><use href="#i-sheet"/></svg><span>Open sheet</span></button>
+      <button type="button" class="ll-btn ll-btn-footer ll-btn-danger" data-action="delete"><svg class="ll-i" aria-hidden="true"><use href="#i-trash"/></svg><span>Delete pile</span></button>
+    </footer>
+  </div>
+  </div>
+</div>
+</figure>
+</main>
+<script>
+// Mockup-only behaviour: tri-state group checkboxes (window 6) and the quantity stepper (window 4).
+for (const review of document.querySelectorAll("[data-review]")) {
+  const sync = () => {
+    let total = 0, picked = 0;
+    for (const group of review.querySelectorAll("[data-group]")) {
+      const items = [...group.querySelectorAll("[data-item]")];
+      const on = items.filter((i) => i.checked).length;
+      const toggle = group.querySelector("[data-group-toggle]");
+      toggle.checked = on === items.length;
+      toggle.indeterminate = on > 0 && on < items.length;
+      group.querySelector("[data-group-count]").textContent = `${on} of ${items.length}`;
+      total += items.length;
+      picked += on;
+    }
+    review.querySelector("[data-summary]").textContent = `${picked} of ${total} items selected`;
+    review.querySelector('[data-action="create"]').disabled = picked === 0;
+  };
+  review.addEventListener("change", (event) => {
+    if (event.target.matches("[data-group-toggle]")) {
+      const group = event.target.closest("[data-group]");
+      for (const item of group.querySelectorAll("[data-item]")) item.checked = event.target.checked;
+    }
+    sync();
+  });
+  sync();
+}
+
+for (const form of document.querySelectorAll("[data-qty]")) {
+  const max = Number(form.dataset.max);
+  const input = form.querySelector("input[type=number]");
+  const sync = () => {
+    const value = Math.min(max, Math.max(1, Math.round(Number(input.value) || 1)));
+    input.value = value;
+    form.querySelector("[data-take-label]").textContent = `Take ${value}`;
+    form.querySelector('[data-step="-1"]').disabled = value <= 1;
+    form.querySelector('[data-step="1"]').disabled = value >= max;
+  };
+  form.addEventListener("click", (event) => {
+    const step = event.target.closest("[data-step]");
+    if (!step) return;
+    input.value = Number(input.value) + Number(step.dataset.step);
+    sync();
+  });
+  input.addEventListener("change", sync);
+  form.addEventListener("submit", (event) => event.preventDefault());
+  sync();
+}
+</script>
+</body>
+</html>

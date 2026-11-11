@@ -19,7 +19,7 @@ package list).
 
 | Topic | Decision |
 |---|---|
-| Packaging | **One module** (`lucd20-automations`). System-specific code lives in `systems/<id>/` and is only loaded when that system is active. No per-system add-on modules. |
+| Packaging | **One module** (`lucd20-automations`). System-specific code lives in `scripts/systems/<id>/`; its features declare `systems: ["<id>"]` and are only registered and started in that system (the files are imported everywhere, which keeps loading simple and reliable). No per-system add-on modules. |
 | Toggles | Every feature has an on/off switch. Options for a disabled feature are hidden. |
 | Settings UI | A single "Open LucD20 Automations" button in Foundry's settings, which opens our own window with categories (see §2). |
 | Language | Plain JavaScript (ES modules), no build step. English text kept in `lang/en.json`. |
@@ -255,7 +255,7 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 | # | Phase | Notes |
 |---|---|---|
 | 0 | Manifest, auto-release workflow, plan | ✅ done |
-| 1 | Core: feature registry, settings window, socket | Everything plugs into this |
+| 1 | Core: feature registry, settings window, socket | ✅ v0.2.0 |
 | 2 | Player Settings (force/lock) | Part of the settings window |
 | 3 | Clean Title Bars, Always Show Prototype Token | Small; first 4e test |
 | 4 | Chat Pins, Turn Announcer | Small, self-contained |

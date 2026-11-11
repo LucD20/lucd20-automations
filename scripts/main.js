@@ -1,15 +1,44 @@
 /**
  * LucD20 Automations — entry point.
- * Phase 0: confirms the module loads. Features arrive from phase 1 on (see docs/PLAN.md).
+ * See docs/PLAN.md for the plan and build order.
  */
 
-export const MODULE_ID = "lucd20-automations";
+import { MODULE_ID, log } from "./core/constants.js";
+import { availableFeatures, getFeature, initFeatures, startFeatures } from "./core/registry.js";
+import { broadcast, executeAsGM, initSocket } from "./core/socket.js";
+import { SettingsHub } from "./core/settings-hub.js";
+
+// Feature definitions. System folders are imported in every world, but their
+// features declare `systems: [...]` and are only registered and started there.
+import "./features/index.js";
+import "./systems/index.js";
 
 Hooks.once("init", () => {
-  console.log(`${MODULE_ID} | Initializing (system: ${game.system.id})`);
+  log(`Initializing (system: ${game.system.id})`);
+
+  game.settings.registerMenu(MODULE_ID, "hub", {
+    name: "LUCD20.Menu.Name",
+    label: "LUCD20.Menu.Label",
+    hint: "LUCD20.Menu.Hint",
+    icon: "fa-solid fa-dice-d20",
+    type: SettingsHub,
+    restricted: false
+  });
+
+  initSocket();
+  initFeatures();
+
+  game.modules.get(MODULE_ID).api = {
+    openSettings: () => new SettingsHub().render({ force: true }),
+    features: () => availableFeatures(),
+    getFeature,
+    broadcast,
+    executeAsGM
+  };
 });
 
 Hooks.once("ready", () => {
-  const version = game.modules.get(MODULE_ID)?.version;
-  console.log(`${MODULE_ID} | Ready (v${version})`);
+  startFeatures();
+  const active = availableFeatures().filter(f => f.active).map(f => f.id);
+  log(`Ready (v${game.modules.get(MODULE_ID).version}). Active features: ${active.join(", ") || "none"}`);
 });

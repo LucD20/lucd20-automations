@@ -1,0 +1,97 @@
+<div class="lucd20-hub-body">
+  <div class="lucd20-hub-layout">
+    <nav class="lucd20-hub-nav">
+      <label class="lucd20-hub-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="search" data-search placeholder="{{labels.search}}" autocomplete="off">
+      </label>
+      {{#each categories}}
+      <button type="button" class="lucd20-hub-tab {{#if active}}active{{/if}}" data-action="selectCategory" data-category="{{id}}">
+        <i class="{{icon}} fa-fw"></i>
+        <span class="label">{{label}}</span>
+        {{#if builtCount}}<span class="count">{{enabledCount}}/{{builtCount}}</span>{{/if}}
+      </button>
+      {{/each}}
+    </nav>
+
+    <section class="lucd20-hub-content">
+      {{#if empty}}
+      <p class="lucd20-hub-empty">{{labels.empty}}</p>
+      {{/if}}
+
+      {{#each categories}}
+      <div class="lucd20-hub-category {{#if active}}active{{/if}}" data-category="{{id}}">
+        <header class="lucd20-hub-category-header">
+          <h2><i class="{{icon}} fa-fw"></i> {{label}}</h2>
+          {{#if hint}}<p>{{hint}}</p>{{/if}}
+        </header>
+
+        {{#each cards}}
+        <article class="lucd20-feature {{#if planned}}planned{{/if}} {{#unless enabled}}off{{/unless}}" data-feature="{{id}}" data-search-text="{{searchText}}">
+          <header class="lucd20-feature-header">
+            {{#if canToggle}}
+            <label class="lucd20-switch" data-tooltip="{{@root.labels.enable}}">
+              <input type="checkbox" name="{{enabledName}}" data-feature-toggle {{#if enabled}}checked{{/if}}>
+              <span class="lucd20-switch-slider"></span>
+            </label>
+            {{/if}}
+            <h3 class="lucd20-feature-name">{{name}}</h3>
+            {{#each systemTags}}<span class="lucd20-tag system">{{this}}</span>{{/each}}
+            {{#if planned}}<span class="lucd20-tag planned">{{plannedLabel}}</span>{{/if}}
+            {{#if isClient}}<i class="lucd20-badge fa-solid fa-user" data-tooltip="{{@root.labels.scopeClient}}"></i>{{/if}}
+            {{#if canReset}}
+            <button type="button" class="lucd20-feature-reset icon" data-action="resetFeature" data-feature="{{id}}" data-tooltip="{{@root.labels.reset}}">
+              <i class="fa-solid fa-arrow-rotate-left"></i>
+            </button>
+            {{/if}}
+          </header>
+          {{#if hint}}<p class="lucd20-feature-hint">{{hint}}</p>{{/if}}
+
+          {{#if hasSettings}}
+          <div class="lucd20-feature-options" {{#if canToggle}}data-depends-on="{{enabledName}}"{{/if}}>
+            {{#each groups}}
+            <div class="lucd20-setting-group">
+            {{#if label}}<h4 class="lucd20-group-label">{{label}}</h4>{{/if}}
+            {{#each settings}}
+            <div class="lucd20-setting form-group" data-search-text="{{searchText}}" {{#if dependsOn}}data-depends-on="{{dependsOn}}"{{/if}}>
+              <label for="lucd20-{{name}}">
+                {{label}}
+                {{#if isClient}}<i class="lucd20-badge fa-solid fa-user" data-tooltip="{{@root.labels.scopeClient}}"></i>
+                {{else}}<i class="lucd20-badge fa-solid fa-earth-americas" data-tooltip="{{@root.labels.scopeWorld}}"></i>{{/if}}
+                {{#if requiresReload}}<i class="lucd20-badge fa-solid fa-rotate" data-tooltip="{{@root.labels.reload}}"></i>{{/if}}
+              </label>
+              <div class="form-fields">
+                {{#if isBoolean}}<input type="checkbox" id="lucd20-{{name}}" name="{{name}}" {{#if value}}checked{{/if}}>{{/if}}
+                {{#if isNumber}}<input type="number" id="lucd20-{{name}}" name="{{name}}" value="{{value}}" min="{{min}}" max="{{max}}" step="{{step}}">{{/if}}
+                {{#if isRange}}<range-picker id="lucd20-{{name}}" name="{{name}}" value="{{value}}" min="{{min}}" max="{{max}}" step="{{step}}"></range-picker>{{/if}}
+                {{#if isString}}<input type="text" id="lucd20-{{name}}" name="{{name}}" value="{{value}}">{{/if}}
+                {{#if isSelect}}
+                <select id="lucd20-{{name}}" name="{{name}}">
+                  {{#each options}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+                </select>
+                {{/if}}
+                {{#if isColor}}<color-picker id="lucd20-{{name}}" name="{{name}}" value="{{value}}"></color-picker>{{/if}}
+                {{#if isFile}}<file-picker id="lucd20-{{name}}" name="{{name}}" type="{{fileType}}" value="{{value}}"></file-picker>{{/if}}
+              </div>
+              {{#if hint}}<p class="hint">{{hint}}</p>{{/if}}
+            </div>
+            {{/each}}
+            </div>
+            {{/each}}
+          </div>
+          {{/if}}
+        </article>
+        {{/each}}
+      </div>
+      {{/each}}
+
+      <p class="lucd20-hub-no-results hidden">{{labels.noResults}}</p>
+    </section>
+  </div>
+
+  <footer class="lucd20-hub-legend">
+    {{#if isGM}}<span><i class="fa-solid fa-earth-americas"></i> {{labels.legendWorld}}</span>{{/if}}
+    <span><i class="fa-solid fa-user"></i> {{labels.legendClient}}</span>
+    <span><i class="fa-solid fa-rotate"></i> {{labels.legendReload}}</span>
+  </footer>
+</div>

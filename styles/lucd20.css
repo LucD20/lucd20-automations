@@ -1,0 +1,318 @@
+/* ------------------------------------------------------------------ */
+/*  LucD20 Automations — settings window                              */
+/*  Colors use translucent greys so they work in light and dark mode. */
+/* ------------------------------------------------------------------ */
+
+.lucd20-hub {
+  --lucd20-accent: var(--color-warm-2, #c9593f);
+  --lucd20-border: rgba(127, 127, 127, 0.35);
+  --lucd20-surface: rgba(127, 127, 127, 0.08);
+  --lucd20-surface-strong: rgba(127, 127, 127, 0.16);
+  --lucd20-muted: rgba(127, 127, 127, 0.95);
+}
+
+.lucd20-hub .window-content {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+.lucd20-hub .lucd20-hub-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.lucd20-hub .lucd20-hub-layout {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Sidebar -------------------------------------------------------------- */
+
+.lucd20-hub .lucd20-hub-nav {
+  flex: 0 0 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 8px;
+  border-right: 1px solid var(--lucd20-border);
+  overflow-y: auto;
+}
+
+.lucd20-hub .lucd20-hub-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding: 0 8px;
+  border: 1px solid var(--lucd20-border);
+  border-radius: 6px;
+  background: var(--lucd20-surface);
+}
+
+.lucd20-hub .lucd20-hub-search input {
+  flex: 1;
+  min-width: 0;
+  height: 30px;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  outline: none;
+}
+
+.lucd20-hub .lucd20-hub-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  box-shadow: none;
+  text-align: left;
+  font-size: var(--font-size-14, 14px);
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.lucd20-hub .lucd20-hub-tab:hover {
+  background: var(--lucd20-surface);
+}
+
+.lucd20-hub .lucd20-hub-tab.active {
+  background: var(--lucd20-surface-strong);
+  border-color: var(--lucd20-border);
+  font-weight: bold;
+}
+
+.lucd20-hub.searching .lucd20-hub-tab.active {
+  background: transparent;
+  border-color: transparent;
+  font-weight: normal;
+}
+
+.lucd20-hub .lucd20-hub-tab .label {
+  flex: 1;
+}
+
+.lucd20-hub .lucd20-hub-tab .count {
+  font-size: var(--font-size-11, 11px);
+  opacity: 0.7;
+}
+
+/* Content -------------------------------------------------------------- */
+
+.lucd20-hub .lucd20-hub-content {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 16px 16px;
+  overflow-y: auto;
+}
+
+.lucd20-hub .lucd20-hub-category {
+  display: none;
+}
+
+.lucd20-hub .lucd20-hub-category.active,
+.lucd20-hub.searching .lucd20-hub-category.search-match {
+  display: block;
+}
+
+.lucd20-hub.searching .lucd20-hub-category:not(.search-match) {
+  display: none;
+}
+
+.lucd20-hub.searching .lucd20-hub-category + .lucd20-hub-category {
+  margin-top: 16px;
+}
+
+.lucd20-hub .lucd20-hub-category-header {
+  margin-bottom: 10px;
+}
+
+.lucd20-hub .lucd20-hub-category-header h2 {
+  margin: 0 0 2px;
+  border: none;
+  font-size: var(--font-size-20, 20px);
+}
+
+.lucd20-hub .lucd20-hub-category-header p,
+.lucd20-hub .lucd20-hub-empty,
+.lucd20-hub .lucd20-hub-no-results {
+  margin: 0;
+  color: var(--lucd20-muted);
+}
+
+.lucd20-hub .hidden,
+.lucd20-hub .search-hidden,
+.lucd20-hub .dependency-hidden {
+  display: none !important;
+}
+
+/* Feature cards -------------------------------------------------------- */
+
+.lucd20-hub .lucd20-feature {
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--lucd20-border);
+  border-radius: 8px;
+  background: var(--lucd20-surface);
+}
+
+.lucd20-hub .lucd20-feature.planned {
+  opacity: 0.55;
+  border-style: dashed;
+  background: transparent;
+}
+
+.lucd20-hub .lucd20-feature-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lucd20-hub .lucd20-feature-name {
+  margin: 0;
+  border: none;
+  font-size: var(--font-size-16, 16px);
+  font-weight: bold;
+}
+
+.lucd20-hub .lucd20-feature-reset {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  margin-left: auto;
+  padding: 0;
+  line-height: 24px;
+}
+
+.lucd20-hub .lucd20-feature-hint {
+  margin: 4px 0 0;
+  color: var(--lucd20-muted);
+  font-size: var(--font-size-13, 13px);
+}
+
+.lucd20-hub .lucd20-feature-options {
+  margin-top: 10px;
+  padding-top: 6px;
+  border-top: 1px solid var(--lucd20-border);
+}
+
+.lucd20-hub .lucd20-group-label {
+  margin: 10px 0 2px;
+  border: none;
+  font-size: var(--font-size-12, 12px);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--lucd20-muted);
+}
+
+.lucd20-hub .lucd20-setting {
+  padding: 4px 0;
+}
+
+.lucd20-hub .lucd20-setting > label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lucd20-hub .lucd20-setting .hint {
+  flex: 0 0 100%;
+  margin: 2px 0 0;
+  color: var(--lucd20-muted);
+  font-size: var(--font-size-12, 12px);
+}
+
+/* Tags & badges -------------------------------------------------------- */
+
+.lucd20-hub .lucd20-tag {
+  padding: 1px 6px;
+  border: 1px solid var(--lucd20-border);
+  border-radius: 999px;
+  font-size: var(--font-size-11, 11px);
+  white-space: nowrap;
+}
+
+.lucd20-hub .lucd20-tag.system {
+  border-color: var(--lucd20-accent);
+  color: var(--lucd20-accent);
+}
+
+.lucd20-hub .lucd20-badge {
+  font-size: var(--font-size-11, 11px);
+  opacity: 0.6;
+}
+
+/* On/off switch -------------------------------------------------------- */
+
+.lucd20-hub .lucd20-switch {
+  position: relative;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.lucd20-hub .lucd20-switch input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  margin: 0;
+  opacity: 0;
+}
+
+.lucd20-hub .lucd20-switch-slider {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: var(--lucd20-surface-strong);
+  border: 1px solid var(--lucd20-border);
+  transition: background 0.15s;
+}
+
+.lucd20-hub .lucd20-switch-slider::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  transition: transform 0.15s;
+}
+
+.lucd20-hub .lucd20-switch input:checked + .lucd20-switch-slider {
+  background: var(--lucd20-accent);
+  border-color: var(--lucd20-accent);
+}
+
+.lucd20-hub .lucd20-switch input:checked + .lucd20-switch-slider::before {
+  transform: translateX(16px);
+}
+
+.lucd20-hub .lucd20-switch input:focus-visible + .lucd20-switch-slider {
+  outline: 2px solid var(--lucd20-accent);
+  outline-offset: 2px;
+}
+
+/* Legend --------------------------------------------------------------- */
+
+.lucd20-hub .lucd20-hub-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 6px 16px;
+  border-top: 1px solid var(--lucd20-border);
+  font-size: var(--font-size-12, 12px);
+  color: var(--lucd20-muted);
+}

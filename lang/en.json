@@ -1,5 +1,144 @@
 {
   "LUCD20": {
-    "Title": "LucD20 Automations"
+    "Title": "LucD20 Automations",
+
+    "Menu": {
+      "Name": "LucD20 Automations",
+      "Label": "Open LucD20 Automations",
+      "Hint": "Every LucD20 feature and its options, organized by category."
+    },
+
+    "Hub": {
+      "Title": "LucD20 Automations",
+      "Search": "Search settings…",
+      "NoResults": "No settings match your search.",
+      "Empty": "Nothing to configure yet.",
+      "Enable": "Turn this feature on or off",
+      "Planned": "Planned · phase {phase}",
+      "Reset": "Reset this feature's options to their defaults",
+      "ResetTitle": "Reset options",
+      "ResetContent": "Reset all options of <strong>{name}</strong> to their defaults? Its on/off switch is not changed.",
+      "ReloadTitle": "Reload required",
+      "ReloadContent": "Some changes only take effect after a reload. Reload now?",
+      "ScopeWorld": "World: set by the GM for everyone",
+      "ScopeClient": "Per player: each user has their own value",
+      "Reload": "Changing this requires a reload",
+      "LegendWorld": "World (GM sets it for everyone)",
+      "LegendClient": "Per player (each user sets their own)",
+      "LegendReload": "Requires reload"
+    },
+
+    "Error": {
+      "FeatureStart": "LucD20 Automations: {name} failed to start. See the console (F12) for details.",
+      "NoGM": "This needs a GM to be connected."
+    },
+
+    "System": {
+      "pf2e": "PF2e",
+      "dnd4e": "D&D 4e",
+      "demonlord": "SotDL"
+    },
+
+    "Category": {
+      "combat": {
+        "Label": "Combat",
+        "Hint": "Turn markers, turn announcements and post-combat loot."
+      },
+      "chat": {
+        "Label": "Chat",
+        "Hint": "Pinned messages and the damage log."
+      },
+      "tokens": {
+        "Label": "Tokens & Placement",
+        "Hint": "Editing several tokens at once and placing actors on the map."
+      },
+      "vision": {
+        "Label": "GM Vision",
+        "Hint": "How the map looks to the GM."
+      },
+      "sheets": {
+        "Label": "Sheets & Windows",
+        "Hint": "Actor sheets and window title bars."
+      },
+      "statistics": {
+        "Label": "Statistics",
+        "Hint": "Dice roll statistics."
+      },
+      "playerSettings": {
+        "Label": "Player Settings",
+        "Hint": "Defaults and locks for players' own settings, for any module."
+      },
+      "exploration": {
+        "Label": "Exploration",
+        "Hint": "PF2e Search automation and hazard detection."
+      }
+    },
+
+    "Feature": {
+      "turnMarker": {
+        "Name": "Turn Marker",
+        "Hint": "A rotating marker under the token whose turn it is. Its size follows the token's size."
+      },
+      "nextTurnMarker": {
+        "Name": "Next-Turn Marker",
+        "Hint": "A marker on the combatant who acts next. Skips defeated combatants and is never shown on tokens players can't see."
+      },
+      "turnAnnouncer": {
+        "Name": "Turn Announcer",
+        "Hint": "A chat card at each turn with the token image, name and player. Hidden combatants are skipped. Players get a heads-up when they're up next."
+      },
+      "lootPile": {
+        "Name": "Loot Pile",
+        "Hint": "After combat, review the dead NPCs' gear and drop it as one loot pile. Players take items or send them to the Party Stash."
+      },
+      "chatPins": {
+        "Name": "Chat Pins",
+        "Hint": "The GM can pin chat messages. Pinned messages survive Clear Chat and are listed in a Pins view."
+      },
+      "damageLog": {
+        "Name": "Damage Log",
+        "Hint": "A separate log of every HP change and its cause. Players only see tokens whose HP bar they can see."
+      },
+      "multiTokenEdit": {
+        "Name": "Multi-Token Edit",
+        "Hint": "Edit several selected tokens at once from the token right-click menu. Only the fields you change are applied."
+      },
+      "folderDrop": {
+        "Name": "Folder Drop",
+        "Hint": "Drop an actor folder (or a PF2e party) on the map and place every actor at once, randomly or one by one."
+      },
+      "gmVision": {
+        "Name": "GM Vision Mode",
+        "Hint": "Selecting a token keeps the whole map visible, with darkness dimmed. Ctrl+G switches to real token vision."
+      },
+      "outOfSightOutlines": {
+        "Name": "Out-of-Sight Outlines",
+        "Hint": "Tokens that no player can see are drawn with a dashed outline."
+      },
+      "cleanTitleBars": {
+        "Name": "Clean Title Bars",
+        "Hint": "Window title-bar buttons become icons with tooltips."
+      },
+      "prototypeTokenButton": {
+        "Name": "Always Show Prototype Token",
+        "Hint": "Adds a Prototype Token button to actor sheet title bars when the system hides it in the ⋮ menu."
+      },
+      "diceStats": {
+        "Name": "Dice Stats",
+        "Hint": "Roll statistics for everyone, all-time and per session. In PF2e also by roll type and degree of success."
+      },
+      "forceSettings": {
+        "Name": "Force Player Settings",
+        "Hint": "Set a default or lock any module's per-player settings for every player."
+      },
+      "searchAutomation": {
+        "Name": "Search Automation",
+        "Hint": "Characters Searching in exploration automatically roll secret Perception checks against hidden things in Search regions."
+      },
+      "hazardDetection": {
+        "Name": "Hazard Detection",
+        "Hint": "Hazards notice Searching characters within a range that walls block, then trigger secret checks."
+      }
+    }
   }
 }

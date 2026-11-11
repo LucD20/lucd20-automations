@@ -78,10 +78,14 @@ Settings lists will be refined while building each feature.
 - A rotating image **under** the token of the active combatant (same canvas
   layer as token art, just below the token, at its elevation).
 - Size follows the token: grid size × max(width, height) × 1.4 × scale (a 2×2
-  token gets a 2×2-sized marker). Optional: also follow the token art scale.
+  token gets a 2×2-sized marker), × the token art scale (on by default).
 - Only shown while combat runs and only on tokens this user can see.
 - Images: Combat Booster's markers (MIT, credited) in `assets/markers/`;
-  default `tolkien_marker.png`.
+  default `blueRunes.webp` (all systems).
+- Defaults: rotation speed 0.5 rotations/second (0–3), scale 0.4 (0–3),
+  follow art scale on.
+- Switching it on turns off Foundry's own turn marker; switching it off turns
+  Foundry's back on (only if we turned it off).
 - Settings: image · color (original/sepia/grayscale/tint) · tint · rotation
   speed · scale · opacity · follow art scale · draw above tokens (fallback).
 
@@ -97,7 +101,8 @@ Settings lists will be refined while building each feature.
 *Replaces Turn Announcer.* ✅ v0.5.0
 - On each turn change, the active GM's client posts a **compact chat card**:
   portrait | "Round X · player" / line / "Name's turn". No message header.
-  The portrait is zoomed by the token's art scale (PF2e Scale 2 looks right).
+  The portrait is zoomed by the token's art scale (PF2e Scale 2 looks right);
+  art above scale 1 spills out of the frame with faded edges.
 - Card content: token image, name, owning player(s), **round number**.
 - **NPC turns are announced** too (option). Hidden and defeated combatants
   are **skipped**. NPC names follow PF2e's name-visibility rule
@@ -147,7 +152,7 @@ Settings lists will be refined while building each feature.
 ### 🗺️ Tokens & Placement
 
 #### Multi-Token Edit
-*Replaces the token part of Multi Token Edit.*
+*Replaces the token part of Multi Token Edit.* ✅ v0.7.0
 - **Tokens only.** With several tokens selected, the right-click menu (token
   HUD) shows a "multiple gears" button.
 - It opens the normal token configuration for one token. On save, **only
@@ -156,17 +161,20 @@ Settings lists will be refined while building each feature.
 - Settings: enable.
 
 #### Folder Drop
-*Replaces DFreds Droppables.*
+*Replaces DFreds Droppables.* ✅ v0.7.0
 - Dropping an actor folder on the map opens a window:
   - **Random**: scatter around the drop point. Never inside walls or on the
     other side of a wall from the drop point; no overlapping tokens.
   - **Select places**: a list of the actors (alphabetical). Click on the map
-    to place the highlighted one; the list moves to the next. Click another
-    actor in the list to place it instead.
+    to place the highlighted one (a see-through preview follows the cursor);
+    the list moves to the next. Click another actor in the list to place it
+    instead. "Random for the rest", right-click or Esc to stop.
   - Option: drop as hidden.
-- PF2e: dropping a Party places its members. Hold **Alt** to drop the Party
-  token itself.
-- Settings: enable · default mode (ask / random / select) · hidden by default.
+- Subfolders: not included unless the option is on.
+- PF2e: dropping a Party places everyone in it. Hold **Alt** to drop the
+  Party token itself.
+- Settings: placement (ask / random / select) · drop as hidden · include
+  subfolders.
 
 ### 👁️ GM Vision
 
@@ -289,7 +297,7 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 | 3 | Clean Title Bars, Always Show Header Buttons | ✅ v0.4.0 |
 | 4 | Chat Pins, Turn Announcer | ✅ v0.5.0 |
 | 5 | Turn Marker, Next-Turn Marker | ✅ v0.6.0 |
-| 6 | Multi-Token Edit, Folder Drop | Token placement reused by Loot Pile |
+| 6 | Multi-Token Edit, Folder Drop | ✅ v0.7.0 |
 | 7 | Damage Log (generic → PF2e) | Sets the generic + system pattern |
 | 8 | Dice Stats (generic → PF2e) | Follows that pattern |
 | 9 | GM Vision | Riskiest canvas work |

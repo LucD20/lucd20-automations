@@ -610,12 +610,24 @@ button.lucd20-lock.mode-lock {
   gap: 8px;
 }
 
+.chat-message.lucd20-turn-message,
+.chat-message.lucd20-turn-message .message-content {
+  overflow: visible;
+}
+
 .lucd20-turn-card .lucd20-turn-portrait {
+  position: relative;
+  z-index: 1;
   flex: 0 0 36px;
   width: 36px;
   height: 36px;
-  overflow: hidden;
-  border-radius: 4px;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.lucd20-turn-card .lucd20-turn-portrait.zoomed img {
+  -webkit-mask-image: radial-gradient(circle at center, #000 42%, transparent 68%);
+  mask-image: radial-gradient(circle at center, #000 42%, transparent 68%);
 }
 
 .lucd20-turn-card .lucd20-turn-portrait img {
@@ -691,4 +703,101 @@ button.lucd20-lock.mode-lock {
 .window-header .lucd20-header-button:focus-visible {
   background: rgba(127, 127, 127, 0.25);
   outline: none;
+}
+
+/* Multi-Token Edit ----------------------------------------------------- */
+
+.lucd20-mte-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 6px 10px;
+  border: 1px solid #d4a017;
+  border-radius: 6px;
+  background: rgba(212, 160, 23, 0.12);
+  font-weight: bold;
+}
+
+.lucd20-mte-changed {
+  border-radius: 4px;
+  box-shadow: inset 3px 0 0 #d4a017;
+  background: rgba(212, 160, 23, 0.08);
+}
+
+/* Folder Drop ---------------------------------------------------------- */
+
+.lucd20-folder-drop .lucd20-radio,
+.lucd20-folder-drop .lucd20-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 6px 0;
+  cursor: pointer;
+}
+
+.lucd20-folder-drop .hint {
+  display: block;
+  font-size: var(--font-size-12, 12px);
+  opacity: 0.75;
+}
+
+.lucd20-placement .window-content {
+  padding: 8px;
+}
+
+.lucd20-placement .hint {
+  margin: 0 0 6px;
+  font-size: var(--font-size-12, 12px);
+  opacity: 0.75;
+}
+
+.lucd20-placement-list {
+  max-height: 360px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.lucd20-placement-entry {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 6px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.lucd20-placement-entry:hover {
+  background: rgba(127, 127, 127, 0.15);
+}
+
+.lucd20-placement-entry.current {
+  border-color: #d4a017;
+  background: rgba(212, 160, 23, 0.15);
+  font-weight: bold;
+}
+
+.lucd20-placement-entry.placed {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.lucd20-placement-entry img {
+  width: 28px;
+  height: 28px;
+  border: none;
+  object-fit: contain;
+}
+
+.lucd20-placement-entry .name {
+  flex: 1;
+}
+
+.lucd20-placement-footer {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
 }

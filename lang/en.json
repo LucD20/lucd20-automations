@@ -71,7 +71,7 @@
     "Feature": {
       "turnMarker": {
         "Name": "Turn Marker",
-        "Hint": "A rotating marker under the token whose turn it is. Its size follows the token's size. Only shown on tokens you can see.",
+        "Hint": "A rotating marker under the token whose turn it is. Its size follows the token's size. Only shown on tokens you can see. Switching it on turns off Foundry's own turn marker (and back on when switched off).",
         "Setting": {
           "image": {
             "Name": "Image",
@@ -84,18 +84,19 @@
             "Name": "Tint color"
           },
           "speed": {
-            "Name": "Rotation speed"
+            "Name": "Rotation speed",
+            "Hint": "Rotations per second."
           },
           "scale": {
             "Name": "Scale",
-            "Hint": "1 = a bit larger than the token. A 2×2 token gets a 2×2-sized marker."
+            "Hint": "Size relative to the token. A 2×2 token gets a 2×2-sized marker."
           },
           "opacity": {
             "Name": "Opacity"
           },
           "followArtScale": {
             "Name": "Follow token art scale",
-            "Hint": "Also grow with the token's art scale (e.g. PF2e Scale 2). Off: only the token's size in squares counts."
+            "Hint": "Also grow with the token's art scale (e.g. PF2e Scale 2)."
           },
           "above": {
             "Name": "Draw above tokens",
@@ -118,18 +119,19 @@
             "Name": "Tint color"
           },
           "speed": {
-            "Name": "Rotation speed"
+            "Name": "Rotation speed",
+            "Hint": "Rotations per second."
           },
           "scale": {
             "Name": "Scale",
-            "Hint": "1 = a bit larger than the token. A 2×2 token gets a 2×2-sized marker."
+            "Hint": "Size relative to the token. A 2×2 token gets a 2×2-sized marker."
           },
           "opacity": {
             "Name": "Opacity"
           },
           "followArtScale": {
             "Name": "Follow token art scale",
-            "Hint": "Also grow with the token's art scale (e.g. PF2e Scale 2). Off: only the token's size in squares counts."
+            "Hint": "Also grow with the token's art scale (e.g. PF2e Scale 2)."
           },
           "above": {
             "Name": "Draw above tokens",
@@ -180,11 +182,24 @@
       },
       "multiTokenEdit": {
         "Name": "Multi-Token Edit",
-        "Hint": "Edit several selected tokens at once from the token right-click menu. Only the fields you change are applied."
+        "Hint": "With several tokens selected, right-click one and use the gears button: its Token Configuration opens, and the fields you change are applied to every selected token."
       },
       "folderDrop": {
         "Name": "Folder Drop",
-        "Hint": "Drop an actor folder (or a PF2e party) on the map and place every actor at once, randomly or one by one."
+        "Hint": "Drop an actor folder (or a PF2e party; hold Alt for the party token) on the map to place every actor at once, randomly or one by one.",
+        "Setting": {
+          "placement": {
+            "Name": "Placement",
+            "Hint": "Ask shows a window on every drop."
+          },
+          "hidden": {
+            "Name": "Drop as hidden",
+            "Hint": "Default for the window's checkbox (or always, when not asking)."
+          },
+          "includeSubfolders": {
+            "Name": "Include subfolders"
+          }
+        }
       },
       "gmVision": {
         "Name": "GM Vision Mode",
@@ -311,6 +326,36 @@
         "grayscale": "Grayscale",
         "tint": "Tint"
       }
+    },
+    "MultiTokenEdit": {
+      "Button": "Edit all {count} selected tokens",
+      "Banner": "Editing {count} tokens: the fields you change are applied to all of them.",
+      "Applied": "Updated {count} tokens."
+    },
+    "FolderDrop": {
+      "Empty": "That folder has no actors.",
+      "DialogTitle": "Place {count} actors",
+      "Place": "Place",
+      "Cancel": "Cancel",
+      "Hidden": "Drop as hidden",
+      "NoRoom": "No free space for {count} actor(s).",
+      "Placement": {
+        "ask": "Ask every time"
+      },
+      "Mode": {
+        "random": {
+          "Label": "Random",
+          "Hint": "Scattered around where you dropped, never inside walls."
+        },
+        "select": {
+          "Label": "Select places",
+          "Hint": "Click on the map to place each actor in turn."
+        }
+      },
+      "PanelTitle": "Place actors",
+      "PanelHint": "Click the map to place the highlighted actor. Click a name to place it instead. Right-click or Esc to stop.",
+      "RandomRest": "Random for the rest",
+      "Done": "Done"
     }
   }
 }

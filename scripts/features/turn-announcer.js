@@ -57,6 +57,14 @@ function cardPortrait(combatant) {
   return { src, zoom: Math.min(Math.max(zoom, 0.5), 3) };
 }
 
+function portraitHTML(portrait) {
+  // Art scaled above 1 spills out of the frame with faded edges, like on the map.
+  const zoomed = portrait.zoom > 1.05;
+  return `<div class="lucd20-turn-portrait${zoomed ? " zoomed" : ""}">
+        <img src="${esc(portrait.src)}" alt="" style="transform: scale(${portrait.zoom})">
+      </div>`;
+}
+
 function turnKey(combat) {
   return `${combat.id}|${combat.round}|${combat.combatant?.id}`;
 }
@@ -86,9 +94,7 @@ async function announce(feature, combat) {
   // Compact card: portrait | Round · player / ───── / "Name's turn"
   const content = `
     <div class="lucd20-turn-card">
-      <div class="lucd20-turn-portrait">
-        <img src="${esc(portrait.src)}" alt="" style="transform: scale(${portrait.zoom})">
-      </div>
+      ${portraitHTML(portrait)}
       <div class="lucd20-turn-text">
         ${top ? `<div class="lucd20-turn-top">${top}</div><hr class="lucd20-turn-rule">` : ""}
         <div class="lucd20-turn-name">${esc(localize("LUCD20.TurnAnnouncer.Turn", { name }))}</div>

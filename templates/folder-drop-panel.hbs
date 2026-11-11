@@ -1,0 +1,18 @@
+<div class="lucd20-placement-body">
+  <p class="hint">{{hint}}</p>
+  <ol class="lucd20-placement-list">
+    {{#each entries}}
+    <li class="lucd20-placement-entry {{#if current}}current{{/if}} {{#if placed}}placed{{/if}}"
+        {{#unless placed}}data-action="pick"{{/unless}} data-index="{{index}}">
+      <img src="{{img}}" alt="">
+      <span class="name">{{name}}</span>
+      {{#if placed}}<i class="fa-solid fa-check"></i>{{/if}}
+      {{#if current}}<i class="fa-solid fa-location-dot"></i>{{/if}}
+    </li>
+    {{/each}}
+  </ol>
+  <footer class="lucd20-placement-footer">
+    <button type="button" data-action="randomRest"><i class="fa-solid fa-shuffle"></i> {{labels.randomRest}}</button>
+    <button type="button" data-action="done"><i class="fa-solid fa-check"></i> {{labels.done}}</button>
+  </footer>
+</div>

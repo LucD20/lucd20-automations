@@ -31,10 +31,10 @@ function markerSettings({ image, color, tint, opacity }) {
     image: { kind: "file", fileType: "imagevideo", default: image },
     color: { kind: "select", default: color, choices: COLOR_CHOICES },
     tint: { kind: "color", default: tint, dependsOn: "color", dependsValue: "tint" },
-    speed: { kind: "range", min: 0, max: 20, step: 1, default: 10 },
-    scale: { kind: "range", min: 0.1, max: 4, step: 0.1, default: 1 },
+    speed: { kind: "range", min: 0, max: 3, step: 0.1, default: 0.5 },
+    scale: { kind: "range", min: 0, max: 3, step: 0.1, default: 0.4 },
     opacity: { kind: "range", min: 0.05, max: 1, step: 0.05, default: opacity },
-    followArtScale: { kind: "boolean", default: false },
+    followArtScale: { kind: "boolean", default: true },
     above: { kind: "boolean", default: false }
   };
 }
@@ -83,8 +83,9 @@ class MarkerRenderer {
     this.opts = {
       color: f.get("color"),
       tint: f.get("tint"),
-      speed: f.get("speed"),
-      scale: f.get("scale"),
+      // Clamp: older versions stored values on a 0–20 / 0–4 scale.
+      speed: Math.min(Math.max(f.get("speed"), 0), 3),
+      scale: Math.min(Math.max(f.get("scale"), 0), 3),
       opacity: f.get("opacity"),
       followArtScale: f.get("followArtScale"),
       above: f.get("above")
@@ -211,9 +212,48 @@ class MarkerRenderer {
     if (sprite.width !== size) sprite.width = size;
     if (sprite.height !== size) sprite.height = size;
 
-    sprite.rotation += 0.01 * opts.speed * (delta ?? 1);
+    // speed = rotations per second; PIXI's delta is in 60 fps frames.
+    sprite.rotation += opts.speed * Math.PI * 2 * ((delta ?? 1) / 60);
     sprite.alpha = opts.opacity;
     sprite.visible = true;
+  }
+}
+
+/* -------------------------------------------- */
+/*  Foundry's own turn marker                   */
+/* -------------------------------------------- */
+
+const CORE_DISABLED_KEY = "turnMarker_coreDisabled";
+
+/**
+ * Turning our Turn Marker on switches Foundry's built-in turn marker off;
+ * turning ours off switches Foundry's back on, but only if we were the ones
+ * who switched it off. Done by the active GM (it is a world setting).
+ */
+async function setCoreTurnMarker(enabled) {
+  if (!game.user?.isActiveGM) return;
+  let config;
+  try {
+    config = game.settings.get("core", "combatTrackerConfig");
+  } catch {
+    return;
+  }
+  if (!config?.turnMarker || typeof config.turnMarker.enabled !== "boolean") return;
+  const withMarker = value => {
+    const data = typeof config.toObject === "function" ? config.toObject() : foundry.utils.deepClone(config);
+    data.turnMarker.enabled = value;
+    return data;
+  };
+  try {
+    if (!enabled && config.turnMarker.enabled) {
+      await game.settings.set("core", "combatTrackerConfig", withMarker(false));
+      await game.settings.set(MODULE_ID, CORE_DISABLED_KEY, true);
+    } else if (enabled && game.settings.get(MODULE_ID, CORE_DISABLED_KEY)) {
+      await game.settings.set("core", "combatTrackerConfig", withMarker(true));
+      await game.settings.set(MODULE_ID, CORE_DISABLED_KEY, false);
+    }
+  } catch (err) {
+    error("Could not change Foundry's turn marker setting.", err);
   }
 }
 
@@ -239,10 +279,18 @@ defineFeature({
   category: "combat",
   scope: "world",
   defaultEnabled: false,
-  settings: markerSettings({ image: `${MARKERS}/tolkien_marker.png`, color: "none", tint: "#ffffff", opacity: 1 }),
+  settings: markerSettings({ image: `${MARKERS}/blueRunes.webp`, color: "none", tint: "#ffffff", opacity: 1 }),
+  init() {
+    game.settings.register(MODULE_ID, CORE_DISABLED_KEY, { scope: "world", config: false, type: Boolean, default: false });
+  },
   enable(feature) {
     const renderer = new MarkerRenderer(feature, currentToken, () => feature.get("image"));
     enableMarker(feature, renderer);
+    setCoreTurnMarker(false);
+  },
+  disable(feature) {
+    // Only when actually switched off (not when restarting after an option change).
+    if (!feature.isEnabled) setCoreTurnMarker(true);
   }
 });
 

@@ -8,3 +8,5 @@ import "./header-buttons.js";
 import "./chat-pins.js";
 import "./turn-announcer.js";
 import "./turn-markers.js";
+import "./multi-token-edit.js";
+import "./folder-drop.js";

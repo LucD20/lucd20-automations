@@ -124,32 +124,72 @@ Settings lists will be refined while building each feature.
   "You're up next" (per player).
 
 #### Loot Pile
-*Replaces Combat Booster's "Body pile".* ✅ v0.11.0
-- When combat ends, the active GM gets a **review window** with the gear of
-  every NPC **marked as defeated**: grouped by NPC (**highest level first**,
-  then name; items alphabetical), with checkboxes. Only real gear is listed
+*Replaces Combat Booster's "Body pile".* ✅ v0.11.0 · restyled v0.12.0
+- When combat ends, the active GM gets the **"Loot the fallen"** window with
+  the gear of every NPC **marked as defeated**: grouped by NPC (**highest
+  level first**, then name; items alphabetical). Only real gear is listed
   (PF2e: physical items; NPC strikes, spells, actions, effects ignored).
 - Confirming creates a loot pile at the **centre of the dead NPCs** and moves
   the checked items into it (each remembers its NPC). **NPC tokens stay on the
   map.** Piles go in an Actors folder "Loot Piles".
-- **Double-clicking the pile opens the Loot window for everyone** (GM too):
-  items grouped by NPC, each with **Take** (to "Taking for": the player's
-  character, or any player character for the GM) and **Party Stash**.
-  Stacks ask how many. **Send all to Party Stash** for everyone. The GM also
-  has **Open sheet** (the system's own loot sheet) and **Delete pile**.
-- Visual redesign pending: a mockup is being made from
-  `docs/design/loot-window-mockup-prompt.md` (branch `mockup/loot-window`). Hidden NPC names show as "Unknown creature".
+- **Double-clicking the pile opens the Loot Pile window for everyone** (GM
+  too): items grouped by NPC, each with **Take** and **Party Stash**; **Send
+  all to Party Stash** for everyone; the GM also has **Open sheet** (the
+  system's own loot sheet) and **Delete pile** (with confirmation).
 - Transfers run on the GM's client (players don't own the pile); players can
   only take for characters they own. Same items stack (e.g. coins).
 - Chat line "Alice took Dogslicer for Amiri." (option). Empty piles are
   removed (option).
 - PF2e (`scripts/systems/pf2e/loot-pile.js`): native `loot` actor; Party
   Stash = the active party's inventory.
-- Other systems (decided v0.11.0): the pile and a module "Party Stash" are
-  actors of an existing type (`loot`, else `npc`) flagged by the module; the
-  stash is created on first use.
+- Other systems: the pile and a module "Party Stash" are actors of an
+  existing type (`loot`, else `npc`) flagged by the module; the stash is
+  created on first use.
 - Settings: pile name · pile image · include coins · remove when empty ·
   announce in chat.
+
+**Look (v0.12.0)**, ported from the approved mockup on branch
+`mockup/loot-window` (`docs/mockups/`, not merged). Class names
+`lucd20-loot-*` / `ll-*` and the `--ll-*` color tokens come from it; all
+three windows carry the token root class `lucd20-loot-app`. Styles are in the
+"Loot Pile" section of `styles/lucd20.css`.
+- **Loot Pile window** (420×560, resizable, works 360–600px wide, scrolls):
+  "Taking for" bar · sticky NPC headers (round portrait, name, level) · item
+  rows (icon, name, quantity pill, accent-outlined **Take**, neutral **Party
+  Stash**) · footer (**Send all to Party Stash**; GM: **Open sheet**, **Delete
+  pile** styled destructive) · empty state ("The pile is empty." /
+  "Everything has been taken or stashed.", Send all disabled).
+- Container queries: under 400px "Party Stash" reads "Stash" (full text in
+  the tooltip and aria-label); from 540px the GM footer is one row.
+- **"How many?"** for stacks: item icon and name, "N in the pile · taking for
+  X", −/+ steppers around the number, "of N"; **defaults to the whole stack**;
+  the primary button reads "Take {n}".
+- **"Loot the fallen"**: hint bar, groups with item checkboxes, a **select
+  all / none** checkbox in each NPC header (tri-state) with an "x of y" count,
+  "n of total items selected", **Create loot pile** (primary) and **Skip**.
+  Unchecked rows are struck through and dimmed; Create is disabled when
+  nothing is selected.
+
+Decisions:
+- Player with **one character**: "Taking for" is a static chip with portrait.
+  Several characters, or the GM: a dropdown (Foundry's own select).
+- Player with **no character**: a hint replaces the "Taking for" bar, and
+  Take is **disabled with a tooltip**, not hidden.
+- An NPC whose name is hidden from players shows **"Unknown creature" and a
+  neutral placeholder portrait** (`icons/svg/mystery-man.svg`). Decided on the
+  GM side when the pile is made: those items store no NPC name or art, so they
+  never reach a player's client; the GM's window looks the real name and
+  portrait up from the token/actor.
+- Checkboxes in "Loot the fallen" are drawn by the module (`ll-check`):
+  Foundry's own checkbox has no confirmed "some selected" look for the
+  select all / none toggle.
+- Colors are the mockup's hex values. Foundry V14's CSS variable names could
+  not be confirmed from its source in this environment, so none are used;
+  swap tokens for theme variables once confirmed. Dark only.
+- Icons are Font Awesome Free (the mockup's `fa-sack` / `fa-treasure-chest`
+  suggestions are Pro-only): window `fa-sack-dollar`, Take `fa-download`,
+  Party Stash `fa-box-archive`, Open sheet `fa-arrow-up-right-from-square`,
+  Delete `fa-trash`, review `fa-skull`, hint `fa-circle-info`.
 
 ### 💬 Chat
 

@@ -489,7 +489,7 @@
     "LootPile": {
       "ReviewTitle": "Loot the fallen",
       "ReviewHint": "Uncheck anything that shouldn't be in the pile. Checked items are moved off the NPCs.",
-      "Level": "level {level}",
+      "Level": "Level {level}",
       "Create": "Create loot pile",
       "Skip": "Skip",
       "Failed": "Could not create the loot pile. See the console (F12).",
@@ -499,10 +499,10 @@
       "Stash": "Party Stash",
       "Unknown": "Unknown",
       "TakingFor": "Taking for",
-      "NoCharacter": "You don't own a character to take items with; you can still send items to the Party Stash.",
+      "NoCharacter": "You have no character, so you can't take items yourself. You can still send them to the Party Stash.",
       "Take": "Take",
-      "TakeHint": "Move to the character above",
-      "StashHint": "Send to the Party Stash",
+      "TakeHint": "Take for the character above",
+      "StashHint": "Send to Party Stash",
       "Empty": "The pile is empty.",
       "OpenSheet": "Open sheet",
       "Delete": "Delete pile",
@@ -513,7 +513,23 @@
       "Disabled": "The Loot Pile feature is switched off.",
       "StashAll": "Send all to Party Stash",
       "StashAllContent": "Send all {count} item(s) in this pile to the Party Stash?",
-      "AnnounceStashAll": "{user} sent everything ({count} items) to {actor}."
+      "AnnounceStashAll": "{user} sent everything ({count} items) to {actor}.",
+      "TakeDisabled": "You need a character to take items",
+      "StashPrefix": "Party ",
+      "StashShort": "Stash",
+      "EmptySub": "Everything has been taken or stashed.",
+      "Quantity": "Quantity: {count}",
+      "InPile": "{count} in the pile",
+      "TakingForName": "taking for {name}",
+      "OfMax": "of {max}",
+      "TakeN": "Take {count}",
+      "OneFewer": "One fewer",
+      "OneMore": "One more",
+      "Cancel": "Cancel",
+      "SelectAll": "Select all / none",
+      "SelectAllFrom": "Select all or none from {name}",
+      "GroupCount": "{count} of {total}",
+      "Selected": "{count} of {total} items selected"
     }
   }
 }

@@ -89,6 +89,7 @@ function lootGroups(combat) {
     groups.push({
       actor,
       token,
+      tokenUuid: token?.uuid ?? null,
       name: token?.name ?? actor.name,
       nameHidden: token?.playersCanSeeName === false,
       level: a.level(actor),
@@ -103,38 +104,7 @@ async function reviewLoot(combat) {
   const groups = lootGroups(combat);
   if (!groups.length) return;
 
-  const qty = item => (typeof item.system?.quantity === "number" && item.system.quantity !== 1 ? ` ×${item.system.quantity}` : "");
-  const content = `
-    <div class="lucd20-loot-review">
-      <p class="hint">${localize("LUCD20.LootPile.ReviewHint")}</p>
-      ${groups.map((g, gi) => `
-        <section class="lucd20-loot-group">
-          <h4><img src="${esc(g.img)}" alt=""> ${esc(g.name)} <span class="hint">${localize("LUCD20.LootPile.Level", { level: g.level })}</span></h4>
-          ${g.items.map(item => `
-            <label class="lucd20-loot-check">
-              <input type="checkbox" name="${gi}:${item.id}" checked>
-              <img src="${esc(item.img)}" alt=""> <span>${esc(item.name)}${qty(item)}</span>
-            </label>`).join("")}
-        </section>`).join("")}
-    </div>`;
-
-  const selected = await DialogV2.wait({
-    window: { title: localize("LUCD20.LootPile.ReviewTitle"), icon: "fa-solid fa-sack" },
-    classes: ["lucd20-loot-review-dialog"],
-    position: { width: 420 },
-    content,
-    buttons: [
-      {
-        action: "create",
-        label: localize("LUCD20.LootPile.Create"),
-        icon: "fa-solid fa-check",
-        default: true,
-        callback: (event, button) => [...button.form.elements].filter(el => el.type === "checkbox" && el.checked).map(el => el.name)
-      },
-      { action: "skip", label: localize("LUCD20.LootPile.Skip"), icon: "fa-solid fa-xmark", callback: () => null }
-    ],
-    rejectClose: false
-  });
+  const selected = await LootReviewWindow.wait(groups);
   if (!Array.isArray(selected) || !selected.length) return;
 
   const chosen = groups.map((g, gi) => ({ ...g, items: g.items.filter(item => selected.includes(`${gi}:${item.id}`)) }))
@@ -173,9 +143,12 @@ async function createPile(groups, scene) {
       const data = item.toObject();
       delete data._id;
       if (data.system && "containerId" in data.system) data.system.containerId = null;
-      foundry.utils.setProperty(data, `flags.${MODULE_ID}.source`, {
-        name: g.name, nameHidden: g.nameHidden, level: g.level, img: g.img, actorUuid: g.actor.uuid
-      });
+      // Hidden names are decided here, on the GM's side: the item then carries
+      // no name or art, so they never reach a player's client.
+      const source = { level: g.level, actorUuid: g.actor.uuid, tokenUuid: g.tokenUuid };
+      if (g.nameHidden) source.hidden = true;
+      else Object.assign(source, { name: g.name, img: g.img });
+      foundry.utils.setProperty(data, `flags.${MODULE_ID}.source`, source);
       items.push(data);
     }
   }
@@ -240,7 +213,7 @@ async function stashAll({ pileUuid }, senderId) {
   if (announce) {
     const stash = await stashActor(true);
     await ChatMessage.create({
-      content: `<p class="lucd20-loot-announce"><i class="fa-solid fa-sack"></i> ${localize("LUCD20.LootPile.AnnounceStashAll", {
+      content: `<p class="lucd20-loot-announce"><i class="fa-solid fa-sack-dollar"></i> ${localize("LUCD20.LootPile.AnnounceStashAll", {
         user: esc(sender.name), count: items.length, actor: esc(stash?.name ?? "")
       })}</p>`,
       speaker: { alias: pile.name }
@@ -281,7 +254,7 @@ async function transfer({ pileUuid, itemId, target, quantity }, senderId, { quie
   if (state.feature?.get("announce") && !quiet) {
     const key = target === "stash" ? "LUCD20.LootPile.AnnounceStash" : "LUCD20.LootPile.AnnounceTake";
     await ChatMessage.create({
-      content: `<p class="lucd20-loot-announce"><i class="fa-solid fa-sack"></i> ${localize(key, {
+      content: `<p class="lucd20-loot-announce"><i class="fa-solid fa-sack-dollar"></i> ${localize(key, {
         user: esc(sender.name), item: esc(item.name), count: hasQty && n > 1 ? `${n}× ` : "", actor: esc(destination.name)
       })}</p>`,
       speaker: { alias: pile.name }
@@ -293,8 +266,22 @@ async function transfer({ pileUuid, itemId, target, quantity }, senderId, { quie
 }
 
 /* -------------------------------------------- */
-/*  Loot window                                 */
+/*  Loot windows                                */
 /* -------------------------------------------- */
+/*
+ * Look: docs/PLAN.md "Loot Pile" (ported from the approved mockup on branch
+ * mockup/loot-window). Class names lucd20-loot-* / ll-* and the --ll-* tokens
+ * in styles/lucd20.css come from that mockup. All three windows carry the
+ * token root class "lucd20-loot-app".
+ */
+
+const PLACEHOLDER_PORTRAIT = "icons/svg/mystery-man.svg";
+const icon = name => `<i class="ll-i fa-solid ${name}" aria-hidden="true"></i>`;
+const hasQuantity = item => typeof item.system?.quantity === "number";
+const qtyPill = item => (hasQuantity(item) && item.system.quantity !== 1
+  ? `<span class="qty" data-tooltip="${esc(localize("LUCD20.LootPile.Quantity", { count: item.system.quantity }))}">×${item.system.quantity}</span>`
+  : "");
+const unknownName = () => localize("LUCD20.TurnAnnouncer.Unknown");
 
 /** Characters this user can take items for. */
 function takers() {
@@ -305,10 +292,50 @@ function takers() {
   return mine ? [mine, ...owned.filter(a => a !== mine)] : owned;
 }
 
+function tokenImage(token, actor) {
+  const src = token?.texture?.src;
+  return src && !/\.(webm|mp4|m4v|ogv)$/i.test(src) ? src : actor?.img ?? PLACEHOLDER_PORTRAIT;
+}
+
+/**
+ * Name and portrait of the NPC an item came from. Hidden names were decided on
+ * the GM's side when the pile was made: the item then stores no name or art at
+ * all, so players get "Unknown creature" and a neutral portrait, and only the
+ * GM looks the real ones up from the token/actor.
+ */
+function sourceDisplay(source) {
+  const hidden = !!(source.hidden || source.nameHidden);
+  if (hidden && !game.user.isGM) return { name: unknownName(), img: PLACEHOLDER_PORTRAIT, unknown: true };
+  if (hidden) {
+    const token = source.tokenUuid ? fromUuidSync(source.tokenUuid) : null;
+    const actor = source.actorUuid ? fromUuidSync(source.actorUuid) : null;
+    return { name: source.name ?? token?.name ?? actor?.name ?? unknownName(), img: source.img ?? tokenImage(token, actor) };
+  }
+  return { name: source.name ?? unknownName(), img: source.img ?? PLACEHOLDER_PORTRAIT };
+}
+
+function portraitHTML(img, extra = "") {
+  return `<span class="lucd20-loot-portrait ${extra}"><img src="${esc(img)}" alt=""></span>`;
+}
+
+function itemIconHTML(item, extra = "") {
+  return `<span class="lucd20-loot-icon ${extra}"><img src="${esc(item.img)}" alt=""></span>`;
+}
+
+function groupHeaderHTML({ name, img, level }, before = "", after = "") {
+  return `<header class="lucd20-loot-group-header">
+      ${before}${portraitHTML(img)}
+      <span class="who"><span class="npc">${esc(name)}</span><span class="level">${localize("LUCD20.LootPile.Level", { level })}</span></span>
+      ${after}
+    </header>`;
+}
+
+/* --- Loot Pile window ------------------------------------------------ */
+
 class LootPileWindow extends ApplicationV2 {
   static DEFAULT_OPTIONS = {
-    classes: ["lucd20-loot-window"],
-    window: { icon: "fa-solid fa-sack", resizable: true },
+    classes: ["lucd20-loot-app", "lucd20-loot-window"],
+    window: { icon: "fa-solid fa-sack-dollar", resizable: true },
     position: { width: 420, height: 560 },
     actions: {
       take: LootPileWindow.#onTake,
@@ -335,49 +362,77 @@ class LootPileWindow extends ApplicationV2 {
     return this.pile?.name ?? localize("LUCD20.LootPile.DefaultName");
   }
 
+  #takerHTML(options) {
+    const label = localize("LUCD20.LootPile.TakingFor");
+    if (!options.length) {
+      return `<p class="lucd20-loot-taker lucd20-loot-hint">${icon("fa-circle-info")}<span>${localize("LUCD20.LootPile.NoCharacter")}</span></p>`;
+    }
+    // One character (players): a static chip. Several, or the GM: a dropdown.
+    if (options.length === 1 && !game.user.isGM) {
+      const actor = options[0];
+      return `<div class="lucd20-loot-taker">
+          <span class="label">${label}</span>
+          <span class="lucd20-loot-taker-chip">${portraitHTML(tokenImage(actor.prototypeToken, actor), "small")}<strong>${esc(actor.name)}</strong></span>
+        </div>`;
+    }
+    return `<div class="lucd20-loot-taker">
+        <label for="${this.id}-taker">${label}</label>
+        <select id="${this.id}-taker" data-taker>${options.map(a =>
+          `<option value="${esc(a.uuid)}" ${a.uuid === this.taker ? "selected" : ""}>${esc(a.name)}</option>`).join("")}</select>
+      </div>`;
+  }
+
   async _renderHTML() {
     const pile = this.pile;
     const gm = game.user.isGM;
     const groups = new Map();
     for (const item of pile.items) {
-      const source = item.getFlag(MODULE_ID, "source") ?? { name: localize("LUCD20.LootPile.Unknown"), level: 0 };
-      const key = `${source.level}|${source.name}|${source.actorUuid ?? ""}`;
-      if (!groups.has(key)) groups.set(key, { ...source, items: [] });
+      const source = item.getFlag(MODULE_ID, "source") ?? { level: 0 };
+      const key = source.actorUuid ?? `${source.level}|${source.name}`;
+      if (!groups.has(key)) groups.set(key, { ...sourceDisplay(source), level: source.level ?? 0, items: [] });
       groups.get(key).items.push(item);
     }
     const sorted = [...groups.values()].sort((a, b) => (b.level - a.level) || a.name.localeCompare(b.name));
     const options = takers();
     if (!options.some(a => a.uuid === this.taker)) this.taker = options[0]?.uuid ?? null;
 
-    const picker = options.length
-      ? `<label class="lucd20-loot-taker">${localize("LUCD20.LootPile.TakingFor")}
-          <select data-taker>${options.map(a => `<option value="${esc(a.uuid)}" ${a.uuid === this.taker ? "selected" : ""}>${esc(a.name)}</option>`).join("")}</select>
-        </label>`
-      : `<p class="hint">${localize("LUCD20.LootPile.NoCharacter")}</p>`;
+    const stashLabel = localize("LUCD20.LootPile.StashHint");
+    const takeDisabled = this.taker ? "" : `disabled data-tooltip="${esc(localize("LUCD20.LootPile.TakeDisabled"))}"`;
+    const row = item => `
+      <li class="lucd20-loot-item" data-item-id="${item.id}">
+        ${itemIconHTML(item)}
+        <span class="name">${esc(item.name)}</span>
+        ${qtyPill(item)}
+        <span class="actions">
+          <button type="button" class="ll-btn ll-btn-take" data-action="take" ${takeDisabled || `data-tooltip="${esc(localize("LUCD20.LootPile.TakeHint"))}"`}>
+            ${icon("fa-download")}<span>${localize("LUCD20.LootPile.Take")}</span></button>
+          <button type="button" class="ll-btn" data-action="stash" aria-label="${esc(stashLabel)}" data-tooltip="${esc(stashLabel)}">
+            ${icon("fa-box-archive")}<span><span class="ll-wide">${localize("LUCD20.LootPile.StashPrefix")}</span>${localize("LUCD20.LootPile.StashShort")}</span></button>
+        </span>
+      </li>`;
 
-    const body = sorted.length
+    const list = sorted.length
       ? sorted.map(g => `
         <section class="lucd20-loot-group">
-          <h3>${g.img ? `<img src="${esc(g.img)}" alt="">` : ""}
-            <span>${esc(!gm && g.nameHidden ? localize("LUCD20.TurnAnnouncer.Unknown") : g.name)}</span>
-            <span class="hint">${localize("LUCD20.LootPile.Level", { level: g.level })}</span></h3>
-          <ol>${g.items.sort((a, b) => a.name.localeCompare(b.name)).map(item => {
-            const q = typeof item.system?.quantity === "number" && item.system.quantity !== 1 ? `<span class="qty">×${item.system.quantity}</span>` : "";
-            return `<li class="lucd20-loot-item" data-item-id="${item.id}">
-              <img src="${esc(item.img)}" alt=""><span class="name">${esc(item.name)} ${q}</span>
-              <button type="button" data-action="take" ${this.taker ? "" : "disabled"} data-tooltip="${localize("LUCD20.LootPile.TakeHint")}"><i class="fa-solid fa-hand"></i> ${localize("LUCD20.LootPile.Take")}</button>
-              <button type="button" data-action="stash" data-tooltip="${localize("LUCD20.LootPile.StashHint")}"><i class="fa-solid fa-box-archive"></i> ${localize("LUCD20.LootPile.Stash")}</button>
-            </li>`;
-          }).join("")}</ol>
+          ${groupHeaderHTML(g)}
+          <ol>${g.items.sort((a, b) => a.name.localeCompare(b.name)).map(row).join("")}</ol>
         </section>`).join("")
-      : `<p class="lucd20-loot-empty">${localize("LUCD20.LootPile.Empty")}</p>`;
+      : `<div class="lucd20-loot-empty">
+          <i class="ll-empty-art fa-solid fa-sack-dollar" aria-hidden="true"></i>
+          <p class="title">${localize("LUCD20.LootPile.Empty")}</p>
+          <p class="sub">${localize("LUCD20.LootPile.EmptySub")}</p>
+        </div>`;
 
-    const footer = `<footer class="lucd20-loot-footer">
-        ${sorted.length ? `<button type="button" data-action="stashAll"><i class="fa-solid fa-box-archive"></i> ${localize("LUCD20.LootPile.StashAll")}</button>` : ""}
-        ${gm ? `<button type="button" data-action="openSheet"><i class="fa-solid fa-file-lines"></i> ${localize("LUCD20.LootPile.OpenSheet")}</button>
-          <button type="button" data-action="deletePile"><i class="fa-solid fa-trash"></i> ${localize("LUCD20.LootPile.Delete")}</button>` : ""}
+    const footer = `
+      <footer class="lucd20-loot-footer ${gm ? "is-gm" : ""}">
+        <button type="button" class="ll-btn ll-btn-footer ll-btn-all" data-action="stashAll" ${sorted.length ? "" : "disabled"}>
+          ${icon("fa-box-archive")}<span>${localize("LUCD20.LootPile.StashAll")}</span></button>
+        ${gm ? `
+        <button type="button" class="ll-btn ll-btn-footer" data-action="openSheet">${icon("fa-arrow-up-right-from-square")}<span>${localize("LUCD20.LootPile.OpenSheet")}</span></button>
+        <button type="button" class="ll-btn ll-btn-footer ll-btn-danger" data-action="deletePile">${icon("fa-trash")}<span>${localize("LUCD20.LootPile.Delete")}</span></button>` : ""}
       </footer>`;
-    return `<div class="lucd20-loot-body">${picker}<div class="lucd20-loot-list">${body}</div>${footer}</div>`;
+
+    return `<div class="lucd20-loot-body">${this.#takerHTML(options)}<div class="lucd20-loot-list">${list}</div>${footer}</div>`;
   }
 
   _replaceHTML(result, content) {
@@ -396,13 +451,8 @@ class LootPileWindow extends ApplicationV2 {
     if (!item) return;
     let quantity = item.system?.quantity;
     if (typeof quantity === "number" && quantity > 1) {
-      quantity = await DialogV2.prompt({
-        window: { title: item.name },
-        content: `<label class="lucd20-loot-qty">${localize("LUCD20.LootPile.HowMany")}
-          <input type="number" name="quantity" min="1" max="${quantity}" value="${quantity}" autofocus></label>`,
-        ok: { label: localize("LUCD20.LootPile.Take"), callback: (event, b) => Number(b.form.elements.quantity.value) },
-        rejectClose: false
-      });
+      const taker = target === "stash" ? null : fromUuidSync(target);
+      quantity = await LootQuantityWindow.wait(item, target === "stash" ? null : taker?.name);
       if (!quantity) return;
     }
     button.disabled = true;
@@ -449,6 +499,230 @@ class LootPileWindow extends ApplicationV2 {
     if (!confirmed) return;
     await deletePile(this.pile);
     this.close();
+  }
+}
+
+/* --- Small window that answers with a value --------------------------- */
+
+/**
+ * An ApplicationV2 that resolves wait() with a value when it is answered or closed.
+ * Documents are handed over with setup() after construction, not through the
+ * options (Foundry copies window options).
+ */
+class AnswerWindow extends ApplicationV2 {
+  static wait(data) {
+    return new Promise(resolve => {
+      const app = new this();
+      app.setup(data);
+      app._resolve = resolve;
+      app.render({ force: true });
+    });
+  }
+
+  setup() {}
+
+  answer(value) {
+    if (this._answered) return;
+    this._answered = true;
+    const resolve = this._resolve;
+    this._resolve = null;
+    resolve?.(value);
+    this.close();
+  }
+
+  async _onClose(options) {
+    await super._onClose?.(options);
+    const resolve = this._resolve;
+    this._resolve = null;
+    resolve?.(null);
+  }
+
+  _replaceHTML(result, content) {
+    content.innerHTML = result;
+  }
+}
+
+/* --- "How many?" ------------------------------------------------------ */
+
+class LootQuantityWindow extends AnswerWindow {
+  static DEFAULT_OPTIONS = {
+    classes: ["lucd20-loot-app", "lucd20-loot-qty-dialog"],
+    window: { title: "LUCD20.LootPile.HowMany", icon: "fa-solid fa-download" },
+    position: { width: 300, height: "auto" },
+    actions: {
+      step: LootQuantityWindow.#onStep,
+      confirm: LootQuantityWindow.#onConfirm,
+      cancel: LootQuantityWindow.#onCancel
+    }
+  };
+
+  /** Resolves with the chosen number (defaults to the whole stack), or null. */
+  static wait(item, takerName) {
+    return super.wait({ item, takerName });
+  }
+
+  setup({ item, takerName }) {
+    this.item = item;
+    this.takerName = takerName;
+    this.max = Number(item.system.quantity) || 1;
+    this.value = this.max;
+  }
+
+  async _renderHTML() {
+    const item = this.item;
+    const sub = [localize("LUCD20.LootPile.InPile", { count: this.max })];
+    if (this.takerName) sub.push(localize("LUCD20.LootPile.TakingForName", { name: esc(this.takerName) }));
+    return `
+      <form class="lucd20-loot-qty" autocomplete="off">
+        <div class="what">
+          ${itemIconHTML(item, "large")}
+          <span><strong>${esc(item.name)}</strong><span class="sub">${sub.join(" · ")}</span></span>
+        </div>
+        <div class="field">
+          <label for="${this.id}-qty">${localize("LUCD20.LootPile.HowMany")}</label>
+          <span class="stepper">
+            <button type="button" class="ll-btn ll-btn-square" data-action="step" data-step="-1" aria-label="${esc(localize("LUCD20.LootPile.OneFewer"))}">${icon("fa-minus")}</button>
+            <input id="${this.id}-qty" type="number" name="quantity" min="1" max="${this.max}" step="1" value="${this.value}" inputmode="numeric">
+            <button type="button" class="ll-btn ll-btn-square" data-action="step" data-step="1" aria-label="${esc(localize("LUCD20.LootPile.OneMore"))}">${icon("fa-plus")}</button>
+          </span>
+          <span class="range">${localize("LUCD20.LootPile.OfMax", { max: this.max })}</span>
+        </div>
+        <footer class="lucd20-loot-footer is-dialog">
+          <button type="submit" class="ll-btn ll-btn-footer ll-btn-primary" data-action="confirm">${icon("fa-download")}<span data-take-label></span></button>
+          <button type="button" class="ll-btn ll-btn-footer" data-action="cancel">${icon("fa-xmark")}<span>${localize("LUCD20.LootPile.Cancel")}</span></button>
+        </footer>
+      </form>`;
+  }
+
+  _onRender(context, options) {
+    super._onRender?.(context, options);
+    const form = this.element.querySelector(".lucd20-loot-qty");
+    const input = form.querySelector("input[name=quantity]");
+    input.addEventListener("change", () => this.#sync(input.value));
+    input.addEventListener("input", () => this.#sync(input.value, false));
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+      this.answer(this.#sync(input.value));
+    });
+    this.#sync(this.value);
+    input.focus();
+    input.select();
+  }
+
+  #sync(raw, writeBack = true) {
+    const value = Math.min(this.max, Math.max(1, Math.round(Number(raw) || 1)));
+    this.value = value;
+    const form = this.element.querySelector(".lucd20-loot-qty");
+    if (writeBack) form.querySelector("input[name=quantity]").value = value;
+    form.querySelector("[data-take-label]").textContent = localize("LUCD20.LootPile.TakeN", { count: value });
+    form.querySelector('[data-step="-1"]').disabled = value <= 1;
+    form.querySelector('[data-step="1"]').disabled = value >= this.max;
+    return value;
+  }
+
+  static #onStep(event, button) {
+    const input = this.element.querySelector("input[name=quantity]");
+    this.#sync(Number(input.value) + Number(button.dataset.step));
+  }
+
+  static #onConfirm(event) {
+    event?.preventDefault?.();
+    this.answer(this.#sync(this.element.querySelector("input[name=quantity]").value));
+  }
+
+  static #onCancel() {
+    this.answer(null);
+  }
+}
+
+/* --- "Loot the fallen" -------------------------------------------------- */
+
+class LootReviewWindow extends AnswerWindow {
+  static DEFAULT_OPTIONS = {
+    classes: ["lucd20-loot-app", "lucd20-loot-review-dialog"],
+    window: { title: "LUCD20.LootPile.ReviewTitle", icon: "fa-solid fa-skull", resizable: true },
+    position: { width: 420, height: 560 },
+    actions: {
+      create: LootReviewWindow.#onCreate,
+      skip: LootReviewWindow.#onSkip
+    }
+  };
+
+  /** Resolves with the checked keys ("groupIndex:itemId"), or null when skipped/closed. */
+  static wait(groups) {
+    return super.wait({ groups });
+  }
+
+  setup({ groups }) {
+    this.groups = groups;
+  }
+
+  async _renderHTML() {
+    const groups = this.groups.map((g, gi) => {
+      const toggle = `<input type="checkbox" class="ll-check" data-group-toggle checked
+        aria-label="${esc(localize("LUCD20.LootPile.SelectAllFrom", { name: g.name }))}" data-tooltip="${esc(localize("LUCD20.LootPile.SelectAll"))}">`;
+      const items = g.items.map(item => `
+        <li><label class="lucd20-loot-check">
+          <input type="checkbox" class="ll-check" data-item name="${gi}:${item.id}" checked>
+          ${itemIconHTML(item)}
+          <span class="name">${esc(item.name)}</span>
+          ${qtyPill(item)}
+        </label></li>`).join("");
+      return `<section class="lucd20-loot-group" data-group>
+          ${groupHeaderHTML(g, toggle, `<span class="count" data-group-count></span>`)}
+          <ol>${items}</ol>
+        </section>`;
+    }).join("");
+    return `
+      <div class="lucd20-loot-body lucd20-loot-review">
+        <p class="lucd20-loot-taker lucd20-loot-hint">${icon("fa-circle-info")}<span>${localize("LUCD20.LootPile.ReviewHint")}</span></p>
+        <div class="lucd20-loot-list">${groups}</div>
+        <footer class="lucd20-loot-footer is-review">
+          <span class="summary" data-summary aria-live="polite"></span>
+          <button type="button" class="ll-btn ll-btn-footer ll-btn-primary" data-action="create">${icon("fa-sack-dollar")}<span>${localize("LUCD20.LootPile.Create")}</span></button>
+          <button type="button" class="ll-btn ll-btn-footer" data-action="skip">${icon("fa-xmark")}<span>${localize("LUCD20.LootPile.Skip")}</span></button>
+        </footer>
+      </div>`;
+  }
+
+  _onRender(context, options) {
+    super._onRender?.(context, options);
+    const root = this.element.querySelector(".lucd20-loot-review");
+    root.addEventListener("change", event => {
+      if (event.target.matches("[data-group-toggle]")) {
+        const group = event.target.closest("[data-group]");
+        for (const item of group.querySelectorAll("[data-item]")) item.checked = event.target.checked;
+      }
+      this.#sync();
+    });
+    this.#sync();
+  }
+
+  #sync() {
+    const root = this.element.querySelector(".lucd20-loot-review");
+    let total = 0;
+    let picked = 0;
+    for (const group of root.querySelectorAll("[data-group]")) {
+      const items = [...group.querySelectorAll("[data-item]")];
+      const on = items.filter(i => i.checked).length;
+      const toggle = group.querySelector("[data-group-toggle]");
+      toggle.checked = on === items.length;
+      toggle.indeterminate = on > 0 && on < items.length;
+      group.querySelector("[data-group-count]").textContent = localize("LUCD20.LootPile.GroupCount", { count: on, total: items.length });
+      total += items.length;
+      picked += on;
+    }
+    root.querySelector("[data-summary]").textContent = localize("LUCD20.LootPile.Selected", { count: picked, total });
+    root.querySelector('[data-action="create"]').disabled = picked === 0;
+  }
+
+  static #onCreate() {
+    const keys = [...this.element.querySelectorAll("[data-item]")].filter(i => i.checked).map(i => i.name);
+    this.answer(keys.length ? keys : null);
+  }
+
+  static #onSkip() {
+    this.answer(null);
   }
 }
 

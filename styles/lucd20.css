@@ -1278,143 +1278,325 @@ button.lucd20-lock.mode-lock {
 }
 
 /* Loot Pile ------------------------------------------------------------ */
+/*
+ * Ported from the approved mockup (branch mockup/loot-window,
+ * docs/mockups/loot-window.html, sections 1–5). Everything is scoped under
+ * .lucd20-loot-app (the Loot Pile window, "How many?" and "Loot the fallen").
+ * Colors are the mockup's hex values: Foundry V14's CSS variable names could
+ * not be confirmed from its source here, so none are used (see docs/PLAN.md).
+ */
 
-.lucd20-loot-review-dialog .lucd20-loot-review {
-  max-height: 60vh;
-  overflow-y: auto;
+/* 1. Design tokens ------------------------------------------------------ */
+
+.lucd20-loot-app {
+  --ll-bg: #1b1a21;
+  --ll-bg-header: #121117;
+  --ll-bg-raised: #26252e;
+  --ll-bg-sunken: #131217;
+  --ll-bg-hover: #2d2b36;
+  --ll-border: #3b3945;
+  --ll-border-strong: #5c596a;
+  --ll-text: #efe6d8;
+  --ll-text-muted: #b5ab9d;
+  --ll-accent: #ee9b3a;
+  --ll-accent-text: #f3b469;
+  --ll-accent-border: #a8702f;
+  --ll-primary: #b34a32;
+  --ll-primary-hover: #bf5238;
+  --ll-primary-border: #e07a5f;
+  --ll-danger-text: #ff9a8f;
+  --ll-danger-border: #9c403b;
+  --ll-danger-fill: #a3302b;
+  --ll-radius: 4px;
+  --ll-row: 28px;
 }
 
-.lucd20-loot-review .lucd20-loot-group,
-.lucd20-loot-window .lucd20-loot-group {
-  margin: 0 0 10px;
-}
-
-.lucd20-loot-review h4,
-.lucd20-loot-window h3 {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 6px 0 4px;
-  padding-bottom: 3px;
-  border-bottom: 1px solid rgba(127, 127, 127, 0.35);
-  font-size: 14px;
-}
-
-.lucd20-loot-review h4 img,
-.lucd20-loot-window h3 img {
-  width: 26px;
-  height: 26px;
-  border: none;
-  object-fit: contain;
-}
-
-.lucd20-loot-review .hint,
-.lucd20-loot-window .hint {
-  font-size: 12px;
-  font-weight: normal;
-  opacity: 0.75;
-}
-
-.lucd20-loot-check {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 2px 0;
-  cursor: pointer;
-}
-
-.lucd20-loot-check img,
-.lucd20-loot-item img {
-  width: 24px;
-  height: 24px;
-  border: none;
-  object-fit: contain;
-}
-
-.lucd20-loot-window .window-content {
+.lucd20-loot-app .window-content {
   display: flex;
   flex-direction: column;
   padding: 0;
   overflow: hidden;
+  background: var(--ll-bg);
+  color: var(--ll-text);
+  font-family: Signika, "Segoe UI", "Helvetica Neue", Arial, "Liberation Sans", sans-serif;
+  font-size: 14px;
+  line-height: 1.3;
 }
 
-.lucd20-loot-window .lucd20-loot-body {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-height: 0;
+.lucd20-loot-app .window-content *,
+.lucd20-loot-app .window-content *::before,
+.lucd20-loot-app .window-content *::after {
+  box-sizing: border-box;
 }
 
-.lucd20-loot-window .lucd20-loot-taker {
-  display: flex;
+.lucd20-loot-app .window-content p,
+.lucd20-loot-app .window-content ol {
+  margin: 0;
+}
+
+.lucd20-loot-app .window-content img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  border: none;
+}
+
+/* 2. Shared pieces: icons, buttons, inputs ------------------------------- */
+
+.lucd20-loot-app .ll-i {
+  flex: none;
+  width: 14px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1;
+  text-align: center;
+}
+
+.lucd20-loot-app button.ll-btn {
+  position: relative;
+  display: inline-flex;
+  flex: none;
   align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  border-bottom: 1px solid rgba(127, 127, 127, 0.35);
+  justify-content: center;
+  gap: 5px;
+  width: auto;
+  height: auto;
+  min-height: var(--ll-row);
+  margin: 0;
+  padding: 0 9px;
+  border: 1px solid var(--ll-border-strong);
+  border-radius: var(--ll-radius);
+  background: var(--ll-bg-raised);
+  box-shadow: none;
+  color: var(--ll-text);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1;
   white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 80ms, border-color 80ms;
 }
 
-.lucd20-loot-window .lucd20-loot-taker select {
-  flex: 1;
-}
+.lucd20-loot-app button.ll-btn:hover { background: #383643; border-color: #9793a6; }
+.lucd20-loot-app button.ll-btn:active { background: var(--ll-bg-sunken); border-color: #9793a6; box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.6); transform: translateY(1px); }
+.lucd20-loot-app button.ll-btn:focus-visible,
+.lucd20-loot-app .lucd20-loot-taker select:focus-visible,
+.lucd20-loot-app input.ll-check:focus-visible,
+.lucd20-loot-app .lucd20-loot-qty input:focus-visible { outline: 2px solid var(--ll-accent); outline-offset: 2px; }
+.lucd20-loot-app button.ll-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
+.lucd20-loot-app button.ll-btn:disabled:hover { background: var(--ll-bg-raised); border-color: var(--ll-border-strong); }
 
-.lucd20-loot-window > .window-content .hint {
-  padding: 0 10px;
-}
+/* Take: the main per-row action, outlined in the accent. */
+.lucd20-loot-app button.ll-btn-take { background: rgba(238, 155, 58, 0.1); border-color: var(--ll-accent-border); color: var(--ll-accent-text); font-weight: 600; }
+.lucd20-loot-app button.ll-btn-take:hover { background: rgba(238, 155, 58, 0.24); border-color: var(--ll-accent); color: #ffd9a8; }
+.lucd20-loot-app button.ll-btn-take:active { background: rgba(238, 155, 58, 0.08); border-color: var(--ll-accent); }
+.lucd20-loot-app button.ll-btn-take:disabled:hover { background: rgba(238, 155, 58, 0.1); border-color: var(--ll-accent-border); color: var(--ll-accent-text); }
 
-.lucd20-loot-window .lucd20-loot-list {
-  flex: 1;
-  min-height: 0;
-  padding: 4px 10px;
-  overflow-y: auto;
-}
+/* Primary: one per window at most. */
+.lucd20-loot-app button.ll-btn-primary { background: var(--ll-primary); border-color: var(--ll-primary-border); color: #fff; font-weight: 600; }
+.lucd20-loot-app button.ll-btn-primary:hover { background: var(--ll-primary-hover); border-color: #ffb39e; }
+.lucd20-loot-app button.ll-btn-primary:active { background: #8f3926; }
+.lucd20-loot-app button.ll-btn-primary:disabled:hover { background: var(--ll-primary); border-color: var(--ll-primary-border); }
 
-.lucd20-loot-window ol {
+/* Destructive: red outline + trash icon at rest, solid red on hover. */
+.lucd20-loot-app button.ll-btn-danger { background: rgba(220, 60, 50, 0.1); border-color: var(--ll-danger-border); color: var(--ll-danger-text); }
+.lucd20-loot-app button.ll-btn-danger:hover { background: var(--ll-danger-fill); border-color: #ff9a8f; color: #fff; }
+.lucd20-loot-app button.ll-btn-danger:active { background: #7d231f; }
+
+.lucd20-loot-app button.ll-btn-footer { min-height: 32px; padding: 0 12px; font-size: 14px; }
+.lucd20-loot-app button.ll-btn-square { width: 30px; min-height: 30px; padding: 0; }
+
+/* Checkbox: drawn by us (Foundry's own checkbox has no visible "some" state
+   for the select all / none toggle). Resets Foundry's checkbox glyph. */
+.lucd20-loot-app input[type="checkbox"].ll-check {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-grid;
+  place-content: center;
+  flex: none;
+  width: 18px;
+  height: 18px;
   margin: 0;
   padding: 0;
-  list-style: none;
+  border: 1px solid #8b8799;
+  border-radius: 3px;
+  background: var(--ll-bg-sunken);
+  box-shadow: none;
+  font-size: 0;
+  cursor: pointer;
 }
 
-.lucd20-loot-item {
+.lucd20-loot-app input[type="checkbox"].ll-check::before {
+  content: "";
+  position: static;
+  width: 11px;
+  height: 11px;
+  margin: 0;
+  background: #1b1a21;
+  font: initial;
+  transform: scale(0);
+  clip-path: polygon(13% 47%, 0 62%, 40% 100%, 100% 20%, 85% 7%, 38% 70%);
+}
+
+.lucd20-loot-app input[type="checkbox"].ll-check::after { content: none; display: none; }
+.lucd20-loot-app input[type="checkbox"].ll-check:checked,
+.lucd20-loot-app input[type="checkbox"].ll-check:indeterminate { border-color: var(--ll-accent); background: var(--ll-accent); }
+.lucd20-loot-app input[type="checkbox"].ll-check:checked::before { transform: scale(1); }
+.lucd20-loot-app input[type="checkbox"].ll-check:indeterminate::before { transform: scale(1); clip-path: inset(38% 8%); }
+
+/* 3. Loot Pile window ---------------------------------------------------- */
+
+.lucd20-loot-app .lucd20-loot-body { display: flex; flex: 1; flex-direction: column; min-height: 0; container-type: inline-size; }
+
+.lucd20-loot-app .lucd20-loot-taker {
   display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  min-height: 46px;
+  margin: 0;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--ll-border);
+  background: var(--ll-bg-header);
+}
+
+.lucd20-loot-app .lucd20-loot-taker label,
+.lucd20-loot-app .lucd20-loot-taker .label { flex: none; margin: 0; color: var(--ll-text-muted); font-size: 12px; }
+
+/* Foundry's own select, sized to the bar. */
+.lucd20-loot-app .lucd20-loot-taker select { flex: 1; min-width: 0; width: auto; height: 30px; margin: 0; font-weight: 600; }
+
+.lucd20-loot-app .lucd20-loot-taker-chip {
+  display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 3px 0;
-}
-
-.lucd20-loot-item .name {
-  flex: 1;
   min-width: 0;
+  height: 30px;
+  padding: 0 10px 0 3px;
+  border: 1px solid var(--ll-border);
+  border-radius: 15px;
+  background: var(--ll-bg-raised);
 }
 
-.lucd20-loot-item .qty {
-  opacity: 0.75;
-  font-size: 12px;
-}
+.lucd20-loot-app .lucd20-loot-taker-chip strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lucd20-loot-app .lucd20-loot-hint { align-items: flex-start; color: var(--ll-text-muted); font-size: 12px; line-height: 1.4; }
+.lucd20-loot-app .lucd20-loot-hint .ll-i { margin-top: 1px; color: var(--ll-accent-text); }
 
-.lucd20-loot-item button {
-  flex: 0 0 auto;
-  width: auto;
-  margin: 0;
-  padding: 1px 8px;
-  font-size: 12px;
-  line-height: 20px;
-  white-space: nowrap;
-}
+.lucd20-loot-app .lucd20-loot-list { flex: 1; min-height: 0; padding: 0 8px 8px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--ll-border-strong) transparent; }
+.lucd20-loot-app .lucd20-loot-list ol { margin: 0; padding: 0; list-style: none; }
+.lucd20-loot-app .lucd20-loot-list li { margin: 0; }
+.lucd20-loot-app .lucd20-loot-group { margin: 0; }
 
-.lucd20-loot-window .lucd20-loot-empty {
-  opacity: 0.75;
-}
-
-.lucd20-loot-window .lucd20-loot-footer {
-  display: flex;
-  gap: 6px;
-  padding: 6px 10px;
-  border-top: 1px solid rgba(127, 127, 127, 0.35);
-}
-
-.lucd20-loot-qty {
+/* Sticky NPC header; the -8px side margins match the list's padding. */
+.lucd20-loot-app .lucd20-loot-group-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: 8px;
+  margin: 0 -8px 2px;
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--ll-border);
+  background: var(--ll-bg-raised);
 }
+
+.lucd20-loot-app .lucd20-loot-group + .lucd20-loot-group .lucd20-loot-group-header { margin-top: 2px; border-top: 1px solid var(--ll-border); }
+.lucd20-loot-app .lucd20-loot-group-header .who { display: flex; flex: 1; flex-wrap: wrap; align-items: baseline; gap: 0 8px; min-width: 0; }
+.lucd20-loot-app .lucd20-loot-group-header .npc { font-size: 15px; font-weight: 700; }
+.lucd20-loot-app .lucd20-loot-group-header .level,
+.lucd20-loot-app .lucd20-loot-group-header .count { color: var(--ll-text-muted); font-size: 12px; white-space: nowrap; }
+
+.lucd20-loot-app .lucd20-loot-portrait { flex: none; width: 32px; height: 32px; overflow: hidden; border: 1px solid #8b8799; border-radius: 50%; background: var(--ll-bg-sunken); }
+.lucd20-loot-app .lucd20-loot-portrait.small { width: 24px; height: 24px; }
+.lucd20-loot-app .lucd20-loot-portrait img { object-fit: cover; }
+
+.lucd20-loot-app .lucd20-loot-icon { flex: none; width: 28px; height: 28px; padding: 1px; border: 1px solid var(--ll-border); border-radius: 3px; background: var(--ll-bg-sunken); }
+.lucd20-loot-app .lucd20-loot-icon.large { width: 40px; height: 40px; padding: 3px; }
+.lucd20-loot-app .lucd20-loot-icon img { object-fit: contain; }
+
+.lucd20-loot-app .lucd20-loot-item { display: flex; align-items: center; gap: 8px; min-height: 34px; padding: 2px 4px; border-radius: var(--ll-radius); }
+.lucd20-loot-app .lucd20-loot-item:hover { background: var(--ll-bg-hover); }
+.lucd20-loot-app .lucd20-loot-item .name,
+.lucd20-loot-app .lucd20-loot-check .name { flex: 1; min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
+
+.lucd20-loot-app .qty {
+  flex: none;
+  min-width: 30px;
+  padding: 2px 6px;
+  border: 1px solid var(--ll-border-strong);
+  border-radius: 10px;
+  background: var(--ll-bg-sunken);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.lucd20-loot-app .lucd20-loot-item .actions { display: flex; flex: none; gap: 4px; }
+
+.lucd20-loot-app .lucd20-loot-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; height: 100%; min-height: 180px; padding: 24px; text-align: center; }
+.lucd20-loot-app .lucd20-loot-empty .ll-empty-art { margin-bottom: 8px; color: var(--ll-border-strong); font-size: 48px; }
+.lucd20-loot-app .lucd20-loot-empty .title { font-size: 16px; font-weight: 600; }
+.lucd20-loot-app .lucd20-loot-empty .sub { color: var(--ll-text-muted); font-size: 12px; }
+
+.lucd20-loot-app .lucd20-loot-footer { display: flex; flex: none; flex-wrap: wrap; gap: 6px; margin: 0; padding: 8px 10px; border-top: 1px solid var(--ll-border); background: var(--ll-bg-header); }
+.lucd20-loot-app .lucd20-loot-footer button.ll-btn-all { flex: 1 1 100%; }
+.lucd20-loot-app .lucd20-loot-footer.is-gm [data-action="deletePile"] { margin-left: auto; }
+
+/* Narrow windows: drop the word "Party". Wide windows: one footer row. */
+@container (max-width: 399px) {
+  .lucd20-loot-app .ll-wide { display: none; }
+}
+
+@container (min-width: 540px) {
+  .lucd20-loot-app .lucd20-loot-footer.is-gm button.ll-btn-all { flex: 1 1 auto; }
+  .lucd20-loot-app .lucd20-loot-footer.is-gm [data-action="deletePile"] { margin-left: 0; }
+}
+
+/* 4. "Loot the fallen" review window ------------------------------------- */
+
+.lucd20-loot-app .lucd20-loot-check { display: flex; align-items: center; gap: 8px; min-height: 32px; margin: 0; padding: 2px 4px 2px 2px; border-radius: var(--ll-radius); cursor: pointer; }
+.lucd20-loot-app .lucd20-loot-check:hover { background: var(--ll-bg-hover); }
+.lucd20-loot-app .lucd20-loot-check:has(.ll-check:not(:checked)) .name { color: var(--ll-text-muted); font-weight: 400; text-decoration: line-through; }
+.lucd20-loot-app .lucd20-loot-check:has(.ll-check:not(:checked)) .lucd20-loot-icon,
+.lucd20-loot-app .lucd20-loot-check:has(.ll-check:not(:checked)) .qty { opacity: 0.5; }
+.lucd20-loot-app .lucd20-loot-footer.is-review .summary { flex: 1 1 100%; color: var(--ll-text-muted); font-size: 12px; }
+.lucd20-loot-app .lucd20-loot-footer.is-review button.ll-btn-primary { flex: 1; }
+
+/* 5. "How many?" dialog -------------------------------------------------- */
+
+.lucd20-loot-app .lucd20-loot-qty { display: flex; flex-direction: column; gap: 12px; padding: 12px 12px 0; }
+.lucd20-loot-app .lucd20-loot-qty .what { display: flex; align-items: center; gap: 10px; }
+.lucd20-loot-app .lucd20-loot-qty .what strong { display: block; font-size: 15px; }
+.lucd20-loot-app .lucd20-loot-qty .sub,
+.lucd20-loot-app .lucd20-loot-qty .range { color: var(--ll-text-muted); font-size: 12px; }
+.lucd20-loot-app .lucd20-loot-qty .field { display: flex; align-items: center; gap: 8px; }
+.lucd20-loot-app .lucd20-loot-qty .field label { flex: 1; margin: 0; font-weight: 600; }
+.lucd20-loot-app .lucd20-loot-qty .stepper { display: flex; gap: 4px; }
+
+.lucd20-loot-app .lucd20-loot-qty input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+  flex: none;
+  width: 52px;
+  height: 30px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--ll-border-strong);
+  border-radius: var(--ll-radius);
+  background: var(--ll-bg-sunken);
+  box-shadow: none;
+  color: var(--ll-text);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.lucd20-loot-app .lucd20-loot-qty input::-webkit-inner-spin-button,
+.lucd20-loot-app .lucd20-loot-qty input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.lucd20-loot-app .lucd20-loot-footer.is-dialog { margin: 0 -12px; }
+.lucd20-loot-app .lucd20-loot-footer.is-dialog button.ll-btn { flex: 1; }

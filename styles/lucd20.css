@@ -851,6 +851,14 @@ button.lucd20-lock.mode-lock {
 
 /* Chat buttons & Clear Chat dialog ------------------------------------- */
 
+/* Our chat buttons are narrower than Foundry's so the row still fits. */
+[data-lucd20-control] {
+  flex: 0 0 24px !important;
+  width: 24px !important;
+  min-width: 24px !important;
+  padding: 0 !important;
+}
+
 [data-lucd20-control].active {
   color: var(--color-warm-1, #ff9c4a);
   box-shadow: 0 0 0 1px currentColor inset;
@@ -871,55 +879,47 @@ button.lucd20-lock.mode-lock {
 
 /* Damage Log ----------------------------------------------------------- */
 
-.lucd20-damage-log {
-  display: none;
+.lucd20-damage-log-window .window-content {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
 }
 
-.lucd20-show-damage [data-lucd20-chat-anchor] {
-  display: none !important;
-}
-
-.lucd20-show-damage .lucd20-damage-log {
+.lucd20-damage-log-window .lucd20-dl-body-wrap {
   display: flex;
   flex: 1;
   flex-direction: column;
   min-height: 0;
 }
 
-.lucd20-damage-log .lucd20-dl-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 4px 6px;
-  border-bottom: 1px solid rgba(127, 127, 127, 0.35);
-}
-
-.lucd20-damage-log .lucd20-dl-header h3 {
-  margin: 0;
-  border: none;
-  font-size: 15px;
-}
-
-.lucd20-damage-log .lucd20-dl-clear {
-  width: 26px;
-  height: 26px;
-  flex: 0 0 26px;
-  margin: 0;
-  padding: 0;
-}
-
-.lucd20-damage-log .lucd20-dl-list {
+.lucd20-damage-log-window .lucd20-dl-list {
   flex: 1;
   min-height: 0;
   margin: 0;
-  padding: 4px;
+  padding: 6px;
   overflow-y: auto;
   list-style: none;
 }
 
-.lucd20-damage-log .lucd20-dl-empty {
-  padding: 8px;
+.lucd20-damage-log-window .lucd20-dl-empty {
+  margin: 0;
+  padding: 12px;
   opacity: 0.75;
+}
+
+.lucd20-damage-log-window .lucd20-dl-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 6px;
+  border-top: 1px solid rgba(127, 127, 127, 0.35);
+}
+
+.lucd20-damage-log-window .lucd20-dl-footer button {
+  flex: 0 0 auto;
+  width: auto;
+  margin: 0;
+  padding: 2px 10px;
 }
 
 .lucd20-dl-entry {
@@ -941,9 +941,9 @@ button.lucd20-lock.mode-lock {
 .lucd20-dl-entry.reverted { opacity: 0.5; }
 
 .lucd20-dl-entry .lucd20-dl-portrait {
-  flex: 0 0 32px;
-  width: 32px;
-  height: 32px;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
   border: none;
   object-fit: contain;
 }
@@ -957,7 +957,8 @@ button.lucd20-lock.mode-lock {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 6px;
+  column-gap: 6px;
+  line-height: 1.3;
 }
 
 .lucd20-dl-entry .lucd20-dl-name {
@@ -989,4 +990,289 @@ button.lucd20-lock.mode-lock {
   height: 24px;
   margin: 0;
   padding: 0;
+}
+
+/* Dice Stats ------------------------------------------------------------ */
+/*
+ * Colors validated with the dataviz validator:
+ *  - d20 bars: single series, blue (#3987e5 dark / #2a78d6 light), passes 3:1.
+ *  - Degrees of success: diverging blue↔red (crit success · success · failure ·
+ *    crit failure). Adjacent CVD and normal-vision ΔE ≥ 15 in both modes; the
+ *    lighter steps are below 3:1 on the surface, so every segment carries a
+ *    count/tooltip, a legend is always shown, and the numbers are in the tables.
+ */
+
+.lucd20-dice-stats {
+  --ds-bar: #3987e5;
+  --ds-cs: #1c5cab;
+  --ds-s: #6da7ec;
+  --ds-f: #e66767;
+  --ds-cf: #b52f2f;
+  --ds-line: rgba(127, 127, 127, 0.3);
+  --ds-muted: rgba(127, 127, 127, 1);
+}
+
+.theme-light .lucd20-dice-stats,
+.lucd20-dice-stats.theme-light {
+  --ds-bar: #2a78d6;
+  --ds-cf: #a82828;
+}
+
+.lucd20-dice-stats .window-content {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+.lucd20-dice-stats .ds-root {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.lucd20-dice-stats .ds-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--ds-line);
+}
+
+.lucd20-dice-stats .ds-segmented {
+  display: inline-flex;
+  border: 1px solid var(--ds-line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.lucd20-dice-stats .ds-segmented button {
+  flex: 0 0 auto;
+  width: auto;
+  margin: 0;
+  padding: 3px 12px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.lucd20-dice-stats .ds-segmented button.active {
+  background: rgba(127, 127, 127, 0.25);
+  font-weight: bold;
+}
+
+.lucd20-dice-stats .ds-hidden-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.lucd20-dice-stats .ds-new-session {
+  flex: 0 0 auto;
+  width: auto;
+  margin: 0 0 0 auto;
+  padding: 2px 10px;
+}
+
+.lucd20-dice-stats .ds-scroll {
+  flex: 1;
+  min-height: 0;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+.lucd20-dice-stats .ds-muted,
+.lucd20-dice-stats .ds-empty {
+  color: var(--ds-muted);
+  font-size: 12px;
+}
+
+.lucd20-dice-stats table {
+  width: 100%;
+  margin: 0 0 10px;
+  border-collapse: collapse;
+  background: transparent;
+  border: none;
+  font-size: 13px;
+}
+
+.lucd20-dice-stats th,
+.lucd20-dice-stats td {
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--ds-line);
+  background: transparent;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.lucd20-dice-stats th:first-child,
+.lucd20-dice-stats td:first-child {
+  text-align: left;
+}
+
+.lucd20-dice-stats thead th {
+  color: var(--ds-muted);
+  font-size: 11px;
+  font-weight: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.lucd20-dice-stats tr:nth-child(even) {
+  background: transparent;
+}
+
+.lucd20-dice-stats .ds-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 0 0 10px;
+  font-size: 12px;
+}
+
+.lucd20-dice-stats .ds-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.lucd20-dice-stats .ds-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.lucd20-dice-stats .ds-card {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--ds-line);
+  border-radius: 8px;
+  background: rgba(127, 127, 127, 0.06);
+}
+
+.lucd20-dice-stats .ds-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.lucd20-dice-stats .ds-card-header h3 {
+  flex: 1;
+  margin: 0;
+  border: none;
+  font-size: 16px;
+}
+
+.lucd20-dice-stats .ds-user-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.lucd20-dice-stats .ds-d20-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* d20 distribution: thin bars, 2px gaps, 4px rounded tops anchored to the baseline */
+.lucd20-dice-stats .ds-dist {
+  margin: 4px 0 10px;
+}
+
+.lucd20-dice-stats .ds-bars {
+  display: grid;
+  grid-template-columns: repeat(20, 1fr);
+  gap: 2px;
+  height: 72px;
+  border-bottom: 1px solid var(--ds-line);
+}
+
+.lucd20-dice-stats .ds-bar-slot {
+  display: flex;
+  align-items: flex-end;
+  height: 100%;
+  cursor: default;
+}
+
+.lucd20-dice-stats .ds-bar-slot:hover {
+  background: rgba(127, 127, 127, 0.12);
+}
+
+.lucd20-dice-stats .ds-bar {
+  width: 100%;
+  min-height: 1px;
+  border-radius: 4px 4px 0 0;
+  background: var(--ds-bar);
+}
+
+.lucd20-dice-stats .ds-ticks {
+  display: grid;
+  grid-template-columns: repeat(20, 1fr);
+  gap: 2px;
+  color: var(--ds-muted);
+  font-size: 10px;
+  text-align: center;
+}
+
+/* Degree of success: stacked bar, 2px surface gaps between segments */
+.lucd20-dice-stats .ds-outcome-cell {
+  width: 45%;
+}
+
+.lucd20-dice-stats .ds-outcomes {
+  display: flex;
+  gap: 2px;
+  height: 16px;
+}
+
+.lucd20-dice-stats .ds-seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3px;
+  color: #fff;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.lucd20-dice-stats .ds-seg:first-child { border-radius: 4px 0 0 4px; }
+.lucd20-dice-stats .ds-seg:last-child { border-radius: 0 4px 4px 0; }
+.lucd20-dice-stats .ds-seg:only-child { border-radius: 4px; }
+
+.lucd20-dice-stats .ds-criticalSuccess { background: var(--ds-cs); }
+.lucd20-dice-stats .ds-success { background: var(--ds-s); color: #0b0b0b; }
+.lucd20-dice-stats .ds-failure { background: var(--ds-f); color: #0b0b0b; }
+.lucd20-dice-stats .ds-criticalFailure { background: var(--ds-cf); }
+
+.lucd20-dice-stats .ds-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.lucd20-dice-stats .ds-chip {
+  padding: 1px 8px;
+  border: 1px solid var(--ds-line);
+  border-radius: 999px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.lucd20-dice-stats-open {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin: 4px 0 0;
 }

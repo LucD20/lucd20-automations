@@ -1,14 +1,13 @@
 import { MODULE_ID, error, localize } from "../core/constants.js";
 import { defineFeature } from "../core/registry.js";
-import { appElement } from "../core/dom.js";
 import { addChatControl, refreshChatControls } from "../core/chat-controls.js";
 import { addFlushContributor } from "../core/chat-flush.js";
 
 /**
  * Damage Log (replaces Damage Log).
  *
- * - A "Damage Log" toggle next to the chat buttons switches the chat sidebar
- *   between the chat and the log.
+ * - A "Damage Log" button next to the chat buttons opens/closes the Damage Log
+ *   window (its own window: works whether the sidebar is open or collapsed).
  * - The active GM's client records every HP change (damage, healing, temporary
  *   HP, max HP) by comparing each actor's HP with the last value it saw, so it
  *   works no matter who or what changed it (including unlinked tokens).
@@ -22,11 +21,13 @@ import { addFlushContributor } from "../core/chat-flush.js";
 const ENTRIES_KEY = "damageLog_entries";
 const esc = value => Handlebars.escapeExpression(String(value ?? ""));
 
+const WINDOW_KEY = "damageLog_window";
+const { ApplicationV2 } = foundry.applications.api;
+
 const state = {
   feature: null,
   entries: [],
   cache: new Map(), // actor uuid → { value, max, temp }
-  showing: false,
   saveTimer: null
 };
 
@@ -252,66 +253,86 @@ function entryHTML(entry) {
         ${entry.cause && (gm || state.feature.get("causeToPlayers")) ? `<div class="lucd20-dl-cause">${esc(entry.cause)}</div>` : ""}
         <div class="lucd20-dl-meta">${esc(when)}${by ? ` · ${esc(by)}` : ""}${entry.reverted ? ` · ${localize("LUCD20.DamageLog.Reverted")}` : ""}</div>
       </div>
-      ${gm && !entry.reverted ? `<button type="button" class="lucd20-dl-undo" data-dl-action="undo" data-tooltip="${localize("LUCD20.DamageLog.Undo")}"><i class="fa-solid fa-rotate-left"></i></button>` : ""}
+      ${gm && !entry.reverted ? `<button type="button" class="lucd20-dl-undo" data-action="undo" data-tooltip="${localize("LUCD20.DamageLog.Undo")}"><i class="fa-solid fa-rotate-left"></i></button>` : ""}
     </li>`;
 }
 
-function ensurePanel() {
-  const root = appElement(ui.chat);
-  if (!root) return null;
-  let panel = root.querySelector(".lucd20-damage-log");
-  if (panel) return panel;
-  const log = root.querySelector(".chat-log");
-  if (!log) return null;
-  const anchor = log.closest(".chat-scroll") ?? log;
-  anchor.dataset.lucd20ChatAnchor = "";
-  panel = document.createElement("section");
-  panel.className = "lucd20-damage-log";
-  panel.addEventListener("click", async event => {
-    const button = event.target.closest("[data-dl-action]");
-    if (!button) return;
-    event.preventDefault();
-    if (button.dataset.dlAction === "undo") await undo(button.closest("[data-entry-id]")?.dataset.entryId);
-    else if (button.dataset.dlAction === "clear") {
-      const confirmed = await foundry.applications.api.DialogV2.confirm({
-        window: { title: localize("LUCD20.DamageLog.ClearTitle") },
-        content: `<p>${localize("LUCD20.DamageLog.ClearContent")}</p>`
-      });
-      if (confirmed) await clearLog();
-    }
-  });
-  anchor.after(panel);
-  return panel;
-}
-
-function render() {
-  if (!state.showing || !state.feature) return;
-  const panel = ensurePanel();
-  if (!panel) return;
+function listHTML() {
   const visible = state.entries.filter(canSeeBars);
   const list = visible.length
     ? `<ol class="lucd20-dl-list">${visible.map(entryHTML).join("")}</ol>`
     : `<p class="lucd20-dl-empty">${localize("LUCD20.DamageLog.Empty")}</p>`;
-  panel.innerHTML = `
-    <header class="lucd20-dl-header">
-      <h3><i class="fa-solid fa-heart-pulse"></i> ${localize("LUCD20.DamageLog.Title")}</h3>
-      ${game.user.isGM ? `<button type="button" class="lucd20-dl-clear" data-dl-action="clear" data-tooltip="${localize("LUCD20.DamageLog.Clear")}"><i class="fa-solid fa-trash"></i></button>` : ""}
-    </header>
-    ${list}`;
-  const scroller = panel.querySelector(".lucd20-dl-list");
-  if (scroller) scroller.scrollTop = scroller.scrollHeight;
+  const toolbar = game.user.isGM
+    ? `<footer class="lucd20-dl-footer">
+        <button type="button" data-action="clear"><i class="fa-solid fa-trash"></i> ${localize("LUCD20.DamageLog.Clear")}</button>
+      </footer>`
+    : "";
+  return `<div class="lucd20-dl-body-wrap">${list}${toolbar}</div>`;
 }
 
-function setShowing(value) {
-  state.showing = value;
-  const root = appElement(ui.chat);
-  root?.classList.toggle("lucd20-show-damage", value);
-  if (value) {
-    // The log lives in the chat tab: open it if another tab is active.
-    if (ui.sidebar?.activeTab && ui.sidebar.activeTab !== "chat") ui.sidebar.changeTab?.("chat", "primary");
-    render();
+class DamageLogWindow extends ApplicationV2 {
+  static DEFAULT_OPTIONS = {
+    id: "lucd20-damage-log",
+    classes: ["lucd20-damage-log-window"],
+    window: { title: "LUCD20.DamageLog.Title", icon: "fa-solid fa-heart-pulse", resizable: true },
+    position: { width: 380, height: 560 },
+    actions: {
+      undo: DamageLogWindow.#onUndo,
+      clear: DamageLogWindow.#onClear
+    }
+  };
+
+  static get instance() {
+    return foundry.applications.instances?.get(this.DEFAULT_OPTIONS.id) ?? null;
   }
-  refreshChatControls();
+
+  static toggle() {
+    const open = this.instance;
+    if (open?.rendered) return open.close();
+    const saved = game.settings.get(MODULE_ID, WINDOW_KEY) ?? {};
+    return new this({ position: { ...this.DEFAULT_OPTIONS.position, ...saved } }).render({ force: true });
+  }
+
+  async _renderHTML() {
+    return listHTML();
+  }
+
+  _replaceHTML(result, content) {
+    const list = content.querySelector(".lucd20-dl-list");
+    const atBottom = !list || list.scrollTop + list.clientHeight >= list.scrollHeight - 10;
+    content.innerHTML = result;
+    const next = content.querySelector(".lucd20-dl-list");
+    if (next && atBottom) next.scrollTop = next.scrollHeight;
+  }
+
+  _onRender(context, options) {
+    super._onRender?.(context, options);
+    refreshChatControls();
+  }
+
+  async _onClose(options) {
+    await super._onClose?.(options);
+    const { left, top, width, height } = this.position;
+    game.settings.set(MODULE_ID, WINDOW_KEY, { left, top, width, height });
+    refreshChatControls();
+  }
+
+  static async #onUndo(event, target) {
+    await undo(target.closest("[data-entry-id]")?.dataset.entryId);
+  }
+
+  static async #onClear() {
+    const confirmed = await foundry.applications.api.DialogV2.confirm({
+      window: { title: localize("LUCD20.DamageLog.ClearTitle") },
+      content: `<p>${localize("LUCD20.DamageLog.ClearContent")}</p>`
+    });
+    if (confirmed) await clearLog();
+  }
+}
+
+function render() {
+  const app = DamageLogWindow.instance;
+  if (app?.rendered) app.render();
 }
 
 /* -------------------------------------------- */
@@ -331,6 +352,7 @@ defineFeature({
   },
 
   init() {
+    game.settings.register(MODULE_ID, WINDOW_KEY, { scope: "client", config: false, type: Object, default: {} });
     game.settings.register(MODULE_ID, ENTRIES_KEY, {
       scope: "world",
       config: false,
@@ -355,12 +377,6 @@ defineFeature({
     feature.on("canvasReady", snapshotAll);
     feature.on("createToken", doc => doc.actor && remember(doc.actor));
     feature.on("createActor", actor => remember(actor));
-    feature.on("renderChatLog", () => {
-      if (state.showing) {
-        appElement(ui.chat)?.classList.add("lucd20-show-damage");
-        render();
-      }
-    });
     snapshotAll();
 
     feature.onCleanup(addChatControl({
@@ -370,8 +386,8 @@ defineFeature({
       className: "lucd20-damage-log-button",
       tooltip: localize("LUCD20.DamageLog.Toggle"),
       visible: () => game.user.isGM || feature.get("showToPlayers"),
-      active: () => state.showing,
-      onClick: () => setShowing(!state.showing)
+      active: () => !!DamageLogWindow.instance?.rendered,
+      onClick: () => DamageLogWindow.toggle()
     }));
 
     feature.onCleanup(addFlushContributor("damageLog", {
@@ -387,8 +403,7 @@ defineFeature({
         clearTimeout(state.saveTimer);
         save();
       }
-      setShowing(false);
-      document.querySelectorAll(".lucd20-damage-log").forEach(el => el.remove());
+      DamageLogWindow.instance?.close();
       state.feature = null;
       state.cache.clear();
     });

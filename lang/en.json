@@ -237,7 +237,13 @@
       },
       "diceStats": {
         "Name": "Dice Stats",
-        "Hint": "Roll statistics for everyone, all-time and per session. In PF2e also by roll type and degree of success."
+        "Hint": "Roll statistics for everyone, for this session and all time, opened from the bottom of the Actors tab. PF2e checks are split by type and degree of success. Blind and secret rolls only count in the GM's view.",
+        "Setting": {
+          "askNewSession": {
+            "Name": "Ask to start a new session when the GM joins",
+            "Hint": "Yes clears the Session counts; All time is kept."
+          }
+        }
       },
       "forceSettings": {
         "Name": "Force Player Settings",
@@ -400,6 +406,43 @@
       "Temp": "Temp",
       "Undo": "Undo this change",
       "Reverted": "undone"
+    },
+    "DiceStats": {
+      "Title": "Dice Stats",
+      "Session": "Session",
+      "AllTime": "All time",
+      "Since": "since {date}",
+      "IncludeHidden": "Include blind/secret rolls",
+      "NewSession": "New session",
+      "NewSessionTitle": "New session?",
+      "NewSessionContent": "Start a new session? The Session dice stats are cleared; All time is kept.",
+      "Empty": "No rolls recorded yet.",
+      "Rolls": "{count} rolls",
+      "Avg": "avg",
+      "Nat20": "Nat 20",
+      "Nat1": "Nat 1",
+      "NoD20": "No d20 rolls.",
+      "Distribution": "d20 results",
+      "BarTip": "{face}: {count} ({pct}%)",
+      "Check": "Check",
+      "Count": "Rolls",
+      "Result": "Results",
+      "Player": "Player",
+      "D20Avg": "d20 avg",
+      "Outcome": {
+        "criticalSuccess": "Critical success",
+        "success": "Success",
+        "failure": "Failure",
+        "criticalFailure": "Critical failure"
+      },
+      "Type": {
+        "attack": "Attack",
+        "save": "Saving throw",
+        "skill": "Skill check",
+        "perception": "Perception",
+        "initiative": "Initiative",
+        "flat": "Flat check"
+      }
     }
   }
 }

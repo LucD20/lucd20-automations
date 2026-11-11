@@ -157,8 +157,10 @@ Settings lists will be refined while building each feature.
 
 #### Damage Log
 *Replaces Damage Log.* ✅ v0.8.0
-- A **Damage Log toggle next to the pin button** switches the chat sidebar
-  between the chat and the log (it opens the chat tab if needed).
+- A **Damage Log button next to the pin button** opens/closes the Damage Log
+  **window** (v0.9.0: was drawn inside the chat sidebar, which broke when the
+  sidebar was collapsed). Window position is remembered per player.
+- Our chat buttons are narrower than Foundry's so the row still fits.
 - Logs **damage, healing, temporary HP and max HP** changes. The active GM's
   client compares each actor's HP with the last value it saw, so it catches
   every change, whoever made it (linked actors and unlinked tokens).
@@ -243,18 +245,24 @@ Settings lists will be refined while building each feature.
 ### 📊 Statistics
 
 #### Dice Stats
-*Replaces Dice Stats.*
-- Generic (all systems): per user, per die type; distribution, natural
-  minimum/maximum counts, averages.
-- PF2e: split by roll type (attack, saving throw, skill check, Perception,
-  damage, flat check) and degree of success (crit success … crit failure).
-- **Everyone can view everyone's stats.**
-- Two counters per user: **All time** (never reset) and **Session**.
-  When the GM joins the world, a prompt asks **"Reset session?"**. Yes clears
-  the Session counters only; All time is kept.
-- Stored on each User document (survives clearing chat).
-- GM blind / secret rolls never appear in player-visible stats.
-- Settings: enable · ask to reset session on GM login.
+*Replaces Dice Stats.* ✅ v0.9.0
+- Opened from a **Dice Stats button at the bottom of the Actors tab**.
+- The active GM's client records **every die of every roll message**, per
+  user (the GM appears as a player).
+- **Session** and **All time** counts. When the GM joins, "Start a new
+  session?" (Yes clears Session only). GM also has a New session button.
+- **Everyone can see everyone's stats.** Blind rolls and the GM's whispered
+  rolls go to a **GM-only pool** (GM can include/exclude them); players never
+  see them in any count.
+- Window: summary table (rolls, d20 average, nat 20s, nat 1s), then a card
+  per player: d20 distribution chart, other dice chips (count, average).
+- PF2e (`scripts/systems/pf2e/dice-stats.js`): d20 checks split by type
+  (attack, saving throw, skill, Perception, initiative, flat) with rolls,
+  average, nat 20/1 and a degree-of-success bar (crit success → crit failure).
+- Charts follow the dataviz rules; colors validated (see the CSS comment).
+- Stored in a world setting (players' clients receive it; filtering is in the
+  UI, like the Damage Log).
+- Settings: ask to start a new session when the GM joins.
 
 ### 🔒 Player Settings
 
@@ -327,7 +335,7 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 | 5 | Turn Marker, Next-Turn Marker | ✅ v0.6.0 |
 | 6 | Multi-Token Edit, Folder Drop | ✅ v0.7.0 |
 | 7 | Damage Log (generic → PF2e) | ✅ v0.8.0 |
-| 8 | Dice Stats (generic → PF2e) | Follows that pattern |
+| 8 | Dice Stats (generic → PF2e) | ✅ v0.9.0 |
 | 9 | GM Vision | Riskiest canvas work |
 | 10 | Loot Pile + Party Stash | Needs system adapters + placement |
 | 11 | PF2e Search + Hazard Detection | Largest; reuses parts of 9 and 10 |

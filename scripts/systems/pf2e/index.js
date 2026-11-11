@@ -3,3 +3,4 @@
  * features. Every feature defined here must declare `systems: ["pf2e"]`.
  */
 import "./damage-log.js";
+import "./dice-stats.js";

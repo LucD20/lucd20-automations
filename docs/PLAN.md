@@ -49,6 +49,10 @@ on/off switch, its options underneath, and badges per setting:
   (Force Client Settings) to set a default or lock it.
 - **Reload**: changing it reloads the world.
 
+Inside a card, options sit **two per row**, and every option in a row lines
+up (names, controls and hints share row heights). Image and text options take
+the full width.
+
 System-only features get their own category, shown only in that system.
 System-specific extras of a generic feature appear inside that feature's card
 under a labelled sub-section (e.g. "PF2e").
@@ -82,8 +86,8 @@ Settings lists will be refined while building each feature.
 - Only shown while combat runs and only on tokens this user can see.
 - Images: Combat Booster's markers (MIT, credited) in `assets/markers/`;
   default `blueRunes.webp` (all systems).
-- Defaults: rotation speed 0.5 rotations/second (0–3), scale 0.4 (0–3),
-  follow art scale on.
+- Defaults: rotation speed 0.1 rotations/second (0–3), scale 0.45 (0–3, in
+  0.05 steps), follow art scale on.
 - Switching it on turns off Foundry's own turn marker; switching it off turns
   Foundry's back on (only if we turned it off).
 - Settings: image · color (original/sepia/grayscale/tint) · tint · rotation
@@ -95,7 +99,10 @@ Settings lists will be refined while building each feature.
   to players on tokens they can't see.
 - Default: the Turn Marker image, sepia, 50 % opacity (Combat Booster's look);
   can use its own image, color and opacity instead.
-- Same settings as the Turn Marker (empty image = use the Turn Marker's).
+- **Same size and speed as the Turn Marker** (on by default): only image,
+  color and opacity differ, so a token's marker doesn't change size when its
+  turn comes. Turn it off to set size/speed separately.
+- Empty image = use the Turn Marker's image.
 
 #### Turn Announcer
 *Replaces Turn Announcer.* ✅ v0.5.0
@@ -154,7 +161,7 @@ Settings lists will be refined while building each feature.
 #### Multi-Token Edit
 *Replaces the token part of Multi Token Edit.* ✅ v0.7.0
 - **Tokens only.** With several tokens selected, the right-click menu (token
-  HUD) shows a "multiple gears" button.
+  HUD) shows a "multiple gears" button in its left column.
 - It opens the normal token configuration for one token. On save, **only
   the fields that were changed** are applied to every selected token.
   Changed fields are highlighted.
@@ -166,7 +173,8 @@ Settings lists will be refined while building each feature.
   - **Random**: scatter around the drop point. Never inside walls or on the
     other side of a wall from the drop point; no overlapping tokens.
   - **Select places**: a list of the actors (alphabetical). Click on the map
-    to place the highlighted one (a see-through preview follows the cursor);
+    to place the highlighted one (a see-through preview, at the token's real
+    size including art scale, follows the cursor);
     the list moves to the next. Click another actor in the list to place it
     instead. "Random for the rest", right-click or Esc to stop.
   - Option: drop as hidden.

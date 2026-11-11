@@ -136,6 +136,10 @@
           "above": {
             "Name": "Draw above tokens",
             "Hint": "Use if the marker doesn't show under tokens."
+          },
+          "matchTurnMarker": {
+            "Name": "Same size and speed as the Turn Marker",
+            "Hint": "Only the image, color and opacity differ. Turn off to set them separately."
           }
         }
       },

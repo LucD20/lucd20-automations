@@ -344,9 +344,12 @@ class PlacementSession {
     }
     if (!texture || !this.active || this.current !== entry) return;
     const { w, h } = tokenSize(entry.actor);
+    const art = entry.actor.prototypeToken?.texture ?? {};
     const sprite = new PIXI.Sprite(texture);
-    sprite.width = w;
-    sprite.height = h;
+    // Same size as the real token: footprint × art scale, centred on the footprint.
+    sprite.anchor.set(0.5, 0.5);
+    sprite.width = w * Math.abs(art.scaleX ?? 1);
+    sprite.height = h * Math.abs(art.scaleY ?? 1);
     sprite.alpha = 0.5;
     sprite.eventMode = "none";
     (canvas.controls ?? canvas.stage).addChild(sprite);
@@ -359,7 +362,7 @@ class PlacementSession {
     if (!this.preview || !entry) return;
     const { w, h } = tokenSize(entry.actor);
     const pos = snapTopLeft(point, w, h);
-    this.preview.position.set(pos.x, pos.y);
+    this.preview.position.set(pos.x + w / 2, pos.y + h / 2);
   }
 
   /* --- input --- */

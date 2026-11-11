@@ -211,8 +211,10 @@ export class SettingsHub extends HandlebarsApplicationMixin(ApplicationV2) {
       lock,
       locked: !!lock?.lockedForMe,
       requiresReload: !!s.requiresReload,
-      dependsOn: s.dependsOn ? feature.key(s.dependsOn) : null,
+      dependsOn: s.dependsOn ? feature.key(s.dependsOn.replace(/^!/, "")) : null,
+      dependsInverse: !!s.dependsOn?.startsWith("!"),
       dependsValue: s.dependsValue ?? null,
+      wide: s.kind === "file" || s.kind === "string",
       searchText: `${label} ${hint}`.toLowerCase()
     };
   }
@@ -264,8 +266,10 @@ export class SettingsHub extends HandlebarsApplicationMixin(ApplicationV2) {
     const satisfied = el => {
       const control = form.querySelector(`[name="${CSS.escape(el.dataset.dependsOn)}"]`);
       if (!control) return true;
-      if (el.dataset.dependsValue !== undefined) return control.value === el.dataset.dependsValue;
-      return control.type === "checkbox" ? control.checked : !!control.value;
+      let result;
+      if (el.dataset.dependsValue !== undefined) result = control.value === el.dataset.dependsValue;
+      else result = control.type === "checkbox" ? control.checked : !!control.value;
+      return el.dataset.dependsInverse !== undefined ? !result : result;
     };
     for (const el of form.querySelectorAll("[data-depends-on]")) {
       el.classList.toggle("dependency-hidden", !satisfied(el));

@@ -214,21 +214,67 @@
   color: var(--lucd20-muted);
 }
 
-.lucd20-hub .lucd20-setting {
-  padding: 4px 0;
+/*
+ * Options sit in two columns. Each option is a 3-row subgrid (name, control,
+ * hint) so every option in a row shares the same row heights: controls line
+ * up even when one name or hint is longer than its neighbour's.
+ */
+.lucd20-hub .lucd20-setting-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 20px;
+  row-gap: 0;
 }
 
-.lucd20-hub .lucd20-setting > label {
+.lucd20-hub .lucd20-setting {
+  display: grid;
+  grid-row: span 3;
+  grid-template-rows: subgrid;
+  row-gap: 4px;
+  min-width: 0;
+  padding: 6px 0 4px;
+}
+
+.lucd20-hub .lucd20-setting.wide {
+  grid-column: 1 / -1;
+}
+
+.lucd20-hub .lucd20-setting-label {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.lucd20-hub .lucd20-setting .form-fields {
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: flex-start;
+  min-width: 0;
+  min-height: 28px;
+}
+
+.lucd20-hub .lucd20-setting .form-fields > * {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.lucd20-hub .lucd20-setting .form-fields > input[type="checkbox"] {
+  flex: 0 0 auto;
+  margin: 0;
 }
 
 .lucd20-hub .lucd20-setting .hint {
-  flex: 0 0 100%;
-  margin: 2px 0 0;
+  margin: 0;
   color: var(--lucd20-muted);
   font-size: var(--font-size-12, 12px);
+  line-height: 1.3;
+}
+
+.lucd20-hub .lucd20-setting .hint:empty {
+  display: block;
+  min-height: 0;
 }
 
 /* Tags & badges -------------------------------------------------------- */
@@ -607,7 +653,8 @@ button.lucd20-lock.mode-lock {
 .lucd20-turn-card {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  padding: 2px 0;
 }
 
 .chat-message.lucd20-turn-message,
@@ -618,9 +665,9 @@ button.lucd20-lock.mode-lock {
 .lucd20-turn-card .lucd20-turn-portrait {
   position: relative;
   z-index: 1;
-  flex: 0 0 36px;
-  width: 36px;
-  height: 36px;
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
   overflow: visible;
   pointer-events: none;
 }
@@ -651,7 +698,7 @@ button.lucd20-lock.mode-lock {
   align-items: baseline;
   justify-content: space-between;
   gap: 6px;
-  font-size: 11px;
+  font-size: 13px;
   opacity: 0.8;
   line-height: 1.2;
 }
@@ -669,7 +716,7 @@ button.lucd20-lock.mode-lock {
 }
 
 .lucd20-turn-card .lucd20-turn-name {
-  font-size: 14px;
+  font-size: 17px;
   font-weight: bold;
   line-height: 1.2;
   overflow: hidden;

@@ -30,6 +30,7 @@ const KIND_TYPES = {
  *     extra: { kind: "boolean", default: false, system: "pf2e" },   // PF2e sub-section only
  *     size:  { kind: "number", default: 1, dependsOn: "extra" },     // hidden while `extra` is off
  *     tint:  { kind: "color", default: "#fff", dependsOn: "mode", dependsValue: "a" }, // shown only when mode = a
+ *     own:   { kind: "number", default: 1, dependsOn: "!shared" },  // shown only while `shared` is off
  *     key:   { kind: "string", default: "", scope: "client", requiresReload: true }
  *   },
  *   init(feature) {},              // always runs at `init` (keybindings, socket handlers …)

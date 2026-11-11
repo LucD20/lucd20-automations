@@ -56,9 +56,11 @@
             {{#each groups}}
             <div class="lucd20-setting-group">
             {{#if label}}<h4 class="lucd20-group-label">{{label}}</h4>{{/if}}
+            <div class="lucd20-setting-grid">
             {{#each settings}}
-            <div class="lucd20-setting form-group {{#if locked}}lucd20-locked{{/if}}" data-search-text="{{searchText}}" {{#if dependsOn}}data-depends-on="{{dependsOn}}"{{/if}} {{#if dependsValue}}data-depends-value="{{dependsValue}}"{{/if}}>
-              <label for="lucd20-{{name}}">
+            <div class="lucd20-setting {{#if wide}}wide{{/if}} {{#if isBoolean}}boolean{{/if}} {{#if locked}}lucd20-locked{{/if}}" data-search-text="{{searchText}}"
+              {{#if dependsOn}}data-depends-on="{{dependsOn}}"{{/if}} {{#if dependsInverse}}data-depends-inverse{{/if}} {{#if dependsValue}}data-depends-value="{{dependsValue}}"{{/if}}>
+              <label class="lucd20-setting-label" for="lucd20-{{name}}">
                 {{label}}
                 {{#if isClient}}<i class="lucd20-badge fa-solid fa-user" data-tooltip="{{@root.labels.scopeClient}}"></i>
                 {{else}}<i class="lucd20-badge fa-solid fa-earth-americas" data-tooltip="{{@root.labels.scopeWorld}}"></i>{{/if}}
@@ -81,9 +83,10 @@
                 {{#if isColor}}<color-picker id="lucd20-{{name}}" name="{{name}}" value="{{value}}" {{#if locked}}disabled{{/if}}></color-picker>{{/if}}
                 {{#if isFile}}<file-picker id="lucd20-{{name}}" name="{{name}}" type="{{fileType}}" value="{{value}}" {{#if locked}}disabled{{/if}}></file-picker>{{/if}}
               </div>
-              {{#if hint}}<p class="hint">{{hint}}</p>{{/if}}
+              <p class="hint">{{hint}}</p>
             </div>
             {{/each}}
+            </div>
             </div>
             {{/each}}
             {{#if panelHTML}}<div class="lucd20-feature-panel">{{{panelHTML}}}</div>{{/if}}

@@ -32,7 +32,7 @@ function addHudButton(hud, html) {
   const base = hud.object ?? hud.document?.object;
   if (tokens.length < 2 || !base || !tokens.includes(base)) return;
 
-  const column = root.querySelector(".col.right") ?? root.querySelector(".col.left") ?? root;
+  const column = root.querySelector(".col.left") ?? root.querySelector(".col.right") ?? root;
   const button = document.createElement("button");
   button.type = "button";
   button.className = "control-icon lucd20-mte";

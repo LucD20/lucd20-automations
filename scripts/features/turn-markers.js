@@ -26,15 +26,21 @@ const COLOR_CHOICES = {
   tint: "LUCD20.TurnMarkers.Color.tint"
 };
 
-function markerSettings({ image, color, tint, opacity }) {
+/** Options that set size and speed (the Next-Turn Marker can share these with the Turn Marker). */
+const SIZE_KEYS = ["speed", "scale", "followArtScale"];
+
+function markerSettings({ image, color, tint, opacity, shareable = false }) {
+  // When the Next-Turn Marker shares size/speed, its own size/speed options are hidden.
+  const sized = shareable ? { dependsOn: "!matchTurnMarker" } : {};
   return {
     image: { kind: "file", fileType: "imagevideo", default: image },
+    ...(shareable ? { matchTurnMarker: { kind: "boolean", default: true } } : {}),
+    speed: { kind: "range", min: 0, max: 3, step: 0.05, default: 0.1, ...sized },
+    scale: { kind: "range", min: 0, max: 3, step: 0.05, default: 0.45, ...sized },
     color: { kind: "select", default: color, choices: COLOR_CHOICES },
-    tint: { kind: "color", default: tint, dependsOn: "color", dependsValue: "tint" },
-    speed: { kind: "range", min: 0, max: 3, step: 0.1, default: 0.5 },
-    scale: { kind: "range", min: 0, max: 3, step: 0.1, default: 0.4 },
     opacity: { kind: "range", min: 0.05, max: 1, step: 0.05, default: opacity },
-    followArtScale: { kind: "boolean", default: true },
+    tint: { kind: "color", default: tint, dependsOn: "color", dependsValue: "tint" },
+    followArtScale: { kind: "boolean", default: true, ...sized },
     above: { kind: "boolean", default: false }
   };
 }
@@ -67,10 +73,11 @@ const ColorMatrixFilter = () => PIXI.ColorMatrixFilter ?? PIXI.filters?.ColorMat
 const PrimarySpriteMesh = () => foundry.canvas?.primary?.PrimarySpriteMesh ?? globalThis.PrimarySpriteMesh;
 
 class MarkerRenderer {
-  constructor(feature, pickToken, imagePath) {
+  constructor(feature, pickToken, imagePath, { shareSize = () => false } = {}) {
     this.feature = feature;
     this.pickToken = pickToken;
     this.imagePath = imagePath;
+    this.shareSize = shareSize;
     this.sprite = null;
     this.src = null;
     this.token = null;
@@ -80,14 +87,16 @@ class MarkerRenderer {
 
   readOptions() {
     const f = this.feature;
+    // Size and speed can come from the Turn Marker (Next-Turn Marker "same size and speed").
+    const sized = this.shareSize() ? key => game.settings.get(MODULE_ID, `turnMarker_${key}`) : key => f.get(key);
     this.opts = {
       color: f.get("color"),
       tint: f.get("tint"),
       // Clamp: older versions stored values on a 0–20 / 0–4 scale.
-      speed: Math.min(Math.max(f.get("speed"), 0), 3),
-      scale: Math.min(Math.max(f.get("scale"), 0), 3),
+      speed: Math.min(Math.max(sized("speed"), 0), 3),
+      scale: Math.min(Math.max(sized("scale"), 0), 3),
       opacity: f.get("opacity"),
-      followArtScale: f.get("followArtScale"),
+      followArtScale: sized("followArtScale"),
       above: f.get("above")
     };
   }
@@ -299,15 +308,17 @@ defineFeature({
   category: "combat",
   scope: "world",
   defaultEnabled: false,
-  settings: markerSettings({ image: "", color: "sepia", tint: "#d9a066", opacity: 0.5 }),
+  settings: markerSettings({ image: "", color: "sepia", tint: "#d9a066", opacity: 0.5, shareable: true }),
   enable(feature) {
     // Empty image = same image as the Turn Marker.
     const image = () => feature.get("image") || game.settings.get(MODULE_ID, "turnMarker_image");
-    const renderer = new MarkerRenderer(feature, nextToken, image);
+    const shareSize = () => feature.get("matchTurnMarker");
+    const renderer = new MarkerRenderer(feature, nextToken, image, { shareSize });
     enableMarker(feature, renderer);
-    // Follow changes to the Turn Marker image when using it.
+    // Follow the Turn Marker's image / size / speed while sharing them.
     feature.on("lucd20.settingChanged", key => {
       if (key === "turnMarker_image" && !feature.get("image")) renderer.refresh();
+      if (SIZE_KEYS.some(k => key === `turnMarker_${k}`) && shareSize()) renderer.readOptions();
     });
   }
 });

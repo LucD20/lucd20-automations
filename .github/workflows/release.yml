@@ -1,33 +1,53 @@
-# Builds module.zip and attaches it (plus a versioned module.json) to a GitHub release.
-# Usage: create a release on GitHub with a tag like v0.1.0 and publish it.
+# Creates a GitHub release automatically whenever a push contains a module.json
+# version that has no release yet. Foundry's Update button then picks it up.
+# To ship an update: bump "version" in module.json and push.
 name: Release
 
 on:
-  release:
-    types: [published]
+  push:
+  workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set version and URLs in module.json
+      - name: Check whether this version is already released
+        id: check
         env:
-          TAG: ${{ github.event.release.tag_name }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(jq -r .version module.json)
+          TAG="v$VERSION"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; nothing to do."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set URLs in module.json
+        if: steps.check.outputs.skip == 'false'
+        env:
+          TAG: ${{ steps.check.outputs.tag }}
           REPO: ${{ github.repository }}
         run: |
-          VERSION="${TAG#v}"
-          jq --arg v "$VERSION" \
-             --arg m "https://github.com/$REPO/releases/latest/download/module.json" \
+          jq --arg m "https://github.com/$REPO/releases/latest/download/module.json" \
              --arg d "https://github.com/$REPO/releases/download/$TAG/module.zip" \
-             '.version = $v | .manifest = $m | .download = $d' module.json > module.tmp
+             '.manifest = $m | .download = $d' module.json > module.tmp
           mv module.tmp module.json
 
       - name: Build module.zip
+        if: steps.check.outputs.skip == 'false'
         run: |
           paths=()
           for p in module.json README.md LICENSE scripts lang styles templates packs; do
@@ -35,8 +55,12 @@ jobs:
           done
           zip -r module.zip "${paths[@]}"
 
-      - name: Upload release assets
+      - name: Create release
+        if: steps.check.outputs.skip == 'false'
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.event.release.tag_name }}
-        run: gh release upload "$TAG" module.json module.zip --clobber
+          TAG: ${{ steps.check.outputs.tag }}
+        run: |
+          git log -1 --pretty=%B > notes.md
+          gh release create "$TAG" module.json module.zip \
+            --target "$GITHUB_SHA" --title "$TAG" --notes-file notes.md --latest

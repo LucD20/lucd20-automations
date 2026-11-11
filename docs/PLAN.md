@@ -24,7 +24,7 @@ package list).
 | Settings UI | A single "Open LucD20 Automations" button in Foundry's settings, which opens our own window with categories (see §2). |
 | Language | Plain JavaScript (ES modules), no build step. English text kept in `lang/en.json`. |
 | Dependencies | None. No libWrapper. |
-| Testing | Clone the repo into `Data/modules/lucd20-automations`, `git pull` and reload. Disable the original module when its replacement lands. |
+| Updates | Installed in Foundry via the manifest URL. Every push that bumps `version` in `module.json` creates a GitHub release automatically; the owner clicks Update in Foundry. Disable the original module when its replacement lands. |
 | Loot / Party Stash | PF2e uses its native `loot` and `party` actors. Other systems get a module-provided solution; whether that is a new actor sub-type or a flagged existing type is decided when we test on 4e. |
 
 ### Rules that apply to every feature
@@ -90,12 +90,11 @@ Settings lists will be refined while building each feature.
 *Replaces Turn Announcer.*
 - On each turn change, posts a **chat card**: token image, name, owning
   player's name.
-- Hidden combatants: no card for players (or "???", setting). Respects the
-  system's hidden-NPC-name setting.
+- Hidden combatants: **skipped** (no card). Respects the system's
+  hidden-NPC-name setting.
 - **"You're up next" heads-up**: the owner(s) of the next combatant get a
   private notification.
-- Settings: enable · show player name · hidden combatants (skip / "???") ·
-  heads-up (per player, default on).
+- Settings: enable · show player name · heads-up (per player, default on).
 
 #### Loot Pile
 *Replaces Combat Booster's "Body pile".*
@@ -194,9 +193,13 @@ Settings lists will be refined while building each feature.
   minimum/maximum counts, averages.
 - PF2e: split by roll type (attack, saving throw, skill check, Perception,
   damage, flat check) and degree of success (crit success … crit failure).
+- **Everyone can view everyone's stats.**
+- Two counters per user: **All time** (never reset) and **Session**.
+  When the GM joins the world, a prompt asks **"Reset session?"**. Yes clears
+  the Session counters only; All time is kept.
 - Stored on each User document (survives clearing chat).
 - GM blind / secret rolls never appear in player-visible stats.
-- Settings: enable · *(open: who can view, session vs. all-time; see §5)*.
+- Settings: enable · ask to reset session on GM login.
 
 ### 🔒 Player Settings
 
@@ -251,7 +254,7 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 
 | # | Phase | Notes |
 |---|---|---|
-| 0 | Manifest, release workflow, plan | ✅ this commit |
+| 0 | Manifest, auto-release workflow, plan | ✅ done |
 | 1 | Core: feature registry, settings window, socket | Everything plugs into this |
 | 2 | Player Settings (force/lock) | Part of the settings window |
 | 3 | Clean Title Bars, Always Show Prototype Token | Small; first 4e test |
@@ -268,8 +271,5 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 
 ## 5. Open questions
 
-- **Dice Stats**: can players view stats (their own only? everyone's)?
-  Track "this session" vs. "all time", or both?
-- **Turn Announcer**: hidden combatants — skip the card, or show "???"?
 - **Loot / Party Stash outside PF2e**: new actor sub-type vs. flagged
   existing type (decide while testing on 4e).

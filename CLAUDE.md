@@ -5,6 +5,9 @@
   decision changes.
 - Targets: Foundry V14 (build 368), PF2e 8.7, D&D 4e 0.9.3. Foundry cannot run
   in the dev container; the owner tests in Foundry and reports back.
+- Releases are automatic: bump `version` in `module.json` (semver) and push;
+  `.github/workflows/release.yml` creates the GitHub release that Foundry
+  updates from. Every change meant for the owner to test needs a version bump.
 - One module. Generic features in `features/`, system code in `systems/<id>/`,
   loaded only when `game.system.id` matches.
 - Plain ES modules, no build step, no libWrapper. All UI text goes in

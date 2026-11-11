@@ -228,7 +228,28 @@ async function deletePile(pile) {
   await pile.delete();
 }
 
-async function transfer({ pileUuid, itemId, target, quantity }, senderId) {
+/** Send every item in the pile to the Party Stash (one chat line). */
+async function stashAll({ pileUuid }, senderId) {
+  const sender = game.users.get(senderId) ?? game.user;
+  const pile = fromUuidSync(pileUuid);
+  if (!isPile(pile)) throw new Error("Not a loot pile.");
+  const items = [...pile.items];
+  if (!items.length) return true;
+  const announce = state.feature?.get("announce");
+  for (const item of items) await transfer({ pileUuid, itemId: item.id, target: "stash" }, senderId, { quiet: true });
+  if (announce) {
+    const stash = await stashActor(true);
+    await ChatMessage.create({
+      content: `<p class="lucd20-loot-announce"><i class="fa-solid fa-sack"></i> ${localize("LUCD20.LootPile.AnnounceStashAll", {
+        user: esc(sender.name), count: items.length, actor: esc(stash?.name ?? "")
+      })}</p>`,
+      speaker: { alias: pile.name }
+    });
+  }
+  return true;
+}
+
+async function transfer({ pileUuid, itemId, target, quantity }, senderId, { quiet = false } = {}) {
   const sender = game.users.get(senderId) ?? game.user;
   const pile = fromUuidSync(pileUuid);
   if (!isPile(pile)) throw new Error("Not a loot pile.");
@@ -257,7 +278,7 @@ async function transfer({ pileUuid, itemId, target, quantity }, senderId) {
   if (hasQty && n < total) await item.update({ "system.quantity": total - n });
   else await item.delete();
 
-  if (state.feature?.get("announce")) {
+  if (state.feature?.get("announce") && !quiet) {
     const key = target === "stash" ? "LUCD20.LootPile.AnnounceStash" : "LUCD20.LootPile.AnnounceTake";
     await ChatMessage.create({
       content: `<p class="lucd20-loot-announce"><i class="fa-solid fa-sack"></i> ${localize(key, {
@@ -293,7 +314,8 @@ class LootPileWindow extends ApplicationV2 {
       take: LootPileWindow.#onTake,
       stash: LootPileWindow.#onStash,
       openSheet: LootPileWindow.#onOpenSheet,
-      deletePile: LootPileWindow.#onDelete
+      deletePile: LootPileWindow.#onDelete,
+      stashAll: LootPileWindow.#onStashAll
     }
   };
 
@@ -350,12 +372,11 @@ class LootPileWindow extends ApplicationV2 {
         </section>`).join("")
       : `<p class="lucd20-loot-empty">${localize("LUCD20.LootPile.Empty")}</p>`;
 
-    const footer = gm
-      ? `<footer class="lucd20-loot-footer">
-          <button type="button" data-action="openSheet"><i class="fa-solid fa-file-lines"></i> ${localize("LUCD20.LootPile.OpenSheet")}</button>
-          <button type="button" data-action="deletePile"><i class="fa-solid fa-trash"></i> ${localize("LUCD20.LootPile.Delete")}</button>
-        </footer>`
-      : "";
+    const footer = `<footer class="lucd20-loot-footer">
+        ${sorted.length ? `<button type="button" data-action="stashAll"><i class="fa-solid fa-box-archive"></i> ${localize("LUCD20.LootPile.StashAll")}</button>` : ""}
+        ${gm ? `<button type="button" data-action="openSheet"><i class="fa-solid fa-file-lines"></i> ${localize("LUCD20.LootPile.OpenSheet")}</button>
+          <button type="button" data-action="deletePile"><i class="fa-solid fa-trash"></i> ${localize("LUCD20.LootPile.Delete")}</button>` : ""}
+      </footer>`;
     return `<div class="lucd20-loot-body">${picker}<div class="lucd20-loot-list">${body}</div>${footer}</div>`;
   }
 
@@ -399,6 +420,21 @@ class LootPileWindow extends ApplicationV2 {
 
   static #onStash(event, button) {
     return this.#move("stash", button);
+  }
+
+  static async #onStashAll(event, button) {
+    const confirmed = await DialogV2.confirm({
+      window: { title: localize("LUCD20.LootPile.StashAll") },
+      content: `<p>${localize("LUCD20.LootPile.StashAllContent", { count: this.pile.items.size })}</p>`
+    });
+    if (!confirmed) return;
+    button.disabled = true;
+    try {
+      await executeAsGM("lootPile.stashAll", { pileUuid: this.pile.uuid });
+    } catch (err) {
+      ui.notifications.warn(err.message ?? String(err));
+      button.disabled = false;
+    }
   }
 
   static #onOpenSheet() {
@@ -445,6 +481,10 @@ defineFeature({
     onGMRequest("lootPile.transfer", (payload, senderId) => {
       if (!feature.active) throw new Error(localize("LUCD20.LootPile.Disabled"));
       return transfer(payload, senderId);
+    });
+    onGMRequest("lootPile.stashAll", (payload, senderId) => {
+      if (!feature.active) throw new Error(localize("LUCD20.LootPile.Disabled"));
+      return stashAll(payload, senderId);
     });
   },
 

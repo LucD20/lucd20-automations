@@ -102,8 +102,29 @@ function onSceneControls(controls) {
   if (!game.user.isGM) return;
   const lighting = Array.isArray(controls) ? controls.find(c => c.name === "lighting") : controls?.lighting;
   if (!lighting) return;
-  // Like PF2e: the Lighting controls icon shows whether GM Vision is on.
+  // Like PF2e: the Lighting controls icon shows whether GM Vision is on…
   lighting.icon = state.active ? "fa-solid fa-lightbulb-cfl-on lucd20-gm-vision" : "fa-solid fa-lightbulb";
+  // …and a toggle tool in the Lighting controls switches it (besides Ctrl+G).
+  const tools = lighting.tools;
+  if (!tools) return;
+  const tool = {
+    name: "lucd20GmVision",
+    title: game.i18n.localize("LUCD20.GMVision.Tool"),
+    icon: state.active ? "fa-solid fa-lightbulb-cfl-on" : "fa-solid fa-lightbulb-cfl",
+    order: (tools.day?.order ?? Object.keys(tools).length) + 1,
+    visible: true,
+    toggle: true,
+    active: state.active,
+    onChange: (event, active) => coreBackend.setOn(typeof active === "boolean" ? active : !state.active),
+    onClick: () => coreBackend.setOn(!state.active)
+  };
+  if (Array.isArray(tools)) {
+    delete tool.onChange;
+    tools.push(tool);
+  } else {
+    delete tool.onClick;
+    tools.lucd20GmVision = tool;
+  }
 }
 
 /* -------------------------------------------- */

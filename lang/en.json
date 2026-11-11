@@ -96,7 +96,7 @@
           },
           "followArtScale": {
             "Name": "Follow token art scale",
-            "Hint": "Also multiply by the token's art scale. Art with empty space around it (e.g. PF2e Scale 2) then gets a bigger marker than other tokens."
+            "Hint": "Also grow with the token's art scale (e.g. PF2e Scale 2)."
           },
           "above": {
             "Name": "Draw above tokens",
@@ -131,7 +131,7 @@
           },
           "followArtScale": {
             "Name": "Follow token art scale",
-            "Hint": "Also multiply by the token's art scale. Art with empty space around it (e.g. PF2e Scale 2) then gets a bigger marker than other tokens."
+            "Hint": "Also grow with the token's art scale (e.g. PF2e Scale 2)."
           },
           "above": {
             "Name": "Draw above tokens",
@@ -483,7 +483,8 @@
       "Shape": {
         "circle": "Circle",
         "square": "Square"
-      }
+      },
+      "Tool": "GM Vision (Ctrl+G)"
     },
     "LootPile": {
       "ReviewTitle": "Loot the fallen",
@@ -509,7 +510,10 @@
       "HowMany": "How many?",
       "AnnounceTake": "{user} took {count}{item} for {actor}.",
       "AnnounceStash": "{user} sent {count}{item} to {actor}.",
-      "Disabled": "The Loot Pile feature is switched off."
+      "Disabled": "The Loot Pile feature is switched off.",
+      "StashAll": "Send all to Party Stash",
+      "StashAllContent": "Send all {count} item(s) in this pile to the Party Stash?",
+      "AnnounceStashAll": "{user} sent everything ({count} items) to {actor}."
     }
   }
 }

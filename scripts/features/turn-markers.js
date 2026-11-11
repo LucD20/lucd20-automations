@@ -7,9 +7,8 @@ import { defineFeature } from "../core/registry.js";
  * A rotating image under the token of the current (or next) combatant.
  * - Size follows the token's footprint: grid size × max(width, height) × (1 + scale).
  *   Scale 0 = exactly the token's size, 0.45 = 45 % larger, the same for every
- *   token of that size. "Follow token art scale" (off by default) also multiplies
- *   by the art scale; art with padding (e.g. PF2e iconics at Scale 2) then gets a
- *   bigger marker than other tokens.
+ *   token of that size. "Follow token art scale" (on by default) also multiplies
+ *   by the art scale, so art drawn bigger (e.g. PF2e Scale 2) gets a bigger marker.
  * - Drawn on the same layer as token art, just below the token, at the
  *   token's elevation. "Draw above tokens" attaches it to the token instead.
  * - Only visible while combat is running and only when the token itself is
@@ -43,7 +42,7 @@ function markerSettings({ image, color, tint, opacity, shareable = false }) {
     color: { kind: "select", default: color, choices: COLOR_CHOICES },
     opacity: { kind: "range", min: 0.05, max: 1, step: 0.05, default: opacity },
     tint: { kind: "color", default: tint, dependsOn: "color", dependsValue: "tint" },
-    followArtScale: { kind: "boolean", default: false, ...sized },
+    followArtScale: { kind: "boolean", default: true, ...sized },
     above: { kind: "boolean", default: false }
   };
 }

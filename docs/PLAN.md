@@ -91,7 +91,7 @@ Settings lists will be refined while building each feature.
 - Images: Combat Booster's markers (MIT, credited) in `assets/markers/`;
   default `blueRunes.webp` (all systems).
 - Defaults: rotation speed 0.1 rotations/second (0–3), size beyond the token
-  0.2 (0–3, in 0.05 steps), follow art scale off.
+  0.2 (0–3, in 0.05 steps), follow art scale **on** (owner's choice, v0.11.1).
 - Switching it on turns off Foundry's own turn marker; switching it off turns
   Foundry's back on (only if we turned it off).
 - Settings: image · color (original/sepia/grayscale/tint) · tint · rotation
@@ -135,8 +135,10 @@ Settings lists will be refined while building each feature.
 - **Double-clicking the pile opens the Loot window for everyone** (GM too):
   items grouped by NPC, each with **Take** (to "Taking for": the player's
   character, or any player character for the GM) and **Party Stash**.
-  Stacks ask how many. The GM also has **Open sheet** (the system's own loot
-  sheet) and **Delete pile**. Hidden NPC names show as "Unknown creature".
+  Stacks ask how many. **Send all to Party Stash** for everyone. The GM also
+  has **Open sheet** (the system's own loot sheet) and **Delete pile**.
+- Visual redesign pending: a mockup is being made from
+  `docs/design/loot-window-mockup-prompt.md` (branch `mockup/loot-window`). Hidden NPC names show as "Unknown creature".
 - Transfers run on the GM's client (players don't own the pile); players can
   only take for characters they own. Same items stack (e.g. coins).
 - Chat line "Alice took Dogslicer for Amiri." (option). Empty piles are
@@ -224,7 +226,8 @@ Settings lists will be refined while building each feature.
   sources for the GM, so the **whole map** stays visible, and darkness is
   drawn with a much lighter color.
 - **Ctrl+G** toggles real vision. The **Lighting controls icon** becomes a lit
-  bulb while GM Vision is on (like PF2e).
+  bulb while GM Vision is on (like PF2e). Outside PF2e there is also a
+  **GM Vision toggle tool** in the Lighting controls (v0.11.1).
 - **Darkness brightness** slider: 1 = PF2e's look (`#d1ccff`), lower keeps
   scenes darker, up to 1.5 for almost no darkness.
 - PF2e (`scripts/systems/pf2e/gm-vision.js`): drives the system's own GM
@@ -256,6 +259,8 @@ as soon as it appears, so it survives reloads)
   other items named in "Other ⋮ items" (e.g. `3D Dice Settings`).
 - Older-style sheets (PF2e) already show their buttons; there Configure
   Ownership is added for the GM if missing.
+- The icon is a separate element inside the button, so styling modules that
+  set a font on title-bar buttons (fox-4e-styling) don't break it (v0.11.1).
 - Promoted items are only hidden inside the ⋮ menu; Foundry's own list is not
   changed, so the ⋮ button stays for the remaining items (fixed in v0.5.0).
 - Settings: Prototype Token · Configure Ownership · Other ⋮ items. Per player.

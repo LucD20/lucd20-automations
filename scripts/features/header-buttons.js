@@ -107,7 +107,13 @@ function addButtons(app) {
     button.type = "button";
     // Own class (not Foundry's "header-control") so core logic that counts or
     // lays out header controls is not affected; styled to match in CSS.
-    button.className = `lucd20-header-button ${control.icon ?? "fa-solid fa-circle"}`;
+    // The icon is its own element: styling modules (e.g. fox-4e-styling) that
+    // set a font on title-bar buttons would otherwise replace the icon glyph.
+    button.className = "lucd20-header-button";
+    const icon = document.createElement("i");
+    icon.className = `${control.icon ?? "fa-solid fa-circle"} fa-fw`;
+    icon.setAttribute("inert", "");
+    button.append(icon);
     button.dataset.tooltip = label;
     button.dataset.lucd20Promoted = control.action ?? label;
     button.setAttribute("aria-label", label);

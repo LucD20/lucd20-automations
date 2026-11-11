@@ -124,19 +124,30 @@ Settings lists will be refined while building each feature.
   "You're up next" (per player).
 
 #### Loot Pile
-*Replaces Combat Booster's "Body pile".*
-- When combat ends, if any NPCs died, the GM gets a **review window**: items
-  grouped by NPC (NPCs sorted by level, then name; items alphabetical), with
-  checkboxes. Only real gear is listed (weapons, armor, equipment,
-  consumables, treasure, coins). NPC attacks, spells, feats and effects are
-  ignored.
-- Confirming creates a loot token at the **center of the dead NPCs**,
-  holding the checked items (moved off the NPCs), still grouped by NPC.
-- Players open the pile and use **Take** (to their character) or
-  **Party Stash**. Transfers are carried out by the GM's client via socket.
-- PF2e: native loot actor + native party actor inventory.
-  Other systems: module-provided loot pile and Party Stash (see §1).
-- Settings: enable · include coins · pile token name/image.
+*Replaces Combat Booster's "Body pile".* ✅ v0.11.0
+- When combat ends, the active GM gets a **review window** with the gear of
+  every NPC **marked as defeated**: grouped by NPC (**highest level first**,
+  then name; items alphabetical), with checkboxes. Only real gear is listed
+  (PF2e: physical items; NPC strikes, spells, actions, effects ignored).
+- Confirming creates a loot pile at the **centre of the dead NPCs** and moves
+  the checked items into it (each remembers its NPC). **NPC tokens stay on the
+  map.** Piles go in an Actors folder "Loot Piles".
+- **Double-clicking the pile opens the Loot window for everyone** (GM too):
+  items grouped by NPC, each with **Take** (to "Taking for": the player's
+  character, or any player character for the GM) and **Party Stash**.
+  Stacks ask how many. The GM also has **Open sheet** (the system's own loot
+  sheet) and **Delete pile**. Hidden NPC names show as "Unknown creature".
+- Transfers run on the GM's client (players don't own the pile); players can
+  only take for characters they own. Same items stack (e.g. coins).
+- Chat line "Alice took Dogslicer for Amiri." (option). Empty piles are
+  removed (option).
+- PF2e (`scripts/systems/pf2e/loot-pile.js`): native `loot` actor; Party
+  Stash = the active party's inventory.
+- Other systems (decided v0.11.0): the pile and a module "Party Stash" are
+  actors of an existing type (`loot`, else `npc`) flagged by the module; the
+  stash is created on first use.
+- Settings: pile name · pile image · include coins · remove when empty ·
+  announce in chat.
 
 ### 💬 Chat
 
@@ -345,12 +356,11 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 | 7 | Damage Log (generic → PF2e) | ✅ v0.8.0 |
 | 8 | Dice Stats (generic → PF2e) | ✅ v0.9.0 |
 | 9 | GM Vision | ✅ v0.10.0 |
-| 10 | Loot Pile + Party Stash | Needs system adapters + placement |
+| 10 | Loot Pile + Party Stash | ✅ v0.11.0 |
 | 11 | PF2e Search + Hazard Detection | Largest; reuses parts of 9 and 10 |
 
 ---
 
 ## 5. Open questions
 
-- **Loot / Party Stash outside PF2e**: new actor sub-type vs. flagged
-  existing type (decide while testing on 4e).
+- (none)

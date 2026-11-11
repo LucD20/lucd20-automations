@@ -1276,3 +1276,145 @@ button.lucd20-lock.mode-lock {
   width: 100%;
   margin: 4px 0 0;
 }
+
+/* Loot Pile ------------------------------------------------------------ */
+
+.lucd20-loot-review-dialog .lucd20-loot-review {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.lucd20-loot-review .lucd20-loot-group,
+.lucd20-loot-window .lucd20-loot-group {
+  margin: 0 0 10px;
+}
+
+.lucd20-loot-review h4,
+.lucd20-loot-window h3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0 4px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid rgba(127, 127, 127, 0.35);
+  font-size: 14px;
+}
+
+.lucd20-loot-review h4 img,
+.lucd20-loot-window h3 img {
+  width: 26px;
+  height: 26px;
+  border: none;
+  object-fit: contain;
+}
+
+.lucd20-loot-review .hint,
+.lucd20-loot-window .hint {
+  font-size: 12px;
+  font-weight: normal;
+  opacity: 0.75;
+}
+
+.lucd20-loot-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+  cursor: pointer;
+}
+
+.lucd20-loot-check img,
+.lucd20-loot-item img {
+  width: 24px;
+  height: 24px;
+  border: none;
+  object-fit: contain;
+}
+
+.lucd20-loot-window .window-content {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+.lucd20-loot-window .lucd20-loot-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.lucd20-loot-window .lucd20-loot-taker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(127, 127, 127, 0.35);
+  white-space: nowrap;
+}
+
+.lucd20-loot-window .lucd20-loot-taker select {
+  flex: 1;
+}
+
+.lucd20-loot-window > .window-content .hint {
+  padding: 0 10px;
+}
+
+.lucd20-loot-window .lucd20-loot-list {
+  flex: 1;
+  min-height: 0;
+  padding: 4px 10px;
+  overflow-y: auto;
+}
+
+.lucd20-loot-window ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lucd20-loot-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 0;
+}
+
+.lucd20-loot-item .name {
+  flex: 1;
+  min-width: 0;
+}
+
+.lucd20-loot-item .qty {
+  opacity: 0.75;
+  font-size: 12px;
+}
+
+.lucd20-loot-item button {
+  flex: 0 0 auto;
+  width: auto;
+  margin: 0;
+  padding: 1px 8px;
+  font-size: 12px;
+  line-height: 20px;
+  white-space: nowrap;
+}
+
+.lucd20-loot-window .lucd20-loot-empty {
+  opacity: 0.75;
+}
+
+.lucd20-loot-window .lucd20-loot-footer {
+  display: flex;
+  gap: 6px;
+  padding: 6px 10px;
+  border-top: 1px solid rgba(127, 127, 127, 0.35);
+}
+
+.lucd20-loot-qty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

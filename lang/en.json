@@ -165,7 +165,26 @@
       },
       "lootPile": {
         "Name": "Loot Pile",
-        "Hint": "After combat, review the dead NPCs' gear and drop it as one loot pile. Players take items or send them to the Party Stash."
+        "Hint": "When combat ends, review the gear of NPCs marked as defeated and drop it as one loot pile at the centre of the bodies. Double-click the pile to take items or send them to the Party Stash.",
+        "Setting": {
+          "pileName": {
+            "Name": "Pile name",
+            "Hint": "Empty = \"Loot Pile\"."
+          },
+          "image": {
+            "Name": "Pile image"
+          },
+          "includeCoins": {
+            "Name": "Include coins"
+          },
+          "deleteWhenEmpty": {
+            "Name": "Remove the pile when empty"
+          },
+          "announce": {
+            "Name": "Announce in chat",
+            "Hint": "\"Alice took Longsword\" when an item is taken."
+          }
+        }
       },
       "chatPins": {
         "Name": "Chat Pins",
@@ -465,6 +484,32 @@
         "circle": "Circle",
         "square": "Square"
       }
+    },
+    "LootPile": {
+      "ReviewTitle": "Loot the fallen",
+      "ReviewHint": "Uncheck anything that shouldn't be in the pile. Checked items are moved off the NPCs.",
+      "Level": "level {level}",
+      "Create": "Create loot pile",
+      "Skip": "Skip",
+      "Failed": "Could not create the loot pile. See the console (F12).",
+      "Folder": "Loot Piles",
+      "DefaultName": "Loot Pile",
+      "Created": "Loot pile created with {count} item(s).",
+      "Stash": "Party Stash",
+      "Unknown": "Unknown",
+      "TakingFor": "Taking for",
+      "NoCharacter": "You don't own a character to take items with; you can still send items to the Party Stash.",
+      "Take": "Take",
+      "TakeHint": "Move to the character above",
+      "StashHint": "Send to the Party Stash",
+      "Empty": "The pile is empty.",
+      "OpenSheet": "Open sheet",
+      "Delete": "Delete pile",
+      "DeleteContent": "Delete <strong>{name}</strong> and its token?",
+      "HowMany": "How many?",
+      "AnnounceTake": "{user} took {count}{item} for {actor}.",
+      "AnnounceStash": "{user} sent {count}{item} to {actor}.",
+      "Disabled": "The Loot Pile feature is switched off."
     }
   }
 }

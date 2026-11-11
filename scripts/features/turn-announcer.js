@@ -35,10 +35,26 @@ function visibleName(combatant) {
   return canSee || isPlayerOwned(combatant) ? combatant.name : localize("LUCD20.TurnAnnouncer.Unknown");
 }
 
-function cardImage(combatant) {
-  const src = combatant.token?.texture?.src ?? combatant.img;
+/**
+ * Image and zoom for the card portrait. Token art is drawn at the token's
+ * texture scale on the map (e.g. PF2e art at Scale 2 has lots of empty space
+ * around the figure), so the portrait is zoomed by the same amount and cropped
+ * to its frame. Dynamic token rings use their subject image and scale.
+ */
+function cardPortrait(combatant) {
+  const doc = combatant.token;
+  const ring = doc?.ring?.enabled ? doc.ring : null;
+  let src = ring?.subject?.texture || doc?.texture?.src || combatant.img;
+  let zoom = 1;
+  if (doc?.texture) zoom = (Math.abs(doc.texture.scaleX ?? 1) + Math.abs(doc.texture.scaleY ?? 1)) / 2;
+  if (ring) zoom *= ring.subject?.scale ?? 1;
+
   const isVideo = /\.(webm|mp4|m4v|ogv)(\?.*)?$/i.test(src ?? "");
-  return isVideo || !src ? combatant.actor?.img ?? "icons/svg/mystery-man.svg" : src;
+  if (isVideo || !src) {
+    src = combatant.actor?.img ?? "icons/svg/mystery-man.svg";
+    zoom = 1;
+  }
+  return { src, zoom: Math.min(Math.max(zoom, 0.5), 3) };
 }
 
 function turnKey(combat) {
@@ -61,15 +77,22 @@ async function announce(feature, combat) {
   const name = visibleName(combatant);
   const players = feature.get("showPlayerName") ? playerOwners(combatant).map(u => u.name) : [];
   const round = feature.get("showRound") ? localize("LUCD20.TurnAnnouncer.Round", { round: combat.round }) : "";
+  const portrait = cardPortrait(combatant);
+  const top = [
+    round ? `<span class="lucd20-turn-round">${esc(round)}</span>` : "",
+    players.length ? `<span class="lucd20-turn-player"><i class="fa-solid fa-user"></i> ${esc(players.join(", "))}</span>` : ""
+  ].join("");
 
+  // Compact card: portrait | Round · player / ───── / "Name's turn"
   const content = `
     <div class="lucd20-turn-card">
-      <img class="lucd20-turn-image" src="${esc(cardImage(combatant))}" alt="">
-      <div class="lucd20-turn-text">
-        <span class="lucd20-turn-name">${esc(name)}</span>
-        ${players.length ? `<span class="lucd20-turn-player"><i class="fa-solid fa-user"></i> ${esc(players.join(", "))}</span>` : ""}
+      <div class="lucd20-turn-portrait">
+        <img src="${esc(portrait.src)}" alt="" style="transform: scale(${portrait.zoom})">
       </div>
-      ${round ? `<span class="lucd20-turn-round">${esc(round)}</span>` : ""}
+      <div class="lucd20-turn-text">
+        ${top ? `<div class="lucd20-turn-top">${top}</div><hr class="lucd20-turn-rule">` : ""}
+        <div class="lucd20-turn-name">${esc(localize("LUCD20.TurnAnnouncer.Turn", { name }))}</div>
+      </div>
     </div>`;
 
   await ChatMessage.create({
@@ -121,6 +144,15 @@ defineFeature({
   },
 
   enable(feature) {
+    // Compact look: hide the message header of turn cards (GM can still delete via right-click).
+    const markCard = (message, html) => {
+      const el = html instanceof HTMLElement ? html : html?.[0];
+      if (el && message.getFlag?.(MODULE_ID, "turnCard")) el.classList.add("lucd20-turn-message");
+    };
+    feature.on("renderChatMessageHTML", markCard);
+    feature.on("renderChatMessage", markCard);
+    feature.onCleanup(() => document.querySelectorAll(".lucd20-turn-message").forEach(el => el.classList.remove("lucd20-turn-message")));
+
     feature.on("updateCombat", (combat, changed) => {
       if (!("turn" in changed) && !("round" in changed)) return;
       if (game.user.isActiveGM) announce(feature, combat);

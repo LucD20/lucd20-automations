@@ -1,4 +1,4 @@
-import { error, localize } from "../core/constants.js";
+import { error, localize, warn } from "../core/constants.js";
 import { defineFeature } from "../core/registry.js";
 import { appElement, appHeader, openAppWindows } from "../core/dom.js";
 
@@ -105,7 +105,9 @@ function addButtons(app) {
     const label = controlLabel(control);
     const button = document.createElement("button");
     button.type = "button";
-    button.className = `header-control icon ${control.icon ?? "fa-solid fa-circle"}`;
+    // Own class (not Foundry's "header-control") so core logic that counts or
+    // lays out header controls is not affected; styled to match in CSS.
+    button.className = `lucd20-header-button ${control.icon ?? "fa-solid fa-circle"}`;
     button.dataset.tooltip = label;
     button.dataset.lucd20Promoted = control.action ?? label;
     button.setAttribute("aria-label", label);
@@ -113,6 +115,26 @@ function addButtons(app) {
     header.insertBefore(button, anchor);
   }
   watchMenu(app);
+  ensureMenuButton(app, header);
+}
+
+/** Keep the ⋮ button visible while its menu still has items, and report if something else hides it. */
+function ensureMenuButton(app, header) {
+  const toggle = header.querySelector('[data-action="toggleControls"]');
+  if (!toggle) return;
+  const menu = appElement(app)?.querySelector(".controls-dropdown");
+  const remaining = menu ? [...menu.querySelectorAll("[data-action]")].filter(el => !el.closest(".lucd20-promoted-hidden")).length : 0;
+  if (remaining && toggle.classList.contains("hidden")) toggle.classList.remove("hidden");
+  requestAnimationFrame(() => {
+    if (!toggle.isConnected || getComputedStyle(toggle).display !== "none") return;
+    warn("The ⋮ button of this window is hidden. Please send this to the module author:", {
+      app: app.constructor?.name,
+      toggleClasses: toggle.className,
+      menuItems: menu?.querySelectorAll("[data-action]").length ?? null,
+      hiddenByUs: menu?.querySelectorAll(".lucd20-promoted-hidden").length ?? null,
+      header: header.outerHTML.slice(0, 1500)
+    });
+  });
 }
 
 /* -------------------------------------------- */

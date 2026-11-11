@@ -74,22 +74,31 @@ Settings lists will be refined while building each feature.
 ### ⚔️ Combat
 
 #### Turn Marker
-*Replaces part of Combat Booster.*
-- An image under the token of the active combatant, rotating.
-- Size follows the token: marker size = token size × scale (a 2×2 token gets
-  a 2×2-sized marker).
-- Settings: enable · image · rotation speed · scale · opacity.
+*Replaces part of Combat Booster.* ✅ v0.6.0
+- A rotating image **under** the token of the active combatant (same canvas
+  layer as token art, just below the token, at its elevation).
+- Size follows the token: grid size × max(width, height) × 1.4 × scale (a 2×2
+  token gets a 2×2-sized marker). Optional: also follow the token art scale.
+- Only shown while combat runs and only on tokens this user can see.
+- Images: Combat Booster's markers (MIT, credited) in `assets/markers/`;
+  default `tolkien_marker.png`.
+- Settings: image · color (original/sepia/grayscale/tint) · tint · rotation
+  speed · scale · opacity · follow art scale · draw above tokens (fallback).
 
 #### Next-Turn Marker
-*Replaces part of Combat Booster.*
-- Same idea, shown on the combatant who acts next.
-- Skips defeated combatants. Never shown to players on tokens they can't see.
-- Settings: enable · image · rotation speed · scale · opacity.
+*Replaces part of Combat Booster.* ✅ v0.6.0
+- Same, on the combatant who acts next. Skips defeated combatants. Never shown
+  to players on tokens they can't see.
+- Default: the Turn Marker image, sepia, 50 % opacity (Combat Booster's look);
+  can use its own image, color and opacity instead.
+- Same settings as the Turn Marker (empty image = use the Turn Marker's).
 
 #### Turn Announcer
 *Replaces Turn Announcer.* ✅ v0.5.0
-- On each turn change, the active GM's client posts a **chat card**: token
-  image, name, owning player(s), **round number**.
+- On each turn change, the active GM's client posts a **compact chat card**:
+  portrait | "Round X · player" / line / "Name's turn". No message header.
+  The portrait is zoomed by the token's art scale (PF2e Scale 2 looks right).
+- Card content: token image, name, owning player(s), **round number**.
 - **NPC turns are announced** too (option). Hidden and defeated combatants
   are **skipped**. NPC names follow PF2e's name-visibility rule
   ("Unknown creature" when players can't see the name).
@@ -279,7 +288,7 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 | 2 | Player Settings (force/lock) | ✅ v0.3.0 |
 | 3 | Clean Title Bars, Always Show Header Buttons | ✅ v0.4.0 |
 | 4 | Chat Pins, Turn Announcer | ✅ v0.5.0 |
-| 5 | Turn Marker, Next-Turn Marker | First canvas drawing |
+| 5 | Turn Marker, Next-Turn Marker | ✅ v0.6.0 |
 | 6 | Multi-Token Edit, Folder Drop | Token placement reused by Loot Pile |
 | 7 | Damage Log (generic → PF2e) | Sets the generic + system pattern |
 | 8 | Dice Stats (generic → PF2e) | Follows that pattern |

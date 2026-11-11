@@ -57,7 +57,7 @@
             <div class="lucd20-setting-group">
             {{#if label}}<h4 class="lucd20-group-label">{{label}}</h4>{{/if}}
             {{#each settings}}
-            <div class="lucd20-setting form-group {{#if locked}}lucd20-locked{{/if}}" data-search-text="{{searchText}}" {{#if dependsOn}}data-depends-on="{{dependsOn}}"{{/if}}>
+            <div class="lucd20-setting form-group {{#if locked}}lucd20-locked{{/if}}" data-search-text="{{searchText}}" {{#if dependsOn}}data-depends-on="{{dependsOn}}"{{/if}} {{#if dependsValue}}data-depends-value="{{dependsValue}}"{{/if}}>
               <label for="lucd20-{{name}}">
                 {{label}}
                 {{#if isClient}}<i class="lucd20-badge fa-solid fa-user" data-tooltip="{{@root.labels.scopeClient}}"></i>

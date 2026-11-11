@@ -596,18 +596,35 @@ button.lucd20-lock.mode-lock {
 
 /* Turn Announcer ------------------------------------------------------- */
 
+.chat-message.lucd20-turn-message {
+  padding: 4px 6px;
+}
+
+.chat-message.lucd20-turn-message .message-header {
+  display: none;
+}
+
 .lucd20-turn-card {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
-.lucd20-turn-card .lucd20-turn-image {
-  flex: 0 0 52px;
-  width: 52px;
-  height: 52px;
-  object-fit: contain;
+.lucd20-turn-card .lucd20-turn-portrait {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.lucd20-turn-card .lucd20-turn-portrait img {
+  display: block;
+  width: 100%;
+  height: 100%;
   border: none;
+  object-fit: contain;
+  transform-origin: center;
 }
 
 .lucd20-turn-card .lucd20-turn-text {
@@ -617,21 +634,61 @@ button.lucd20-lock.mode-lock {
   min-width: 0;
 }
 
-.lucd20-turn-card .lucd20-turn-name {
-  font-size: 16px;
-  font-weight: bold;
+.lucd20-turn-card .lucd20-turn-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 11px;
+  opacity: 0.8;
+  line-height: 1.2;
 }
 
 .lucd20-turn-card .lucd20-turn-player {
-  font-size: 12px;
-  opacity: 0.8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.lucd20-turn-card .lucd20-turn-round {
-  align-self: flex-start;
-  padding: 1px 6px;
-  border: 1px solid rgba(127, 127, 127, 0.4);
-  border-radius: 999px;
-  font-size: 11px;
+.lucd20-turn-card .lucd20-turn-rule {
+  margin: 2px 0;
+  border: none;
+  border-top: 1px solid rgba(127, 127, 127, 0.45);
+}
+
+.lucd20-turn-card .lucd20-turn-name {
+  font-size: 14px;
+  font-weight: bold;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Always Show Header Buttons ------------------------------------------- */
+
+.window-header .lucd20-header-button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: var(--header-button-size, 24px);
+  height: var(--header-button-size, 24px);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  box-shadow: none;
+  color: inherit;
+  font-size: var(--font-size-14, 14px);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.window-header .lucd20-header-button:hover,
+.window-header .lucd20-header-button:focus-visible {
+  background: rgba(127, 127, 127, 0.25);
+  outline: none;
 }

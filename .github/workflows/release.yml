@@ -50,7 +50,7 @@ jobs:
         if: steps.check.outputs.skip == 'false'
         run: |
           paths=()
-          for p in module.json README.md LICENSE scripts lang styles templates packs; do
+          for p in module.json README.md LICENSE scripts lang styles templates assets packs; do
             [ -e "$p" ] && paths+=("$p")
           done
           zip -r module.zip "${paths[@]}"

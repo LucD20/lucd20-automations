@@ -212,6 +212,7 @@ export class SettingsHub extends HandlebarsApplicationMixin(ApplicationV2) {
       locked: !!lock?.lockedForMe,
       requiresReload: !!s.requiresReload,
       dependsOn: s.dependsOn ? feature.key(s.dependsOn) : null,
+      dependsValue: s.dependsValue ?? null,
       searchText: `${label} ${hint}`.toLowerCase()
     };
   }
@@ -229,7 +230,7 @@ export class SettingsHub extends HandlebarsApplicationMixin(ApplicationV2) {
   _onFirstRender(context, options) {
     super._onFirstRender?.(context, options);
     this.element.addEventListener("change", event => {
-      if (event.target.matches?.("input[type=checkbox]")) this.#applyDependencies();
+      if (event.target.matches?.("input[type=checkbox], select")) this.#applyDependencies();
     });
   }
 
@@ -254,12 +255,20 @@ export class SettingsHub extends HandlebarsApplicationMixin(ApplicationV2) {
     SettingsHub.#instance = null;
   }
 
-  /** Hide anything marked data-depends-on="<checkbox name>" while that checkbox is unchecked. */
+  /**
+   * Hide anything marked data-depends-on="<name>" while that checkbox is unchecked,
+   * or, with data-depends-value, while that dropdown has a different value.
+   */
   #applyDependencies() {
     const form = this.element;
-    const isChecked = name => form.querySelector(`input[type=checkbox][name="${CSS.escape(name)}"]`)?.checked ?? true;
+    const satisfied = el => {
+      const control = form.querySelector(`[name="${CSS.escape(el.dataset.dependsOn)}"]`);
+      if (!control) return true;
+      if (el.dataset.dependsValue !== undefined) return control.value === el.dataset.dependsValue;
+      return control.type === "checkbox" ? control.checked : !!control.value;
+    };
     for (const el of form.querySelectorAll("[data-depends-on]")) {
-      el.classList.toggle("dependency-hidden", !isChecked(el.dataset.dependsOn));
+      el.classList.toggle("dependency-hidden", !satisfied(el));
     }
     for (const card of form.querySelectorAll(".lucd20-feature:not(.planned)")) {
       const toggle = card.querySelector("input[data-feature-toggle]");

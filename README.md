@@ -8,6 +8,12 @@ are loaded only for that system (PF2e first).
 See [docs/PLAN.md](docs/PLAN.md) for decisions, the settings layout, feature
 specs and build order.
 
+## Credits
+
+Turn marker images in `assets/markers/` come from
+[Combat Booster](https://github.com/theripper93/Combat-Booster) by theripper93
+(MIT License, see `assets/markers/LICENSE-combat-booster.txt`).
+
 ## Install
 
 In Foundry: **Add-on Modules → Install Module → Manifest URL**:

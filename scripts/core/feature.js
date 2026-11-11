@@ -29,6 +29,7 @@ const KIND_TYPES = {
  *     mode:  { kind: "select", choices: { a: "LUCD20.…" }, default: "a" },
  *     extra: { kind: "boolean", default: false, system: "pf2e" },   // PF2e sub-section only
  *     size:  { kind: "number", default: 1, dependsOn: "extra" },     // hidden while `extra` is off
+ *     tint:  { kind: "color", default: "#fff", dependsOn: "mode", dependsValue: "a" }, // shown only when mode = a
  *     key:   { kind: "string", default: "", scope: "client", requiresReload: true }
  *   },
  *   init(feature) {},              // always runs at `init` (keybindings, socket handlers …)
@@ -182,6 +183,8 @@ export class Feature {
   }
 
   #onSettingChange(setting, value) {
+    // Lets other features react to this one's options (e.g. Next-Turn Marker using the Turn Marker image).
+    if (game.ready) Hooks.callAll("lucd20.settingChanged", this.key(setting.key), value);
     if (!game.ready || !this.active || setting.requiresReload) return;
     if (this.def.onSettingChange) {
       try {

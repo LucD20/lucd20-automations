@@ -71,11 +71,71 @@
     "Feature": {
       "turnMarker": {
         "Name": "Turn Marker",
-        "Hint": "A rotating marker under the token whose turn it is. Its size follows the token's size."
+        "Hint": "A rotating marker under the token whose turn it is. Its size follows the token's size. Only shown on tokens you can see.",
+        "Setting": {
+          "image": {
+            "Name": "Image",
+            "Hint": "Image or video. Built-in markers are in modules/lucd20-automations/assets/markers."
+          },
+          "color": {
+            "Name": "Color"
+          },
+          "tint": {
+            "Name": "Tint color"
+          },
+          "speed": {
+            "Name": "Rotation speed"
+          },
+          "scale": {
+            "Name": "Scale",
+            "Hint": "1 = a bit larger than the token. A 2×2 token gets a 2×2-sized marker."
+          },
+          "opacity": {
+            "Name": "Opacity"
+          },
+          "followArtScale": {
+            "Name": "Follow token art scale",
+            "Hint": "Also grow with the token's art scale (e.g. PF2e Scale 2). Off: only the token's size in squares counts."
+          },
+          "above": {
+            "Name": "Draw above tokens",
+            "Hint": "Use if the marker doesn't show under tokens."
+          }
+        }
       },
       "nextTurnMarker": {
         "Name": "Next-Turn Marker",
-        "Hint": "A marker on the combatant who acts next. Skips defeated combatants and is never shown on tokens players can't see."
+        "Hint": "A marker under the combatant who acts next (skips defeated). Never shown on tokens players can't see.",
+        "Setting": {
+          "image": {
+            "Name": "Image",
+            "Hint": "Leave empty to use the Turn Marker image (with the color and opacity below)."
+          },
+          "color": {
+            "Name": "Color"
+          },
+          "tint": {
+            "Name": "Tint color"
+          },
+          "speed": {
+            "Name": "Rotation speed"
+          },
+          "scale": {
+            "Name": "Scale",
+            "Hint": "1 = a bit larger than the token. A 2×2 token gets a 2×2-sized marker."
+          },
+          "opacity": {
+            "Name": "Opacity"
+          },
+          "followArtScale": {
+            "Name": "Follow token art scale",
+            "Hint": "Also grow with the token's art scale (e.g. PF2e Scale 2). Off: only the token's size in squares counts."
+          },
+          "above": {
+            "Name": "Draw above tokens",
+            "Hint": "Use if the marker doesn't show under tokens."
+          }
+        }
       },
       "turnAnnouncer": {
         "Name": "Turn Announcer",
@@ -241,7 +301,16 @@
       "Round": "Round {round}",
       "Speaker": "Turn",
       "Unknown": "Unknown creature",
-      "UpNext": "You're up next: {name}"
+      "UpNext": "You're up next: {name}",
+      "Turn": "{name}'s turn"
+    },
+    "TurnMarkers": {
+      "Color": {
+        "none": "Original",
+        "sepia": "Sepia",
+        "grayscale": "Grayscale",
+        "tint": "Tint"
+      }
     }
   }
 }

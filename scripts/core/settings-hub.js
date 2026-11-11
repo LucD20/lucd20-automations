@@ -1,6 +1,7 @@
 import { MODULE_ID, TEMPLATE_PATH, localize, localizeIfExists, systemLabel } from "./constants.js";
 import { CATEGORIES, FEATURE_ORDER, isAvailableForSystem } from "./catalog.js";
 import { availableFeatures, getFeature, settingInfo } from "./registry.js";
+import { lockInfo, openLockDialog } from "./setting-locks.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin, DialogV2 } = foundry.applications.api;
 
@@ -38,7 +39,9 @@ export class SettingsHub extends HandlebarsApplicationMixin(ApplicationV2) {
     },
     actions: {
       selectCategory: SettingsHub.#onSelectCategory,
-      resetFeature: SettingsHub.#onResetFeature
+      resetFeature: SettingsHub.#onResetFeature,
+      lockSetting: SettingsHub.#onLockSetting,
+      featureAction: SettingsHub.#onFeatureAction
     }
   };
 
@@ -137,6 +140,8 @@ export class SettingsHub extends HandlebarsApplicationMixin(ApplicationV2) {
 
     const name = feature.name;
     const hint = feature.hint;
+    const toggleLock = feature.scope === "client" ? lockInfo(`${MODULE_ID}.${feature.key("enabled")}`) : null;
+    const panelHTML = isGM && feature.def.renderPanel ? feature.def.renderPanel(feature) : null;
     return {
       id: feature.id,
       name,
@@ -144,11 +149,14 @@ export class SettingsHub extends HandlebarsApplicationMixin(ApplicationV2) {
       planned: false,
       enabled,
       canToggle,
+      toggleLock,
+      toggleLocked: !!toggleLock?.lockedForMe,
       enabledName: feature.key("enabled"),
       isClient: feature.scope === "client",
       systemTags: (feature.def.systems ?? []).map(systemLabel),
       groups,
-      hasSettings: groups.length > 0,
+      panelHTML,
+      hasSettings: groups.length > 0 || !!panelHTML,
       canReset: groups.length > 0,
       searchText: `${name} ${hint}`.toLowerCase()
     };
@@ -175,6 +183,7 @@ export class SettingsHub extends HandlebarsApplicationMixin(ApplicationV2) {
     const label = localizeIfExists(`${base}.Name`, s.key);
     const hint = localizeIfExists(`${base}.Hint`);
     const value = feature.get(s.key);
+    const lock = s.scope === "client" ? lockInfo(`${MODULE_ID}.${feature.key(s.key)}`) : null;
     return {
       name: feature.key(s.key),
       label,
@@ -196,6 +205,8 @@ export class SettingsHub extends HandlebarsApplicationMixin(ApplicationV2) {
         ? Object.entries(s.choices ?? {}).map(([v, l]) => ({ value: v, label: localize(l), selected: v === value }))
         : null,
       isClient: s.scope === "client",
+      lock,
+      locked: !!lock?.lockedForMe,
       requiresReload: !!s.requiresReload,
       dependsOn: s.dependsOn ? feature.key(s.dependsOn) : null,
       searchText: `${label} ${hint}`.toLowerCase()
@@ -321,6 +332,19 @@ export class SettingsHub extends HandlebarsApplicationMixin(ApplicationV2) {
     }
     await this.render();
     if (reload) await confirmReload(reload === "world");
+  }
+
+  static async #onLockSetting(event, target) {
+    await openLockDialog(target.dataset.key);
+  }
+
+  /** Buttons inside a feature's own panel: data-feature + data-feature-action. */
+  static async #onFeatureAction(event, target) {
+    const feature = getFeature(target.dataset.feature);
+    const handler = feature?.def.hubActions?.[target.dataset.featureAction];
+    if (!handler) return;
+    await handler(feature, target);
+    await this.render();
   }
 
   /** Save every changed value. Called on each change in the form. */

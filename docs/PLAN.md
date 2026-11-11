@@ -203,12 +203,19 @@ Settings lists will be refined while building each feature.
 
 ### 🔒 Player Settings
 
-*Replaces Force Client Settings.*
-- From the 🔒 button on any per-player setting (ours, other modules',
-  Foundry's own), the GM chooses:
-  - **Default**: set the value once; players can still change it.
-  - **Locked**: players' input is disabled and the GM's value is enforced.
-- Settings: enable · list of forced settings (managed in the window).
+*Replaces Force Client Settings.* ✅ v0.3.0
+- A lock button sits next to every per-player setting, both in our window and
+  in Foundry's Configure Settings (where other modules' settings live).
+  Clicking it lets the GM choose, using the GM's own current value:
+  - **Default**: applied once to each player; they can change it afterwards.
+    Changing the default re-applies it once.
+  - **Locked**: always the GM's value; players see the input **greyed out**
+    with a 🔒 and can't change it.
+- **Only players are affected.** GMs (and Assistant GMs) keep their own values.
+- The Player Settings card lists every forced setting: switch mode, update to
+  the GM's current value, or remove.
+- Locks take effect before other modules read their settings, so a reload
+  isn't needed for modules that only read settings at startup.
 
 ### 🔍 Exploration (PF2e only)
 
@@ -256,7 +263,7 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 |---|---|---|
 | 0 | Manifest, auto-release workflow, plan | ✅ done |
 | 1 | Core: feature registry, settings window, socket | ✅ v0.2.0 |
-| 2 | Player Settings (force/lock) | Part of the settings window |
+| 2 | Player Settings (force/lock) | ✅ v0.3.0 |
 | 3 | Clean Title Bars, Always Show Prototype Token | Small; first 4e test |
 | 4 | Chat Pins, Turn Announcer | Small, self-contained |
 | 5 | Turn Marker, Next-Turn Marker | First canvas drawing |

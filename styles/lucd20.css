@@ -316,3 +316,153 @@
   font-size: var(--font-size-12, 12px);
   color: var(--lucd20-muted);
 }
+
+/* Force Player Settings ------------------------------------------------ */
+
+.lucd20-lock {
+  font-size: var(--font-size-11, 11px);
+}
+
+i.lucd20-lock {
+  margin-left: 4px;
+  opacity: 0.8;
+}
+
+button.lucd20-lock {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  min-height: 0;
+  margin: 0 0 0 4px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  line-height: 20px;
+  opacity: 0.45;
+  cursor: pointer;
+}
+
+button.lucd20-lock:hover,
+button.lucd20-lock.mode-default,
+button.lucd20-lock.mode-lock {
+  opacity: 1;
+}
+
+button.lucd20-lock.mode-default {
+  color: var(--color-level-info, #3a8fd6);
+}
+
+button.lucd20-lock.mode-lock {
+  color: var(--color-level-warning, #d68a1f);
+}
+
+.lucd20-locked > label,
+.lucd20-locked .form-fields {
+  opacity: 0.55;
+}
+
+.lucd20-hub .lucd20-feature-panel {
+  margin-top: 6px;
+}
+
+.lucd20-hub .lucd20-panel-empty {
+  margin: 4px 0;
+  color: var(--lucd20-muted);
+}
+
+.lucd20-hub .lucd20-forced-list {
+  width: 100%;
+  margin: 4px 0 0;
+  border-collapse: collapse;
+  background: transparent;
+  border: none;
+}
+
+.lucd20-hub .lucd20-forced-list th {
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--lucd20-border);
+  background: transparent;
+  text-align: left;
+  font-size: var(--font-size-12, 12px);
+  color: var(--lucd20-muted);
+}
+
+.lucd20-hub .lucd20-forced-list td {
+  padding: 5px 6px;
+  border-bottom: 1px solid var(--lucd20-border);
+  vertical-align: middle;
+}
+
+.lucd20-hub .lucd20-forced-list tr:nth-child(even) {
+  background: transparent;
+}
+
+.lucd20-hub .lucd20-forced-list td .hint {
+  display: block;
+  font-size: var(--font-size-12, 12px);
+  color: var(--lucd20-muted);
+}
+
+.lucd20-hub .lucd20-forced-list td.value {
+  max-width: 180px;
+  overflow-wrap: anywhere;
+}
+
+.lucd20-hub .lucd20-forced-list td.controls {
+  width: 64px;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.lucd20-hub .lucd20-forced-list td.controls button {
+  width: 26px;
+  height: 26px;
+  margin: 0 0 0 2px;
+  padding: 0;
+  line-height: 24px;
+}
+
+.lucd20-hub .lucd20-mode-button {
+  width: auto;
+  margin: 0;
+  padding: 2px 8px;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.lucd20-hub .lucd20-mode-button.mode-default {
+  color: var(--color-level-info, #3a8fd6);
+}
+
+.lucd20-hub .lucd20-mode-button.mode-lock {
+  color: var(--color-level-warning, #d68a1f);
+}
+
+/* Lock dialog */
+
+.lucd20-lock-dialog .lucd20-lock-target .hint,
+.lucd20-lock-dialog .lucd20-lock-mode .hint {
+  display: block;
+  font-size: var(--font-size-12, 12px);
+  opacity: 0.75;
+}
+
+.lucd20-lock-dialog .lucd20-lock-modes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 8px;
+}
+
+.lucd20-lock-dialog .lucd20-lock-mode {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.lucd20-lock-dialog .lucd20-lock-mode > i {
+  margin-top: 3px;
+}

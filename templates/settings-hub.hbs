@@ -31,11 +31,15 @@
           <header class="lucd20-feature-header">
             {{#if canToggle}}
             <label class="lucd20-switch" data-tooltip="{{@root.labels.enable}}">
-              <input type="checkbox" name="{{enabledName}}" data-feature-toggle {{#if enabled}}checked{{/if}}>
+              <input type="checkbox" name="{{enabledName}}" data-feature-toggle {{#if enabled}}checked{{/if}} {{#if toggleLocked}}disabled{{/if}}>
               <span class="lucd20-switch-slider"></span>
             </label>
             {{/if}}
             <h3 class="lucd20-feature-name">{{name}}</h3>
+            {{#if toggleLock.gm}}
+            <button type="button" class="lucd20-lock icon mode-{{toggleLock.mode}}" data-action="lockSetting" data-key="{{toggleLock.key}}" data-tooltip="{{toggleLock.tooltip}}"><i class="{{toggleLock.icon}}"></i></button>
+            {{/if}}
+            {{#if toggleLocked}}<i class="lucd20-lock fa-solid fa-lock" data-tooltip="{{toggleLock.tooltip}}"></i>{{/if}}
             {{#each systemTags}}<span class="lucd20-tag system">{{this}}</span>{{/each}}
             {{#if planned}}<span class="lucd20-tag planned">{{plannedLabel}}</span>{{/if}}
             {{#if isClient}}<i class="lucd20-badge fa-solid fa-user" data-tooltip="{{@root.labels.scopeClient}}"></i>{{/if}}
@@ -53,31 +57,36 @@
             <div class="lucd20-setting-group">
             {{#if label}}<h4 class="lucd20-group-label">{{label}}</h4>{{/if}}
             {{#each settings}}
-            <div class="lucd20-setting form-group" data-search-text="{{searchText}}" {{#if dependsOn}}data-depends-on="{{dependsOn}}"{{/if}}>
+            <div class="lucd20-setting form-group {{#if locked}}lucd20-locked{{/if}}" data-search-text="{{searchText}}" {{#if dependsOn}}data-depends-on="{{dependsOn}}"{{/if}}>
               <label for="lucd20-{{name}}">
                 {{label}}
                 {{#if isClient}}<i class="lucd20-badge fa-solid fa-user" data-tooltip="{{@root.labels.scopeClient}}"></i>
                 {{else}}<i class="lucd20-badge fa-solid fa-earth-americas" data-tooltip="{{@root.labels.scopeWorld}}"></i>{{/if}}
                 {{#if requiresReload}}<i class="lucd20-badge fa-solid fa-rotate" data-tooltip="{{@root.labels.reload}}"></i>{{/if}}
+                {{#if lock.gm}}
+                <button type="button" class="lucd20-lock icon mode-{{lock.mode}}" data-action="lockSetting" data-key="{{lock.key}}" data-tooltip="{{lock.tooltip}}"><i class="{{lock.icon}}"></i></button>
+                {{/if}}
+                {{#if locked}}<i class="lucd20-lock fa-solid fa-lock" data-tooltip="{{lock.tooltip}}"></i>{{/if}}
               </label>
               <div class="form-fields">
-                {{#if isBoolean}}<input type="checkbox" id="lucd20-{{name}}" name="{{name}}" {{#if value}}checked{{/if}}>{{/if}}
-                {{#if isNumber}}<input type="number" id="lucd20-{{name}}" name="{{name}}" value="{{value}}" min="{{min}}" max="{{max}}" step="{{step}}">{{/if}}
-                {{#if isRange}}<range-picker id="lucd20-{{name}}" name="{{name}}" value="{{value}}" min="{{min}}" max="{{max}}" step="{{step}}"></range-picker>{{/if}}
-                {{#if isString}}<input type="text" id="lucd20-{{name}}" name="{{name}}" value="{{value}}">{{/if}}
+                {{#if isBoolean}}<input type="checkbox" id="lucd20-{{name}}" name="{{name}}" {{#if value}}checked{{/if}} {{#if locked}}disabled{{/if}}>{{/if}}
+                {{#if isNumber}}<input type="number" id="lucd20-{{name}}" name="{{name}}" value="{{value}}" min="{{min}}" max="{{max}}" step="{{step}}" {{#if locked}}disabled{{/if}}>{{/if}}
+                {{#if isRange}}<range-picker id="lucd20-{{name}}" name="{{name}}" value="{{value}}" min="{{min}}" max="{{max}}" step="{{step}}" {{#if locked}}disabled{{/if}}></range-picker>{{/if}}
+                {{#if isString}}<input type="text" id="lucd20-{{name}}" name="{{name}}" value="{{value}}" {{#if locked}}disabled{{/if}}>{{/if}}
                 {{#if isSelect}}
-                <select id="lucd20-{{name}}" name="{{name}}">
+                <select id="lucd20-{{name}}" name="{{name}}" {{#if locked}}disabled{{/if}}>
                   {{#each options}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
                 </select>
                 {{/if}}
-                {{#if isColor}}<color-picker id="lucd20-{{name}}" name="{{name}}" value="{{value}}"></color-picker>{{/if}}
-                {{#if isFile}}<file-picker id="lucd20-{{name}}" name="{{name}}" type="{{fileType}}" value="{{value}}"></file-picker>{{/if}}
+                {{#if isColor}}<color-picker id="lucd20-{{name}}" name="{{name}}" value="{{value}}" {{#if locked}}disabled{{/if}}></color-picker>{{/if}}
+                {{#if isFile}}<file-picker id="lucd20-{{name}}" name="{{name}}" type="{{fileType}}" value="{{value}}" {{#if locked}}disabled{{/if}}></file-picker>{{/if}}
               </div>
               {{#if hint}}<p class="hint">{{hint}}</p>{{/if}}
             </div>
             {{/each}}
             </div>
             {{/each}}
+            {{#if panelHTML}}<div class="lucd20-feature-panel">{{{panelHTML}}}</div>{{/if}}
           </div>
           {{/if}}
         </article>

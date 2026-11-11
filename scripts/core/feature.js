@@ -34,7 +34,10 @@ const KIND_TYPES = {
  *   init(feature) {},              // always runs at `init` (keybindings, socket handlers …)
  *   enable(feature) {},            // runs at `ready` and whenever switched on
  *   disable(feature) {},           // runs when switched off (tracked hooks/wraps are removed automatically)
- *   onSettingChange(feature, key, value) {} // optional; default: disable + enable
+ *   onSettingChange(feature, key, value) {}, // optional; default: disable + enable
+ *   renderPanel(feature) { return "<p>…</p>"; }, // optional, GM only: extra HTML inside the card
+ *   hubActions: { name: (feature, button) => {} } // buttons in that HTML:
+ *     // <button type="button" data-action="featureAction" data-feature="<id>" data-feature-action="name">
  * }
  * ```
  */

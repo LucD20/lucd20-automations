@@ -1,13 +1,11 @@
 {
   "LUCD20": {
     "Title": "LucD20 Automations",
-
     "Menu": {
       "Name": "LucD20 Automations",
       "Label": "Open LucD20 Automations",
       "Hint": "Every LucD20 feature and its options, organized by category."
     },
-
     "Hub": {
       "Title": "LucD20 Automations",
       "Search": "Search settings…",
@@ -27,18 +25,15 @@
       "LegendClient": "Per player (each user sets their own)",
       "LegendReload": "Requires reload"
     },
-
     "Error": {
       "FeatureStart": "LucD20 Automations: {name} failed to start. See the console (F12) for details.",
       "NoGM": "This needs a GM to be connected."
     },
-
     "System": {
       "pf2e": "PF2e",
       "dnd4e": "D&D 4e",
       "demonlord": "SotDL"
     },
-
     "Category": {
       "combat": {
         "Label": "Combat",
@@ -73,7 +68,6 @@
         "Hint": "PF2e Search automation and hazard detection."
       }
     },
-
     "Feature": {
       "turnMarker": {
         "Name": "Turn Marker",
@@ -129,7 +123,7 @@
       },
       "forceSettings": {
         "Name": "Force Player Settings",
-        "Hint": "Set a default or lock any module's per-player settings for every player."
+        "Hint": "Set a default or lock any per-player setting (ours, other modules', Foundry's own) for all players. Use the lock button next to a per-player setting, here or in Foundry's Configure Settings. GMs are never affected."
       },
       "searchAutomation": {
         "Name": "Search Automation",
@@ -138,6 +132,49 @@
       "hazardDetection": {
         "Name": "Hazard Detection",
         "Hint": "Hazards notice Searching characters within a range that walls block, then trigger secret checks."
+      }
+    },
+    "ForceSettings": {
+      "DialogTitle": "Force for players",
+      "ValueNote": "Uses your current saved value: <strong>{value}</strong>",
+      "Save": "Save",
+      "Cancel": "Cancel",
+      "On": "On",
+      "Off": "Off",
+      "OnOff": "on/off",
+      "Core": "Foundry",
+      "Missing": "Module not active",
+      "LockedByGM": "Locked by the GM",
+      "Empty": "No forced settings yet. Click the lock button next to any per-player setting, here or in Foundry's Configure Settings.",
+      "RefreshValue": "Use my current value",
+      "Remove": "Stop forcing this setting",
+      "Column": {
+        "Setting": "Setting",
+        "Mode": "Mode",
+        "Value": "Value"
+      },
+      "SwitchTo": {
+        "lock": "Switch to Locked",
+        "default": "Switch to Default"
+      },
+      "Tooltip": {
+        "none": "Not forced. Click to force this for players.",
+        "default": "Default for players (they can change it). Click to edit.",
+        "lock": "Locked for players. Click to edit."
+      },
+      "Mode": {
+        "none": {
+          "Label": "Not forced",
+          "Hint": "Players choose their own value."
+        },
+        "default": {
+          "Label": "Default",
+          "Hint": "Applied once to every player; they can change it afterwards."
+        },
+        "lock": {
+          "Label": "Locked",
+          "Hint": "Always your value; players see it greyed out and can't change it."
+        }
       }
     }
   }

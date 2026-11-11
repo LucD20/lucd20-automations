@@ -93,15 +93,22 @@ function describeValue(setting, value) {
   return text.length > 60 ? `${text.slice(0, 57)}…` : text;
 }
 
-/** Re-render our window and Foundry's settings window so lock buttons update. */
+/**
+ * Update lock buttons in open windows. Foundry's settings window is updated in
+ * place (re-rendering it would scroll it back to the top); ours is re-rendered
+ * and keeps its scroll position.
+ */
 function refreshWindows() {
   const instances = foundry.applications.instances;
   if (!instances) return;
   const SettingsConfig = foundry.applications.settings?.SettingsConfig;
   for (const app of instances.values()) {
-    const isOurs = app.id === "lucd20-automations-settings";
-    const isCore = SettingsConfig ? app instanceof SettingsConfig : app.constructor?.name === "SettingsConfig";
-    if ((isOurs || isCore) && app.rendered) app.render();
+    if (!app.rendered) continue;
+    if (app.id === "lucd20-automations-settings") app.render();
+    else if (SettingsConfig ? app instanceof SettingsConfig : app.constructor?.name === "SettingsConfig") {
+      undecorateSettingsConfig(app.element);
+      if (state.active) decorateSettingsConfig(app, app.element);
+    }
   }
 }
 
@@ -184,10 +191,19 @@ async function saveRule(fullKey, mode, { refreshValue = true } = {}) {
   await game.settings.set(MODULE_ID, RULES_KEY, rules);
 }
 
-async function openDialog(fullKey) {
+/** Click: dialog. Shift+click: Default. Ctrl+click (Cmd on Mac): Locked. */
+async function openDialog(fullKey, event) {
   if (isPlayer()) return;
   const setting = game.settings.settings.get(fullKey);
   if (!isPerPlayer(setting)) return;
+
+  const shortcut = event?.shiftKey ? "default" : event?.ctrlKey || event?.metaKey ? "lock" : null;
+  if (shortcut) {
+    await saveRule(fullKey, shortcut);
+    ui.notifications?.info(localize(`LUCD20.ForceSettings.Notify.${shortcut}`, { name: settingName(fullKey, setting) }));
+    return;
+  }
+
   const current = state.rules[fullKey]?.mode ?? "none";
   const value = rawGet(setting.namespace, setting.key);
 
@@ -240,7 +256,9 @@ function lockState(fullKey) {
     gm,
     lockedForMe: !gm && mode === "lock",
     icon: ICONS[mode],
-    tooltip: localize(gm ? `LUCD20.ForceSettings.Tooltip.${mode}` : "LUCD20.ForceSettings.LockedByGM")
+    tooltip: gm
+      ? `${localize(`LUCD20.ForceSettings.Tooltip.${mode}`)} ${localize("LUCD20.ForceSettings.Tooltip.Shortcuts")}`
+      : localize("LUCD20.ForceSettings.LockedByGM")
   };
 }
 
@@ -261,6 +279,7 @@ function decorateSettingsConfig(app, html) {
     if (!group || group.querySelector(".lucd20-lock")) continue;
     const label = group.querySelector("label") ?? group;
     const lock = lockState(fullKey);
+    label.classList.add("lucd20-lock-label");
 
     if (gm) {
       const button = document.createElement("button");
@@ -271,13 +290,15 @@ function decorateSettingsConfig(app, html) {
       button.addEventListener("click", event => {
         event.preventDefault();
         event.stopPropagation();
-        openDialog(fullKey);
+        openDialog(fullKey, event);
       });
       label.append(button);
     } else if (lock.lockedForMe) {
       for (const el of group.querySelectorAll("[name], button, input, select, textarea")) {
+        if (el.disabled) continue;
         el.disabled = true;
         el.setAttribute("disabled", "");
+        el.dataset.lucd20Locked = "";
       }
       group.classList.add("lucd20-locked");
       const icon = document.createElement("i");
@@ -286,6 +307,19 @@ function decorateSettingsConfig(app, html) {
       label.append(icon);
     }
   }
+}
+
+function undecorateSettingsConfig(html) {
+  const root = html instanceof HTMLElement ? html : html?.[0];
+  if (!root) return;
+  for (const el of root.querySelectorAll(".lucd20-lock")) el.remove();
+  for (const el of root.querySelectorAll("[data-lucd20-locked]")) {
+    el.disabled = false;
+    el.removeAttribute("disabled");
+    delete el.dataset.lucd20Locked;
+  }
+  for (const el of root.querySelectorAll(".lucd20-locked")) el.classList.remove("lucd20-locked");
+  for (const el of root.querySelectorAll(".lucd20-lock-label")) el.classList.remove("lucd20-lock-label");
 }
 
 /* -------------------------------------------- */

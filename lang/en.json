@@ -111,11 +111,7 @@
       },
       "cleanTitleBars": {
         "Name": "Clean Title Bars",
-        "Hint": "Window title-bar buttons become icons with tooltips."
-      },
-      "prototypeTokenButton": {
-        "Name": "Always Show Prototype Token",
-        "Hint": "Adds a Prototype Token button to actor sheet title bars when the system hides it in the ⋮ menu."
+        "Hint": "In every window, title-bar buttons show only their icon; hover for the name. The window title stays."
       },
       "diceStats": {
         "Name": "Dice Stats",
@@ -132,6 +128,22 @@
       "hazardDetection": {
         "Name": "Hazard Detection",
         "Hint": "Hazards notice Searching characters within a range that walls block, then trigger secret checks."
+      },
+      "headerButtons": {
+        "Name": "Always Show Header Buttons",
+        "Hint": "Moves chosen items from a window's ⋮ menu into its title bar as icons, and adds Configure Ownership to older-style sheets.",
+        "Setting": {
+          "prototypeToken": {
+            "Name": "Prototype Token"
+          },
+          "ownership": {
+            "Name": "Configure Ownership"
+          },
+          "extras": {
+            "Name": "Other ⋮ items",
+            "Hint": "Names of other ⋮ menu items to show in the title bar, separated by commas. Example: 3D Dice Settings, View Token Artwork"
+          }
+        }
       }
     },
     "ForceSettings": {
@@ -160,7 +172,8 @@
       "Tooltip": {
         "none": "Not forced. Click to force this for players.",
         "default": "Default for players (they can change it). Click to edit.",
-        "lock": "Locked for players. Click to edit."
+        "lock": "Locked for players. Click to edit.",
+        "Shortcuts": "(Shift+click: Default · Ctrl+click: Locked)"
       },
       "Mode": {
         "none": {
@@ -175,6 +188,10 @@
           "Label": "Locked",
           "Hint": "Always your value; players see it greyed out and can't change it."
         }
+      },
+      "Notify": {
+        "default": "Default for players: {name}",
+        "lock": "Locked for players: {name}"
       }
     }
   }

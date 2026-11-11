@@ -5,7 +5,7 @@
  *
  * Provider interface:
  *   info(fullKey) → { key, mode: "none"|"default"|"lock", gm, lockedForMe, icon, tooltip }
- *   openDialog(fullKey) → Promise
+ *   openDialog(fullKey, event) → Promise (Shift/Ctrl+click are shortcuts)
  */
 
 let provider = null;
@@ -19,6 +19,6 @@ export function lockInfo(fullKey) {
   return provider?.info(fullKey) ?? null;
 }
 
-export function openLockDialog(fullKey) {
-  return provider?.openDialog(fullKey);
+export function openLockDialog(fullKey, event) {
+  return provider?.openDialog(fullKey, event);
 }

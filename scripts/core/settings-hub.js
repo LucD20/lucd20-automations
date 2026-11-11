@@ -58,6 +58,9 @@ export class SettingsHub extends HandlebarsApplicationMixin(ApplicationV2) {
   /** Current search text (lowercase). */
   #search = "";
 
+  /** Scroll position of the content pane, kept across re-renders. */
+  #scrollTop = null;
+
   /* -------------------------------------------- */
   /*  Context                                     */
   /* -------------------------------------------- */
@@ -217,6 +220,12 @@ export class SettingsHub extends HandlebarsApplicationMixin(ApplicationV2) {
   /*  Rendering                                   */
   /* -------------------------------------------- */
 
+  async _preRender(context, options) {
+    await super._preRender?.(context, options);
+    const content = this.element?.querySelector(".lucd20-hub-content");
+    if (content) this.#scrollTop = content.scrollTop;
+  }
+
   _onFirstRender(context, options) {
     super._onFirstRender?.(context, options);
     this.element.addEventListener("change", event => {
@@ -236,6 +245,8 @@ export class SettingsHub extends HandlebarsApplicationMixin(ApplicationV2) {
     }
     this.#applyDependencies();
     this.#applySearch(this.#search);
+    const content = this.element.querySelector(".lucd20-hub-content");
+    if (content && this.#scrollTop !== null) content.scrollTop = this.#scrollTop;
   }
 
   _onClose(options) {
@@ -335,7 +346,7 @@ export class SettingsHub extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   static async #onLockSetting(event, target) {
-    await openLockDialog(target.dataset.key);
+    await openLockDialog(target.dataset.key, event);
   }
 
   /** Buttons inside a feature's own panel: data-feature + data-feature-action. */

@@ -30,7 +30,7 @@ export const FEATURE_ORDER = [
   { id: "gmVision", category: "vision", phase: 9 },
   { id: "outOfSightOutlines", category: "vision", phase: 9 },
   { id: "cleanTitleBars", category: "sheets", phase: 3 },
-  { id: "prototypeTokenButton", category: "sheets", phase: 3 },
+  { id: "headerButtons", category: "sheets", phase: 3 },
   { id: "diceStats", category: "statistics", phase: 8 },
   { id: "forceSettings", category: "playerSettings", phase: 2 },
   { id: "searchAutomation", category: "exploration", phase: 11, systems: ["pf2e"] },

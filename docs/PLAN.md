@@ -58,7 +58,7 @@ under a labelled sub-section (e.g. "PF2e").
 💬 Chat                 Chat Pins · Damage Log
 🗺️ Tokens & Placement   Multi-Token Edit · Folder Drop
 👁️ GM Vision            GM Vision Mode · Out-of-Sight Outlines
-🗂️ Sheets & Windows     Clean Title Bars · Always Show Prototype Token
+🗂️ Sheets & Windows     Clean Title Bars · Always Show Header Buttons
 📊 Statistics           Dice Stats
 🔒 Player Settings      Force / lock any module's per-player settings
 🔍 Exploration (PF2e)   Search Automation · Hazard Detection
@@ -175,15 +175,19 @@ Settings lists will be refined while building each feature.
 ### 🗂️ Sheets & Windows
 
 #### Clean Title Bars
-*Replaces Cleaner Sheet Title Bar.*
-- Window title-bar buttons become icons with tooltips (labels removed).
-- Supports Foundry's new and old window styles (4e may use the old one).
-- Settings: enable (per player).
+*Replaces Cleaner Sheet Title Bar.* ✅ v0.4.0
+- **Every window**: title-bar buttons keep only their icon; the label becomes
+  a tooltip. The window title stays. The ⋮ menu is left alone.
+- Supports both window styles. Per player (lockable).
 
-#### Always Show Prototype Token
-- If a system hides "Prototype Token" in the "⋮" menu, promote it to the
-  title bar as an icon. PF2e already shows it; test on 4e.
-- Settings: enable.
+#### Always Show Header Buttons
+✅ v0.4.0 (was "Always Show Prototype Token")
+- Moves chosen ⋮ menu items into the title bar as icons:
+  **Prototype Token** and **Configure Ownership** (on by default) plus any
+  other items named in "Other ⋮ items" (e.g. `3D Dice Settings`).
+- Older-style sheets (PF2e) already show their buttons; there Configure
+  Ownership is added for the GM if missing.
+- Settings: Prototype Token · Configure Ownership · Other ⋮ items. Per player.
 
 ### 📊 Statistics
 
@@ -212,6 +216,8 @@ Settings lists will be refined while building each feature.
   - **Locked**: always the GM's value; players see the input **greyed out**
     with a 🔒 and can't change it.
 - **Only players are affected.** GMs (and Assistant GMs) keep their own values.
+- Shortcuts on the lock button: **Shift+click = Default**, **Ctrl+click =
+  Locked** (no dialog).
 - The Player Settings card lists every forced setting: switch mode, update to
   the GM's current value, or remove.
 - Locks take effect before other modules read their settings, so a reload
@@ -264,7 +270,7 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 | 0 | Manifest, auto-release workflow, plan | ✅ done |
 | 1 | Core: feature registry, settings window, socket | ✅ v0.2.0 |
 | 2 | Player Settings (force/lock) | ✅ v0.3.0 |
-| 3 | Clean Title Bars, Always Show Prototype Token | Small; first 4e test |
+| 3 | Clean Title Bars, Always Show Header Buttons | ✅ v0.4.0 |
 | 4 | Chat Pins, Turn Announcer | Small, self-contained |
 | 5 | Turn Marker, Next-Turn Marker | First canvas drawing |
 | 6 | Multi-Token Edit, Folder Drop | Token placement reused by Loot Pile |

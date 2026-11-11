@@ -3,3 +3,5 @@
  * defineFeature() at the top level; import it here.
  */
 import "./force-settings.js";
+import "./clean-title-bars.js";
+import "./header-buttons.js";

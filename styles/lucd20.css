@@ -328,19 +328,43 @@ i.lucd20-lock {
   opacity: 0.8;
 }
 
+.lucd20-lock-label {
+  display: flex !important;
+  align-items: center;
+  gap: 4px;
+}
+
+.application button.lucd20-lock,
+.window-app button.lucd20-lock,
 button.lucd20-lock {
-  flex: 0 0 auto;
-  width: 20px;
-  height: 20px;
-  min-height: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto !important;
+  width: 22px !important;
+  min-width: 0 !important;
+  max-width: 22px;
+  height: 22px !important;
+  min-height: 0 !important;
   margin: 0 0 0 4px;
-  padding: 0;
-  border: none;
+  padding: 0 !important;
+  border: 1px solid transparent;
+  border-radius: 4px;
   background: transparent;
   box-shadow: none;
-  line-height: 20px;
-  opacity: 0.45;
+  font-size: 13px;
+  line-height: 1;
+  opacity: 0.75;
   cursor: pointer;
+}
+
+button.lucd20-lock:hover {
+  border-color: rgba(127, 127, 127, 0.5);
+  background: rgba(127, 127, 127, 0.15);
+}
+
+button.lucd20-lock i {
+  margin: 0;
 }
 
 button.lucd20-lock:hover,
@@ -465,4 +489,18 @@ button.lucd20-lock.mode-lock {
 
 .lucd20-lock-dialog .lucd20-lock-mode > i {
   margin-top: 3px;
+}
+
+/* Clean Title Bars ----------------------------------------------------- */
+
+.lucd20-label-hidden {
+  display: none !important;
+}
+
+.window-header .lucd20-clean > i {
+  margin: 0;
+}
+
+.window-app .window-header a.header-button.lucd20-clean {
+  margin-left: 8px;
 }

@@ -163,7 +163,8 @@ three windows carry the token root class `lucd20-loot-app`. Styles are in the
   the tooltip and aria-label); from 540px the GM footer is one row.
 - **"How many?"** for stacks: item icon and name, "N in the pile · taking for
   X", −/+ steppers around the number, "of N"; **defaults to the whole stack**;
-  the primary button reads "Take {n}".
+  the primary button reads "Take {n}". **Shift+click** on Take or Party Stash
+  moves the whole stack without asking (v0.12.1).
 - **"Loot the fallen"**: hint bar, groups with item checkboxes, a **select
   all / none** checkbox in each NPC header (tri-state) with an "x of y" count,
   "n of total items selected", **Create loot pile** (primary) and **Skip**.

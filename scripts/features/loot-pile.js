@@ -445,12 +445,13 @@ class LootPileWindow extends ApplicationV2 {
     });
   }
 
-  async #move(target, button) {
+  /** Shift+click takes/stashes the whole stack without asking "How many?". */
+  async #move(target, button, event) {
     const itemId = button.closest("[data-item-id]")?.dataset.itemId;
     const item = this.pile.items.get(itemId);
     if (!item) return;
     let quantity = item.system?.quantity;
-    if (typeof quantity === "number" && quantity > 1) {
+    if (typeof quantity === "number" && quantity > 1 && !event?.shiftKey) {
       const taker = target === "stash" ? null : fromUuidSync(target);
       quantity = await LootQuantityWindow.wait(item, target === "stash" ? null : taker?.name);
       if (!quantity) return;
@@ -465,11 +466,11 @@ class LootPileWindow extends ApplicationV2 {
   }
 
   static #onTake(event, button) {
-    if (this.taker) return this.#move(this.taker, button);
+    if (this.taker) return this.#move(this.taker, button, event);
   }
 
   static #onStash(event, button) {
-    return this.#move("stash", button);
+    return this.#move("stash", button, event);
   }
 
   static async #onStashAll(event, button) {

@@ -39,7 +39,7 @@ function markerSettings({ image, color, tint, opacity, shareable = false }) {
     image: { kind: "file", fileType: "imagevideo", default: image },
     ...(shareable ? { matchTurnMarker: { kind: "boolean", default: true } } : {}),
     speed: { kind: "range", min: 0, max: 3, step: 0.05, default: 0.1, ...sized },
-    scale: { kind: "range", min: 0, max: 3, step: 0.05, default: 0.45, ...sized },
+    scale: { kind: "range", min: 0, max: 3, step: 0.05, default: 0.2, ...sized },
     color: { kind: "select", default: color, choices: COLOR_CHOICES },
     opacity: { kind: "range", min: 0.05, max: 1, step: 0.05, default: opacity },
     tint: { kind: "color", default: tint, dependsOn: "color", dependsValue: "tint" },

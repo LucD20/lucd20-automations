@@ -89,7 +89,7 @@
           },
           "scale": {
             "Name": "Size beyond the token",
-            "Hint": "0 = same size as the token, 0.45 = 45% larger. A 2×2 token gets a marker twice as big."
+            "Hint": "0 = same size as the token, 0.2 = 20% larger. A 2×2 token gets a marker twice as big."
           },
           "opacity": {
             "Name": "Opacity"
@@ -124,7 +124,7 @@
           },
           "scale": {
             "Name": "Size beyond the token",
-            "Hint": "0 = same size as the token, 0.45 = 45% larger. A 2×2 token gets a marker twice as big."
+            "Hint": "0 = same size as the token, 0.2 = 20% larger. A 2×2 token gets a marker twice as big."
           },
           "opacity": {
             "Name": "Opacity"
@@ -182,7 +182,25 @@
       },
       "damageLog": {
         "Name": "Damage Log",
-        "Hint": "A separate log of every HP change and its cause. Players only see tokens whose HP bar they can see."
+        "Hint": "A Damage Log toggle next to the chat buttons shows every HP change: damage, healing, temporary HP and max HP. Players only see tokens whose HP bar they can see.",
+        "Setting": {
+          "showToPlayers": {
+            "Name": "Players can open it",
+            "Hint": "Players only see tokens whose HP bar they can see."
+          },
+          "causeToPlayers": {
+            "Name": "Players see the cause",
+            "Hint": "The system's damage message (e.g. resistances applied)."
+          },
+          "maxEntries": {
+            "Name": "Entries kept",
+            "Hint": "Older entries are removed."
+          },
+          "details": {
+            "Name": "Show what caused it",
+            "Hint": "Attach PF2e's \"damage applied\" message: damage taken, resistances, weaknesses, immunities, shield block."
+          }
+        }
       },
       "multiTokenEdit": {
         "Name": "Multi-Token Edit",
@@ -309,12 +327,11 @@
       "Jump": "Show in chat",
       "UnpinArchived": "Unpin (this message was cleared from chat, so it will be deleted)",
       "Archived": "Cleared from chat",
-      "FlushTitle": "Clear Chat Log",
-      "FlushContent": "Delete every chat message? {count} pinned message(s) will be kept in Pinned Messages.",
       "Color": {
         "gold": "Gold",
         "blue": "Blue"
-      }
+      },
+      "FlushKept": "{count} pinned message(s) will be kept in Pinned Messages."
     },
     "TurnAnnouncer": {
       "Round": "Round {round}",
@@ -360,6 +377,29 @@
       "PanelHint": "Click the map to place the highlighted actor. Click a name to place it instead. Right-click or Esc to stop.",
       "RandomRest": "Random for the rest",
       "Done": "Done"
+    },
+    "ChatFlush": {
+      "Title": "Clear Chat Log",
+      "Content": "Delete every chat message?",
+      "Yes": "Clear",
+      "No": "Cancel"
+    },
+    "DamageLog": {
+      "Toggle": "Damage Log",
+      "Title": "Damage Log",
+      "Empty": "No HP changes yet.",
+      "Clear": "Clear the Damage Log",
+      "ClearTitle": "Clear Damage Log",
+      "ClearContent": "Delete every entry in the Damage Log?",
+      "AlsoClear": "Also clear the Damage Log",
+      "Took": "took {amount} damage",
+      "Healed": "healed {amount}",
+      "TempGained": "+{amount} temp HP",
+      "MaxChanged": "max HP {before} → {after}",
+      "HP": "HP",
+      "Temp": "Temp",
+      "Undo": "Undo this change",
+      "Reverted": "undone"
     }
   }
 }

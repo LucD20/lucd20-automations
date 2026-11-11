@@ -10,3 +10,4 @@ import "./turn-announcer.js";
 import "./turn-markers.js";
 import "./multi-token-edit.js";
 import "./folder-drop.js";
+import "./damage-log.js";

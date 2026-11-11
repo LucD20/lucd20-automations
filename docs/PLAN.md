@@ -90,8 +90,8 @@ Settings lists will be refined while building each feature.
 - Only shown while combat runs and only on tokens this user can see.
 - Images: Combat Booster's markers (MIT, credited) in `assets/markers/`;
   default `blueRunes.webp` (all systems).
-- Defaults: rotation speed 0.1 rotations/second (0–3), scale 0.45 (0–3, in
-  0.05 steps), follow art scale off.
+- Defaults: rotation speed 0.1 rotations/second (0–3), size beyond the token
+  0.2 (0–3, in 0.05 steps), follow art scale off.
 - Switching it on turns off Foundry's own turn marker; switching it off turns
   Foundry's back on (only if we turned it off).
 - Settings: image · color (original/sepia/grayscale/tint) · tint · rotation
@@ -145,20 +145,36 @@ Settings lists will be refined while building each feature.
 - **GM only.** Right-click a message → Pin Message / Unpin Message.
 - Pinned messages get a **gold or blue outline** and a pin icon.
 - A **pin button next to Export Chat Log** opens Pinned Messages (newest
-  first, with "Show in chat" and Unpin).
+  first, with "Show in chat" and Unpin). The button is kept next to Export
+  wherever Foundry draws or moves the chat controls (fixed in v0.8.0: it was
+  missing after a reload).
 - "Clear Chat" deletes everything except pinned messages; those leave the
   main log and stay in Pinned Messages. Unpinning one of those deletes it.
+- Clear Chat uses one shared dialog (`scripts/core/chat-flush.js`) that
+  features add to: "N pinned messages will be kept", "Also clear the Damage
+  Log".
 - Settings: outline color (gold/blue) · players see pin outlines.
 
 #### Damage Log
-*Replaces Damage Log.*
-- A separate log of HP changes (damage and healing).
-- Generic: actor, old HP → new HP, temp HP, timestamp.
-- PF2e: uses PF2e's applied-damage messages for the cause (which roll),
-  damage types, resistances / weaknesses / immunities applied, temp HP
-  absorbed, shield block, persistent damage, and an undo button (GM).
-- **Players only see entries for tokens whose HP bar they can see.**
-- Settings: enable · visible to players · PF2e details.
+*Replaces Damage Log.* ✅ v0.8.0
+- A **Damage Log toggle next to the pin button** switches the chat sidebar
+  between the chat and the log (it opens the chat tab if needed).
+- Logs **damage, healing, temporary HP and max HP** changes. The active GM's
+  client compares each actor's HP with the last value it saw, so it catches
+  every change, whoever made it (linked actors and unlinked tokens).
+- Entry: portrait, name, "took 12 damage" / "healed 8" / "+5 temp HP" /
+  "max HP 40 → 45", HP before → after, round, time, who; colored by type.
+- GM: **Undo** per entry (restores HP and temp HP), **Clear** button.
+- Kept in a world setting (newest 200 by default), **survives Clear Chat**;
+  Clear Chat offers "Also clear the Damage Log".
+- **Players only see entries for tokens whose HP bar they can see** (hidden
+  tokens never), with PF2e's hidden names as "Unknown creature". The data is
+  in a world setting that players' clients receive; filtering is in the UI.
+- PF2e: the system's "damage applied" message (damage taken, resistances,
+  weaknesses, immunities, shield block) is attached as the cause
+  (`scripts/systems/pf2e/damage-log.js`). 4e: temp HP from `temphp`.
+- Settings: players can open it · players see the cause · entries kept ·
+  PF2e: show what caused it.
 
 ### 🗺️ Tokens & Placement
 
@@ -310,7 +326,7 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 | 4 | Chat Pins, Turn Announcer | ✅ v0.5.0 |
 | 5 | Turn Marker, Next-Turn Marker | ✅ v0.6.0 |
 | 6 | Multi-Token Edit, Folder Drop | ✅ v0.7.0 |
-| 7 | Damage Log (generic → PF2e) | Sets the generic + system pattern |
+| 7 | Damage Log (generic → PF2e) | ✅ v0.8.0 |
 | 8 | Dice Stats (generic → PF2e) | Follows that pattern |
 | 9 | GM Vision | Riskiest canvas work |
 | 10 | Loot Pile + Party Stash | Needs system adapters + placement |

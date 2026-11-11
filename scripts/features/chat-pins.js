@@ -1,6 +1,7 @@
 import { MODULE_ID, TEMPLATE_PATH, error, localize } from "../core/constants.js";
 import { defineFeature } from "../core/registry.js";
-import { appElement } from "../core/dom.js";
+import { addChatControl } from "../core/chat-controls.js";
+import { addFlushContributor } from "../core/chat-flush.js";
 
 /**
  * Chat Pins (replaces DFreds Chat Pins). GM only.
@@ -14,7 +15,7 @@ import { appElement } from "../core/dom.js";
  * Flags on ChatMessage: pinned (bool), pinnedAt (ms), archived (bool).
  */
 
-const { ApplicationV2, HandlebarsApplicationMixin, DialogV2 } = foundry.applications.api;
+const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
 const isPinned = message => !!message?.getFlag(MODULE_ID, "pinned");
 const isArchived = message => !!message?.getFlag(MODULE_ID, "archived");
@@ -88,52 +89,20 @@ function decorateMessage(message, html) {
   }
 }
 
-/** Pin button next to "Export Chat Log" (GM only). */
-function addPinsButton(app, html) {
-  if (!game.user.isGM) return;
-  const root = asElement(html) ?? appElement(app);
-  if (!root || root.querySelector(".lucd20-pins-button")) return;
-  const exportButton = root.querySelector('[data-action="export"], .export-log, #chat-export');
-  if (!exportButton) return;
-
-  const button = exportButton.cloneNode(true);
-  button.removeAttribute("id");
-  button.removeAttribute("data-action");
-  button.classList.add("lucd20-pins-button");
-  const label = localize("LUCD20.ChatPins.Open");
-  button.dataset.tooltip = label;
-  button.setAttribute("aria-label", label);
-  for (const el of [button, ...button.querySelectorAll("i")]) {
-    el.className = el.className.replace(/\bfa-(?!solid\b|regular\b|fw\b)[\w-]+/g, "").trim();
-    if (el.matches("i") || !button.querySelector("i")) el.classList.add("fa-solid", "fa-thumbtack");
-  }
-  button.addEventListener("click", event => {
-    event.preventDefault();
-    event.stopPropagation();
-    ChatPinsWindow.open();
-  });
-  exportButton.before(button);
-}
-
 /* -------------------------------------------- */
 /*  Clear Chat keeps pinned messages            */
 /* -------------------------------------------- */
 
-async function flushKeepingPins(original) {
-  const pinned = game.messages.filter(isPinned);
-  if (!pinned.length) return original();
-
-  const confirmed = await DialogV2.confirm({
-    window: { title: localize("LUCD20.ChatPins.FlushTitle"), icon: "fa-solid fa-trash" },
-    content: `<p>${localize("LUCD20.ChatPins.FlushContent", { count: pinned.length })}</p>`
-  });
-  if (!confirmed) return;
-
-  const remove = game.messages.filter(m => !isPinned(m)).map(m => m.id);
-  if (remove.length) await ChatMessage.deleteDocuments(remove);
-  const archive = pinned.filter(m => !isArchived(m)).map(m => ({ _id: m.id, [`flags.${MODULE_ID}.archived`]: true }));
-  if (archive.length) await ChatMessage.updateDocuments(archive);
-}
+/** Contribution to the shared Clear Chat dialog. */
+const flushContributor = {
+  wantsDialog: () => game.messages.some(isPinned),
+  dialogContent: () => `<p class="hint"><i class="fa-solid fa-thumbtack"></i> ${localize("LUCD20.ChatPins.FlushKept", { count: game.messages.filter(isPinned).length })}</p>`,
+  keepMessage: isPinned,
+  afterFlush: async () => {
+    const archive = game.messages.filter(m => isPinned(m) && !isArchived(m)).map(m => ({ _id: m.id, [`flags.${MODULE_ID}.archived`]: true }));
+    if (archive.length) await ChatMessage.updateDocuments(archive);
+  }
+};
 
 /* -------------------------------------------- */
 /*  Pinned Messages window                      */
@@ -239,20 +208,27 @@ defineFeature({
     feature.on("getChatLogEntryContext", addContextOptions);
     feature.on("renderChatMessageHTML", decorateMessage);
     feature.on("renderChatMessage", decorateMessage);
-    feature.on("renderChatLog", addPinsButton);
     for (const hook of ["createChatMessage", "updateChatMessage", "deleteChatMessage"]) feature.on(hook, refreshPinsWindow);
-    if (game.user.isGM) feature.wrap(game.messages, "flush", flushKeepingPins);
+    feature.onCleanup(addFlushContributor("chatPins", flushContributor));
+    feature.onCleanup(addChatControl({
+      id: "chatPins",
+      order: 1,
+      icon: "fa-solid fa-thumbtack",
+      className: "lucd20-pins-button",
+      tooltip: localize("LUCD20.ChatPins.Open"),
+      visible: () => game.user.isGM,
+      onClick: () => ChatPinsWindow.open()
+    }));
 
     // Apply to what is already on screen.
     for (const el of document.querySelectorAll("[data-message-id]")) {
       const message = game.messages.get(el.dataset.messageId);
       if (message) decorateMessage(message, el);
     }
-    if (ui.chat) addPinsButton(ui.chat, appElement(ui.chat));
 
     feature.onCleanup(() => {
       state.feature = null;
-      document.querySelectorAll(".lucd20-pins-button, .lucd20-pin-icon").forEach(el => el.remove());
+      document.querySelectorAll(".lucd20-pin-icon").forEach(el => el.remove());
       document.querySelectorAll(".lucd20-pinned, .lucd20-pin-archived").forEach(el =>
         el.classList.remove("lucd20-pinned", "lucd20-pin-gold", "lucd20-pin-blue", "lucd20-pin-archived"));
       foundry.applications.instances?.get(ChatPinsWindow.DEFAULT_OPTIONS.id)?.close();

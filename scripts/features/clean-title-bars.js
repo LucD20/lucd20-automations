@@ -1,5 +1,5 @@
 import { defineFeature } from "../core/registry.js";
-import { appHeader } from "../core/dom.js";
+import { watchDOM } from "../core/dom-watch.js";
 
 /**
  * Clean Title Bars (replaces Cleaner Sheet Title Bar).
@@ -60,10 +60,11 @@ defineFeature({
   defaultEnabled: false,
 
   enable(feature) {
-    const onRender = app => cleanHeader(appHeader(app));
-    feature.on("renderApplication", onRender); // older window style
-    feature.on("renderApplicationV2", onRender); // newer window style
-    for (const header of document.querySelectorAll(".window-header")) cleanHeader(header);
+    // Watch the page instead of relying on render hooks: every title bar is
+    // cleaned as soon as it appears or is re-drawn (including after a reload).
+    feature.onCleanup(watchDOM("clean-title-bars", () => {
+      for (const header of document.querySelectorAll(".window-header")) cleanHeader(header);
+    }));
     feature.onCleanup(restoreAll);
   }
 });

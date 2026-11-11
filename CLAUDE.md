@@ -17,6 +17,10 @@
   `lang/en.json` (`Setting.<key>.Name/Hint` for options). Use `feature.on`,
   `feature.wrap`, `feature.onCleanup` so switching it off cleans up.
 - Cross-client work: `scripts/core/socket.js` (`broadcast`, `executeAsGM`).
+- UI added to Foundry's own windows/sidebar: use `scripts/core/dom-watch.js`
+  (or `chat-controls.js` for chat buttons), not render hooks alone; Foundry
+  draws before modules start and re-draws/moves things later.
+- GM-only features: `gmOnly: true` hides them from players' settings window.
 - Plain ES modules, no build step, no libWrapper. All UI text goes in
   `lang/en.json`.
 - Every feature is togglable. Prefer enabling/disabling without reload.

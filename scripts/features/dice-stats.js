@@ -1,6 +1,7 @@
 import { MODULE_ID, error, localize } from "../core/constants.js";
 import { defineFeature } from "../core/registry.js";
 import { appElement } from "../core/dom.js";
+import { watchDOM } from "../core/dom-watch.js";
 
 /**
  * Dice Stats (replaces Dice Stats).
@@ -392,8 +393,11 @@ defineFeature({
     state.data = foundry.utils.deepClone(game.settings.get(MODULE_ID, DATA_KEY) ?? emptyData());
     state.data.users ??= {};
     feature.on("createChatMessage", onChatMessage);
-    feature.on("renderActorDirectory", addDirectoryButton);
-    if (ui.actors) addDirectoryButton(ui.actors, appElement(ui.actors));
+    // Keep the button at the bottom of the Actors tab whenever it is drawn or re-drawn.
+    feature.onCleanup(watchDOM("dice-stats-button", () => {
+      const root = appElement(ui.actors) ?? document.getElementById("actors");
+      if (root) addDirectoryButton(ui.actors, root);
+    }));
 
     if (game.user.isGM && feature.get("askNewSession") && !state.askedThisLoad) {
       state.askedThisLoad = true;

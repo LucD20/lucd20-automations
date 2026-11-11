@@ -12,3 +12,4 @@ import "./multi-token-edit.js";
 import "./folder-drop.js";
 import "./damage-log.js";
 import "./dice-stats.js";
+import "./gm-vision.js";

@@ -9,18 +9,22 @@
  *                  className, active: () => bool }) → remove()
  */
 
+import { schedule, watchDOM } from "./dom-watch.js";
+
 const controls = new Map();
-let observer = null;
-let frame = null;
+let stopWatching = null;
 
 export function addChatControl(definition) {
   controls.set(definition.id, definition);
-  start();
+  stopWatching ??= watchDOM("chat-controls", apply);
   schedule();
   return () => {
     controls.delete(definition.id);
     for (const el of document.querySelectorAll(`[data-lucd20-control="${definition.id}"]`)) el.remove();
-    if (!controls.size) stop();
+    if (!controls.size) {
+      stopWatching?.();
+      stopWatching = null;
+    }
   };
 }
 
@@ -29,29 +33,12 @@ export function refreshChatControls() {
   schedule();
 }
 
-function start() {
-  if (observer) return;
-  observer = new MutationObserver(schedule);
-  observer.observe(document.body, { childList: true, subtree: true });
-}
-
-function stop() {
-  observer?.disconnect();
-  observer = null;
-}
-
-function schedule() {
-  if (frame) return;
-  frame = requestAnimationFrame(apply);
-}
-
 /** Chat's Export buttons: the ones sitting next to a Clear Chat (flush) button. */
 function exportButtons() {
   return [...document.querySelectorAll('[data-action="export"]')].filter(b => b.parentElement?.querySelector('[data-action="flush"]'));
 }
 
 function apply() {
-  frame = null;
   const defs = [...controls.values()].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   for (const exportButton of exportButtons()) {
     const box = exportButton.parentElement;

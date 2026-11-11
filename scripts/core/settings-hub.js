@@ -124,6 +124,7 @@ export class SettingsHub extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   #prepareFeature(feature, isGM) {
+    if (!isGM && feature.def.gmOnly) return null;
     const enabled = feature.isEnabled;
     const canToggle = isGM || feature.scope === "client";
     const editable = feature.settings.filter(s => isGM || s.scope === "client");

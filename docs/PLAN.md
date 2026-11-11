@@ -208,25 +208,29 @@ Settings lists will be refined while building each feature.
 
 ### 👁️ GM Vision
 
-*Replaces GM Vision and works alongside PF2e's built-in GM vision.*
-- **On by default for the GM.** Selecting a token does **not** switch to
-  that token's vision; the GM keeps seeing the **full map**. Darkness is
-  dimmed instead of black; walls cast dimmed shadows.
-- **Ctrl+G** toggles to real vision (tokens that can't see, can't see;
-  walls block normally). The key can be changed in Foundry's controls.
-- **Out-of-sight outlines**: tokens no player token can see are drawn with a
-  dashed outline.
-- PF2e: drive the system's own GM vision toggle instead of competing with it,
-  and add the outlines.
-- Risk: low-level canvas code; V14's canvas changes (scene levels) need
-  careful testing.
-- Settings: enable · on at startup · darkness dimming amount ·
-  out-of-sight outlines.
+*Replaces GM Vision and works with PF2e's built-in GM vision.* ✅ v0.10.0
+- **On when the GM joins** (option). While on, selected tokens are not vision
+  sources for the GM, so the **whole map** stays visible, and darkness is
+  drawn with a much lighter color.
+- **Ctrl+G** toggles real vision. The **Lighting controls icon** becomes a lit
+  bulb while GM Vision is on (like PF2e).
+- **Darkness brightness** slider: 1 = PF2e's look (`#d1ccff`), lower keeps
+  scenes darker, up to 1.5 for almost no darkness.
+- PF2e (`scripts/systems/pf2e/gm-vision.js`): drives the system's own GM
+  vision (its setting, Ctrl+G, icon and tool); we only switch it on at
+  startup and replace its darkness color with the slider's.
+- Other systems: the same, implemented by the module (same approach as PF2e:
+  `_isVisionSource` returns false for the GM, `CONFIG.Canvas.darknessColor`).
+- **Out-of-Sight Outlines** (GM): tokens that no player-owned token has line
+  of sight to (walls), and hidden tokens, get a **dashed outline colored by
+  disposition**. Circle or square. Only while GM Vision is on (option).
+- Both are GM-only and hidden from players' settings window.
 
 ### 🗂️ Sheets & Windows
 
 #### Clean Title Bars
-*Replaces Cleaner Sheet Title Bar.* ✅ v0.4.0
+*Replaces Cleaner Sheet Title Bar.* ✅ v0.4.0 (v0.10.0: cleans every title bar
+as soon as it appears, so it survives reloads)
 - **Every window**: title-bar buttons keep only their icon; the label becomes
   a tooltip. The window title stays. The ⋮ menu is left alone.
 - Supports both window styles. Per player (lockable).
@@ -246,7 +250,8 @@ Settings lists will be refined while building each feature.
 
 #### Dice Stats
 *Replaces Dice Stats.* ✅ v0.9.0
-- Opened from a **Dice Stats button at the bottom of the Actors tab**.
+- Opened from a **Dice Stats button at the bottom of the Actors tab** (kept
+  there whenever the tab is drawn or re-drawn, v0.10.0).
 - The active GM's client records **every die of every roll message**, per
   user (the GM appears as a player).
 - **Session** and **All time** counts. When the GM joins, "Start a new
@@ -336,7 +341,7 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 | 6 | Multi-Token Edit, Folder Drop | ✅ v0.7.0 |
 | 7 | Damage Log (generic → PF2e) | ✅ v0.8.0 |
 | 8 | Dice Stats (generic → PF2e) | ✅ v0.9.0 |
-| 9 | GM Vision | Riskiest canvas work |
+| 9 | GM Vision | ✅ v0.10.0 |
 | 10 | Loot Pile + Party Stash | Needs system adapters + placement |
 | 11 | PF2e Search + Hazard Detection | Largest; reuses parts of 9 and 10 |
 

@@ -225,11 +225,28 @@
       },
       "gmVision": {
         "Name": "GM Vision Mode",
-        "Hint": "Selecting a token keeps the whole map visible, with darkness dimmed. Ctrl+G switches to real token vision."
+        "Hint": "Selecting a token keeps the whole map visible, with darkness lifted. Ctrl+G toggles real vision. The Lighting controls icon shows a lit bulb while it is on. In PF2e this drives the system's own GM vision.",
+        "Setting": {
+          "onAtStartup": {
+            "Name": "On when the GM joins"
+          },
+          "brightness": {
+            "Name": "Darkness brightness",
+            "Hint": "1 = PF2e's GM vision look. Lower keeps scenes darker, higher lifts darkness further."
+          }
+        }
       },
       "outOfSightOutlines": {
         "Name": "Out-of-Sight Outlines",
-        "Hint": "Tokens that no player can see are drawn with a dashed outline."
+        "Hint": "Tokens that no player-owned token has line of sight to get a dashed outline, colored by disposition.",
+        "Setting": {
+          "onlyWithGMVision": {
+            "Name": "Only while GM Vision is on"
+          },
+          "shape": {
+            "Name": "Outline shape"
+          }
+        }
       },
       "cleanTitleBars": {
         "Name": "Clean Title Bars",
@@ -442,6 +459,14 @@
         "perception": "Perception",
         "initiative": "Initiative",
         "flat": "Flat check"
+      }
+    },
+    "GMVision": {
+      "Keybinding": "Toggle GM Vision (LucD20)",
+      "KeybindingHint": "Switch between the full map with lifted darkness and real token vision.",
+      "Shape": {
+        "circle": "Circle",
+        "square": "Square"
       }
     }
   }

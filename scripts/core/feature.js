@@ -21,6 +21,7 @@ const KIND_TYPES = {
  *   id: "turnMarker",              // also the localization key: LUCD20.Feature.turnMarker.*
  *   category: "combat",            // a CATEGORIES id
  *   scope: "world",                // scope of the on/off switch: "world" (GM) or "client" (per player)
+ *   gmOnly: true,                  // optional: hidden from players in the settings window
  *   defaultEnabled: false,
  *   systems: ["pf2e"],             // optional: only exists in these systems
  *   settings: {

@@ -394,15 +394,33 @@
       },
       "statusHighlight": {
         "Name": "Active Effect Highlight",
-        "Hint": "Active effects stand out in the Token HUD's status effects palette."
+        "Hint": "Active effects get a colored border and glow in the Token HUD's status effects palette.",
+        "Setting": {
+          "color": {
+            "Name": "Highlight color"
+          }
+        }
       },
       "sceneNavigation": {
         "Name": "Scene Navigation",
-        "Hint": "Left-click a scene in the sidebar to view it, toggle its navigation entry with one click, collapse the navigation bar during combat."
+        "Hint": "Scenes sidebar: left-click a scene to view it (settings stay in the right-click menu) and a compass icon toggles its navigation entry. The navigation bar collapses during combat.",
+        "Setting": {
+          "clickToView": {
+            "Name": "Left-click views the scene"
+          },
+          "navToggle": {
+            "Name": "Navigation toggle",
+            "Hint": "A compass icon on each scene: bright when it shows in the navigation bar."
+          },
+          "collapseInCombat": {
+            "Name": "Collapse the navigation bar during combat",
+            "Hint": "Re-opens when the combat ends."
+          }
+        }
       },
       "scenePalette": {
         "Name": "Scene Palette",
-        "Hint": "Five background color swatches taken from the level's background image, next to the color picker."
+        "Hint": "Five color swatches taken from the level's background image, next to the Background color picker in the scene's settings."
       },
       "hiddenTrackNames": {
         "Name": "Hidden Track Names",
@@ -734,6 +752,14 @@
     },
     "PauseNotifier": {
       "Text": "Game's Paused"
+    },
+    "SceneNavigation": {
+      "InNav": "Shown in the navigation bar (click to hide)",
+      "NotInNav": "Not in the navigation bar (click to show)"
+    },
+    "ScenePalette": {
+      "Hint": "Colors from the background image",
+      "Use": "Use {color}"
     }
   }
 }

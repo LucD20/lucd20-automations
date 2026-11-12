@@ -1747,3 +1747,59 @@ button.lucd20-lock.mode-lock {
 button.lucd20-move-mode {
   cursor: pointer;
 }
+
+/* Active Effect Highlight ---------------------------------------------- */
+
+body.lucd20-status-highlight #token-hud .status-effects .effect-control.active,
+body.lucd20-status-highlight .token-hud .status-effects .effect-control.active {
+  opacity: 1;
+  border: 2px solid var(--lucd20-status-color, #ff9f1a);
+  border-radius: 4px;
+  background-color: color-mix(in srgb, var(--lucd20-status-color, #ff9f1a) 25%, transparent);
+  box-shadow: 0 0 6px 1px var(--lucd20-status-color, #ff9f1a);
+  filter: none;
+}
+
+/* Scene Navigation: compass toggle in the Scenes sidebar ---------------- */
+
+.lucd20-scene-nav {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  margin: 0 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #f0c060;
+  opacity: 0.3;
+  cursor: pointer;
+}
+
+.lucd20-scene-nav.on {
+  opacity: 1;
+  text-shadow: 0 0 4px rgba(240, 192, 96, 0.7);
+}
+
+/* Scene Palette: swatches next to the background color picker ---------- */
+
+.lucd20-palette {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.lucd20-palette .lucd20-swatch {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  min-width: 0;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.lucd20-palette .lucd20-swatch:hover {
+  outline: 2px solid #fff;
+  outline-offset: 1px;
+}

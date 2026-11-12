@@ -63,6 +63,8 @@ under a labelled sub-section (e.g. "PF2e").
                           · Combat Movement
 💬 Chat                 Chat Pins · Damage Log
 🗺️ Tokens & Placement   Multi-Token Edit · Folder Drop · Paused Movement Notice
+                          · Active Effect Highlight
+🎬 Scenes & Sound       Scene Navigation · Scene Palette
 👁️ GM Vision            GM Vision Mode · Out-of-Sight Outlines
 🗂️ Sheets & Windows     Clean Title Bars · Always Show Header Buttons
 📊 Statistics           Dice Stats
@@ -75,8 +77,7 @@ since v0.14.0; Scenes & Sound sits before Player Settings):
 
 ```
 💬 Chat                 + Describe
-🗺️ Tokens & Placement   + Active Effect Highlight
-🎬 Scenes & Sound (new) Scene Navigation · Scene Palette · Hidden Track Names
+🎬 Scenes & Sound       + Hidden Track Names
 ```
 
 ---
@@ -354,6 +355,13 @@ Decisions:
 - Settings: placement (ask / random / select) · drop as hidden · include
   subfolders.
 
+#### Active Effect Highlight — `statusHighlight`
+*Replaces part of Monk's Little Details.* ✅ v0.18.0 · per player, on by default.
+- In the Token HUD's status effects palette, active effects
+  (`.effect-control.active`) get a colored border, a tinted background and a
+  glow. Pure CSS behind a `<body>` class; the color is a CSS variable.
+- Settings: highlight color.
+
 #### Paused Movement Notice — `pauseNotifier`
 *Replaces Pause Notifier.* ✅ v0.17.0 · GM only, no options.
 - V14 already stops a player's move while paused and shows "You cannot take
@@ -389,6 +397,31 @@ Decisions:
   visible, so nothing is outlined. Circle or square. (v0.10.1: was "tokens no
   player can see", which outlined everything while the whole map was visible.)
 - Both are GM-only and hidden from players' settings window.
+
+### 🎬 Scenes & Sound
+
+#### Scene Navigation — `sceneNavigation`
+*Replaces part of Monk's Scene Navigation.* ✅ v0.18.0 · GM only.
+- **Left-click views** the scene in the Scenes sidebar (V14 opens its
+  settings; owner checked). Modified clicks (Shift/Ctrl/Alt) and right-click
+  stay Foundry's; Configure is in the right-click menu.
+- **Navigation toggle**: a compass icon on each scene, bright when it shows in
+  the navigation bar, dim when not; click toggles `navigation`.
+- **Collapse during combat**: on combat start the navigation bar collapses on
+  every client; it re-opens when the last combat ends, only if we collapsed
+  it (`ui.nav.collapse()` / `expand()`).
+- Settings: left-click views · navigation toggle · collapse during combat
+  (all on).
+
+#### Scene Palette — `scenePalette`
+*Replaces part of Monk's Little Details.* ✅ v0.18.0 · GM only, no options.
+- Scene settings → Basics → Current Level → **Background color** (V14, owner
+  checked): five swatches from that level's background image under Foundry's
+  color picker (the custom pick, Q10). Click sets the color.
+- The fields are found by name (`…background…color`, `…background…src` with
+  the same prefix, else the scene's own background image).
+- Colors: image drawn at 64 px on a canvas, k-means (farthest-point start, 10
+  passes), most common first. Cached per image.
 
 ### 🗂️ Sheets & Windows
 
@@ -546,7 +579,7 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 | 13 | Defeat at 0 HP, Hidden Until Started | ✅ v0.15.0 |
 | 14 | Combat Tracker Window | ✅ v0.16.0 |
 | 15 | Combat Movement, Paused Movement Notice (shared movement block) | ✅ v0.17.0 |
-| 16 | Active Effect Highlight, Scene Navigation, Scene Palette | §6 |
+| 16 | Active Effect Highlight, Scene Navigation, Scene Palette | ✅ v0.18.0 |
 | 17 | Hidden Track Names | §6 |
 | 18 | Describe | §6 |
 
@@ -606,35 +639,13 @@ container, so when unsure, ask the owner to check in Foundry's console
 ##### Paused Movement Notice
 ✅ Built in v0.17.0; spec moved to §3 (Tokens & Placement).
 
-##### Active Effect Highlight — `statusHighlight`
-*Replaces part of Monk's Little Details.* Client setting.
-- In the Token HUD's status effects palette, active effects get a clear
-  highlight (colored border and glow), so it's obvious which are on.
-  Foundry only dims inactive ones **(verify)**.
-- Options: highlight color.
+##### Active Effect Highlight
+✅ Built in v0.18.0; spec moved to §3 (Tokens & Placement).
 
 #### 🎬 Scenes & Sound (new category)
 
-##### Scene Navigation — `sceneNavigation`
-*Replaces part of Monk's Scene Navigation.* GM only.
-- **Left-click views**: in the Scenes sidebar, left-click a scene to view it
-  instead of opening its settings. Configure stays in the right-click menu.
-- **Navigation toggle**: a small compass icon on each scene in the sidebar
-  toggles whether it shows in the navigation bar (`navigation`). Bright when
-  on, dim when off.
-- **Collapse during combat**: when combat starts, the scene navigation bar
-  at the top collapses. It re-opens when combat ends, if we collapsed it.
-- Each is an option, on by default. The owner may add more scene options
-  later.
-
-##### Scene Palette — `scenePalette`
-*Replaces part of Monk's Little Details.* GM only.
-- In Scene settings → Levels → the current level → **Background color**,
-  show 5 color swatches taken from that level's background image, next to
-  Foundry's normal color picker (the custom pick). Clicking a swatch sets
-  the color (Q10).
-- Colors are worked out in the browser from the image (downscale on a
-  canvas, simple color quantization). No dependencies.
+##### Scene Navigation, Scene Palette
+✅ Built in v0.18.0; specs moved to §3 (Scenes & Sound).
 
 ##### Hidden Track Names — `hiddenTrackNames`
 *Replaces part of Monk's Sound Enhancements.* GM only.
@@ -677,5 +688,5 @@ recommended default.
 | Q7b | Defeat at 0 HP | Undo when healed above 0? | ✅ Decided: yes (option, on). |
 | Q8 | Combat Movement | Where is the manual toggle? Do tokens not in the combat move freely? | ✅ Decided: button in the combat tracker header (GM); tokens not in the combat move freely. |
 | Q9 | Paused Movement Notice | Who sees "Game's Paused": only the player who tried to move, or everyone? | ✅ Decided: everyone (who can see the token). |
-| Q10 | Scene Palette | Are the 5 swatches taken from the level's background image (like Monk's)? Or are they fixed palettes? | Taken from the image, plus Foundry's color picker for a custom color. |
+| Q10 | Scene Palette | Are the 5 swatches taken from the level's background image (like Monk's)? Or are they fixed palettes? | ✅ Decided: from the image, plus Foundry's color picker. |
 | Q11 | Hidden Track Names | What do players see instead of the name? Also hide the playlist name? | "Unknown track". Playlist names stay visible. |

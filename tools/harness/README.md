@@ -54,6 +54,7 @@ sets `game.system.id`.
 | `test14.js` | Hidden Until Started, Defeat at 0 HP (13) |
 | `test15.js` | Combat Tracker Window, free-spot placement (14) |
 | `test16.js` | Combat Movement, Paused Movement Notice (15) |
+| `test17.js` | Active Effect Highlight, Scene Navigation, Scene Palette (16) |
 
 For a new feature, copy the closest test, keep its mock setup and replace the
 checks.

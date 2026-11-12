@@ -1859,37 +1859,82 @@ li:has(> .lucd20-scene-nav) {
   color: #8fd18f;
 }
 
-/* Describe: centered narration over a black gradient --------------------- */
+/* Describe: a dark band across the screen ------------------------------- */
 
 .lucd20-describe {
   position: fixed;
   inset: 0;
   z-index: 9000;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 0 12vw;
-  background: radial-gradient(ellipse 70% 45% at center, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.7) 45%, rgba(0, 0, 0, 0) 100%);
+  gap: 10px;
+  pointer-events: none; /* the rest of the screen stays usable */
   opacity: 0;
   transition: opacity 0.6s ease;
-  cursor: pointer;
 }
 
 .lucd20-describe.visible {
   opacity: 1;
 }
 
+.lucd20-describe-band {
+  width: 100%;
+  padding: 28px 10vw;
+  display: flex;
+  justify-content: center;
+  /* Dark in the middle, fading out at the top and bottom edges. */
+  background: linear-gradient(to bottom,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.75) 22%,
+    rgba(0, 0, 0, 0.85) 50%,
+    rgba(0, 0, 0, 0.75) 78%,
+    rgba(0, 0, 0, 0) 100%);
+  pointer-events: auto;
+}
+
 .lucd20-describe-text {
-  max-width: 900px;
-  max-height: 80vh;
+  max-width: 1100px;
+  max-height: 60vh;
   overflow: hidden;
-  color: #f4ecd8;
-  font-family: "Modesto Condensed", "Signika", serif;
-  font-size: clamp(22px, 2.6vw, 38px);
-  line-height: 1.35;
+  color: #fff;
+  font-family: "Signika", "Roboto", sans-serif;
+  font-size: clamp(22px, 2.4vw, 36px);
+  font-weight: 800;
+  line-height: 1.3;
   text-align: center;
   white-space: pre-line;
-  text-shadow: 0 0 8px #000, 0 2px 4px #000;
+  /* Dark outline around the letters. */
+  text-shadow:
+    -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000,
+    0 0 8px rgba(0, 0, 0, 0.9);
+}
+
+.lucd20-describe-controls {
+  display: flex;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+.lucd20-describe-controls button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 88px;
+  height: 26px;
+  padding: 0 12px;
+  border: 1px solid #8a6d3b;
+  border-radius: 3px;
+  background: rgba(60, 58, 54, 0.92);
+  color: #f0e6d2;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.lucd20-describe-controls button:hover {
+  background: rgba(90, 84, 74, 0.95);
+  box-shadow: 0 0 6px rgba(240, 192, 96, 0.5);
 }
 
 /* Our own right-click menu, in Foundry's context-menu style. */

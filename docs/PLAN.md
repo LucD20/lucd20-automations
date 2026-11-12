@@ -163,8 +163,8 @@ default** (owner's decision, Q6); can be locked with Force Client Settings.
 - V14 notes (v0.16.1): the tracker class is `EncounterTracker` (render hook
   `renderEncounterTracker`); `ui.combat.renderPopout()` / `ui.combat.popout`
   work. The pop-out waits ~150 ms after the encounter is created so Foundry
-  finishes re-drawing the tracker first (likely cause of v0.16.0 showing
-  nothing, not yet confirmed). Temporary console logging until confirmed.
+  finishes re-drawing the tracker first (that fixed v0.16.0 showing nothing;
+  owner confirmed). The temporary console logging was removed in v0.20.1.
 
 #### Combat Movement — `combatMovement`
 *Replaces part of Monk's TokenBar.* ✅ v0.17.0 · GM only, no options.
@@ -335,10 +335,15 @@ Decisions:
 - **`/describe Text`** in chat does the same; no chat message is posted
   (`chatMessage` hook; V14 sends the input as HTML, turned into plain text
   with line breaks).
-- Everyone sees the text **centered on screen** over a black radial gradient,
-  fading in and out. Stays **3 s + 0.3 s per word, 4–30 s** (Q3). A click
-  dismisses it; **the GM's click dismisses it for everyone**.
-- Sent with `broadcast` (`describe.show` / `describe.hide`); plain text only.
+- Everyone sees the text on a **dark band across the middle of the screen**
+  (fading out at its top and bottom), bold white text with a dark outline,
+  fading in and out (v0.20.1, owner's reference: Narrator Tools). The rest of
+  the screen stays usable. Stays **3 s + 0.3 s per word, 4–30 s** (Q3).
+- The GM gets **Pause** (keeps it up; becomes Resume) and **Close** under the
+  band, both for everyone. A player's click on the band hides it for that
+  player only.
+- Sent with `broadcast` (`describe.show` / `describe.pause` /
+  `describe.hide`); plain text only.
 
 ### 🗺️ Tokens & Placement
 

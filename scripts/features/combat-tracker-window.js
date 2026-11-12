@@ -88,28 +88,20 @@ function schedulePlace() {
   state.timer = setTimeout(place, 30);
 }
 
-/** Temporary diagnostics (v0.16.1) until the owner confirms it works in V14. */
-function log(...args) {
-  console.log(`${MODULE_ID} | Combat Tracker Window:`, ...args);
-}
-
 async function popOut(combat) {
   if (state.handled.has(combat.id)) return;
-  if (!onViewedScene(combat)) return log("skipped, combat on another scene", combat.id);
-  if (!hasVisibleCombatant(combat)) return log("waiting, no combatant visible to this user yet", combat.id);
+  if (!onViewedScene(combat) || !hasVisibleCombatant(combat)) return;
   state.handled.add(combat.id);
   // Foundry is still re-drawing the tracker for the new encounter: let it finish.
   await new Promise(r => setTimeout(r, 150));
   if (!state.feature?.active) return;
-  if (isOpen()) return log("already open, left alone");
-  if (typeof ui.combat?.renderPopout !== "function") return log("ui.combat.renderPopout is missing");
+  if (isOpen() || typeof ui.combat?.renderPopout !== "function") return; // already open: the user's window
   try {
     await ui.combat.renderPopout();
   } catch (err) {
     console.error(`${MODULE_ID} | Combat Tracker Window: could not pop out the tracker.`, err);
     return;
   }
-  log("popped out", { open: isOpen(), app: popoutApp()?.constructor?.name });
   state.opened = { combatId: combat.id, left: null, top: null, manual: false };
   // Wait for the window to be drawn before measuring it.
   await new Promise(r => requestAnimationFrame(() => r()));

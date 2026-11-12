@@ -10,8 +10,8 @@ import { broadcast, onBroadcast } from "../core/socket.js";
  *   descriptions …) a small menu in Foundry's context-menu style appears,
  *   only while text is selected.
  * - `/describe Text` in chat does the same; no chat message is posted.
- * - Everyone sees the text centered on screen over a black gradient (dark
- *   behind the text, transparent at the edges), fading in and out.
+ * - Everyone sees the text across the middle of the screen on a dark band
+ *   (fading out at its top and bottom edges), fading in and out.
  * - It stays 3 s + 0.3 s per word, between 4 and 30 s (Q3). A click dismisses
  *   it; the GM's click dismisses it for everyone.
  */
@@ -39,6 +39,36 @@ function hide(id = null, { local = true } = {}) {
   if (!local) broadcast("describe.hide", { id: current.id });
 }
 
+/** Pause keeps the text up until Close (or Resume restarts the countdown). */
+function setPaused(id, paused, { local = true } = {}) {
+  const current = state.current;
+  if (!current || current.id !== id || current.paused === paused) return;
+  current.paused = paused;
+  clearTimeout(current.timer);
+  if (!paused) current.timer = setTimeout(() => hide(id), current.duration);
+  const button = current.el.querySelector("[data-describe='pause']");
+  if (button) {
+    button.querySelector("i").className = `fa-solid ${paused ? "fa-play" : "fa-pause"}`;
+    button.querySelector("span").textContent = localize(paused ? "LUCD20.Describe.Resume" : "LUCD20.Describe.Pause");
+  }
+  if (!local) broadcast("describe.pause", { id, paused });
+}
+
+function button(action, icon, label) {
+  const el = document.createElement("button");
+  el.type = "button";
+  el.dataset.describe = action;
+  el.innerHTML = `<i class="fa-solid ${icon}"></i><span></span>`;
+  el.querySelector("span").textContent = localize(label);
+  return el;
+}
+
+/**
+ * The look (owner's reference: Narrator Tools): a dark band across the whole
+ * screen with bold outlined text; the GM gets Pause and Close under it. The
+ * rest of the screen stays usable. A player's click on the band hides it for
+ * that player only.
+ */
 function show({ id, text, duration }) {
   if (!text) return;
   if (state.current) {
@@ -50,17 +80,33 @@ function show({ id, text, duration }) {
   el.className = "lucd20-describe";
   el.setAttribute("role", "dialog");
   el.setAttribute("aria-live", "polite");
+
+  const band = document.createElement("div");
+  band.className = "lucd20-describe-band";
   const box = document.createElement("div");
   box.className = "lucd20-describe-text";
   box.textContent = text; // plain text only
-  el.append(box);
-  el.dataset.tooltip = "";
-  el.title = localize("LUCD20.Describe.Dismiss");
-  el.addEventListener("click", () => hide(id, { local: !game.user.isGM }));
+  band.append(box);
+  el.append(band);
+
+  if (game.user.isGM) {
+    const controls = document.createElement("div");
+    controls.className = "lucd20-describe-controls";
+    const pause = button("pause", "fa-pause", "LUCD20.Describe.Pause");
+    const close = button("close", "fa-circle-xmark", "LUCD20.Describe.Close");
+    pause.addEventListener("click", () => setPaused(id, !state.current?.paused, { local: false }));
+    close.addEventListener("click", () => hide(id, { local: false }));
+    controls.append(pause, close);
+    el.append(controls);
+  } else {
+    band.dataset.tooltip = localize("LUCD20.Describe.Dismiss");
+    band.addEventListener("click", () => hide(id));
+  }
+
   document.body.append(el);
   requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("visible")));
   const timer = setTimeout(() => hide(id), duration);
-  state.current = { id, el, timer };
+  state.current = { id, el, timer, duration, paused: false };
 }
 
 /** GM: show on every screen. */
@@ -76,6 +122,7 @@ onBroadcast("describe.show", payload => {
   if (state.feature?.active && typeof payload?.text === "string") show(payload);
 });
 onBroadcast("describe.hide", payload => hide(payload?.id));
+onBroadcast("describe.pause", payload => setPaused(payload?.id, !!payload?.paused));
 
 /* -------------------------------------------- */
 /*  /describe                                   */

@@ -386,7 +386,7 @@
       },
       "describe": {
         "Name": "Describe",
-        "Hint": "Select text anywhere and right-click → Describe, or type /describe Text in chat: everyone sees it centered on screen for a few seconds. Click to dismiss (the GM's click dismisses it for everyone)."
+        "Hint": "Select text anywhere and right-click → Describe, or type /describe Text in chat: everyone sees it on a dark band across the screen for a few seconds. The GM can pause or close it for everyone."
       },
       "pauseNotifier": {
         "Name": "Paused Movement Notice",
@@ -768,8 +768,11 @@
     },
     "Describe": {
       "Menu": "Describe",
-      "Dismiss": "Click to dismiss",
-      "Usage": "Usage: /describe Text to show on everyone's screen"
+      "Dismiss": "Click to hide",
+      "Usage": "Usage: /describe Text to show on everyone's screen",
+      "Pause": "Pause",
+      "Resume": "Resume",
+      "Close": "Close"
     }
   }
 }

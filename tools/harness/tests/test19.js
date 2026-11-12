@@ -60,8 +60,14 @@ async function setup(page) {
   await page.screenshot({ path: `${out}/p18-describe.png` });
   // other chat untouched
   assert.strictEqual(await page.evaluate(() => Hooks.call("chatMessage", {}, "<p>hello</p>", {})), true);
-  // GM click dismisses for everyone
-  await page.click(".lucd20-describe");
+  // GM: Pause keeps it up past its time, Resume restarts, Close hides for everyone
+  assert.deepStrictEqual(await page.$$eval(".lucd20-describe-controls button", e => e.map(b => b.innerText.trim())), ["Pause", "Close"], "GM controls");
+  await page.click("[data-describe='pause']");
+  assert.strictEqual(await page.evaluate(() => __sent.at(-1)?.type), "describe.pause", "pause sent to everyone");
+  assert.strictEqual(await page.$eval("[data-describe='pause']", e => e.innerText.trim()), "Resume");
+  await page.waitForTimeout(4500);
+  assert.strictEqual(await page.$$eval(".lucd20-describe", e => e.length), 1, "paused: still up after its time");
+  await page.click("[data-describe='close']");
   await page.waitForTimeout(700);
   assert.strictEqual(await page.$$eval(".lucd20-describe", e => e.length), 0, "dismissed");
   assert.strictEqual(await page.evaluate(() => __sent.at(-1)?.type), "describe.hide", "GM's click dismisses for everyone");
@@ -75,7 +81,7 @@ async function setup(page) {
   await page.click("#lucd20-describe-menu .context-item");
   await page.waitForTimeout(100);
   assert.ok((await page.$eval(".lucd20-describe-text", e => e.textContent)).startsWith("The door creaks open."));
-  await page.click(".lucd20-describe");
+  await page.click("[data-describe='close']");
   await page.waitForTimeout(700);
   // no selection → no menu
   await page.evaluate(() => getSelection().removeAllRanges());
@@ -101,8 +107,10 @@ async function setup(page) {
   });
   await page.waitForTimeout(700);
   assert.strictEqual(await page.$eval(".lucd20-describe-text", e => e.textContent), "A shadow passes overhead.", "players see it");
-  await page.click(".lucd20-describe");
+  assert.strictEqual(await page.$$eval(".lucd20-describe-controls", e => e.length), 0, "players get no buttons");
+  await page.click(".lucd20-describe-band");
   await page.waitForTimeout(700);
+  assert.strictEqual(await page.$$eval(".lucd20-describe", e => e.length), 0, "player's click hides it");
   assert.ok(!(await page.evaluate(() => __sent.some(m => m.type === "describe.hide"))), "player's click is local only");
   assert.strictEqual(await page.evaluate(() => Hooks.call("chatMessage", {}, "<p>/describe hi</p>", {})), true, "players can't /describe");
   await page.evaluate(() => __select("jtext"));

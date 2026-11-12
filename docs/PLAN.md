@@ -59,7 +59,7 @@ under a labelled sub-section (e.g. "PF2e").
 
 ```
 ⚔️ Combat               Turn Marker · Next-Turn Marker · Turn Announcer · Loot Pile
-                          · Lock Combat Toggle
+                          · Hidden Until Started · Defeat at 0 HP · Lock Combat Toggle
 💬 Chat                 Chat Pins · Damage Log
 🗺️ Tokens & Placement   Multi-Token Edit · Folder Drop
 👁️ GM Vision            GM Vision Mode · Out-of-Sight Outlines
@@ -73,8 +73,7 @@ Planned in the next pass (§6), shown greyed out until built (in the catalog
 since v0.14.0; Scenes & Sound sits before Player Settings):
 
 ```
-⚔️ Combat               + Combat Tracker Window · Hidden Until Started · Defeat at 0 HP
-                          · Combat Movement
+⚔️ Combat               + Combat Tracker Window · Combat Movement
 💬 Chat                 + Describe
 🗺️ Tokens & Placement   + Paused Movement Notice · Active Effect Highlight
 🎬 Scenes & Sound (new) Scene Navigation · Scene Palette · Hidden Track Names
@@ -129,7 +128,7 @@ Settings lists will be refined while building each feature.
 - Card content: token image, name, owning player(s), **round number**.
 - **New rounds** (v0.14.0, option, on by default): a thin "Round X" divider
   card (no header) when the round goes up, posted before that round's first
-  turn card. Only once per round: stepping back a round and forward again
+  turn card. A double line on each side and outlined text (v0.15.0). Only once per round: stepping back a round and forward again
   doesn't repeat it.
 - **NPC turns are announced** too (option). Hidden and defeated combatants
   are **skipped**. NPC names follow PF2e's name-visibility rule
@@ -149,6 +148,38 @@ Settings lists will be refined while building each feature.
   blocked.
 - Only the HUD button is blocked (a capture-phase click listener on the
   document); `TokenDocument#toggleCombatant` and the tracker are untouched.
+
+#### Hidden Until Started — `encounterVisibility`
+*Replaces part of Monk's Combat Details.* ✅ v0.15.0 · GM only, no options.
+- A combatant **whose token is hidden** (Foundry's hidden flag) is added
+  **hidden in the tracker** (owner's decision, Q7: not every NPC). Applies
+  whenever it is added, before or during combat.
+- **Auto-reveal**: when a token stops being hidden, its combatants in every
+  combat on that scene are revealed.
+- When the combat starts, combatants this feature hid whose token is visible
+  by then are revealed (catches tokens revealed while the feature was off).
+  A combatant the GM hid by hand (token visible) stays hidden.
+- Never reveals a combatant whose token is still hidden. Not about the
+  Invisible condition.
+
+#### Defeat at 0 HP — `defeatAutomation`
+*Replaces part of Monk's Combat Details.* ✅ v0.15.0 · GM only.
+- When an **NPC combatant** (no player owner) drops to 0 HP, it is marked
+  **defeated** and gets the system's defeated status
+  (`CONFIG.specialStatusEffects.DEFEATED` via `actor.toggleStatusEffect`).
+  NPCs not in a combat are left alone; PCs are never touched.
+- **Hide the token** (option, on): hidden as soon as it goes down.
+- **Undo when healed** (option, on): back above 0 → not defeated, status
+  removed, token shown again. Only undoes what this feature did: a combatant
+  the GM defeated by hand or a token the GM hid stays as it is (flags on the
+  combatant and token).
+- Acts when HP **crosses** 0 (compared with the last value seen), so the GM
+  can un-defeat a 0 HP NPC by hand. Only the active GM acts. HP readers are
+  shared with Damage Log (`scripts/core/hp.js`).
+- Loot Pile gathers defeated combatants whether their token is hidden or
+  not; the pile token is always created visible.
+- PF2e has its own "dead at 0 HP" automation; both together are harmless
+  (each step checks the current state first).
 
 #### Loot Pile
 *Replaces Combat Booster's "Body pile".* ✅ v0.11.0 · restyled v0.12.0
@@ -464,7 +495,7 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 | 10 | Loot Pile + Party Stash | ✅ v0.11.0 |
 | 11 | PF2e Search + Hazard Detection | ✅ v0.13.0 |
 | 12 | Next-pass prep: catalog entries + Scenes & Sound category, Turn Announcer rounds, Lock Combat Toggle | ✅ v0.14.0 |
-| 13 | Defeat at 0 HP, Hidden Until Started | §6 |
+| 13 | Defeat at 0 HP, Hidden Until Started | ✅ v0.15.0 |
 | 14 | Combat Tracker Window | §6 |
 | 15 | Combat Movement, Paused Movement Notice (shared movement block) | §6 |
 | 16 | Active Effect Highlight, Scene Navigation, Scene Palette | §6 |
@@ -508,33 +539,8 @@ container, so when unsure, ask the owner to check in Foundry's console
   next combatant in view (Q5).
 - Options: pop out on create · close on end · follow the turn.
 
-##### Hidden Until Started — `encounterVisibility`
-*Replaces part of Monk's Combat Details.* GM only.
-- While an encounter has not started, NPC combatants added to it are set
-  **hidden** in the tracker, so players don't see what's coming.
-- When the combat starts, those whose token is visible to players
-  (token not hidden) are revealed.
-- **Auto-reveal**: whenever a token stops being hidden (`hidden` true →
-  false), its combatant in any combat on that scene is revealed. This is
-  about Foundry's hidden flag, not the Invisible condition.
-- Never reveals a combatant whose token is still hidden.
-
-##### Defeat at 0 HP — `defeatAutomation`
-*Replaces part of Monk's Combat Details.* GM only.
-- When an NPC's HP reaches 0, its combatant is marked defeated and the
-  system's defeated status is applied (`CONFIG.specialStatusEffects.DEFEATED`
-  via `actor.toggleStatusEffect`). Healed above 0 → undone (option).
-- PCs are never touched. NPC = no player owner.
-- **Hide dead NPC tokens** (option, on by default): the token is set hidden
-  **as soon as the NPC goes down**, so bodies don't clutter the map (owner's
-  decision). If it is healed above 0, the token is shown again, but only if
-  we hid it.
-- **Loot Pile must work with hidden NPCs**: "Loot the fallen" gathers
-  defeated combatants on the GM's client whether their token is hidden or
-  not (it already does; keep it that way and test it). The pile token
-  itself is created visible, at the centre of the dead NPCs' tokens.
-- Reuse the HP readers from Damage Log (generic path + PF2e adapter, 4e path).
-- Only the active GM acts, so the update happens once.
+##### Hidden Until Started, Defeat at 0 HP
+✅ Built in v0.15.0; specs moved to §3 (Combat).
 
 ##### Lock Combat Toggle, Turn Announcer new rounds
 ✅ Built in v0.14.0; specs moved to §3 (Combat).
@@ -645,7 +651,8 @@ recommended default.
 | Q4b | Lock Combat Toggle | Can the GM get past the lock from the HUD? | ✅ Decided: Shift+click removes (GM only). Owner confirmed V14's HUD button removes all selected combatants and `TokenDocument#toggleCombatant` exists. |
 | Q5 | Combat Tracker Window | Owner checks in V14: does the tracker already follow the current turn and keep the next combatant visible? | If yes, skip "follow the turn". If no, build it. |
 | Q6 | Combat Tracker Window | Pop out for players too, or only the GM? | Everyone (client setting, default on). Can be locked with Force Client Settings. |
-| Q7 | Hidden Until Started | Which combatants are hidden before the start? | All combatants without a player owner. |
+| Q7 | Hidden Until Started | Which combatants are hidden before the start? | ✅ Decided: only combatants whose token is hidden. |
+| Q7b | Defeat at 0 HP | Undo when healed above 0? | ✅ Decided: yes (option, on). |
 | Q8 | Combat Movement | Where is the manual toggle? Do tokens not in the combat move freely? | A button in the combat tracker header (GM). Tokens not in the combat move freely. |
 | Q9 | Paused Movement Notice | Who sees "Game's Paused": only the player who tried to move, or everyone? | Only that player. |
 | Q10 | Scene Palette | Are the 5 swatches taken from the level's background image (like Monk's)? Or are they fixed palettes? | Taken from the image, plus Foundry's color picker for a custom color. |

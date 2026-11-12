@@ -166,7 +166,8 @@ async function createPile(groups, scene) {
   const cy = centre.y / Math.max(tokens.length, 1);
   const position = { x: Math.round((cx - size / 2) / size) * size, y: Math.round((cy - size / 2) / size) * size };
   const tokenDoc = await pile.getTokenDocument(position);
-  await scene.createEmbeddedDocuments("Token", [tokenDoc.toObject()]);
+  // Visible even when the dead NPCs' tokens are hidden (Defeat at 0 HP).
+  await scene.createEmbeddedDocuments("Token", [{ ...tokenDoc.toObject(), hidden: false }]);
   ui.notifications.info(localize("LUCD20.LootPile.Created", { count: items.length }));
   return pile;
 }

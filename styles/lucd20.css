@@ -735,19 +735,26 @@ button.lucd20-lock.mode-lock {
 .lucd20-round-divider {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 12px;
+  gap: 10px;
+  font-size: 13px;
   font-weight: bold;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  opacity: 0.75;
+  color: #f0e6d2;
+  /* A thin dark outline around the letters. */
+  text-shadow:
+    -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000,
+    0 0 3px rgba(0, 0, 0, 0.8);
 }
 
+/* A double line on each side of "Round X". */
 .lucd20-round-divider::before,
 .lucd20-round-divider::after {
   content: "";
   flex: 1;
-  border-top: 1px solid rgba(127, 127, 127, 0.55);
+  height: 5px;
+  border-top: 2px solid rgba(200, 170, 110, 0.85);
+  border-bottom: 1px solid rgba(200, 170, 110, 0.55);
 }
 
 /* Always Show Header Buttons ------------------------------------------- */

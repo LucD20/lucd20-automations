@@ -358,11 +358,21 @@
       },
       "encounterVisibility": {
         "Name": "Hidden Until Started",
-        "Hint": "NPCs added to an encounter stay hidden in the tracker until the combat starts. Revealing a token reveals its combatant."
+        "Hint": "Combatants whose token is hidden are added hidden in the combat tracker, so players don't see what's coming. Revealing the token reveals its combatant."
       },
       "defeatAutomation": {
         "Name": "Defeat at 0 HP",
-        "Hint": "NPCs at 0 HP are marked defeated (and their token hidden). Healing undoes it."
+        "Hint": "When an NPC in combat drops to 0 HP, it is marked defeated and gets the defeated status. Player characters are never touched.",
+        "Setting": {
+          "hideToken": {
+            "Name": "Hide the token",
+            "Hint": "Hide the NPC's token as soon as it goes down, so bodies don't clutter the map. Loot Pile still finds it."
+          },
+          "undoOnHeal": {
+            "Name": "Undo when healed",
+            "Hint": "Healed above 0 HP: no longer defeated, and the token is shown again if this feature hid it."
+          }
+        }
       },
       "combatMovement": {
         "Name": "Combat Movement",

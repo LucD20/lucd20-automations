@@ -68,6 +68,16 @@ under a labelled sub-section (e.g. "PF2e").
 🔍 Exploration (PF2e)   Search Automation · Hazard Detection
 ```
 
+Planned in the next pass (§6), shown greyed out until built:
+
+```
+⚔️ Combat               + Combat Tracker Window · Hidden Until Started · Defeat at 0 HP
+                          · Lock Combat Toggle · Combat Movement
+💬 Chat                 + Describe
+🗺️ Tokens & Placement   + Paused Movement Notice · Active Effect Highlight
+🎬 Scenes & Sound (new) Scene Navigation · Scene Palette · Hidden Track Names
+```
+
 ---
 
 ## 3. Feature specs
@@ -436,9 +446,192 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 | 9 | GM Vision | ✅ v0.10.0 |
 | 10 | Loot Pile + Party Stash | ✅ v0.11.0 |
 | 11 | PF2e Search + Hazard Detection | ✅ v0.13.0 |
+| 12 | Next-pass prep: catalog entries + Scenes & Sound category, Turn Announcer rounds, Lock Combat Toggle | §6 |
+| 13 | Defeat at 0 HP, Hidden Until Started | §6 |
+| 14 | Combat Tracker Window | §6 |
+| 15 | Combat Movement, Paused Movement Notice (shared movement block) | §6 |
+| 16 | Active Effect Highlight, Scene Navigation, Scene Palette | §6 |
+| 17 | Hidden Track Names | §6 |
+| 18 | Describe | §6 |
 
 ---
 
 ## 5. Open questions
 
-- (none)
+- Next pass: see §6.3. Each question has a recommended default; build with
+  the default only if the owner says so.
+
+---
+
+## 6. Next pass
+
+Features taken from more of the owner's current modules. Each one replaces
+only the parts the owner uses: Monk's modules have far more options than
+needed ("prime example of too many settings"), so keep each card to a switch
+and a few options with good defaults.
+
+Behavior marked **(verify)** is from memory of Foundry V12–V13 and must be
+checked against V14. Foundry's API docs are not reachable from the dev
+container, so when unsure, ask the owner to check in Foundry's console
+(F12) instead of guessing.
+
+### 6.1 Features
+
+#### ⚔️ Combat
+
+##### Combat Tracker Window — `combatTrackerWindow`
+*Replaces part of Monk's Combat Details.* Client setting (each player).
+- When an encounter is created, the combat tracker pops out and sits at the
+  **bottom right, against the left edge of the chat sidebar**. When the
+  combat ends (deleted), the pop-out closes, but only if we opened it.
+- **Follow the turn**: keep the current combatant visible, one row above the
+  bottom, so the next combatant is visible too. Foundry already scrolls to
+  the active turn (V12's `CombatTracker#scrollToTurn` centered it)
+  **(verify)**. Build this option only if Foundry doesn't already keep the
+  next combatant in view (Q5).
+- Options: pop out on create · close on end · follow the turn.
+
+##### Hidden Until Started — `encounterVisibility`
+*Replaces part of Monk's Combat Details.* GM only.
+- While an encounter has not started, NPC combatants added to it are set
+  **hidden** in the tracker, so players don't see what's coming.
+- When the combat starts, those whose token is visible to players
+  (token not hidden) are revealed.
+- **Auto-reveal**: whenever a token stops being hidden (`hidden` true →
+  false), its combatant in any combat on that scene is revealed. This is
+  about Foundry's hidden flag, not the Invisible condition.
+- Never reveals a combatant whose token is still hidden.
+
+##### Defeat at 0 HP — `defeatAutomation`
+*Replaces part of Monk's Combat Details.* GM only.
+- When an NPC's HP reaches 0, its combatant is marked defeated and the
+  system's defeated status is applied (`CONFIG.specialStatusEffects.DEFEATED`
+  via `actor.toggleStatusEffect`). Healed above 0 → undone (option).
+- PCs are never touched. NPC = no player owner.
+- **Hide dead NPC tokens** (option): the token is set hidden (Q1 decides
+  when). Loot Pile's "Loot the fallen" still finds them, since it runs on
+  the GM's client.
+- Reuse the HP readers from Damage Log (generic path + PF2e adapter, 4e path).
+- Only the active GM acts, so the update happens once.
+
+##### Lock Combat Toggle — `hudCombatLock`
+*Replaces part of Monk's Combat Details.* GM only, no options.
+- The Token HUD "Toggle combat state" button can add a token to combat but
+  not remove it. Removing is done from the combat tracker. Clicking it on a
+  combatant shows a short notification instead.
+
+##### Turn Announcer: new rounds
+Monk's "round messages" are **partly covered**: every turn card already
+shows "Round X". Missing: a message when a new round starts.
+- New option **Announce new rounds**: a thin "Round X" divider card in chat
+  when the round changes (Q4).
+
+##### Combat Movement — `combatMovement`
+*Replaces part of Monk's TokenBar.* GM only.
+- When combat starts, movement switches to **combat mode**: players can only
+  move the token of the combatant whose turn it is. The GM can always move.
+  It switches back to free movement when combat ends.
+- A GM button toggles it by hand during combat (Q8 decides where). The
+  current mode is visible to everyone.
+- Block every way of moving: drag, keyboard arrows, ruler/waypoint moves.
+  Use V14's movement hooks (`preMoveToken`) rather than only drag handlers
+  **(verify)**, with a check on the GM's side as a backstop.
+- Blocked moves show the same scrolling text as Paused Movement Notice
+  ("Not your turn").
+
+#### 💬 Chat
+
+##### Describe — `describe`
+*Replaces Narrator Tools (only its "describe").*
+- Select text anywhere (journal, chat, item descriptions…) and right-click:
+  a small menu offers **Describe**.
+- `/describe Text` in chat does the same (no chat message is posted).
+- Everyone sees the text **centered on screen** over a black gradient
+  (transparent at the edges, dark behind the text), fading in and out.
+- It stays on screen for a time based on its length (Q3). The GM can
+  dismiss it early for everyone.
+- Who can use it: Q2. Sent with `broadcast` from `core/socket.js`.
+
+#### 🗺️ Tokens & Placement
+
+##### Paused Movement Notice — `pauseNotifier`
+*Replaces Pause Notifier.*
+- While the game is paused, a player's attempt to move a token is stopped
+  and **"Game's Paused"** floats up from the token as scrolling text
+  (`canvas.interface.createScrollingText`).
+- Foundry already blocks player moves while paused and shows a
+  notification **(verify)**. If so, this replaces that notification with the
+  scrolling text. The GM is never blocked.
+- Who sees the text: Q9.
+
+##### Active Effect Highlight — `statusHighlight`
+*Replaces part of Monk's Little Details.* Client setting.
+- In the Token HUD's status effects palette, active effects get a clear
+  highlight (colored border and glow), so it's obvious which are on.
+  Foundry only dims inactive ones **(verify)**.
+- Options: highlight color.
+
+#### 🎬 Scenes & Sound (new category)
+
+##### Scene Navigation — `sceneNavigation`
+*Replaces part of Monk's Scene Navigation.* GM only.
+- **Left-click views**: in the Scenes sidebar, left-click a scene to view it
+  instead of opening its settings. Configure stays in the right-click menu.
+- **Navigation toggle**: a small compass icon on each scene in the sidebar
+  toggles whether it shows in the navigation bar (`navigation`). Bright when
+  on, dim when off.
+- **Collapse during combat**: when combat starts, the scene navigation bar
+  at the top collapses. It re-opens when combat ends, if we collapsed it.
+- Each is an option, on by default. The owner may add more scene options
+  later.
+
+##### Scene Palette — `scenePalette`
+*Replaces part of Monk's Little Details.* GM only.
+- In Scene settings → Levels → the current level → **Background color**,
+  show 5 color swatches taken from that level's background image, next to
+  Foundry's normal color picker (the custom pick). Clicking a swatch sets
+  the color (Q10).
+- Colors are worked out in the browser from the image (downscale on a
+  canvas, simple color quantization). No dependencies.
+
+##### Hidden Track Names — `hiddenTrackNames`
+*Replaces part of Monk's Sound Enhancements.* GM only.
+- Players don't see the names of playing tracks: in the Playlists sidebar
+  and its "Currently playing" list they see a placeholder (Q11).
+- The GM sees an **eye icon** next to each track (in playlists and in
+  "Currently playing") to reveal or hide its name. The reveal is saved on
+  the track (a flag on the PlaylistSound), so it survives reloads.
+- Tracks are hidden by default.
+- This is a display change: the real name is still in the player's client
+  data. Good enough for a table, not a secret store.
+
+### 6.2 Notes for building
+
+- Add every new feature to `scripts/core/catalog.js` `FEATURE_ORDER` (and
+  the `scenes` category to `CATEGORIES`) first, with lang names, so the
+  layout shows greyed out from phase 12.
+- Combat Movement and Paused Movement Notice share one movement block
+  (a small core helper, e.g. `scripts/core/movement-block.js`), so a move is
+  checked once and gets one message.
+- UI inside Foundry's own windows (Token HUD, sidebars, Scene settings,
+  combat tracker) goes through `core/dom-watch.js`.
+- Test with `tools/harness/` (see its README) before each release.
+
+### 6.3 Questions for the owner
+
+Ask these before building the feature they belong to. Each has a
+recommended default.
+
+| # | Feature | Question | Recommended |
+|---|---|---|---|
+| Q1 | Defeat at 0 HP | Hide dead NPC tokens when? Loot Pile keeps the bodies visible today. | Option: *right away* / *when combat ends* / *never*. Default: when combat ends, so bodies stay visible during the fight. |
+| Q2 | Describe | GM only, or players too? | GM only: players don't get the menu or `/describe`. |
+| Q3 | Describe | How long does the text stay? | 3 s + 0.3 s per word, between 4 and 30 s. Click to dismiss (the GM's click dismisses it for everyone). |
+| Q4 | Turn Announcer | New-round message as a separate divider card, or as a line on the first turn card of the round? | Separate thin divider card, on by default. |
+| Q5 | Combat Tracker Window | Owner checks in V14: does the tracker already follow the current turn and keep the next combatant visible? | If yes, skip "follow the turn". If no, build it. |
+| Q6 | Combat Tracker Window | Pop out for players too, or only the GM? | Everyone (client setting, default on). Can be locked with Force Client Settings. |
+| Q7 | Hidden Until Started | Which combatants are hidden before the start? | All combatants without a player owner. |
+| Q8 | Combat Movement | Where is the manual toggle? Do tokens not in the combat move freely? | A button in the combat tracker header (GM). Tokens not in the combat move freely. |
+| Q9 | Paused Movement Notice | Who sees "Game's Paused": only the player who tried to move, or everyone? | Only that player. |
+| Q10 | Scene Palette | Are the 5 swatches taken from the level's background image (like Monk's)? Or are they fixed palettes? | Taken from the image, plus Foundry's color picker for a custom color. |
+| Q11 | Hidden Track Names | What do players see instead of the name? Also hide the playlist name? | "Unknown track". Playlist names stay visible. |

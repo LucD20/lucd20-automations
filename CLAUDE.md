@@ -5,6 +5,8 @@
   decision changes.
 - Targets: Foundry V14 (build 368), PF2e 8.7, D&D 4e 0.9.3. Foundry cannot run
   in the dev container; the owner tests in Foundry and reports back.
+- Before a release, test in the mock-Foundry browser harness:
+  `tools/harness/README.md` (setup, server, one test per phase).
 - Releases are automatic: bump `version` in `module.json` (semver) and push;
   `.github/workflows/release.yml` creates the GitHub release that Foundry
   updates from. Every change meant for the owner to test needs a version bump.

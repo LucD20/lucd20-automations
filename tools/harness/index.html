@@ -1,0 +1,216 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="/node_modules/@fortawesome/fontawesome-free/css/all.min.css">
+<link rel="stylesheet" href="/modules/lucd20-automations/styles/lucd20.css">
+<style>
+  body { margin: 0; background: #1e1e24; color: #e6e6e6; font-family: sans-serif; font-size: 14px; }
+  body.light { background: #f0ece2; color: #222; }
+  form.application { position: absolute; left: 20px; top: 20px; width: 900px; height: 680px; display: flex; flex-direction: column;
+    border: 1px solid #555; border-radius: 6px; background: inherit; }
+  div.application { position: absolute; display: flex; flex-direction: column; border: 1px solid #555; border-radius: 6px; overflow: hidden; background: #1b1a21; }
+  div.application .window-header { flex: none; background: #121117; }
+  div.application .window-content { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+  .window-header { padding: 6px 10px; border-bottom: 1px solid #555; font-weight: bold; }
+  .window-content { flex: 1; min-height: 0; }
+  .form-group { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+  .form-group > label { flex: 2; }
+  .form-group > .form-fields { flex: 3; display: flex; justify-content: flex-end; }
+  input, select, button { color: inherit; background: rgba(127,127,127,0.15); border: 1px solid #777; border-radius: 3px; }
+  #core-config { position: absolute; left: 20px; top: 720px; width: 600px; padding: 10px; border: 1px solid #555; }
+</style>
+<script src="/node_modules/handlebars/dist/handlebars.min.js"></script>
+<script src="/node_modules/pixi.js/dist/pixi.min.js"></script>
+</head>
+<body>
+<form id="core-config">
+  <div class="form-group"><label for="c1">Font size</label><div class="form-fields"><input id="c1" type="number" name="core.fontSize" value="5"></div></div>
+  <div class="form-group"><label for="c2">Other mode</label><div class="form-fields"><select id="c2" name="other.mode"><option>a</option><option>b</option></select></div></div>
+  <div class="form-group"><label for="c3">World thing</label><div class="form-fields"><input id="c3" type="checkbox" name="other.worldThing"></div></div>
+</form>
+<script>
+// Minimal stand-ins for Foundry's <range-picker>, <color-picker>, <file-picker>.
+const mk = render => class extends HTMLElement {
+  connectedCallback() { if (!this.firstChild) this.innerHTML = render(this); this.style.display = "flex"; this.style.gap = "6px"; }
+  get value() { return this.querySelector("[data-v]")?.value; }
+  get disabled() { return this.hasAttribute("disabled"); }
+  set disabled(v) { v ? this.setAttribute("disabled", "") : this.removeAttribute("disabled"); }
+};
+customElements.define("range-picker", mk(el => `<input type="range" style="flex:1;min-width:0" min="${el.getAttribute("min")}" max="${el.getAttribute("max")}" step="${el.getAttribute("step")}" value="${el.getAttribute("value")}"><input data-v type="number" style="width:52px" value="${el.getAttribute("value")}">`));
+customElements.define("color-picker", mk(el => `<input data-v type="text" style="flex:1;min-width:0" value="${el.getAttribute("value")}"><input type="color" value="${el.getAttribute("value")}">`));
+customElements.define("file-picker", mk(el => `<input data-v type="text" style="flex:1;min-width:0" value="${el.getAttribute("value")}"><button type="button">📁</button>`));
+</script>
+<script type="module">
+const params = new URLSearchParams(location.search);
+const isGM = params.get("gm") !== "0";
+if (params.get("light")) document.body.classList.add("light");
+const preset = JSON.parse(params.get("preset") ?? "{}");
+
+// ---- i18n ----
+const lang = await (await fetch("/modules/lucd20-automations/lang/en.json")).json();
+Object.assign(lang.LUCD20.Feature, {
+  demoMarker: { Name: "Demo Marker", Hint: "A rotating marker under the token whose turn it is. Its size follows the token's size.", Setting: {
+    image: { Name: "Marker image" }, rotationSpeed: { Name: "Rotation speed", Hint: "Turns per minute." },
+    scale: { Name: "Scale" }, opacity: { Name: "Opacity" }, tint: { Name: "Tint" },
+    mode: { Name: "Mode" }, pf2eExtra: { Name: "Use PF2e disposition colors" }, extraSize: { Name: "Extra size", Hint: "Only when the PF2e option is on." },
+    myClient: { Name: "Show for me", Hint: "Per-player option." }, label: { Name: "Label" }, reloadMe: { Name: "Needs reload" } } },
+  demoClient: { Name: "Demo Client Feature", Hint: "Per-player demo.", Setting: { compact: { Name: "Compact icons" } } }
+});
+const flat = { "CORE.FontSize": "Font Size", "OTHER.Mode": "Other mode", "OTHER.A": "Choice A", "OTHER.B": "Choice B" };
+(function walk(o, p) { for (const [k, v] of Object.entries(o)) typeof v === "object" ? walk(v, p + k + ".") : (flat[p + k] = v); })(lang, "");
+
+// ---- settings store ----
+const registered = new Map(); const values = new Map(); window.__sets = [];
+window.Hooks = {
+  _h: {}, _id: 0,
+  on(n, f) { const id = ++this._id; (this._h[n] ??= []).push({ id, f }); return id; },
+  once(n, f) { return this.on(n, f); },
+  off(n, id) { this._h[n] = (this._h[n] ?? []).filter(h => h.id !== id); },
+  callAll(n, ...a) { for (const h of this._h[n] ?? []) h.f(...a); }
+};
+window.CONFIG = { queries: {} };
+window.canvas = { ready: false, tokens: { placeables: [] } };
+window.CONFIG.Canvas = { darknessColor: 0x242448, polygonBackends: {}, dispositionColors: { FRIENDLY: 0x43dfdf, NEUTRAL: 0xf1d836, HOSTILE: 0xe72124, SECRET: 0xa612d4 } };
+window.CONFIG.Token = { objectClass: class MockToken { _isVisionSource() { return true; } _onClickLeft2() { window.__sheetOpened = true; } } };
+window.__keybindings = {};
+window.CONST = { USER_ROLES: { PLAYER: 1, TRUSTED: 2, ASSISTANT: 3, GAMEMASTER: 4 }, TOKEN_DISPOSITIONS: { SECRET: -2, HOSTILE: -1, NEUTRAL: 0, FRIENDLY: 1 } };
+window.ui = { notifications: { error: m => console.error("NOTIFY", m), info: m => (window.__infos ??= []).push(m) } };
+const settingsAPI = {
+  settings: registered,
+  registerMenu() {},
+  register(ns, key, cfg) {
+    const full = `${ns}.${key}`;
+    registered.set(full, { ...cfg, namespace: ns, key, config: cfg.config ?? false });
+    values.set(full, full in preset ? preset[full] : cfg.default);
+  },
+  get(ns, key) { const full = `${ns}.${key}`; if (!registered.has(full)) throw new Error("not registered " + full); return values.get(full); },
+  async set(ns, key, v) { const full = `${ns}.${key}`; values.set(full, v); window.__sets.push([full, v]); registered.get(full).onChange?.(v); return v; }
+};
+window.game = {
+  ready: false,
+  userId: "u1",
+  data: { users: [{ _id: "u1", role: isGM ? 4 : 1 }] },
+  user: null,
+  system: { id: params.get("system") ?? "pf2e", title: "Pathfinder Second Edition" },
+  users: { activeGM: null },
+  socket: { on() {}, emit() {} },
+  keybindings: { register(ns, key, cfg) { window.__keybindings[`${ns}.${key}`] = cfg; }, actions: new Map() },
+  i18n: {
+    has: k => k in flat, localize: k => flat[k] ?? k,
+    format: (k, d) => (flat[k] ?? k).replace(/{(\w+)}/g, (_, x) => d[x])
+  },
+  modules: new Map([["lucd20-automations", { version: "test", title: "LucD20 Automations" }], ["other", { title: "Other Module" }]]),
+  settings: settingsAPI
+};
+// core + other-module settings exist before our module registers
+settingsAPI.register("core", "fontSize", { name: "CORE.FontSize", scope: "client", config: true, type: Number, default: 5 });
+settingsAPI.register("other", "mode", { name: "OTHER.Mode", scope: "client", config: true, type: String, default: "a", choices: { a: "OTHER.A", b: "OTHER.B" } });
+if ((params.get("system") ?? "pf2e") === "pf2e") {
+  settingsAPI.register("pf2e", "gmVision", { scope: "client", config: false, type: Boolean, default: false,
+    onChange: v => { window.__pf2eGmVisionChanges = (window.__pf2eGmVisionChanges ?? 0) + 1; CONFIG.Canvas.darknessColor = v ? CONFIG.PF2E.Canvas.darkness.gmVision : CONFIG.PF2E.Canvas.darkness.default; } });
+  window.CONFIG.PF2E = { Canvas: { darkness: { default: 0x242448, gmVision: 0xd1ccff } } };
+}
+settingsAPI.register("other", "worldThing", { name: "OTHER.World", scope: "world", config: true, type: Boolean, default: false });
+
+// ---- minimal ApplicationV2 ----
+const instances = new Map();
+class ApplicationV2 {
+  constructor(options = {}) { this.options = { ...this.constructor.DEFAULT_OPTIONS, ...options }; this.id = this.options.id; this.position = { ...(this.options.position ?? {}) }; }
+  async _prepareContext() { return {}; }
+  _onFirstRender() {}
+  _onRender() {}
+  async close() { await this._onClose?.({}); this.element?.remove(); this.element = null; this.rendered = false; instances.delete(this.id); }
+  async render() {
+    const first = !this.element;
+    if (first) {
+      this.element = document.createElement(this.options.tag ?? "div");
+      this.element.className = "application " + (this.options.classes ?? []).join(" ");
+      if (this.position?.width) Object.assign(this.element.style, { width: this.position.width + "px", height: typeof this.position.height === "number" ? this.position.height + "px" : "auto", left: (this.position.left ?? 20) + "px", top: (this.position.top ?? 20) + "px" });
+      if (this.title && this.element.querySelector(".window-header")) queueMicrotask(() => { const h = this.element?.querySelector(".window-header"); if (h) h.textContent = this.title; });
+      this.element.innerHTML = `<header class="window-header">${game.i18n.localize(this.options.window.title)}</header><section class="window-content"></section>`;
+      document.body.append(this.element);
+      this.element.addEventListener("click", ev => {
+        const t = ev.target.closest("[data-action]"); if (!t) return;
+        this.options.actions[t.dataset.action].call(this, ev, t);
+      });
+      this.element.addEventListener("change", ev => {
+        if (!this.options.form) return;
+        const object = {};
+        for (const el of this.element.querySelectorAll("[name]")) if (!el.disabled) object[el.name] = el.type === "checkbox" ? el.checked : el.value;
+        this.options.form.handler.call(this, ev, this.element, { object });
+      });
+      instances.set(this.id, this);
+    }
+    const ctx = await this._prepareContext({});
+    await this._preRender?.(ctx, {});
+    const contentEl = this.element.querySelector(".window-content");
+    if (this.constructor.PARTS) {
+      const tpl = await (await fetch("/" + Object.values(this.constructor.PARTS)[0].template)).text();
+      contentEl.innerHTML = Handlebars.compile(tpl)(ctx);
+    } else {
+      this._replaceHTML(await this._renderHTML(ctx, {}), contentEl, {});
+    }
+    if (first) this._onFirstRender(ctx, {});
+    await this._onRender(ctx, {});
+    this.rendered = true;
+    return this;
+  }
+}
+window.__dialogMode = "lock";
+window.foundry = {
+  applications: {
+    instances,
+    api: { ApplicationV2, HandlebarsApplicationMixin: B => class extends B {},
+      DialogV2: { confirm: async () => true, wait: async opts => {
+        window.__dialogContent = opts.content;
+        if (window.__dialogMode !== undefined) return window.__dialogMode;
+        // Run the default button's callback against a real form built from the content.
+        const form = document.createElement("form"); form.innerHTML = opts.content;
+        window.__dialogPrep?.(form);
+        const button = opts.buttons.find(b => b.default) ?? opts.buttons[0];
+        return button.callback ? button.callback(new Event("click"), { form }) : button.action;
+      } } }
+  },
+  utils: { debouncedReload() { window.__reloaded = true; }, deepClone: v => (v === undefined ? v : structuredClone(v)),
+    getProperty: (o, p) => p.split(".").reduce((x, k) => x?.[k], o),
+    setProperty: (o, p, v) => { const parts = p.split("."); let x = o; for (const k of parts.slice(0, -1)) x = x[k] ??= {}; x[parts.at(-1)] = v; return true; } }
+};
+
+// ---- demo features (exercise every setting kind) ----
+const { defineFeature } = await import("/modules/lucd20-automations/scripts/core/registry.js");
+window.__log = [];
+defineFeature({
+  id: "demoMarker", category: "combat", defaultEnabled: true,
+  settings: {
+    image: { kind: "file", fileType: "image", default: "icons/marker.webp" },
+    rotationSpeed: { kind: "range", min: 0, max: 10, step: 0.5, default: 3 },
+    scale: { kind: "number", min: 0.5, max: 3, step: 0.1, default: 1.2 },
+    opacity: { kind: "range", min: 0, max: 1, step: 0.05, default: 0.8 },
+    tint: { kind: "color", default: "#ff8800" },
+    mode: { kind: "select", choices: { a: "LUCD20.Hub.LegendWorld", b: "LUCD20.Hub.LegendClient" }, default: "b" },
+    label: { kind: "string", default: "Hello" },
+    reloadMe: { kind: "boolean", default: false, requiresReload: true },
+    myClient: { kind: "boolean", default: true, scope: "client" },
+    pf2eExtra: { kind: "boolean", default: false, system: "pf2e" },
+    extraSize: { kind: "number", default: 2, system: "pf2e", dependsOn: "pf2eExtra" }
+  },
+  enable(f) { __log.push("enable"); f.on("updateCombat", () => {}); },
+  disable() { __log.push("disable"); }
+});
+defineFeature({ id: "demoClient", category: "sheets", scope: "client", defaultEnabled: false,
+  settings: { compact: { kind: "boolean", default: true } }, enable() { __log.push("ctb-enable"); } });
+
+await import("/modules/lucd20-automations/scripts/main.js");
+Hooks.callAll("init");
+game.user = { id: "u1", isGM, isActiveGM: isGM };
+game.ready = true; Hooks.callAll("ready");
+await new Promise(r => setTimeout(r, 50));
+window.__registered = registered; window.__values = values;
+window.__decorateCore = () => Hooks.callAll("renderSettingsConfig", {}, document.getElementById("core-config"));
+const { SettingsHub } = await import("/modules/lucd20-automations/scripts/core/settings-hub.js");
+window.__hub = await new SettingsHub().render(true);
+window.__done = true;
+</script>
+</body>
+</html>

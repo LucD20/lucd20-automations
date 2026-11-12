@@ -1,0 +1,15 @@
+{
+  "name": "lucd20-harness",
+  "version": "1.0.0",
+  "description": "Mock Foundry page for testing lucd20-automations in a headless browser",
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^6.5.2",
+    "handlebars": "^4.7.8",
+    "pixi.js": "^7.4.2"
+  },
+  "private": true
+}

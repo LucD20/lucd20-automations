@@ -457,12 +457,28 @@
         }
       },
       "secretDoorHighlight": {
-        "Name": "Secret Door Highlight",
-        "Hint": "Secret door icons get a purple ring, a glow and an eye-slash badge, so they can't be mistaken for normal doors."
+        "Name": "Secret Doors",
+        "Hint": "Secret door icons get a thin purple ring and a small eye-slash badge, so they can't be mistaken for normal doors.",
+        "Setting": {
+          "confirmOpen": {
+            "Name": "Ask before opening",
+            "Hint": "Clicking a closed secret door asks first, so a misclick doesn't spoil the surprise."
+          }
+        }
       },
       "lockedDoorAlert": {
         "Name": "Locked Door Alert",
-        "Hint": "When a player clicks a locked door, the chat says who tried it (at most once every 10 seconds per player and door). Hovering the message highlights the door."
+        "Hint": "When a player clicks a locked door, the chat says who tried it (at most once every 10 seconds per player and door). Hovering the message highlights the door.",
+        "Setting": {
+          "lockOptions": {
+            "Name": "Lock options",
+            "Hint": "Wall settings get a Lock section (description, Force Open, Pick a Lock, other check). Clicking such a door posts a card with buttons to try, and the best party member for each."
+          },
+          "autoUnlock": {
+            "Name": "Unlock on success",
+            "Hint": "A successful try unlocks the door. Force Open also opens it, and on a plain success breaks it (it becomes secret so it can't be closed)."
+          }
+        }
       }
     },
     "ForceSettings": {
@@ -814,7 +830,37 @@
     },
     "Doors": {
       "Locked": "<strong>{name}</strong> tries the door: it's locked.",
-      "Someone": "Someone"
+      "Someone": "Someone",
+      "SecretConfirmTitle": "Open secret door?",
+      "SecretConfirm": "This is a <strong>secret door</strong>. Open it?"
+    },
+    "DoorLocks": {
+      "Legend": "Lock (LucD20)",
+      "ConfigHint": "Ways to open this door when it is locked. Players who click it get a card with these options.",
+      "Description": "Description",
+      "ForceOpen": "Force Open",
+      "PickALock": "Pick a Lock",
+      "Check": "Other check",
+      "Successes": "Successes",
+      "LabelPlaceholder": "Label, e.g. Dispel the seal",
+      "Best": "Best: {name} {mod}",
+      "NoOne": "No one in the party can try this",
+      "Try": "Try",
+      "Who": "Who tries?",
+      "Progress": "{done} / {total} successes",
+      "Jammed": "Jammed (−2)",
+      "Unlocked": "The door is unlocked.",
+      "Opened": "The door is open.",
+      "Gone": "This door is no longer here.",
+      "NoCharacter": "You have no character to try this with.",
+      "NoToolkit": "{name} has no thieves' toolkit.",
+      "Door": "Door",
+      "ResultBroken": "{name} forces the door open. It's broken.",
+      "ResultForced": "{name} forces the door open.",
+      "ResultJammed": "{name} jams the door: −2 to Force Open it from now on.",
+      "ResultPicked": "{name} picks the lock. The door is unlocked.",
+      "ResultProgress": "{name} makes progress on the lock ({done} / {total}).",
+      "ResultUnlocked": "{name} gets past the lock. The door is unlocked."
     }
   }
 }

@@ -64,7 +64,7 @@ under a labelled sub-section (e.g. "PF2e").
 💬 Chat                 Chat Pins · Damage Log · Describe
 🗺️ Tokens & Placement   Multi-Token Edit · Folder Drop · Paused Movement Notice
                           · Active Effect Highlight
-🚪 Doors                Door Icon Size · Secret Door Highlight · Locked Door Alert
+🚪 Doors                Door Icon Size · Secret Doors · Locked Door Alert (+ PF2e lock options)
 🎬 Scenes & Sound       Scene Navigation · Scene Palette · Hidden Track Names
 👁️ GM Vision            GM Vision Mode · Out-of-Sight Outlines
 🗂️ Sheets & Windows     Clean Title Bars · Always Show Header Buttons
@@ -435,11 +435,14 @@ code.
   (Q19). The whole icon container is scaled (art, background, border, hit
   area). Wraps `DoorControl#draw` and `#reposition`; changes apply at once.
 
-#### Secret Door Highlight — `secretDoorHighlight`
-*Replaces Smart Doors (secret door tint).* ✅ v0.21.0 · GM only, no options.
-- Secret door icons get a **purple ring with a soft glow**, a light purple
-  tint and an **eye-slash badge** in the bottom-right corner. Icon only, the
-  wall isn't marked (Q18; "let's try icon only").
+#### Secret Doors — `secretDoorHighlight`
+*Replaces Smart Doors (secret door tint).* ✅ v0.21.0 · GM only.
+- Secret door icons get a **thin purple ring** and a **small eye-slash badge**
+  in the bottom-right corner. Icon only, the wall isn't marked (Q18).
+  v0.22.0: toned down (no glow, no tint); v0.21.0 was too distracting.
+- **Ask before opening** (option, on, v0.22.0): a GM click that would open a
+  closed secret door asks for confirmation first, so a misclick doesn't spoil
+  the surprise (owner's request). Closing, locking etc. aren't asked.
 
 #### Locked Door Alert — `lockedDoorAlert`
 *Replaces Smart Doors (locked door alert).* ✅ v0.21.0 · no options.
@@ -449,6 +452,30 @@ code.
   (Q17). Not while paused. Foundry's own handling (lock sound) still runs.
 - GM: hovering the message highlights the door icon.
 - Wraps `DoorControl#_onMouseDown`.
+- **PF2e: lock options** ✅ v0.22.0 (`scripts/systems/pf2e/door-locks.js`,
+  options "Lock options" and "Unlock on success", both on):
+  - The wall's settings get a **Lock** section after the door type: a
+    description and the ways to open it, each with a DC: **Force Open**
+    (Athletics), **Pick a Lock** (Thievery, thieves' toolkit needed,
+    successes needed), **Other check** (any skill + label). Saved with the
+    wall's own form in `flags.lucd20-automations.lock`.
+  - A player clicking such a locked door posts a **card** instead of the
+    plain line: description, one row per way with the **best active party
+    member on the scene** ("Best: Amiri +12"; Pick a Lock only counts those
+    with a toolkit), progress ("1 / 2 successes"), "Jammed (−2)", and a
+    **Try** button. Rows are drawn on each client from the live wall data;
+    DCs only for the GM unless PF2e's "show DCs" is on.
+  - **Try** rolls for the player's own character (controlled token, else
+    their character, else a choice); the GM picks anyone (best preselected)
+    (Q21). Force Open and Pick a Lock use PF2e's own actions
+    (`game.pf2e.actions.forceOpen/pickALock`), so crowbars and feats apply;
+    other checks roll the statistic.
+  - The outcome goes to the active GM's client, which updates the door and
+    posts one line: Force Open success → **opened and turned secret** ("the
+    players broke it": it can't be closed; owner's call), critical success →
+    opened intact, critical failure → **jammed** (−2 circumstance to later
+    Force Open tries); Pick a Lock → counts successes, unlocks at the
+    target; Other check → unlocks (Q20).
 
 ### 🎬 Scenes & Sound
 
@@ -656,7 +683,8 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 | 17 | Hidden Track Names | ✅ v0.19.0 |
 | 18 | Describe | ✅ v0.20.0 |
 | 19 | Doors: Door Icon Size, Secret Door Highlight, Locked Door Alert | ✅ v0.21.0 |
-| 20–25 | Third pass: PF2e door locks, Riding, Token Scatter, Token Tooltip (2), Pathfinding | §7 |
+| 20 | PF2e door locks; secret doors toned down + ask before opening | ✅ v0.22.0 |
+| 21–25 | Third pass: Riding, Token Scatter, Token Tooltip (2), Pathfinding | §7 |
 
 ---
 
@@ -889,7 +917,7 @@ Source notes (from reading each module's code, Nov 2026):
 | # | Phase | Notes |
 |---|---|---|
 | 19 | Doors: Door Icon Size, Secret Door Highlight, Locked Door Alert | ✅ v0.21.0 (specs in §3) |
-| 20 | PF2e door locks (wall settings, card, best party member, unlock) | |
+| 20 | PF2e door locks (wall settings, card, best party member, unlock) | ✅ v0.22.0 (spec in §3) |
 | 21 | Riding | uses the movement block and placement helpers |
 | 22 | Token Scatter + stack badge | |
 | 23 | Token Tooltip: display + PF2e presets | |
@@ -911,8 +939,8 @@ tests.
 | Q17 | Locked Door Alert | Public message or whisper to the GM? Cooldown? | ✅ Decided: public; 10 s per player per door. |
 | Q18 | Secret Door Highlight | Purple ring + glow + eye-slash badge OK? Also mark the wall itself? | ✅ Decided: icon only, to try. |
 | Q19 | Door Icon Size | Default factor? | ✅ Decided: 1.5, per player, range 1–3. |
-| Q20 | Door locks (PF2e) | Ways to open: Force Open, Pick a Lock, Other check. Anything else? Auto-unlock on success? | Those three; auto-unlock on success (option). |
-| Q21 | Door locks (PF2e) | Who rolls from the card? Who counts for "best"? | Each player rolls their own character (choice if several); the GM can roll for anyone. Best = active party members on the scene. |
+| Q20 | Door locks (PF2e) | Ways to open: Force Open, Pick a Lock, Other check. Anything else? Auto-unlock on success? | ✅ Decided: those three; auto-unlock (option). Force Open also turns the door secret ("players broke it"). |
+| Q21 | Door locks (PF2e) | Who rolls from the card? Who counts for "best"? | ✅ Decided: as recommended. |
 | Q22 | Token Tooltip | One list with per-row "who sees it / on what" OK? | Yes. |
 | Q23 | Token Tooltip | When does it show? Which key shows all? | On hover; hold a key (default Alt, check for conflicts) for all visible tokens. |
 | Q24 | Token Tooltip | PF2e default rows and who sees them? | PCs: HP, AC, saves, Perception, Speed, Hero Points (owner + GM). NPCs: same rows GM-only; conditions for everyone. |

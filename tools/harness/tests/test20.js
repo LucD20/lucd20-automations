@@ -40,7 +40,7 @@ async function setup(page) {
     const doors = app.stage.addChild(new PIXI.Container());
     const scene = { id: "s1", grid: { size: 150 } };
     const mkWall = (id, mid, door, ds) => {
-      const wall = { id, scene, midpoint: mid, document: { id, door, ds, parent: scene } };
+      const wall = { id, scene, midpoint: mid, document: { id, door, ds, parent: scene, async update(d) { Object.assign(this, d); window.__wallUpdates = (window.__wallUpdates ?? []).concat([[id, d]]); } } };
       const c = new DoorControl(wall);
       wall.doorControl = c;
       doors.addChild(c);
@@ -103,6 +103,19 @@ async function setup(page) {
   await page.evaluate(() => { __walls[1].document.door = 1; Hooks.callAll("updateWall", __walls[1].document, { door: 1 }, {}); });
   assert.ok(await page.evaluate(() => !__walls[1].doorControl.lucd20SecretMark), "mark removed when no longer secret");
   await page.evaluate(() => { __walls[1].document.door = 2; Hooks.callAll("updateWall", __walls[1].document, { door: 2 }, {}); });
+  // Ask before opening: GM click on the closed secret door → confirm → opened
+  await page.evaluate(() => { window.__coreClicks = 0; __walls[1].doorControl._onMouseDown({ button: 0, stopPropagation() {} }); });
+  await page.waitForTimeout(50);
+  assert.deepStrictEqual(await page.evaluate(() => [__coreClicks, __wallUpdates]), [0, [["w2", { ds: 1 }]]], "confirmed, then opened by us");
+  await page.evaluate(() => { foundry.applications.api.DialogV2.confirm = async () => false; __walls[1].document.ds = 0; __wallUpdates = []; __walls[1].doorControl._onMouseDown({ button: 0, stopPropagation() {} }); });
+  await page.waitForTimeout(50);
+  assert.deepStrictEqual(await page.evaluate(() => [__walls[1].document.ds, __wallUpdates.length]), [0, 0], "cancelled: stays closed");
+  // Normal doors are not asked
+  await page.evaluate(() => __walls[0].doorControl._onMouseDown({ button: 0 }));
+  assert.strictEqual(await page.evaluate(() => __coreClicks), 1, "normal door: Foundry handles it");
+  await set(page, "secretDoorHighlight_confirmOpen", false);
+  await page.evaluate(() => __walls[1].doorControl._onMouseDown({ button: 0 }));
+  assert.strictEqual(await page.evaluate(() => __coreClicks), 2, "option off: no question");
   await set(page, "secretDoorHighlight_enabled", false);
   assert.ok(await page.evaluate(() => !__walls[1].doorControl.lucd20SecretMark), "off without reload");
   await set(page, "doorIconSize_enabled", false);
@@ -129,6 +142,7 @@ async function setup(page) {
   assert.strictEqual(msgs.length, 1, "one message, cooldown stops the spam");
   assert.ok(msgs[0].includes("Valeros") && msgs[0].includes("locked"));
   assert.strictEqual(await page.evaluate(() => __coreClicks), 4, "Foundry's own handling still runs");
+  assert.ok(!(await page.evaluate(() => __messages[0].flags["lucd20-automations"].lockCard)), "no lock card outside PF2e");
   assert.deepStrictEqual(await page.evaluate(() => __messages[0].flags["lucd20-automations"].lockedDoor), { wallId: "w3", sceneId: "s1" });
   // After the cooldown, a new message
   await page.evaluate(() => { const t = Date.now; Date.now = () => t() + 10_500; });

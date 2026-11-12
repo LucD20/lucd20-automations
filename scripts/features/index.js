@@ -21,6 +21,7 @@ import "./scene-navigation.js";
 import "./scene-palette.js";
 import "./hidden-track-names.js";
 import "./damage-log.js";
+import "./describe.js";
 import "./dice-stats.js";
 import "./gm-vision.js";
 import "./loot-pile.js";

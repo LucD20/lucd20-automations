@@ -56,6 +56,7 @@ sets `game.system.id`.
 | `test16.js` | Combat Movement, Paused Movement Notice (15) |
 | `test17.js` | Active Effect Highlight, Scene Navigation, Scene Palette (16) |
 | `test18.js` | Hidden Track Names (17) |
+| `test19.js` | Describe; round divider look (18) |
 
 For a new feature, copy the closest test, keep its mock setup and replace the
 checks.

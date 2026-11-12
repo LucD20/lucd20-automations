@@ -724,12 +724,31 @@ button.lucd20-lock.mode-lock {
   white-space: nowrap;
 }
 
-/* New-round divider: a thin line with "Round X" in the middle. */
-.chat-message.lucd20-round-message {
-  padding: 2px 6px;
-  background: none;
-  border-color: transparent;
-  box-shadow: none;
+/* New-round divider: only "─── ROUND X ───", no message frame or header.
+   :has() catches the card even if the render hook class is missing, and the
+   extra selectors beat system themes that style chat messages by id. */
+.chat-message.lucd20-round-message,
+#chat-log .chat-message:has(.lucd20-round-divider),
+.chat-log .chat-message:has(.lucd20-round-divider),
+.chat-message:has(.lucd20-round-divider) {
+  margin: 2px 0 !important;
+  padding: 2px 4px !important;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.chat-message.lucd20-round-message .message-header,
+.chat-message:has(.lucd20-round-divider) .message-header,
+.chat-message:has(.lucd20-round-divider) > header {
+  display: none !important;
+}
+
+.chat-message:has(.lucd20-round-divider) .message-content {
+  margin: 0 !important;
+  padding: 0 !important;
+  background: none !important;
+  border: none !important;
 }
 
 .lucd20-round-divider {
@@ -1762,14 +1781,22 @@ body.lucd20-status-highlight .token-hud .status-effects .effect-control.active {
 
 /* Scene Navigation: compass toggle in the Scenes sidebar ---------------- */
 
+li:has(> .lucd20-scene-nav) {
+  position: relative;
+}
+
 .lucd20-scene-nav {
-  flex: 0 0 auto;
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  z-index: 2;
   width: 22px;
   height: 22px;
-  margin: 0 4px;
+  margin: -11px 0 0;
   padding: 0;
   border: none;
-  background: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
   color: #f0c060;
   opacity: 0.3;
   cursor: pointer;
@@ -1830,4 +1857,67 @@ body.lucd20-status-highlight .token-hud .status-effects .effect-control.active {
 .lucd20-track-eye.revealed {
   opacity: 1;
   color: #8fd18f;
+}
+
+/* Describe: centered narration over a black gradient --------------------- */
+
+.lucd20-describe {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12vw;
+  background: radial-gradient(ellipse 70% 45% at center, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.7) 45%, rgba(0, 0, 0, 0) 100%);
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  cursor: pointer;
+}
+
+.lucd20-describe.visible {
+  opacity: 1;
+}
+
+.lucd20-describe-text {
+  max-width: 900px;
+  max-height: 80vh;
+  overflow: hidden;
+  color: #f4ecd8;
+  font-family: "Modesto Condensed", "Signika", serif;
+  font-size: clamp(22px, 2.6vw, 38px);
+  line-height: 1.35;
+  text-align: center;
+  white-space: pre-line;
+  text-shadow: 0 0 8px #000, 0 2px 4px #000;
+}
+
+/* Our own right-click menu, in Foundry's context-menu style. */
+.lucd20-describe-menu {
+  position: fixed;
+  z-index: 10000;
+  min-width: 140px;
+  background: rgba(20, 20, 26, 0.96);
+  border: 1px solid #6b5a3a;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  color: #eee;
+}
+
+.lucd20-describe-menu .context-items {
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+}
+
+.lucd20-describe-menu .context-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.lucd20-describe-menu .context-item:hover {
+  background: rgba(255, 255, 255, 0.1);
 }

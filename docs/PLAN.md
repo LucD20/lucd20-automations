@@ -61,7 +61,7 @@ under a labelled sub-section (e.g. "PF2e").
 ⚔️ Combat               Turn Marker · Next-Turn Marker · Turn Announcer · Loot Pile
                           · Combat Tracker Window · Hidden Until Started · Defeat at 0 HP · Lock Combat Toggle
                           · Combat Movement
-💬 Chat                 Chat Pins · Damage Log
+💬 Chat                 Chat Pins · Damage Log · Describe
 🗺️ Tokens & Placement   Multi-Token Edit · Folder Drop · Paused Movement Notice
                           · Active Effect Highlight
 🎬 Scenes & Sound       Scene Navigation · Scene Palette · Hidden Track Names
@@ -72,12 +72,8 @@ under a labelled sub-section (e.g. "PF2e").
 🔍 Exploration (PF2e)   Search Automation · Hazard Detection
 ```
 
-Planned in the next pass (§6), shown greyed out until built (in the catalog
-since v0.14.0; Scenes & Sound sits before Player Settings):
-
-```
-💬 Chat                 + Describe
-```
+Every feature of the next pass (§6) is built (v0.14.0–v0.20.0). Scenes &
+Sound sits before Player Settings.
 
 ---
 
@@ -128,7 +124,10 @@ Settings lists will be refined while building each feature.
 - Card content: token image, name, owning player(s), **round number**.
 - **New rounds** (v0.14.0, option, on by default): a thin "Round X" divider
   card (no header) when the round goes up, posted before that round's first
-  turn card. A double line on each side and outlined text (v0.15.0). Only once per round: stepping back a round and forward again
+  turn card. A double line on each side and outlined text (v0.15.0).
+  Only the divider shows: no message header, frame or background (v0.20.0;
+  also matched with `:has(.lucd20-round-divider)` and `!important`, since
+  PF2e's chat styles still showed the header). Only once per round: stepping back a round and forward again
   doesn't repeat it.
 - **NPC turns are announced** too (option). Hidden and defeated combatants
   are **skipped**. NPC names follow PF2e's name-visibility rule
@@ -326,6 +325,21 @@ Decisions:
 - Settings: players can open it · players see the cause · entries kept ·
   PF2e: show what caused it.
 
+#### Describe — `describe`
+*Replaces Narrator Tools (only its "describe").* ✅ v0.20.0 · GM only
+(owner's decision, Q2), no options.
+- Select text and right-click → **Describe**. On chat messages it's an entry
+  in **Foundry's own message menu** (owner's choice); elsewhere (journals,
+  item descriptions …) a small menu in Foundry's context-menu style appears,
+  only while text is selected and not inside an editor.
+- **`/describe Text`** in chat does the same; no chat message is posted
+  (`chatMessage` hook; V14 sends the input as HTML, turned into plain text
+  with line breaks).
+- Everyone sees the text **centered on screen** over a black radial gradient,
+  fading in and out. Stays **3 s + 0.3 s per word, 4–30 s** (Q3). A click
+  dismisses it; **the GM's click dismisses it for everyone**.
+- Sent with `broadcast` (`describe.show` / `describe.hide`); plain text only.
+
 ### 🗺️ Tokens & Placement
 
 #### Multi-Token Edit
@@ -411,6 +425,9 @@ Decisions:
   it (`ui.nav.collapse()` / `expand()`).
 - Settings: left-click views · navigation toggle · collapse during combat
   (all on).
+- v0.20.0: the compass is a direct child of the scene row, placed over its
+  right edge with CSS (V14's rows are thumbnails; it didn't show and
+  flickered in v0.19.0).
 - v0.19.0: V14's scene name is an action link and Foundry handles the
   click first, so the left-click and the compass are now handled by a
   capture-phase listener on the document (before Foundry); pointer events on
@@ -432,8 +449,9 @@ Decisions:
 - Players see **"Unknown track"** instead of a track's name in the Playlists
   sidebar and its "Currently playing" list (owner: the only places).
   **Playlist names stay visible** (Q11). Tooltips and labels are scrubbed too.
-- The GM gets an **eye icon** on each track (both lists): slashed = hidden,
-  green eye = revealed. Saved as a flag on the PlaylistSound (`revealed`);
+- The GM gets an **eye icon** on each track (both lists), placed beside
+  Foundry's own track icons so rows keep their height (v0.20.0): slashed =
+  hidden, green eye = revealed. Saved as a flag on the PlaylistSound (`revealed`);
   tracks are hidden by default.
 - Display only: the real name is still in the player's client data. Masking
   runs on every sidebar change (dom-watch), so Foundry's re-draws don't show
@@ -597,7 +615,7 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 | 15 | Combat Movement, Paused Movement Notice (shared movement block) | ✅ v0.17.0 |
 | 16 | Active Effect Highlight, Scene Navigation, Scene Palette | ✅ v0.18.0 |
 | 17 | Hidden Track Names | ✅ v0.19.0 |
-| 18 | Describe | §6 |
+| 18 | Describe | ✅ v0.20.0 |
 
 ---
 
@@ -638,17 +656,8 @@ container, so when unsure, ask the owner to check in Foundry's console
 
 #### 💬 Chat
 
-##### Describe — `describe`
-*Replaces Narrator Tools (only its "describe").*
-- Select text anywhere (journal, chat, item descriptions…) and right-click:
-  a small menu offers **Describe**.
-- `/describe Text` in chat does the same (no chat message is posted).
-- Everyone sees the text **centered on screen** over a black gradient
-  (transparent at the edges, dark behind the text), fading in and out.
-- It stays on screen for a time based on its length (Q3). The GM can
-  dismiss it early for everyone.
-- **GM only** (owner's decision): players get neither the menu nor
-  `/describe`. Sent with `broadcast` from `core/socket.js`.
+##### Describe
+✅ Built in v0.20.0; spec moved to §3 (Chat).
 
 #### 🗺️ Tokens & Placement
 
@@ -687,7 +696,7 @@ recommended default.
 |---|---|---|---|
 | Q1 | Defeat at 0 HP | Hide dead NPC tokens when? | ✅ Decided: as soon as they go down. Loot Pile must work with hidden NPCs. |
 | Q2 | Describe | GM only, or players too? | ✅ Decided: GM only. |
-| Q3 | Describe | How long does the text stay? | 3 s + 0.3 s per word, between 4 and 30 s. Click to dismiss (the GM's click dismisses it for everyone). |
+| Q3 | Describe | How long does the text stay? | ✅ Decided: 3 s + 0.3 s per word, between 4 and 30 s. Click to dismiss (the GM's click dismisses it for everyone). Right-click entry goes in Foundry's chat menu. |
 | Q4 | Turn Announcer | New-round message as a separate divider card, or as a line on the first turn card of the round? | ✅ Decided: separate thin divider card, on by default. |
 | Q4b | Lock Combat Toggle | Can the GM get past the lock from the HUD? | ✅ Decided: Shift+click removes (GM only). Owner confirmed V14's HUD button removes all selected combatants and `TokenDocument#toggleCombatant` exists. |
 | Q5 | Combat Tracker Window | Owner checks in V14: does the tracker already follow the current turn and keep the next combatant visible? | ✅ Yes: "follow the turn" not built. |

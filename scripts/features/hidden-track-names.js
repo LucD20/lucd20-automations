@@ -74,8 +74,9 @@ function drawEye(li, sound) {
     eye = document.createElement("button");
     eye.type = "button";
     eye.className = "lucd20-track-eye inline-control icon fa-solid";
-    const controls = li.querySelector(".sound-controls, .entry-controls, .controls");
-    if (controls) controls.prepend(eye);
+    // Beside Foundry's own icons (play, stop, repeat …), so the row keeps its height.
+    const first = li.querySelector("[data-action]:not(.lucd20-track-eye), .inline-control:not(.lucd20-track-eye), .sound-control, button:not(.lucd20-track-eye)");
+    if (first) first.before(eye);
     else li.append(eye);
   }
   eye.dataset.revealed = String(revealed);

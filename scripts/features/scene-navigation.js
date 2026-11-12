@@ -79,7 +79,7 @@ function drawToggles() {
   for (const li of root.querySelectorAll("li.directory-item, li.entry")) {
     if (li.classList.contains("folder")) continue;
     const scene = game.scenes.get(entryId(li));
-    let button = li.querySelector(".lucd20-scene-nav");
+    let button = li.querySelector(":scope > .lucd20-scene-nav");
     if (!scene || !show) {
       button?.remove();
       continue;
@@ -90,8 +90,9 @@ function drawToggles() {
       button = document.createElement("button");
       button.type = "button";
       button.className = "lucd20-scene-nav inline-control icon fa-solid fa-compass";
-      const name = li.querySelector(".entry-name, .document-name, h4, a");
-      (name?.parentElement === li ? name : li.firstElementChild ?? li).after(button);
+      // A direct child of the row, placed with CSS over its right edge: V14's
+      // scene rows are thumbnails with the name drawn over them.
+      li.append(button);
     }
     button.dataset.on = String(on);
     button.classList.toggle("on", on);

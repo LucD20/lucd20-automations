@@ -386,7 +386,7 @@
       },
       "describe": {
         "Name": "Describe",
-        "Hint": "Show selected text, or /describe text, centered on everyone's screen."
+        "Hint": "Select text anywhere and right-click → Describe, or type /describe Text in chat: everyone sees it centered on screen for a few seconds. Click to dismiss (the GM's click dismisses it for everyone)."
       },
       "pauseNotifier": {
         "Name": "Paused Movement Notice",
@@ -765,6 +765,11 @@
       "Unknown": "Unknown track",
       "Hidden": "Name hidden from players (click to reveal)",
       "Revealed": "Name shown to players (click to hide)"
+    },
+    "Describe": {
+      "Menu": "Describe",
+      "Dismiss": "Click to dismiss",
+      "Usage": "Usage: /describe Text to show on everyone's screen"
     }
   }
 }

@@ -164,8 +164,8 @@ default** (owner's decision, Q6); can be locked with Force Client Settings.
 - V14 notes (v0.16.1): the tracker class is `EncounterTracker` (render hook
   `renderEncounterTracker`); `ui.combat.renderPopout()` / `ui.combat.popout`
   work. The pop-out waits ~150 ms after the encounter is created so Foundry
-  finishes re-drawing the tracker first (v0.16.0 popped out during that
-  re-draw and nothing appeared). Temporary console logging until confirmed.
+  finishes re-drawing the tracker first (likely cause of v0.16.0 showing
+  nothing, not yet confirmed). Temporary console logging until confirmed.
 
 #### Hidden Until Started — `encounterVisibility`
 *Replaces part of Monk's Combat Details.* ✅ v0.15.0 · GM only, no options.

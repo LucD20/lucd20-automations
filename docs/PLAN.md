@@ -621,12 +621,14 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 | 16 | Active Effect Highlight, Scene Navigation, Scene Palette | ✅ v0.18.0 |
 | 17 | Hidden Track Names | ✅ v0.19.0 |
 | 18 | Describe | ✅ v0.20.0 |
+| 19–25 | Third pass: Doors, PF2e door locks, Riding, Token Scatter, Token Tooltip (2), Pathfinding | §7 |
 
 ---
 
 ## 5. Open questions
 
-- Next pass: see §6.3. Each question has a recommended default; build with
+- Next pass: see §6.3 (all answered).
+- Third pass: see §7.3. Each question has a recommended default; build with
   the default only if the owner says so.
 
 ---
@@ -712,3 +714,177 @@ recommended default.
 | Q9 | Paused Movement Notice | Who sees "Game's Paused": only the player who tried to move, or everyone? | ✅ Decided: everyone (who can see the token). |
 | Q10 | Scene Palette | Are the 5 swatches taken from the level's background image (like Monk's)? Or are they fixed palettes? | ✅ Decided: from the image, plus Foundry's color picker. |
 | Q11 | Hidden Track Names | What do players see instead of the name? Also hide the playlist name? | ✅ Decided: "Unknown track"; playlist names stay visible. |
+
+---
+
+## 7. Third pass
+
+Five more modules, taken from the owner's list. Same rules as §6: replace
+only what the owner uses, a switch and a few options per card, good
+defaults. Behavior marked **(verify)** must be checked in Foundry V14 by the
+owner before it is built.
+
+Source notes (from reading each module's code, Nov 2026):
+
+| Module | License | What matters for us |
+|---|---|---|
+| Rideable (Saibot393) | MIT | Flags on the mount (rider ids) and rider (offset). Only the GM moves riders, on `updateToken` of the mount, with `move(..., {constrainOptions: {ignoreWalls, ignoreCost}})` and an option flag to avoid loops. Blocks rider moves in `preUpdateToken`. No vision handling; unmount doesn't look for free space. Draw order: `rider.sort = mount.sort + 10` set locally on every client. |
+| Smart Doors (farling42) | **none** (all rights reserved): write our own | Overrides `DoorControl#reposition`, wraps `#draw` and `#_onMouseDown` (V14: `foundry.canvas.containers.DoorControl`). Icon size = grid × factor × 0.4. Secret doors only get a grey tint. Locked-door message is public, with no cooldown. |
+| Token Tooltip Alt | MIT | Hover overlay (HTML), rows of icon + value. Values by typed data path / mathjs / raw JS; separate lists per GM/player × disposition × actor type; no path browser, no system presets; tooltip is destroyed on pan. |
+| Wayfinder | MIT | Wraps one method: `CONFIG.Token.objectClass.prototype.findMovementPath` (V14, async `{result, promise, cancel}`). Plain A* on grid cells (+ elevation layers), own wall geometry, all diagonal rules, square + hex, no terrain costs, optional "explored fog only". WASM isn't needed: maps are 1k–10k cells. |
+| Z-Scatter | MIT | Hooks only, no overrides. Moves only the drawing (mesh, border, bars, effects, nameplate) and the hit area, never the document. Overlap = rectangles intersect, **same elevation only**. Push-apart relaxation, no shrinking. |
+
+### 7.1 Features
+
+#### 🗺️ Tokens & Placement
+
+##### Riding — `riding`
+*Replaces Rideable (only mounting).*
+- A GM marks a token **Rideable** (Q12).
+- **Mount**: select your token, **target** the rideable token, press **M**
+  (verify that M is free in V14 + PF2e). Your token moves onto the mount,
+  **a little inside one of its corners** (Q13), drawn above it, at
+  **50 % of its art scale**, at the mount's elevation.
+- While riding, the rider can't be moved on its own (shared movement block,
+  "Riding: press M to dismount"). When the mount moves, its riders move with
+  it (the active GM moves them, `ignoreWalls`/`ignoreCost`, a module option
+  so the rule doesn't block it).
+- **Dismount**: press M again with the rider selected. It goes to the
+  **closest free square it can reach** from the mount (no token there, not
+  across a wall: `core/placement.js`), and gets its scale back.
+- **Vision from the mount's centre** if V14 lets us move a token's vision
+  origin cleanly (verify, Q15); otherwise the rider's own (it sits on the
+  mount, so the difference is under a square).
+- PF2e: keep "link to actor size" from undoing the scale (Rideable had to
+  switch it off while riding).
+- Riders are kept on the mount (flag) across reloads; deleting either token
+  cleans up.
+
+##### Token Scatter — `tokenScatter`
+*Replaces Z-Scatter.* Per player.
+- Tokens that overlap **at the same elevation** spread apart a little on
+  screen so each can be seen, clicked and targeted. Only the drawing moves
+  (art, border, bars, effects, name, hit area); positions are not changed.
+  Not while a token is moving. Dead tokens (defeated) don't spread (option).
+- **Flying tokens over others** (different elevations, Z-Scatter leaves them
+  stacked). Idea, Q30:
+  - A small **stack badge** (layers icon + count) on the top token of a
+    stack. Hovering it fans out the stack for a moment; clicking it opens a
+    small strip of portraits under the token: click one to select it
+    (if yours) or target it.
+  - Holding a key fans out **every** stack on screen while held.
+  - No parallax or per-frame work: the badge is only recomputed when tokens
+    move.
+- Players only ever see (and count) tokens they can see.
+- Settings: spread amount · include different elevations in the badge ·
+  hold-to-fan key.
+
+##### Token Tooltip — `tokenTooltip`
+*Replaces Token Tooltip Alt, with a much simpler setup.*
+- Hovering a token shows a small panel next to it: rows of **icon + value**
+  (Font Awesome icons). Holding a key shows it on every visible token. It
+  follows pan and zoom.
+- **One list of rows** (not per disposition × role × actor type). Each row:
+  icon, value, color, **who sees it** (GM / owner / everyone) and **on what**
+  (PCs / NPCs / all) (Q22).
+- **No paths to type.** "Add row" opens a picker:
+  - **Presets** for the system (PF2e: HP, temp HP, AC, Fort/Ref/Will,
+    Perception, Speed, Level, Hero Points, Focus, Class DC, Spell DC,
+    conditions, shield HP…), with a sensible icon and color.
+  - **Browse data**: a searchable tree of the selected (or a chosen) token's
+    actor data with **live values** ("AC 18", "hp.value 31"); click a value
+    to use it. The path is filled in for you.
+  - Simple formats instead of expressions: number, `value / max (+temp)`,
+    modifier (`+7`), list (conditions), yes/no.
+- Never leaks: no tooltip on tokens the player can't see; NPC rows are GM-only
+  unless marked "everyone"; PF2e hidden names respected.
+- Editor in the lucd20-loot-app style: drag to reorder, preview on the
+  selected token.
+
+##### Pathfinding — `pathfinding`
+*Replaces Wayfinder.*
+- While dragging a token, Foundry's own ruler shows the **shortest path around
+  walls** (and closed/locked doors) instead of a straight line. Your own
+  waypoints are kept; each leg is routed.
+- One wrap: `findMovementPath` on the token class (verify its V14 signature
+  in the console before building). Plain-JS A* with a binary heap on grid
+  cells, the token's footprint, the scene's diagonal rule; walls from a
+  simple segment index rebuilt on wall changes. Searches can be cancelled.
+- **Players only route through explored or currently visible areas**, or the
+  path would reveal unexplored corridors (Q28, verify how to read V14's fog).
+- Off on gridless scenes and when Foundry asks to ignore walls.
+- Toggle in Token controls (per player, Q26). Square grids first (Q27).
+- Difficult terrain: not in the search at first; Foundry's ruler still shows
+  the real cost of the path (Q29).
+
+#### 🚪 Doors (new category)
+
+##### Door Icon Size — `doorIconSize`
+*Replaces Smart Doors (icon size).* Per player.
+- Door icons scale with the grid, so they don't get tiny when zoomed out.
+  Default 1.5 × Foundry's size (range 1–3). Wraps `DoorControl#draw` and
+  `#reposition`; switching it off redraws the doors.
+
+##### Secret Door Highlight — `secretDoorHighlight`
+*Replaces Smart Doors (secret doors), but more visible.* GM only.
+- Secret door icons get a **purple ring and glow** (PF2e's "secret" color)
+  and a small **eye-slash badge**, so they can't be mistaken for normal doors
+  (Q18). Only the GM sees secret door icons anyway.
+
+##### Locked Door Alert — `lockedDoorAlert`
+*Replaces Smart Doors (locked door alert).*
+- A player clicking a locked door posts **"Valeros tries the door: it's
+  locked."** (their character as speaker, the door's lock sound). Hovering
+  the message highlights the door (GM).
+- **Cooldown**: one message per player per door every 10 s (Q17).
+- **PF2e: lock options** (`doorLocks`, PF2e only). In the wall's settings
+  (door section), the GM adds a **description** and **ways to open it** (Q20):
+  - **Force Open** (Athletics; PF2e's own action, so the crowbar −2 rule
+    applies), DC.
+  - **Pick a Lock** (Thievery; needs thieves' toolkit), DC, successes needed.
+  - **Other check**: any skill, DC, label (e.g. "Dispel the seal", Arcana).
+  Then the locked-door message becomes a **card**: description, one button
+  per way, and on top the **party member best at each** ("Best: Amiri,
+  Athletics +12") (Q21). Rolls use PF2e's actions / checks with the DC (shown
+  or hidden per PF2e's own "show DCs" setting). On a success the GM's client
+  unlocks the door (Force Open also opens it) and the card says so.
+
+### 7.2 Build order
+
+| # | Phase | Notes |
+|---|---|---|
+| 19 | Doors: Door Icon Size, Secret Door Highlight, Locked Door Alert | new 🚪 Doors category |
+| 20 | PF2e door locks (wall settings, card, best party member, unlock) | |
+| 21 | Riding | uses the movement block and placement helpers |
+| 22 | Token Scatter + stack badge | |
+| 23 | Token Tooltip: display + PF2e presets | |
+| 24 | Token Tooltip: editor + data browser | |
+| 25 | Pathfinding | last: most API risk |
+
+Each phase: ask its questions → build → harness test → minor version → owner
+tests.
+
+### 7.3 Questions for the owner
+
+| # | Feature | Question | Recommended |
+|---|---|---|---|
+| Q12 | Riding | Which tokens can be ridden, and where is the switch? | Only tokens marked Rideable; GM switch in the Token HUD (and the token's settings). |
+| Q13 | Riding | Where does the rider sit? Several riders? | Rider's centre ~30 % in from the mount's top-left corner; more riders take the other corners. |
+| Q14 | Riding | Who can mount, from how far? | Players mount their own tokens onto a Rideable token within 1 square; the GM any token, any distance. |
+| Q15 | Riding | Vision from the mount's centre (verify in V14 at build time). | Yes if it's a clean hook; otherwise skip. |
+| Q16 | Riding | Do riders move together with the mount (same animation) or jump at the end? | Together. |
+| Q17 | Locked Door Alert | Public message or whisper to the GM? Cooldown? | Public; 10 s per player per door. |
+| Q18 | Secret Door Highlight | Purple ring + glow + eye-slash badge OK? Also mark the wall itself? | Icon only (ring, glow, badge). |
+| Q19 | Door Icon Size | Default factor? | 1.5, per player, range 1–3. |
+| Q20 | Door locks (PF2e) | Ways to open: Force Open, Pick a Lock, Other check. Anything else? Auto-unlock on success? | Those three; auto-unlock on success (option). |
+| Q21 | Door locks (PF2e) | Who rolls from the card? Who counts for "best"? | Each player rolls their own character (choice if several); the GM can roll for anyone. Best = active party members on the scene. |
+| Q22 | Token Tooltip | One list with per-row "who sees it / on what" OK? | Yes. |
+| Q23 | Token Tooltip | When does it show? Which key shows all? | On hover; hold a key (default Alt, check for conflicts) for all visible tokens. |
+| Q24 | Token Tooltip | PF2e default rows and who sees them? | PCs: HP, AC, saves, Perception, Speed, Hero Points (owner + GM). NPCs: same rows GM-only; conditions for everyone. |
+| Q25 | Token Tooltip | No expressions at all (presets + data browser + simple formats)? | Yes; add a "sum of two values" format later only if needed. |
+| Q26 | Pathfinding | Always on, or a per-player toggle in Token controls? | Toggle, on by default. |
+| Q27 | Pathfinding | Do you use hex maps? | Square first; hex only if you use them. |
+| Q28 | Pathfinding | Players route only through explored/visible areas? | Yes (otherwise the path leaks the map). |
+| Q29 | Pathfinding | Avoid difficult terrain when searching? | Not at first; the ruler still shows the cost. |
+| Q30 | Token Scatter | Flyers: stack badge + strip of portraits + hold-to-fan key OK? | Yes. |
+| Q31 | Token Scatter | Per player, on by default? | Yes. |

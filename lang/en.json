@@ -382,7 +382,7 @@
       },
       "combatMovement": {
         "Name": "Combat Movement",
-        "Hint": "During combat, players can only move the token whose turn it is."
+        "Hint": "During combat, players can only move the token whose turn it is; tokens not in the combat move freely. A button in the combat tracker header switches between turn order and free movement."
       },
       "describe": {
         "Name": "Describe",
@@ -390,7 +390,7 @@
       },
       "pauseNotifier": {
         "Name": "Paused Movement Notice",
-        "Hint": "\"Game's Paused\" floats up from a token a player tries to move while the game is paused."
+        "Hint": "When a player tries to move a token while the game is paused, \"Game's Paused\" floats up from the token instead of Foundry's notification. Everyone who can see the token sees it."
       },
       "statusHighlight": {
         "Name": "Active Effect Highlight",
@@ -725,6 +725,15 @@
     "HudCombatLock": {
       "Blocked": "Remove combatants from the combat tracker.",
       "BlockedGM": "Remove combatants from the combat tracker, or Shift+click to remove anyway."
+    },
+    "CombatMovement": {
+      "NotYourTurn": "Not your turn",
+      "Turn": "Movement: turn order (only the current combatant can move)",
+      "Free": "Movement: free",
+      "Toggle": "Click to switch"
+    },
+    "PauseNotifier": {
+      "Text": "Game's Paused"
     }
   }
 }

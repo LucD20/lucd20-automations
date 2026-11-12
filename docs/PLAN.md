@@ -60,6 +60,7 @@ under a labelled sub-section (e.g. "PF2e").
 ```
 ⚔️ Combat               Turn Marker · Next-Turn Marker · Turn Announcer · Loot Pile
                           · Combat Tracker Window · Hidden Until Started · Defeat at 0 HP · Lock Combat Toggle
+                          · Combat Movement
 💬 Chat                 Chat Pins · Damage Log
 🗺️ Tokens & Placement   Multi-Token Edit · Folder Drop
 👁️ GM Vision            GM Vision Mode · Out-of-Sight Outlines
@@ -73,9 +74,8 @@ Planned in the next pass (§6), shown greyed out until built (in the catalog
 since v0.14.0; Scenes & Sound sits before Player Settings):
 
 ```
-⚔️ Combat               + Combat Movement
 💬 Chat                 + Describe
-🗺️ Tokens & Placement   + Paused Movement Notice · Active Effect Highlight
+🗺️ Tokens & Placement   + Active Effect Highlight
 🎬 Scenes & Sound (new) Scene Navigation · Scene Palette · Hidden Track Names
 ```
 
@@ -166,6 +166,21 @@ default** (owner's decision, Q6); can be locked with Force Client Settings.
   work. The pop-out waits ~150 ms after the encounter is created so Foundry
   finishes re-drawing the tracker first (likely cause of v0.16.0 showing
   nothing, not yet confirmed). Temporary console logging until confirmed.
+
+#### Combat Movement — `combatMovement`
+*Replaces part of Monk's TokenBar.* ✅ v0.17.0 · GM only, no options.
+- While a combat has started, players can only move the token of the
+  combatant whose turn it is. **Tokens not in the combat move freely** (Q8).
+  The GM can always move. Free again when the combat ends.
+- **GM button in the combat tracker header** (Q8) switches the combat between
+  turn order (shoe prints, amber) and free movement (walking figure, green);
+  players see the same icon without the button. Stored as a flag on the
+  combat (`freeMovement`), so everyone sees the same mode.
+- Blocked moves float **"Not your turn"** over the token for everyone who can
+  see it (same as the paused text).
+- The check runs in `preMoveToken` on the player's client (V14 fires it for
+  moves; owner checked). No GM-side backstop: a player's own token update
+  can only be undone after the fact, which isn't worth it.
 
 #### Hidden Until Started — `encounterVisibility`
 *Replaces part of Monk's Combat Details.* ✅ v0.15.0 · GM only, no options.
@@ -338,6 +353,18 @@ Decisions:
   Party token itself.
 - Settings: placement (ask / random / select) · drop as hidden · include
   subfolders.
+
+#### Paused Movement Notice — `pauseNotifier`
+*Replaces Pause Notifier.* ✅ v0.17.0 · GM only, no options.
+- V14 already stops a player's move while paused and shows "You cannot take
+  this action while the game is currently paused." (owner checked). That
+  notification is replaced by **"Game's Paused"** floating up from the
+  token(s) the player tried to move (their controlled tokens), **seen by
+  everyone** who can see the token (Q9). Other paused warnings (nothing
+  controlled) are left alone. The GM is never blocked.
+- Shared movement block (`scripts/core/movement-block.js`): move rules run once
+  in `preMoveToken`; the floating text is broadcast and drawn only on clients
+  that can see the token; repeated attempts don't stack texts.
 
 ### 👁️ GM Vision
 
@@ -518,7 +545,7 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 | 12 | Next-pass prep: catalog entries + Scenes & Sound category, Turn Announcer rounds, Lock Combat Toggle | ✅ v0.14.0 |
 | 13 | Defeat at 0 HP, Hidden Until Started | ✅ v0.15.0 |
 | 14 | Combat Tracker Window | ✅ v0.16.0 |
-| 15 | Combat Movement, Paused Movement Notice (shared movement block) | §6 |
+| 15 | Combat Movement, Paused Movement Notice (shared movement block) | ✅ v0.17.0 |
 | 16 | Active Effect Highlight, Scene Navigation, Scene Palette | §6 |
 | 17 | Hidden Track Names | §6 |
 | 18 | Describe | §6 |
@@ -557,18 +584,8 @@ container, so when unsure, ask the owner to check in Foundry's console
 ##### Lock Combat Toggle, Turn Announcer new rounds
 ✅ Built in v0.14.0; specs moved to §3 (Combat).
 
-##### Combat Movement — `combatMovement`
-*Replaces part of Monk's TokenBar.* GM only.
-- When combat starts, movement switches to **combat mode**: players can only
-  move the token of the combatant whose turn it is. The GM can always move.
-  It switches back to free movement when combat ends.
-- A GM button toggles it by hand during combat (Q8 decides where). The
-  current mode is visible to everyone.
-- Block every way of moving: drag, keyboard arrows, ruler/waypoint moves.
-  Use V14's movement hooks (`preMoveToken`) rather than only drag handlers
-  **(verify)**, with a check on the GM's side as a backstop.
-- Blocked moves show the same scrolling text as Paused Movement Notice
-  ("Not your turn").
+##### Combat Movement
+✅ Built in v0.17.0; spec moved to §3 (Combat).
 
 #### 💬 Chat
 
@@ -586,15 +603,8 @@ container, so when unsure, ask the owner to check in Foundry's console
 
 #### 🗺️ Tokens & Placement
 
-##### Paused Movement Notice — `pauseNotifier`
-*Replaces Pause Notifier.*
-- While the game is paused, a player's attempt to move a token is stopped
-  and **"Game's Paused"** floats up from the token as scrolling text
-  (`canvas.interface.createScrollingText`).
-- Foundry already blocks player moves while paused and shows a
-  notification **(verify)**. If so, this replaces that notification with the
-  scrolling text. The GM is never blocked.
-- Who sees the text: Q9.
+##### Paused Movement Notice
+✅ Built in v0.17.0; spec moved to §3 (Tokens & Placement).
 
 ##### Active Effect Highlight — `statusHighlight`
 *Replaces part of Monk's Little Details.* Client setting.
@@ -665,7 +675,7 @@ recommended default.
 | Q6 | Combat Tracker Window | Pop out for players too, or only the GM? | ✅ Decided: everyone, per-player setting, on by default. |
 | Q7 | Hidden Until Started | Which combatants are hidden before the start? | ✅ Decided: only combatants whose token is hidden. |
 | Q7b | Defeat at 0 HP | Undo when healed above 0? | ✅ Decided: yes (option, on). |
-| Q8 | Combat Movement | Where is the manual toggle? Do tokens not in the combat move freely? | A button in the combat tracker header (GM). Tokens not in the combat move freely. |
-| Q9 | Paused Movement Notice | Who sees "Game's Paused": only the player who tried to move, or everyone? | Only that player. |
+| Q8 | Combat Movement | Where is the manual toggle? Do tokens not in the combat move freely? | ✅ Decided: button in the combat tracker header (GM); tokens not in the combat move freely. |
+| Q9 | Paused Movement Notice | Who sees "Game's Paused": only the player who tried to move, or everyone? | ✅ Decided: everyone (who can see the token). |
 | Q10 | Scene Palette | Are the 5 swatches taken from the level's background image (like Monk's)? Or are they fixed palettes? | Taken from the image, plus Foundry's color picker for a custom color. |
 | Q11 | Hidden Track Names | What do players see instead of the name? Also hide the playlist name? | "Unknown track". Playlist names stay visible. |

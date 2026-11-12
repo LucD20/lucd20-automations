@@ -1723,3 +1723,27 @@ button.lucd20-lock.mode-lock {
 .lucd20-loot-app .lucd20-search-rolled { display: flex; align-items: center; gap: 8px; min-height: 32px; padding: 2px 0; border-bottom: 1px solid var(--ll-border); }
 .lucd20-loot-app .lucd20-search-rolled .name { flex: 1; font-weight: 600; }
 .lucd20-loot-app .pill.missed { color: var(--ll-danger-text); border-color: var(--ll-danger-border); }
+
+/* Combat Movement: mode control in the combat tracker header ------------ */
+
+.lucd20-move-mode {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-width: 24px;
+  height: 24px;
+  margin: 0 2px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #e9a23b;
+}
+
+.lucd20-move-mode.free {
+  color: #8fd18f;
+}
+
+button.lucd20-move-mode {
+  cursor: pointer;
+}

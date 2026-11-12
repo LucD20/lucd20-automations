@@ -78,7 +78,7 @@ async function setupMocks(page) {
   console.log("Combat:", combat);
   const lock = combat.find(c => c[0].includes("Lock Combat Toggle"));
   assert.ok(lock && !lock[1], "Lock Combat Toggle is built");
-  assert.ok(combat.some(c => c[0].includes("Combat Movement") && c[1]), "Combat Movement planned");
+  assert.ok(combat.every(c => !c[1]), "every combat feature is built");
   await page.screenshot({ path: `${out}/p12-hub-combat.png` });
   await page.evaluate(() => { document.querySelector(".lucd20-hub").style.display = "none"; document.getElementById("core-config").style.display = "none"; });
 

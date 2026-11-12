@@ -62,7 +62,7 @@ under a labelled sub-section (e.g. "PF2e").
                           · Combat Tracker Window · Hidden Until Started · Defeat at 0 HP · Lock Combat Toggle
                           · Combat Movement
 💬 Chat                 Chat Pins · Damage Log
-🗺️ Tokens & Placement   Multi-Token Edit · Folder Drop
+🗺️ Tokens & Placement   Multi-Token Edit · Folder Drop · Paused Movement Notice
 👁️ GM Vision            GM Vision Mode · Out-of-Sight Outlines
 🗂️ Sheets & Windows     Clean Title Bars · Always Show Header Buttons
 📊 Statistics           Dice Stats

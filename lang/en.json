@@ -424,7 +424,7 @@
       },
       "hiddenTrackNames": {
         "Name": "Hidden Track Names",
-        "Hint": "Players see \"Unknown track\" instead of track names. The GM reveals names one by one."
+        "Hint": "Players see \"Unknown track\" instead of track names in the Playlists sidebar. An eye icon on each track lets the GM reveal its name. Playlist names stay visible."
       }
     },
     "ForceSettings": {
@@ -760,6 +760,11 @@
     "ScenePalette": {
       "Hint": "Colors from the background image",
       "Use": "Use {color}"
+    },
+    "HiddenTrackNames": {
+      "Unknown": "Unknown track",
+      "Hidden": "Name hidden from players (click to reveal)",
+      "Revealed": "Name shown to players (click to hide)"
     }
   }
 }

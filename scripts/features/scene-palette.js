@@ -170,7 +170,7 @@ function drawSwatches(picker) {
   const field = imageFieldFor(picker);
   const src = imageSrc(field) || documentImage(picker);
   const group = picker.closest(".form-group") ?? picker.parentElement;
-  let box = group.querySelector(":scope .lucd20-palette");
+  let box = group.querySelector(".lucd20-palette");
   if (box?.dataset.src === src) return;
   if (!src) {
     box?.remove();
@@ -179,8 +179,10 @@ function drawSwatches(picker) {
   if (!box) {
     box = document.createElement("div");
     box.className = "lucd20-palette";
-    const fields = picker.closest(".form-fields") ?? picker;
-    fields.after(box);
+    // Inside the picker's row, after it: same line, same height.
+    const fields = picker.closest(".form-fields");
+    if (fields) fields.append(box);
+    else picker.after(box);
   }
   box.dataset.src = src;
   box.innerHTML = "";

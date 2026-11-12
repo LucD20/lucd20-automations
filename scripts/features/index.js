@@ -19,6 +19,7 @@ import "./pause-notifier.js";
 import "./status-highlight.js";
 import "./scene-navigation.js";
 import "./scene-palette.js";
+import "./hidden-track-names.js";
 import "./damage-log.js";
 import "./dice-stats.js";
 import "./gm-vision.js";

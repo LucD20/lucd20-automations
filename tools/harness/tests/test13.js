@@ -70,7 +70,7 @@ async function setupMocks(page) {
   const scenes = await page.$$eval('.lucd20-hub-category[data-category="scenes"] .lucd20-feature', els => els.map(e => [e.dataset.feature ?? e.querySelector("h3,h4,.lucd20-feature-name")?.textContent.trim(), e.classList.contains("planned")]));
   console.log("Scenes:", scenes);
   assert.strictEqual(scenes.length, 3);
-  assert.deepStrictEqual(scenes.map(s => s[1]), [false, false, true], "Hidden Track Names still planned");
+  assert.ok(scenes.every(s => !s[1]), "every scene feature is built");
   await page.screenshot({ path: `${out}/p12-hub-scenes.png` });
   await page.click('.lucd20-hub-tab[data-category="combat"]');
   await page.waitForTimeout(150);

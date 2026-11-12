@@ -31,11 +31,11 @@ async function setupMocks(page) {
     document.body.append(dir);
     window.__drawScenes = () => {
       dir.innerHTML = `<header class="directory-header"><button class="create">Create</button></header><ol class="directory-list">
-        ${scenes.map(s => `<li class="directory-item entry scene" data-entry-id="${s.id}" style="display:flex;align-items:center;padding:4px"><a class="entry-name" style="flex:1">${s.name}</a></li>`).join("")}</ol>`;
+        ${scenes.map(s => `<li class="directory-item entry scene" data-entry-id="${s.id}" style="display:flex;align-items:center;padding:4px"><a class="entry-name" data-action="activateEntry" style="flex:1">${s.name}</a></li>`).join("")}</ol>`;
     };
     __drawScenes();
-    // Foundry's own handler: opens the sheet
-    dir.addEventListener("click", e => { const li = e.target.closest("[data-entry-id]"); if (li) window.__sheetFor = li.dataset.entryId; });
+    // Foundry's own handler (capture phase on the app, like V14 seems to): opens the sheet
+    dir.addEventListener("click", e => { const li = e.target.closest("[data-entry-id]"); if (li) window.__sheetFor = li.dataset.entryId; }, true);
     ui.scenes = { element: dir };
     // Scene navigation bar
     window.__nav = { expanded: true, collapse() { this.expanded = false; }, expand() { this.expanded = true; } };
@@ -81,6 +81,11 @@ async function setupMocks(page) {
   assert.strictEqual(await page.evaluate(() => game.scenes.get("sB").navigation), true, "compass toggles navigation");
   assert.deepStrictEqual(await page.$$eval("#scenes .lucd20-scene-nav", e => e.map(b => b.classList.contains("on"))), [true, true], "redrawn after the update");
   assert.strictEqual(await page.evaluate(() => window.__viewed), "sB", "compass click doesn't view");
+  assert.strictEqual(await page.evaluate(() => window.__sheetFor), undefined, "compass click doesn't open the settings");
+  await page.click('#scenes [data-entry-id="sB"] .lucd20-scene-nav');
+  await page.waitForTimeout(80);
+  assert.strictEqual(await page.evaluate(() => game.scenes.get("sB").navigation), false, "clicking again removes it");
+  assert.strictEqual(await page.evaluate(() => window.__sheetFor), undefined, "still no settings");
   await page.screenshot({ path: `${out}/p16-scenes.png`, clip: { x: 720, y: 0, width: 280, height: 90 } });
   // option off → Foundry's click
   await set("sceneNavigation_clickToView", false);
@@ -115,7 +120,7 @@ async function setupMocks(page) {
     app.style.cssText = "position:fixed;left:200px;top:120px;width:420px;background:#2a2a2a;color:#ddd;padding:8px";
     app.innerHTML = `<form><fieldset><legend>Current Level</legend>
       <div class="form-group"><label>Background image</label><div class="form-fields"><input type="text" name="levels.l1.background.src" value="${src}"></div></div>
-      <div class="form-group"><label>Background color</label><div class="form-fields"><input type="color" name="levels.l1.background.color" value="#000000"></div></div>
+      <div class="form-group" style="display:flex;align-items:center"><label style="flex:1">Background color</label><div class="form-fields" style="display:flex;align-items:center;gap:4px;flex:2"><input type="text" value="#000000" style="flex:1"><input type="color" name="levels.l1.background.color" value="#000000"></div></div>
       </fieldset></form>`;
     document.body.append(app);
     window.__changes = 0;

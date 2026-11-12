@@ -64,7 +64,7 @@ under a labelled sub-section (e.g. "PF2e").
 💬 Chat                 Chat Pins · Damage Log
 🗺️ Tokens & Placement   Multi-Token Edit · Folder Drop · Paused Movement Notice
                           · Active Effect Highlight
-🎬 Scenes & Sound       Scene Navigation · Scene Palette
+🎬 Scenes & Sound       Scene Navigation · Scene Palette · Hidden Track Names
 👁️ GM Vision            GM Vision Mode · Out-of-Sight Outlines
 🗂️ Sheets & Windows     Clean Title Bars · Always Show Header Buttons
 📊 Statistics           Dice Stats
@@ -77,7 +77,6 @@ since v0.14.0; Scenes & Sound sits before Player Settings):
 
 ```
 💬 Chat                 + Describe
-🎬 Scenes & Sound       + Hidden Track Names
 ```
 
 ---
@@ -412,6 +411,10 @@ Decisions:
   it (`ui.nav.collapse()` / `expand()`).
 - Settings: left-click views · navigation toggle · collapse during combat
   (all on).
+- v0.19.0: V14's scene name is an action link and Foundry handles the
+  click first, so the left-click and the compass are now handled by a
+  capture-phase listener on the document (before Foundry); pointer events on
+  the compass are swallowed too.
 
 #### Scene Palette — `scenePalette`
 *Replaces part of Monk's Little Details.* ✅ v0.18.0 · GM only, no options.
@@ -422,6 +425,19 @@ Decisions:
   the same prefix, else the scene's own background image).
 - Colors: image drawn at 64 px on a canvas, k-means (farthest-point start, 10
   passes), most common first. Cached per image.
+- Look (v0.19.0): 22 px rounded squares in the picker's row, after it.
+
+#### Hidden Track Names — `hiddenTrackNames`
+*Replaces part of Monk's Sound Enhancements.* ✅ v0.19.0 · GM only, no options.
+- Players see **"Unknown track"** instead of a track's name in the Playlists
+  sidebar and its "Currently playing" list (owner: the only places).
+  **Playlist names stay visible** (Q11). Tooltips and labels are scrubbed too.
+- The GM gets an **eye icon** on each track (both lists): slashed = hidden,
+  green eye = revealed. Saved as a flag on the PlaylistSound (`revealed`);
+  tracks are hidden by default.
+- Display only: the real name is still in the player's client data. Masking
+  runs on every sidebar change (dom-watch), so Foundry's re-draws don't show
+  the name.
 
 ### 🗂️ Sheets & Windows
 
@@ -580,7 +596,7 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 | 14 | Combat Tracker Window | ✅ v0.16.0 |
 | 15 | Combat Movement, Paused Movement Notice (shared movement block) | ✅ v0.17.0 |
 | 16 | Active Effect Highlight, Scene Navigation, Scene Palette | ✅ v0.18.0 |
-| 17 | Hidden Track Names | §6 |
+| 17 | Hidden Track Names | ✅ v0.19.0 |
 | 18 | Describe | §6 |
 
 ---
@@ -647,16 +663,8 @@ container, so when unsure, ask the owner to check in Foundry's console
 ##### Scene Navigation, Scene Palette
 ✅ Built in v0.18.0; specs moved to §3 (Scenes & Sound).
 
-##### Hidden Track Names — `hiddenTrackNames`
-*Replaces part of Monk's Sound Enhancements.* GM only.
-- Players don't see the names of playing tracks: in the Playlists sidebar
-  and its "Currently playing" list they see a placeholder (Q11).
-- The GM sees an **eye icon** next to each track (in playlists and in
-  "Currently playing") to reveal or hide its name. The reveal is saved on
-  the track (a flag on the PlaylistSound), so it survives reloads.
-- Tracks are hidden by default.
-- This is a display change: the real name is still in the player's client
-  data. Good enough for a table, not a secret store.
+##### Hidden Track Names
+✅ Built in v0.19.0; spec moved to §3 (Scenes & Sound).
 
 ### 6.2 Notes for building
 
@@ -689,4 +697,4 @@ recommended default.
 | Q8 | Combat Movement | Where is the manual toggle? Do tokens not in the combat move freely? | ✅ Decided: button in the combat tracker header (GM); tokens not in the combat move freely. |
 | Q9 | Paused Movement Notice | Who sees "Game's Paused": only the player who tried to move, or everyone? | ✅ Decided: everyone (who can see the token). |
 | Q10 | Scene Palette | Are the 5 swatches taken from the level's background image (like Monk's)? Or are they fixed palettes? | ✅ Decided: from the image, plus Foundry's color picker. |
-| Q11 | Hidden Track Names | What do players see instead of the name? Also hide the playlist name? | "Unknown track". Playlist names stay visible. |
+| Q11 | Hidden Track Names | What do players see instead of the name? Also hide the playlist name? | ✅ Decided: "Unknown track"; playlist names stay visible. |

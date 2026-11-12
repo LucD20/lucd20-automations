@@ -59,6 +59,10 @@
         "Label": "Statistics",
         "Hint": "Dice roll statistics."
       },
+      "doors": {
+        "Label": "Doors",
+        "Hint": "Door icon size, secret doors and locked doors."
+      },
       "scenes": {
         "Label": "Scenes & Sound",
         "Hint": "Scene navigation, scene background colors and hidden track names."
@@ -425,6 +429,40 @@
       "hiddenTrackNames": {
         "Name": "Hidden Track Names",
         "Hint": "Players see \"Unknown track\" instead of track names in the Playlists sidebar. An eye icon on each track lets the GM reveal its name. Playlist names stay visible."
+      },
+      "riding": {
+        "Name": "Riding",
+        "Hint": "Mount a rideable token with M: your token rides it until you press M again."
+      },
+      "tokenScatter": {
+        "Name": "Token Scatter",
+        "Hint": "Overlapping tokens spread apart a little on screen so each can be seen and targeted. A badge shows tokens stacked under a flyer."
+      },
+      "tokenTooltip": {
+        "Name": "Token Tooltip",
+        "Hint": "Hover a token to see a small panel of values (HP, AC …), set up from presets or by picking values, no paths to type."
+      },
+      "pathfinding": {
+        "Name": "Pathfinding",
+        "Hint": "Dragging a token routes it around walls along the shortest path."
+      },
+      "doorIconSize": {
+        "Name": "Door Icon Size",
+        "Hint": "Door icons scale with the grid, so they don't get tiny when you zoom out.",
+        "Setting": {
+          "factor": {
+            "Name": "Size",
+            "Hint": "1 = Foundry's size at a 100 px grid."
+          }
+        }
+      },
+      "secretDoorHighlight": {
+        "Name": "Secret Door Highlight",
+        "Hint": "Secret door icons get a purple ring, a glow and an eye-slash badge, so they can't be mistaken for normal doors."
+      },
+      "lockedDoorAlert": {
+        "Name": "Locked Door Alert",
+        "Hint": "When a player clicks a locked door, the chat says who tried it (at most once every 10 seconds per player and door). Hovering the message highlights the door."
       }
     },
     "ForceSettings": {
@@ -773,6 +811,10 @@
       "Pause": "Pause",
       "Resume": "Resume",
       "Close": "Close"
+    },
+    "Doors": {
+      "Locked": "<strong>{name}</strong> tries the door: it's locked.",
+      "Someone": "Someone"
     }
   }
 }

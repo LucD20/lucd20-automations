@@ -64,6 +64,7 @@ under a labelled sub-section (e.g. "PF2e").
 💬 Chat                 Chat Pins · Damage Log · Describe
 🗺️ Tokens & Placement   Multi-Token Edit · Folder Drop · Paused Movement Notice
                           · Active Effect Highlight
+🚪 Doors                Door Icon Size · Secret Door Highlight · Locked Door Alert
 🎬 Scenes & Sound       Scene Navigation · Scene Palette · Hidden Track Names
 👁️ GM Vision            GM Vision Mode · Out-of-Sight Outlines
 🗂️ Sheets & Windows     Clean Title Bars · Always Show Header Buttons
@@ -72,8 +73,13 @@ under a labelled sub-section (e.g. "PF2e").
 🔍 Exploration (PF2e)   Search Automation · Hazard Detection
 ```
 
-Every feature of the next pass (§6) is built (v0.14.0–v0.20.0). Scenes &
-Sound sits before Player Settings.
+Every feature of the next pass (§6) is built (v0.14.0–v0.20.0). Doors and
+Scenes & Sound sit before Player Settings. Third pass (§7), greyed out until
+built:
+
+```
+🗺️ Tokens & Placement   + Riding · Token Scatter · Token Tooltip · Pathfinding
+```
 
 ---
 
@@ -416,6 +422,34 @@ Decisions:
   player can see", which outlined everything while the whole map was visible.)
 - Both are GM-only and hidden from players' settings window.
 
+### 🚪 Doors
+
+Shared helper: `scripts/core/doors.js` (V14 `foundry.canvas.containers.DoorControl`,
+the door icons on the canvas). Smart Doors has no license, so this is our own
+code.
+
+#### Door Icon Size — `doorIconSize`
+*Replaces Smart Doors (icon size).* ✅ v0.21.0 · per player, on by default.
+- Door icons are scaled to grid size × factor × 0.4 (Foundry draws them 40 px
+  whatever the grid), centred on the door. Default factor **1.5**, range 1–3
+  (Q19). The whole icon container is scaled (art, background, border, hit
+  area). Wraps `DoorControl#draw` and `#reposition`; changes apply at once.
+
+#### Secret Door Highlight — `secretDoorHighlight`
+*Replaces Smart Doors (secret door tint).* ✅ v0.21.0 · GM only, no options.
+- Secret door icons get a **purple ring with a soft glow**, a light purple
+  tint and an **eye-slash badge** in the bottom-right corner. Icon only, the
+  wall isn't marked (Q18; "let's try icon only").
+
+#### Locked Door Alert — `lockedDoorAlert`
+*Replaces Smart Doors (locked door alert).* ✅ v0.21.0 · no options.
+- A player left-clicking a locked door posts a **public** message
+  "**Valeros** tries the door: it's locked." (their controlled token's actor,
+  else their character, as speaker). **10 s cooldown per player per door**
+  (Q17). Not while paused. Foundry's own handling (lock sound) still runs.
+- GM: hovering the message highlights the door icon.
+- Wraps `DoorControl#_onMouseDown`.
+
 ### 🎬 Scenes & Sound
 
 #### Scene Navigation — `sceneNavigation`
@@ -621,7 +655,8 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 | 16 | Active Effect Highlight, Scene Navigation, Scene Palette | ✅ v0.18.0 |
 | 17 | Hidden Track Names | ✅ v0.19.0 |
 | 18 | Describe | ✅ v0.20.0 |
-| 19–25 | Third pass: Doors, PF2e door locks, Riding, Token Scatter, Token Tooltip (2), Pathfinding | §7 |
+| 19 | Doors: Door Icon Size, Secret Door Highlight, Locked Door Alert | ✅ v0.21.0 |
+| 20–25 | Third pass: PF2e door locks, Riding, Token Scatter, Token Tooltip (2), Pathfinding | §7 |
 
 ---
 
@@ -853,7 +888,7 @@ Source notes (from reading each module's code, Nov 2026):
 
 | # | Phase | Notes |
 |---|---|---|
-| 19 | Doors: Door Icon Size, Secret Door Highlight, Locked Door Alert | new 🚪 Doors category |
+| 19 | Doors: Door Icon Size, Secret Door Highlight, Locked Door Alert | ✅ v0.21.0 (specs in §3) |
 | 20 | PF2e door locks (wall settings, card, best party member, unlock) | |
 | 21 | Riding | uses the movement block and placement helpers |
 | 22 | Token Scatter + stack badge | |
@@ -873,9 +908,9 @@ tests.
 | Q14 | Riding | Who can mount, from how far? | Players mount their own tokens onto a Rideable token within 1 square; the GM any token, any distance. |
 | Q15 | Riding | Vision from the mount's centre (verify in V14 at build time). | Yes if it's a clean hook; otherwise skip. |
 | Q16 | Riding | Do riders move together with the mount (same animation) or jump at the end? | Together. |
-| Q17 | Locked Door Alert | Public message or whisper to the GM? Cooldown? | Public; 10 s per player per door. |
-| Q18 | Secret Door Highlight | Purple ring + glow + eye-slash badge OK? Also mark the wall itself? | Icon only (ring, glow, badge). |
-| Q19 | Door Icon Size | Default factor? | 1.5, per player, range 1–3. |
+| Q17 | Locked Door Alert | Public message or whisper to the GM? Cooldown? | ✅ Decided: public; 10 s per player per door. |
+| Q18 | Secret Door Highlight | Purple ring + glow + eye-slash badge OK? Also mark the wall itself? | ✅ Decided: icon only, to try. |
+| Q19 | Door Icon Size | Default factor? | ✅ Decided: 1.5, per player, range 1–3. |
 | Q20 | Door locks (PF2e) | Ways to open: Force Open, Pick a Lock, Other check. Anything else? Auto-unlock on success? | Those three; auto-unlock on success (option). |
 | Q21 | Door locks (PF2e) | Who rolls from the card? Who counts for "best"? | Each player rolls their own character (choice if several); the GM can roll for anyone. Best = active party members on the scene. |
 | Q22 | Token Tooltip | One list with per-row "who sees it / on what" OK? | Yes. |

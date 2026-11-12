@@ -57,6 +57,7 @@ sets `game.system.id`.
 | `test17.js` | Active Effect Highlight, Scene Navigation, Scene Palette (16) |
 | `test18.js` | Hidden Track Names (17) |
 | `test19.js` | Describe; round divider look (18) |
+| `test20.js` | Door Icon Size, Secret Door Highlight, Locked Door Alert (19) |
 
 For a new feature, copy the closest test, keep its mock setup and replace the
 checks.

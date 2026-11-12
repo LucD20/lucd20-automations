@@ -354,7 +354,13 @@
       },
       "combatTrackerWindow": {
         "Name": "Combat Tracker Window",
-        "Hint": "Pops the combat tracker out next to the chat when an encounter is created and closes it when the combat ends."
+        "Hint": "When an encounter is created, the combat tracker pops out at the bottom right, next to the sidebar. Players only get it once they can see a combatant.",
+        "Setting": {
+          "closeOnEnd": {
+            "Name": "Close when the combat ends",
+            "Hint": "Only if it was opened automatically."
+          }
+        }
       },
       "encounterVisibility": {
         "Name": "Hidden Until Started",

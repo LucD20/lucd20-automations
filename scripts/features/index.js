@@ -7,6 +7,7 @@ import "./clean-title-bars.js";
 import "./header-buttons.js";
 import "./chat-pins.js";
 import "./turn-announcer.js";
+import "./combat-tracker-window.js";
 import "./hud-combat-lock.js";
 import "./encounter-visibility.js";
 import "./defeat-automation.js";

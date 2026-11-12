@@ -1,5 +1,6 @@
 import { TEMPLATE_PATH, error, localize } from "../core/constants.js";
 import { defineFeature } from "../core/registry.js";
+import { findFreeSpot, occupiedRects, snapTopLeft } from "../core/placement.js";
 
 /**
  * Folder Drop (replaces DFreds Droppables). GM only.
@@ -113,71 +114,6 @@ function tokenSize(actor) {
   return { w: (proto?.width ?? 1) * size, h: (proto?.height ?? 1) * size };
 }
 
-/** Top-left position for a token of w×h centred near a point, snapped to the grid. */
-function snapTopLeft(point, w, h) {
-  const size = canvas.dimensions.size;
-  const gridless = canvas.grid?.isGridless ?? canvas.grid?.type === CONST.GRID_TYPES?.GRIDLESS;
-  if (gridless) return { x: Math.round(point.x - w / 2), y: Math.round(point.y - h / 2) };
-  return { x: Math.round((point.x - w / 2) / size) * size, y: Math.round((point.y - h / 2) / size) * size };
-}
-
-function occupiedRects() {
-  const size = canvas.dimensions.size;
-  return (canvas.tokens?.placeables ?? []).map(t => ({
-    x: t.document.x, y: t.document.y, w: t.document.width * size, h: t.document.height * size
-  }));
-}
-
-function overlaps(rects, x, y, w, h) {
-  const e = 1;
-  return rects.some(r => x < r.x + r.w - e && x + w > r.x + e && y < r.y + r.h - e && y + h > r.y + e);
-}
-
-function insideScene(x, y, w, h) {
-  const r = canvas.dimensions.sceneRect ?? { x: 0, y: 0, width: canvas.dimensions.width, height: canvas.dimensions.height };
-  return x >= r.x && y >= r.y && x + w <= r.x + r.width && y + h <= r.y + r.height;
-}
-
-function blockedByWall(from, to) {
-  const backend = CONFIG.Canvas?.polygonBackends?.move;
-  if (!backend?.testCollision) return false;
-  try {
-    return !!backend.testCollision(from, to, { type: "move", mode: "any" });
-  } catch {
-    return false;
-  }
-}
-
-function shuffle(list) {
-  for (let i = list.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [list[i], list[j]] = [list[j], list[i]];
-  }
-  return list;
-}
-
-/** Free spot near the origin: rings of grid cells outward, random order within each ring. */
-function findSpot(origin, w, h, occupied) {
-  const size = canvas.dimensions.size;
-  const base = snapTopLeft(origin, w, h);
-  for (let ring = 0; ring <= 15; ring++) {
-    const cells = [];
-    for (let dx = -ring; dx <= ring; dx++) {
-      for (let dy = -ring; dy <= ring; dy++) {
-        if (Math.max(Math.abs(dx), Math.abs(dy)) === ring) cells.push({ dx, dy });
-      }
-    }
-    for (const { dx, dy } of shuffle(cells)) {
-      const x = base.x + dx * size;
-      const y = base.y + dy * size;
-      if (!insideScene(x, y, w, h) || overlaps(occupied, x, y, w, h)) continue;
-      if (blockedByWall(origin, { x: x + w / 2, y: y + h / 2 })) continue;
-      return { x, y };
-    }
-  }
-  return null;
-}
-
 async function tokenData(actor, position, hidden) {
   const doc = await actor.getTokenDocument({ x: position.x, y: position.y, hidden: hidden || actor.prototypeToken?.hidden });
   return doc.toObject();
@@ -189,7 +125,7 @@ async function placeRandom(actors, origin, { hidden }) {
   let skipped = 0;
   for (const actor of actors) {
     const { w, h } = tokenSize(actor);
-    const spot = findSpot(origin, w, h, occupied);
+    const spot = findFreeSpot(origin, w, h, { occupied, random: true });
     if (!spot) {
       skipped++;
       continue;

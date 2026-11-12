@@ -52,6 +52,7 @@ sets `game.system.id`.
 | `test12.js`, `card.js` | PF2e Search Automation, Hazard Detection (11) |
 | `test13.js` | Planned catalog entries, Turn Announcer new rounds, Lock Combat Toggle (12) |
 | `test14.js` | Hidden Until Started, Defeat at 0 HP (13) |
+| `test15.js` | Combat Tracker Window, free-spot placement (14) |
 
 For a new feature, copy the closest test, keep its mock setup and replace the
 checks.

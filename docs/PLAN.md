@@ -59,7 +59,7 @@ under a labelled sub-section (e.g. "PF2e").
 
 ```
 ⚔️ Combat               Turn Marker · Next-Turn Marker · Turn Announcer · Loot Pile
-                          · Hidden Until Started · Defeat at 0 HP · Lock Combat Toggle
+                          · Combat Tracker Window · Hidden Until Started · Defeat at 0 HP · Lock Combat Toggle
 💬 Chat                 Chat Pins · Damage Log
 🗺️ Tokens & Placement   Multi-Token Edit · Folder Drop
 👁️ GM Vision            GM Vision Mode · Out-of-Sight Outlines
@@ -73,7 +73,7 @@ Planned in the next pass (§6), shown greyed out until built (in the catalog
 since v0.14.0; Scenes & Sound sits before Player Settings):
 
 ```
-⚔️ Combat               + Combat Tracker Window · Combat Movement
+⚔️ Combat               + Combat Movement
 💬 Chat                 + Describe
 🗺️ Tokens & Placement   + Paused Movement Notice · Active Effect Highlight
 🎬 Scenes & Sound (new) Scene Navigation · Scene Palette · Hidden Track Names
@@ -149,6 +149,19 @@ Settings lists will be refined while building each feature.
 - Only the HUD button is blocked (a capture-phase click listener on the
   document); `TokenDocument#toggleCombatant` and the tracker are untouched.
 
+#### Combat Tracker Window — `combatTrackerWindow`
+*Replaces part of Monk's Combat Details.* ✅ v0.16.0 · per player, **on by
+default** (owner's decision, Q6); can be locked with Force Client Settings.
+- When an encounter is created, the combat tracker pops out at the **bottom
+  right, against the left edge of the sidebar**. It stays anchored to the
+  bottom as rows are added, until moved by hand.
+- Players: only once the combat has a combatant they can see (a combat of
+  hidden combatants gives nothing away). Only for combats on the viewed
+  scene. Once per combat: closing it by hand doesn't bring it back.
+- **Close when the combat ends** (option, on): only if we opened it.
+- No "follow the turn": Foundry V14 already keeps the current and next
+  combatants visible (owner checked, Q5).
+
 #### Hidden Until Started — `encounterVisibility`
 *Replaces part of Monk's Combat Details.* ✅ v0.15.0 · GM only, no options.
 - A combatant **whose token is hidden** (Foundry's hidden flag) is added
@@ -187,7 +200,10 @@ Settings lists will be refined while building each feature.
   the gear of every NPC **marked as defeated**: grouped by NPC (**highest
   level first**, then name; items alphabetical). Only real gear is listed
   (PF2e: physical items; NPC strikes, spells, actions, effects ignored).
-- Confirming creates a loot pile at the **centre of the dead NPCs** and moves
+- Confirming creates a loot pile at the **centre of the dead NPCs** (the
+  nearest **free square**: never under or on top of a token, hidden bodies
+  included, v0.16.0; shared with Folder Drop in `scripts/core/placement.js`)
+  and moves
   the checked items into it (each remembers its NPC). **NPC tokens stay on the
   map.** Piles go in an Actors folder "Loot Piles".
 - **Double-clicking the pile opens the Loot Pile window for everyone** (GM
@@ -496,7 +512,7 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 | 11 | PF2e Search + Hazard Detection | ✅ v0.13.0 |
 | 12 | Next-pass prep: catalog entries + Scenes & Sound category, Turn Announcer rounds, Lock Combat Toggle | ✅ v0.14.0 |
 | 13 | Defeat at 0 HP, Hidden Until Started | ✅ v0.15.0 |
-| 14 | Combat Tracker Window | §6 |
+| 14 | Combat Tracker Window | ✅ v0.16.0 |
 | 15 | Combat Movement, Paused Movement Notice (shared movement block) | §6 |
 | 16 | Active Effect Highlight, Scene Navigation, Scene Palette | §6 |
 | 17 | Hidden Track Names | §6 |
@@ -527,17 +543,8 @@ container, so when unsure, ask the owner to check in Foundry's console
 
 #### ⚔️ Combat
 
-##### Combat Tracker Window — `combatTrackerWindow`
-*Replaces part of Monk's Combat Details.* Client setting (each player).
-- When an encounter is created, the combat tracker pops out and sits at the
-  **bottom right, against the left edge of the chat sidebar**. When the
-  combat ends (deleted), the pop-out closes, but only if we opened it.
-- **Follow the turn**: keep the current combatant visible, one row above the
-  bottom, so the next combatant is visible too. Foundry already scrolls to
-  the active turn (V12's `CombatTracker#scrollToTurn` centered it)
-  **(verify)**. Build this option only if Foundry doesn't already keep the
-  next combatant in view (Q5).
-- Options: pop out on create · close on end · follow the turn.
+##### Combat Tracker Window
+✅ Built in v0.16.0; spec moved to §3 (Combat).
 
 ##### Hidden Until Started, Defeat at 0 HP
 ✅ Built in v0.15.0; specs moved to §3 (Combat).
@@ -649,8 +656,8 @@ recommended default.
 | Q3 | Describe | How long does the text stay? | 3 s + 0.3 s per word, between 4 and 30 s. Click to dismiss (the GM's click dismisses it for everyone). |
 | Q4 | Turn Announcer | New-round message as a separate divider card, or as a line on the first turn card of the round? | ✅ Decided: separate thin divider card, on by default. |
 | Q4b | Lock Combat Toggle | Can the GM get past the lock from the HUD? | ✅ Decided: Shift+click removes (GM only). Owner confirmed V14's HUD button removes all selected combatants and `TokenDocument#toggleCombatant` exists. |
-| Q5 | Combat Tracker Window | Owner checks in V14: does the tracker already follow the current turn and keep the next combatant visible? | If yes, skip "follow the turn". If no, build it. |
-| Q6 | Combat Tracker Window | Pop out for players too, or only the GM? | Everyone (client setting, default on). Can be locked with Force Client Settings. |
+| Q5 | Combat Tracker Window | Owner checks in V14: does the tracker already follow the current turn and keep the next combatant visible? | ✅ Yes: "follow the turn" not built. |
+| Q6 | Combat Tracker Window | Pop out for players too, or only the GM? | ✅ Decided: everyone, per-player setting, on by default. |
 | Q7 | Hidden Until Started | Which combatants are hidden before the start? | ✅ Decided: only combatants whose token is hidden. |
 | Q7b | Defeat at 0 HP | Undo when healed above 0? | ✅ Decided: yes (option, on). |
 | Q8 | Combat Movement | Where is the manual toggle? Do tokens not in the combat move freely? | A button in the combat tracker header (GM). Tokens not in the combat move freely. |

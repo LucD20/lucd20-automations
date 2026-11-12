@@ -1,5 +1,6 @@
 import { MODULE_ID, error, localize } from "../core/constants.js";
 import { defineFeature } from "../core/registry.js";
+import { findFreeSpot, snapTopLeft } from "../core/placement.js";
 import { executeAsGM, onGMRequest } from "../core/socket.js";
 import { AnswerWindow } from "../core/answer-window.js";
 
@@ -156,7 +157,8 @@ async function createPile(groups, scene) {
   await pile.createEmbeddedDocuments("Item", items);
   for (const g of groups) await g.actor.deleteEmbeddedDocuments("Item", g.items.map(i => i.id));
 
-  // Centre of the dead NPCs' tokens, snapped to the grid.
+  // Centre of the dead NPCs' tokens, then the nearest free square: never under
+  // or on top of another token (the hidden bodies included).
   const tokens = groups.map(g => g.token).filter(Boolean);
   const size = scene?.grid?.size ?? canvas.dimensions?.size ?? 100;
   const centre = tokens.length
@@ -164,7 +166,10 @@ async function createPile(groups, scene) {
     : { x: canvas.dimensions.width / 2, y: canvas.dimensions.height / 2 };
   const cx = centre.x / Math.max(tokens.length, 1);
   const cy = centre.y / Math.max(tokens.length, 1);
-  const position = { x: Math.round((cx - size / 2) / size) * size, y: Math.round((cy - size / 2) / size) * size };
+  const proto = pile.prototypeToken;
+  const w = (proto?.width ?? 1) * size;
+  const h = (proto?.height ?? 1) * size;
+  const position = findFreeSpot({ x: cx, y: cy }, w, h, { scene }) ?? snapTopLeft({ x: cx, y: cy }, w, h, scene);
   const tokenDoc = await pile.getTokenDocument(position);
   // Visible even when the dead NPCs' tokens are hidden (Defeat at 0 HP).
   await scene.createEmbeddedDocuments("Token", [{ ...tokenDoc.toObject(), hidden: false }]);

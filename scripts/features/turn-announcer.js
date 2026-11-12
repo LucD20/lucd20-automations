@@ -7,11 +7,13 @@ import { defineFeature } from "../core/registry.js";
  * - At every turn, the active GM's client posts a chat card: token image,
  *   name, owning player(s) and round. Hidden or defeated combatants are skipped.
  *   NPC names follow the system's "can players see this name" rule (PF2e).
+ * - New rounds: a thin "Round X" divider card when the round goes up (option),
+ *   posted before that round's first turn card.
  * - "You're up next": the owner(s) of the next combatant get a private
  *   on-screen notification (per-player option).
  */
 
-const state = { lastAnnounced: null, lastHeadsUp: null };
+const state = { lastAnnounced: null, lastHeadsUp: null, roundsAnnounced: new Map() };
 const esc = value => Handlebars.escapeExpression(String(value ?? ""));
 
 function isHiddenCombatant(combatant) {
@@ -72,6 +74,26 @@ function turnKey(combat) {
 /* -------------------------------------------- */
 /*  Chat card (active GM only)                  */
 /* -------------------------------------------- */
+
+/**
+ * "Round X" divider. Only when the round goes up past the highest round already
+ * announced in this combat, so stepping back and forward doesn't repeat it.
+ */
+async function announceRound(feature, combat, changed) {
+  if (!("round" in changed) || !feature.get("announceRounds") || !combat.started || !(combat.round > 0)) return;
+  const previous = combat.previous?.round;
+  if (Number.isFinite(previous) && combat.round < previous) return; // stepped back
+  const highest = state.roundsAnnounced.get(combat.id) ?? 0;
+  if (combat.round <= highest) return;
+  state.roundsAnnounced.set(combat.id, combat.round);
+
+  const label = localize("LUCD20.TurnAnnouncer.NewRound", { round: combat.round });
+  await ChatMessage.create({
+    content: `<div class="lucd20-round-divider"><span>${esc(label)}</span></div>`,
+    speaker: { alias: localize("LUCD20.TurnAnnouncer.Speaker") },
+    flags: { [MODULE_ID]: { roundCard: true, round: combat.round } }
+  });
+}
 
 async function announce(feature, combat) {
   const combatant = combat.combatant;
@@ -146,6 +168,7 @@ defineFeature({
     announceNpcs: { kind: "boolean", default: true },
     showPlayerName: { kind: "boolean", default: true },
     showRound: { kind: "boolean", default: true },
+    announceRounds: { kind: "boolean", default: true },
     headsUp: { kind: "boolean", default: true, scope: "client" }
   },
 
@@ -153,16 +176,26 @@ defineFeature({
     // Compact look: hide the message header of turn cards (GM can still delete via right-click).
     const markCard = (message, html) => {
       const el = html instanceof HTMLElement ? html : html?.[0];
-      if (el && message.getFlag?.(MODULE_ID, "turnCard")) el.classList.add("lucd20-turn-message");
+      if (!el) return;
+      if (message.getFlag?.(MODULE_ID, "turnCard")) el.classList.add("lucd20-turn-message");
+      if (message.getFlag?.(MODULE_ID, "roundCard")) el.classList.add("lucd20-turn-message", "lucd20-round-message");
     };
     feature.on("renderChatMessageHTML", markCard);
     feature.on("renderChatMessage", markCard);
-    feature.onCleanup(() => document.querySelectorAll(".lucd20-turn-message").forEach(el => el.classList.remove("lucd20-turn-message")));
+    feature.onCleanup(() => document.querySelectorAll(".lucd20-turn-message").forEach(el => el.classList.remove("lucd20-turn-message", "lucd20-round-message")));
 
     feature.on("updateCombat", (combat, changed) => {
       if (!("turn" in changed) && !("round" in changed)) return;
-      if (game.user.isActiveGM) announce(feature, combat);
+      if (game.user.isActiveGM) {
+        // The divider goes first, so it sits above the round's first turn card.
+        announceRound(feature, combat, changed)
+          .catch(err => console.error(`${MODULE_ID} | Round announcement failed.`, err))
+          .then(() => announce(feature, combat));
+      }
       headsUp(feature, combat);
     });
+
+    // A combat that ends forgets its rounds.
+    feature.on("deleteCombat", combat => state.roundsAnnounced.delete(combat.id));
   }
 });

@@ -59,6 +59,10 @@
         "Label": "Statistics",
         "Hint": "Dice roll statistics."
       },
+      "scenes": {
+        "Label": "Scenes & Sound",
+        "Hint": "Scene navigation, scene background colors and hidden track names."
+      },
       "playerSettings": {
         "Label": "Player Settings",
         "Hint": "Defaults and locks for players' own settings, for any module."
@@ -145,7 +149,7 @@
       },
       "turnAnnouncer": {
         "Name": "Turn Announcer",
-        "Hint": "A chat card at each turn with the token image, name, player and round. Hidden combatants are skipped. Players get a heads-up when they're up next.",
+        "Hint": "A chat card at each turn with the token image, name, player and round, and a divider when a new round starts. Hidden combatants are skipped. Players get a heads-up when they're up next.",
         "Setting": {
           "announceNpcs": {
             "Name": "Announce NPC turns",
@@ -156,6 +160,10 @@
           },
           "showRound": {
             "Name": "Show round number"
+          },
+          "announceRounds": {
+            "Name": "Announce new rounds",
+            "Hint": "A thin \"Round X\" divider in chat when a new round starts."
           },
           "headsUp": {
             "Name": "\"You're up next\" notification",
@@ -339,6 +347,50 @@
             "Hint": "Names of other ⋮ menu items to show in the title bar, separated by commas. Example: 3D Dice Settings, View Token Artwork"
           }
         }
+      },
+      "hudCombatLock": {
+        "Name": "Lock Combat Toggle",
+        "Hint": "The Token HUD's combat button can add tokens to combat but not remove them, so nobody loses their initiative by accident. Remove combatants from the combat tracker, or Shift+click the button (GM)."
+      },
+      "combatTrackerWindow": {
+        "Name": "Combat Tracker Window",
+        "Hint": "Pops the combat tracker out next to the chat when an encounter is created and closes it when the combat ends."
+      },
+      "encounterVisibility": {
+        "Name": "Hidden Until Started",
+        "Hint": "NPCs added to an encounter stay hidden in the tracker until the combat starts. Revealing a token reveals its combatant."
+      },
+      "defeatAutomation": {
+        "Name": "Defeat at 0 HP",
+        "Hint": "NPCs at 0 HP are marked defeated (and their token hidden). Healing undoes it."
+      },
+      "combatMovement": {
+        "Name": "Combat Movement",
+        "Hint": "During combat, players can only move the token whose turn it is."
+      },
+      "describe": {
+        "Name": "Describe",
+        "Hint": "Show selected text, or /describe text, centered on everyone's screen."
+      },
+      "pauseNotifier": {
+        "Name": "Paused Movement Notice",
+        "Hint": "\"Game's Paused\" floats up from a token a player tries to move while the game is paused."
+      },
+      "statusHighlight": {
+        "Name": "Active Effect Highlight",
+        "Hint": "Active effects stand out in the Token HUD's status effects palette."
+      },
+      "sceneNavigation": {
+        "Name": "Scene Navigation",
+        "Hint": "Left-click a scene in the sidebar to view it, toggle its navigation entry with one click, collapse the navigation bar during combat."
+      },
+      "scenePalette": {
+        "Name": "Scene Palette",
+        "Hint": "Five background color swatches taken from the level's background image, next to the color picker."
+      },
+      "hiddenTrackNames": {
+        "Name": "Hidden Track Names",
+        "Hint": "Players see \"Unknown track\" instead of track names. The GM reveals names one by one."
       }
     },
     "ForceSettings": {
@@ -411,7 +463,8 @@
       "Speaker": "Turn",
       "Unknown": "Unknown creature",
       "UpNext": "You're up next: {name}",
-      "Turn": "{name}'s turn"
+      "Turn": "{name}'s turn",
+      "NewRound": "Round {round}"
     },
     "TurnMarkers": {
       "Color": {
@@ -652,6 +705,10 @@
       "ToggleAreasHint": "Hide the hazard detection outlines on your screen; press again to show them.",
       "AreasHidden": "Hazard areas hidden (Ctrl+H to show).",
       "AreasShown": "Hazard areas shown."
+    },
+    "HudCombatLock": {
+      "Blocked": "Remove combatants from the combat tracker.",
+      "BlockedGM": "Remove combatants from the combat tracker, or Shift+click to remove anyway."
     }
   }
 }

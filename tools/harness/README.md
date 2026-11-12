@@ -50,6 +50,7 @@ sets `game.system.id`.
 | `test10.js` | GM Vision, Out-of-Sight Outlines (9) |
 | `test11.js`, `visual.js` | Loot Pile windows (10) |
 | `test12.js`, `card.js` | PF2e Search Automation, Hazard Detection (11) |
+| `test13.js` | Planned catalog entries, Turn Announcer new rounds, Lock Combat Toggle (12) |
 
 For a new feature, copy the closest test, keep its mock setup and replace the
 checks.

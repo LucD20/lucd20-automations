@@ -59,6 +59,7 @@ under a labelled sub-section (e.g. "PF2e").
 
 ```
 ⚔️ Combat               Turn Marker · Next-Turn Marker · Turn Announcer · Loot Pile
+                          · Lock Combat Toggle
 💬 Chat                 Chat Pins · Damage Log
 🗺️ Tokens & Placement   Multi-Token Edit · Folder Drop
 👁️ GM Vision            GM Vision Mode · Out-of-Sight Outlines
@@ -68,11 +69,12 @@ under a labelled sub-section (e.g. "PF2e").
 🔍 Exploration (PF2e)   Search Automation · Hazard Detection
 ```
 
-Planned in the next pass (§6), shown greyed out until built:
+Planned in the next pass (§6), shown greyed out until built (in the catalog
+since v0.14.0; Scenes & Sound sits before Player Settings):
 
 ```
 ⚔️ Combat               + Combat Tracker Window · Hidden Until Started · Defeat at 0 HP
-                          · Lock Combat Toggle · Combat Movement
+                          · Combat Movement
 💬 Chat                 + Describe
 🗺️ Tokens & Placement   + Paused Movement Notice · Active Effect Highlight
 🎬 Scenes & Sound (new) Scene Navigation · Scene Palette · Hidden Track Names
@@ -125,13 +127,28 @@ Settings lists will be refined while building each feature.
   The portrait is zoomed by the token's art scale (PF2e Scale 2 looks right);
   art above scale 1 spills out of the frame with faded edges.
 - Card content: token image, name, owning player(s), **round number**.
+- **New rounds** (v0.14.0, option, on by default): a thin "Round X" divider
+  card (no header) when the round goes up, posted before that round's first
+  turn card. Only once per round: stepping back a round and forward again
+  doesn't repeat it.
 - **NPC turns are announced** too (option). Hidden and defeated combatants
   are **skipped**. NPC names follow PF2e's name-visibility rule
   ("Unknown creature" when players can't see the name).
 - **"You're up next"**: the owner(s) of the next combatant (skipping hidden
   and defeated) get a simple on-screen notification.
 - Settings: announce NPC turns · show player name · show round number ·
-  "You're up next" (per player).
+  announce new rounds · "You're up next" (per player).
+
+#### Lock Combat Toggle — `hudCombatLock`
+*Replaces part of Monk's Combat Details.* ✅ v0.14.0 · GM only, no options.
+- The Token HUD's "Toggle combat state" button still **adds** tokens to
+  combat, but on a token already in combat (which would remove it and every
+  selected combatant, losing their initiative) it only shows a notification:
+  "Remove combatants from the combat tracker".
+- **GM: Shift+click** removes anyway (owner's decision). Players are always
+  blocked.
+- Only the HUD button is blocked (a capture-phase click listener on the
+  document); `TokenDocument#toggleCombatant` and the tracker are untouched.
 
 #### Loot Pile
 *Replaces Combat Booster's "Body pile".* ✅ v0.11.0 · restyled v0.12.0
@@ -446,7 +463,7 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 | 9 | GM Vision | ✅ v0.10.0 |
 | 10 | Loot Pile + Party Stash | ✅ v0.11.0 |
 | 11 | PF2e Search + Hazard Detection | ✅ v0.13.0 |
-| 12 | Next-pass prep: catalog entries + Scenes & Sound category, Turn Announcer rounds, Lock Combat Toggle | §6 |
+| 12 | Next-pass prep: catalog entries + Scenes & Sound category, Turn Announcer rounds, Lock Combat Toggle | ✅ v0.14.0 |
 | 13 | Defeat at 0 HP, Hidden Until Started | §6 |
 | 14 | Combat Tracker Window | §6 |
 | 15 | Combat Movement, Paused Movement Notice (shared movement block) | §6 |
@@ -519,17 +536,8 @@ container, so when unsure, ask the owner to check in Foundry's console
 - Reuse the HP readers from Damage Log (generic path + PF2e adapter, 4e path).
 - Only the active GM acts, so the update happens once.
 
-##### Lock Combat Toggle — `hudCombatLock`
-*Replaces part of Monk's Combat Details.* GM only, no options.
-- The Token HUD "Toggle combat state" button can add a token to combat but
-  not remove it. Removing is done from the combat tracker. Clicking it on a
-  combatant shows a short notification instead.
-
-##### Turn Announcer: new rounds
-Monk's "round messages" are **partly covered**: every turn card already
-shows "Round X". Missing: a message when a new round starts.
-- New option **Announce new rounds**: a thin "Round X" divider card in chat
-  when the round changes (Q4).
+##### Lock Combat Toggle, Turn Announcer new rounds
+✅ Built in v0.14.0; specs moved to §3 (Combat).
 
 ##### Combat Movement — `combatMovement`
 *Replaces part of Monk's TokenBar.* GM only.
@@ -633,7 +641,8 @@ recommended default.
 | Q1 | Defeat at 0 HP | Hide dead NPC tokens when? | ✅ Decided: as soon as they go down. Loot Pile must work with hidden NPCs. |
 | Q2 | Describe | GM only, or players too? | ✅ Decided: GM only. |
 | Q3 | Describe | How long does the text stay? | 3 s + 0.3 s per word, between 4 and 30 s. Click to dismiss (the GM's click dismisses it for everyone). |
-| Q4 | Turn Announcer | New-round message as a separate divider card, or as a line on the first turn card of the round? | Separate thin divider card, on by default. |
+| Q4 | Turn Announcer | New-round message as a separate divider card, or as a line on the first turn card of the round? | ✅ Decided: separate thin divider card, on by default. |
+| Q4b | Lock Combat Toggle | Can the GM get past the lock from the HUD? | ✅ Decided: Shift+click removes (GM only). Owner confirmed V14's HUD button removes all selected combatants and `TokenDocument#toggleCombatant` exists. |
 | Q5 | Combat Tracker Window | Owner checks in V14: does the tracker already follow the current turn and keep the next combatant visible? | If yes, skip "follow the turn". If no, build it. |
 | Q6 | Combat Tracker Window | Pop out for players too, or only the GM? | Everyone (client setting, default on). Can be locked with Force Client Settings. |
 | Q7 | Hidden Until Started | Which combatants are hidden before the start? | All combatants without a player owner. |

@@ -508,9 +508,14 @@ container, so when unsure, ask the owner to check in Foundry's console
   system's defeated status is applied (`CONFIG.specialStatusEffects.DEFEATED`
   via `actor.toggleStatusEffect`). Healed above 0 → undone (option).
 - PCs are never touched. NPC = no player owner.
-- **Hide dead NPC tokens** (option): the token is set hidden (Q1 decides
-  when). Loot Pile's "Loot the fallen" still finds them, since it runs on
-  the GM's client.
+- **Hide dead NPC tokens** (option, on by default): the token is set hidden
+  **as soon as the NPC goes down**, so bodies don't clutter the map (owner's
+  decision). If it is healed above 0, the token is shown again, but only if
+  we hid it.
+- **Loot Pile must work with hidden NPCs**: "Loot the fallen" gathers
+  defeated combatants on the GM's client whether their token is hidden or
+  not (it already does; keep it that way and test it). The pile token
+  itself is created visible, at the centre of the dead NPCs' tokens.
 - Reuse the HP readers from Damage Log (generic path + PF2e adapter, 4e path).
 - Only the active GM acts, so the update happens once.
 
@@ -550,7 +555,8 @@ shows "Round X". Missing: a message when a new round starts.
   (transparent at the edges, dark behind the text), fading in and out.
 - It stays on screen for a time based on its length (Q3). The GM can
   dismiss it early for everyone.
-- Who can use it: Q2. Sent with `broadcast` from `core/socket.js`.
+- **GM only** (owner's decision): players get neither the menu nor
+  `/describe`. Sent with `broadcast` from `core/socket.js`.
 
 #### 🗺️ Tokens & Placement
 
@@ -624,8 +630,8 @@ recommended default.
 
 | # | Feature | Question | Recommended |
 |---|---|---|---|
-| Q1 | Defeat at 0 HP | Hide dead NPC tokens when? Loot Pile keeps the bodies visible today. | Option: *right away* / *when combat ends* / *never*. Default: when combat ends, so bodies stay visible during the fight. |
-| Q2 | Describe | GM only, or players too? | GM only: players don't get the menu or `/describe`. |
+| Q1 | Defeat at 0 HP | Hide dead NPC tokens when? | ✅ Decided: as soon as they go down. Loot Pile must work with hidden NPCs. |
+| Q2 | Describe | GM only, or players too? | ✅ Decided: GM only. |
 | Q3 | Describe | How long does the text stay? | 3 s + 0.3 s per word, between 4 and 30 s. Click to dismiss (the GM's click dismisses it for everyone). |
 | Q4 | Turn Announcer | New-round message as a separate divider card, or as a line on the first turn card of the round? | Separate thin divider card, on by default. |
 | Q5 | Combat Tracker Window | Owner checks in V14: does the tracker already follow the current turn and keep the next combatant visible? | If yes, skip "follow the turn". If no, build it. |

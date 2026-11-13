@@ -450,7 +450,15 @@
       },
       "tokenTooltip": {
         "Name": "Token Tooltip",
-        "Hint": "Hover a token to see a small panel of values (HP, AC …), set up from presets or by picking values, no paths to type."
+        "Hint": "Hover a token to see a small panel of values next to it (HP, AC, saves, speeds, distance …). Starts from your system's defaults; each value shows only to who should see it.",
+        "Setting": {
+          "accent": {
+            "Name": "Border color"
+          },
+          "fontSize": {
+            "Name": "Text size"
+          }
+        }
       },
       "pathfinding": {
         "Name": "Pathfinding",

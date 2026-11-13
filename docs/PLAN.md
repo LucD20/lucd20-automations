@@ -64,6 +64,7 @@ under a labelled sub-section (e.g. "PF2e").
 💬 Chat                 Chat Pins · Damage Log · Describe
 🗺️ Tokens & Placement   Multi-Token Edit · Folder Drop · Paused Movement Notice
                           · Active Effect Highlight · Riding · Token Scatter · Flying Tokens
+                          · Token Tooltip
 🚪 Doors                Door Icon Size · Secret Doors · Locked Door Alert (+ PF2e lock options)
 🎬 Scenes & Sound       Scene Navigation · Scene Palette · Hidden Track Names
 👁️ GM Vision            GM Vision Mode · Out-of-Sight Outlines
@@ -78,7 +79,7 @@ Scenes & Sound sit before Player Settings. Third pass (§7), greyed out until
 built:
 
 ```
-🗺️ Tokens & Placement   + Token Tooltip · Pathfinding
+🗺️ Tokens & Placement   + Pathfinding
 ```
 
 ---
@@ -446,6 +447,47 @@ Decisions:
   tokens change.
 - Settings: hover motion · ground shadow.
 
+#### Token Tooltip — `tokenTooltip`
+*Replaces Token Tooltip Alt.* ✅ v0.26.0 (display + presets; editor and data
+browser are phase 24). Code: `scripts/features/token-tooltip/`.
+- **Hover** a token → a panel to its right (left if no room): dark, rounded,
+  accent-coloured border, rows of **coloured Font Awesome icon + bold value**,
+  in **two columns** (filled top to bottom) when there are more than five rows
+  (owner's screenshots, Q22). Follows pan and zoom and Token Scatter offsets;
+  refreshes when the actor or token changes. Hover only (Q23).
+- **One list of rows** for the world (world setting `tokenTooltipConfig`;
+  empty = the system's preset). Each row: icon, colour, value, **who sees it**
+  (`gm` · `owner` = GM + owners · `friendly` = also everyone on friendly
+  tokens · `others` = players who don't own it · `all`) and **actor types**
+  (none = all). Replaces TTA's lists per GM/player × disposition × type.
+- **Values** (Q25: expressions are fine if intuitive), three forms:
+  1. a data path from the actor's system data: `attributes.ac.value`;
+  2. text with `{…}` blocks: `<path>` or `@path` read values, the rest is
+     JavaScript, several statements allowed, the last is the result
+     (`P: {<stats.parry.value>}`, `{@saves.fortitude.value + 10}`). TTA's
+     mathjs helpers exist (`concat`, `string`, `typeOf`, `compareText`,
+     `floor`, `ceil`, `round`, `abs`, `min`, `max`), so **the owner's old
+     expressions paste as they are** (tested);
+  3. a script (contains `return`): function body with `token`, `actor`,
+     `data`, `_token`, as TTA's functions (`Ray` provided).
+  A row is **hidden when its value or any block is empty / null / undefined /
+  NaN** (no more null-check boilerplate). `{value, max}` objects show as
+  `value/max`. Helpers: `distance()` (from your controlled token, else your
+  character's: PF2e `token.distanceTo`, else edge-to-edge with elevation and
+  the scene's diagonal rule, adjacent = 1 square), `hpStatus(v, max)`
+  (Healthy / Grazed / Bloodied / Critical / Ø), `signed(n)`. Assignments stay
+  in a per-evaluation sandbox (no globals leak).
+- **Presets** (Q24, from the owner's TTA exports): PF2e (HP with temp and the
+  owner's "Nice" at 69 %, AC, hero points, save/Perception/Stealth/Athletics
+  DCs for the GM, speeds, HP status words for players on NPCs, distance),
+  SWADE (bennies, parry, toughness, pace, fly, distance with ⚔️ when
+  adjacent, power points, size, scale), Wrath & Glory (wounds, shock, faith,
+  defence, resilience, speed, passive awareness, corruption, wrath), and a
+  generic one. Pro-only icons swapped for Free look-alikes.
+- Never leaks: only tokens this user can see; rows filtered per user.
+  Values are written by the GM and run on every client (as TTA's functions).
+- Settings: border colour · text size (per player).
+
 #### Paused Movement Notice — `pauseNotifier`
 *Replaces Pause Notifier.* ✅ v0.17.0 · GM only, no options.
 - V14 already stops a player's move while paused and shows "You cannot take
@@ -746,7 +788,8 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 | 20 | PF2e door locks; secret doors toned down + ask before opening | ✅ v0.22.0 |
 | 21 | Riding | ✅ v0.23.0 |
 | 22 | Token Scatter | ✅ v0.24.0; badge dropped, flyers spread + Flying Tokens v0.25.0 |
-| 23–25 | Third pass: Token Tooltip (2), Pathfinding | §7 |
+| 23 | Token Tooltip: display + presets | ✅ v0.26.0 |
+| 24–25 | Third pass: Token Tooltip editor, Pathfinding | §7 |
 
 ---
 
@@ -982,7 +1025,7 @@ Source notes (from reading each module's code, Nov 2026):
 | 20 | PF2e door locks (wall settings, card, best party member, unlock) | ✅ v0.22.0 (spec in §3) |
 | 21 | Riding | ✅ v0.23.0 (spec in §3) |
 | 22 | Token Scatter + stack badge | ✅ v0.24.0 (spec in §3) |
-| 23 | Token Tooltip: display + PF2e presets | |
+| 23 | Token Tooltip: display + PF2e presets | ✅ v0.26.0 (spec in §3) |
 | 24 | Token Tooltip: editor + data browser | |
 | 25 | Pathfinding | last: most API risk |
 
@@ -1003,10 +1046,10 @@ tests.
 | Q19 | Door Icon Size | Default factor? | ✅ Decided: 1.5, per player, range 1–3. |
 | Q20 | Door locks (PF2e) | Ways to open: Force Open, Pick a Lock, Other check. Anything else? Auto-unlock on success? | ✅ Decided: those three; auto-unlock (option). Force Open also turns the door secret ("players broke it"). |
 | Q21 | Door locks (PF2e) | Who rolls from the card? Who counts for "best"? | ✅ Decided: as recommended. |
-| Q22 | Token Tooltip | One list with per-row "who sees it / on what" OK? | Yes. |
-| Q23 | Token Tooltip | When does it show? Which key shows all? | On hover; hold a key (default Alt, check for conflicts) for all visible tokens. |
-| Q24 | Token Tooltip | PF2e default rows and who sees them? | PCs: HP, AC, saves, Perception, Speed, Hero Points (owner + GM). NPCs: same rows GM-only; conditions for everyone. |
-| Q25 | Token Tooltip | No expressions at all (presets + data browser + simple formats)? | Yes; add a "sum of two values" format later only if needed. |
+| Q22 | Token Tooltip | One list with per-row "who sees it / on what" OK? | ✅ Owner sent screenshots of the look; one list with who/types built. |
+| Q23 | Token Tooltip | When does it show? Which key shows all? | ✅ Hover (Alt optional, not built). |
+| Q24 | Token Tooltip | PF2e default rows and who sees them? | ✅ Ported from the owner's TTA exports (PF2e, SWADE, Wrath & Glory). |
+| Q25 | Token Tooltip | No expressions at all? | ✅ Owner is fine with expressions if intuitive: TTA-compatible expressions + data browser (phase 24). |
 | Q26 | Pathfinding | Always on, or a per-player toggle in Token controls? | Toggle, on by default. |
 | Q27 | Pathfinding | Do you use hex maps? | Square first; hex only if you use them. |
 | Q28 | Pathfinding | Players route only through explored/visible areas? | Yes (otherwise the path leaks the map). |

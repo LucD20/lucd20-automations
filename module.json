@@ -2,7 +2,7 @@
   "id": "lucd20-automations",
   "title": "LucD20 Automations",
   "description": "Personal all-in-one automations: combat markers, chat pins, damage log, GM vision, folder drop, dice stats, PF2e search automation and more.",
-  "version": "0.25.0",
+  "version": "0.26.0",
   "compatibility": {
     "minimum": "14",
     "verified": "14.368"

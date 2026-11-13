@@ -62,6 +62,7 @@ sets `game.system.id`.
 | `test22.js` | Riding (21) |
 | `test23.js` | Token Scatter (22) |
 | `test24.js` | Flying Tokens (hover + shadow) |
+| `test25.js` | Token Tooltip display, who sees what, expressions (23) |
 
 For a new feature, copy the closest test, keep its mock setup and replace the
 checks.

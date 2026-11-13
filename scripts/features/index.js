@@ -19,6 +19,7 @@ import "./pause-notifier.js";
 import "./riding.js";
 import "./token-scatter.js";
 import "./flying-tokens.js";
+import "./token-tooltip/token-tooltip.js";
 import "./status-highlight.js";
 import "./scene-navigation.js";
 import "./scene-palette.js";

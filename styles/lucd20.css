@@ -2107,3 +2107,50 @@ li:has(> .lucd20-scene-nav) {
   border-color: #ffd166;
   box-shadow: 0 0 6px rgba(255, 209, 102, 0.6);
 }
+
+/* Token Tooltip -------------------------------------------------------- */
+
+#lucd20-token-tooltip {
+  position: fixed;
+  z-index: 1;
+  display: none;
+  padding: 6px 10px;
+  border: 2px solid var(--tt-accent, #500085);
+  border-radius: 8px;
+  background: rgba(14, 12, 18, 0.88);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: var(--tt-font, 16px);
+  font-weight: bold;
+  line-height: 1.35;
+  pointer-events: none;
+}
+
+#lucd20-token-tooltip.visible {
+  display: block;
+}
+
+#lucd20-token-tooltip .tt-grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: auto;
+  column-gap: 16px;
+  row-gap: 2px;
+}
+
+#lucd20-token-tooltip .tt-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px #000;
+}
+
+#lucd20-token-tooltip .tt-cell i {
+  width: 1.25em;
+  text-align: center;
+}
+
+#lucd20-token-tooltip .tt-cell span {
+  margin-left: auto;
+}

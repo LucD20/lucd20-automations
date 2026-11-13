@@ -514,14 +514,17 @@ defineFeature({
       // Debug (owner, v0.28.2): CONFIG.debug.lucd20Pathfinding = true logs every call.
       const debug = CONFIG.debug?.lucd20Pathfinding;
       if (debug) {
-        console.log(`${MODULE_ID} | Pathfinding call`, {
+        // Only constrainOptions: reading the old top-level option names logs V14 deprecation warnings.
+        console.log(`${MODULE_ID} | Pathfinding call`, JSON.stringify({
           token: this.document?.name,
-          waypoints: foundry.utils.deepClone?.(waypoints) ?? waypoints,
-          options: { ...options, constrainOptions: { ...(c ?? {}), history: c?.history ? "(history)" : undefined } },
+          at: [this.document?.x, this.document?.y],
+          waypoints: (waypoints ?? []).map(w => [w.x, w.y, w.level ?? null]),
+          constrainOptions: { ignoreWalls: c?.ignoreWalls, ignoreCost: c?.ignoreCost },
           active: isActive(),
           squareGrid: squareGrid(),
-          walls: (canvas.walls?.placeables ?? []).length
-        });
+          walls: (canvas.walls?.placeables ?? []).length,
+          blockingWalls: (canvas.walls?.placeables ?? []).filter(w => w.document.move !== (CONST.WALL_MOVEMENT_TYPES?.NONE ?? 0) && !(w.document.door && w.document.ds === CONST.WALL_DOOR_STATES?.OPEN)).length
+        }));
       }
       // ignoreCost (Foundry sets it for the GM): still route around walls, just without terrain costs.
       const skip = !isActive() ? "off" : !squareGrid() ? "not a square grid" : c?.ignoreWalls ? "Foundry asked to ignore walls" : !Array.isArray(waypoints) || waypoints.length < 2 ? "fewer than two waypoints" : "";

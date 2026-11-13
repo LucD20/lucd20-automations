@@ -89,7 +89,7 @@ const out = __dirname;
       stages: [0, 2, 3, 5].map(stageAt),
       penalty: [e.stagePenalty(listed, { successes: 0 }, listed.skills[1]), e.stagePenalty(listed, { successes: 0 }, listed.skills[0]), e.stagePenalty(listed, { successes: 1 }, listed.skills[1])],
       mod: [e.resolveCheck(base.skills[0], st, 16, -2).outcome, e.resolveCheck(base.skills[0], st, 16, 0).outcome],
-      group: [e.resolveGroup([{ outcome: "success" }, { outcome: "failure" }]), e.resolveGroup([{ outcome: "success" }, { outcome: "failure" }, { outcome: "failure" }])]
+      group: [e.resolveGroup([{ outcome: "success" }, { outcome: "failure" }]), e.resolveGroup([{ outcome: "success" }, { outcome: "failure" }, { outcome: "failure" }]), e.resolveGroup([{ outcome: "success" }, { outcome: "failure" }], "all"), e.resolveGroup([{ outcome: "success" }], "all")]
     };
   }, { ENGINE, CHALLENGE });
   assert.ok(engine.again, "normalizing twice changes nothing (the editor relies on it)");
@@ -101,7 +101,7 @@ const out = __dirname;
   assert.deepStrictEqual(engine.stages, [0, 0, 1, 1], "stage 2 starts after 3 successes");
   assert.deepStrictEqual(engine.penalty, [2, 0, 0], "a stage that lists its skills penalizes the others");
   assert.deepStrictEqual(engine.mod, ["failure", "success"], "the GM's modifier is part of the judgment");
-  assert.deepStrictEqual(engine.group, [{ ds: 1, df: 0 }, { ds: 0, df: 1 }], "half succeed = success; more than half fail = failure");
+  assert.deepStrictEqual(engine.group, [{ ds: 1, df: 0 }, { ds: 0, df: 1 }, { ds: 0, df: 1 }, { ds: 1, df: 0 }], "half succeed = success; more than half fail = failure; rule all: one failure fails it");
 
   // ---------- GM: runner ----------
   await setup(page, { gm: true });
@@ -235,7 +235,7 @@ const out = __dirname;
   const savedFlag = await page.evaluate(() => { const u = window.__updates[0]; return { name: u.name, data: u["flags.lucd20-automations.skillChallenge"] }; });
   assert.strictEqual(savedFlag.name, "Claim the Prize");
   assert.deepStrictEqual([savedFlag.data.skills[0].dc, savedFlag.data.skills[2].hidden, savedFlag.data.skills[4].skill, savedFlag.data.skills[4].bonusSkills], [13, false, "stl", ["ath", "acr"]]);
-  assert.deepStrictEqual(savedFlag.data.groupChecks[1], { name: "Troublemakers", note: "", options: [{ skill: "stl", dc: 17 }, { skill: "blu", dc: 12 }] });
+  assert.deepStrictEqual(savedFlag.data.groupChecks[1], { name: "Troublemakers", note: "", rule: "half", options: [{ skill: "stl", dc: 17 }, { skill: "blu", dc: 12 }] });
   assert.deepStrictEqual([savedFlag.data.thresholds.length, savedFlag.data.routes.length, savedFlag.data.successes, savedFlag.data.visibility], [0, 2, 6, null]);
   assert.strictEqual(await page.locator(".lucd20-sc-editor").count(), 0, "saved and closed");
   assert.ok((await page.locator('.lucd20-sc-skill[data-skill="arc"] .chip.dc').innerText()).includes("13"), "the open runner uses the edited challenge");

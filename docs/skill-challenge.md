@@ -126,8 +126,9 @@ Parts completed in order.
 ## Group checks
 
 Ready-made group checks for the runner's **Group check** button (the GM can
-also type one). Every character rolls one of the options; at least half
-succeed = 1 success, otherwise 1 failure.
+also type one). Every character rolls one of the options. `"rule": "half"`
+(default): at least half succeed = 1 success, otherwise 1 failure.
+`"rule": "all"`: everyone must succeed, otherwise 1 failure.
 
 ```json
 "groupChecks": [

@@ -112,6 +112,7 @@ const groupHTML = (g, i) => `<li class="item">
 	<div class="grid">
 		${field(E("Name"), txt(`groupChecks.${i}.name`, g.name))}
 		${field(E("Options"), txt(`groupChecks.${i}.options`, optionsText(g.options), "options"), { hint: E("OptionsHint") })}
+		${field(L("Group.Rule"), select(`groupChecks.${i}.rule`, g.rule, [["half", L("Group.RuleHalf")], ["all", L("Group.RuleAll")]]))}
 		${field(E("Note"), area(`groupChecks.${i}.note`, g.note), { wide: true })}
 	</div>
 </li>`;

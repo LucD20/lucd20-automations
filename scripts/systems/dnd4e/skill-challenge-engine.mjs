@@ -84,7 +84,7 @@ export function normalizeChallenge(raw) {
 		})),
 		thresholds: list(raw.thresholds).filter(t => t?.text).map(t => ({ failures: Math.max(0, int(t.failures, 1)), text: text(t.text) }))
 			.sort((a, b) => a.failures - b.failures),
-		groupChecks: list(raw.groupChecks).filter(g => g?.name).map(g => ({ name: text(g.name), note: text(g.note), options: normalizeOptions(g.options) })),
+		groupChecks: list(raw.groupChecks).filter(g => g?.name).map(g => ({ name: text(g.name), note: text(g.note), rule: g.rule === "all" ? "all" : "half", options: normalizeOptions(g.options) })),
 		successText: text(raw.successText),
 		failureText: text(raw.failureText),
 		note: text(raw.note)
@@ -205,10 +205,14 @@ export function resolveCheck(skillDef, state, total, mod = 0) {
 	return result;
 }
 
-/** A group check: at least half succeed = 1 success, otherwise 1 failure. */
-export function resolveGroup(results) {
+/**
+ * A group check. Rule "half": at least half succeed = 1 success, otherwise 1
+ * failure. Rule "all": everyone must succeed (one failed check = 1 failure).
+ */
+export function resolveGroup(results, rule = "half") {
 	const wins = results.filter(r => r.outcome === "success").length;
-	return wins * 2 >= results.length ? { ds: 1, df: 0 } : { ds: 0, df: 1 };
+	const passed = rule === "all" ? wins === results.length : wins * 2 >= results.length;
+	return passed ? { ds: 1, df: 0 } : { ds: 0, df: 1 };
 }
 
 /* -------------------------------------------- */

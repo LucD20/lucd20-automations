@@ -1227,7 +1227,7 @@
       "Group": {
         "Button": "Group check",
         "Title": "Group check",
-        "Hint": "Every character rolls one of these skills. At least half succeed: 1 success. Otherwise: 1 failure.",
+        "Hint": "Every character rolls one of these skills. The group earns 1 success or 1 failure, by the rule chosen below.",
         "Preset": "From the challenge",
         "Custom": "Custom (fill in below)",
         "Name": "Name",
@@ -1237,7 +1237,10 @@
         "Waiting": "waiting for {user}",
         "Skipped": "skipped",
         "Skip": "Skip",
-        "Count": "Count now"
+        "Count": "Count now",
+        "Rule": "Succeeds when",
+        "RuleHalf": "at least half succeed",
+        "RuleAll": "everyone succeeds"
       },
       "Difficulty": {
         "Hint": "How hard this looks. The GM knows the real number.",

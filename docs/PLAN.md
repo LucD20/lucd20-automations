@@ -1345,7 +1345,8 @@ adventure text into this repo).
 - **Group checks** (Q52): runner button; a preset from the data or up to
   three typed skills with a DC. Every PC's player picks one of the skills
   and rolls (the GM for absent players). Panel with each result, Skip, Count
-  now, Cancel. At least half succeed = 1 success, else 1 failure.
+  now, Cancel. At least half succeed = 1 success, else 1 failure; or, with
+  rule "everyone succeeds" (v0.32.1), one failed check = 1 failure.
 - **Routes** (Q53): picked in the runner until the first roll; a route
   overrides fields of listed skills, adds or removes skills.
 - **Stages** (Q54): shown in the runner; "Wrong stage −N" sets the modifier

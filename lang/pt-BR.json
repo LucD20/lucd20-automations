@@ -684,7 +684,7 @@
       "Group": {
         "Button": "Teste em grupo",
         "Title": "Teste em grupo",
-        "Hint": "Cada personagem rola uma destas perícias. Pelo menos metade tem sucesso: 1 sucesso. Senão: 1 fracasso.",
+        "Hint": "Cada personagem rola uma destas perícias. O grupo ganha 1 sucesso ou 1 fracasso, pela regra escolhida abaixo.",
         "Preset": "Do desafio",
         "Custom": "Personalizado (preencha abaixo)",
         "Name": "Nome",
@@ -694,7 +694,10 @@
         "Waiting": "aguardando {user}",
         "Skipped": "pulado",
         "Skip": "Pular",
-        "Count": "Contar agora"
+        "Count": "Contar agora",
+        "Rule": "Tem sucesso quando",
+        "RuleHalf": "pelo menos metade tem sucesso",
+        "RuleAll": "todos têm sucesso"
       },
       "Difficulty": {
         "Hint": "Quão difícil isto parece. O mestre sabe o número real.",

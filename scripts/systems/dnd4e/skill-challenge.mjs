@@ -349,6 +349,7 @@ async function groupDialog(def) {
 		<label>${L("DCLabel")} <input type="number" name="dc${i}" value="10" min="0" step="1"></label></div>`;
 	const content = `<div class="lucd20-sc-group-form">
 		<p class="hint">${L("Group.Hint")}</p>
+		<div class="row"><span>${L("Group.Rule")}</span><select name="rule"><option value="half">${L("Group.RuleHalf")}</option><option value="all">${L("Group.RuleAll")}</option></select></div>
 		${presets.length ? `<div class="row"><span>${L("Group.Preset")}</span><select name="preset"><option value="">${L("Group.Custom")}</option>${presets.map((g, i) => `<option value="${i}">${esc(g.name)}</option>`).join("")}</select></div>` : ""}
 		<div class="row"><span>${L("Group.Name")}</span><input type="text" name="name" value=""></div>
 		${[0, 1, 2].map(row).join("")}
@@ -364,17 +365,17 @@ async function groupDialog(def) {
 			callback: (event, button) => {
 				const form = button.form;
 				const preset = presets[Number(form.elements.preset?.value)] ?? null;
-				if (form.elements.preset?.value !== "" && preset) return { name: preset.name, options: preset.options };
+				if (form.elements.preset?.value !== "" && preset) return { name: preset.name, options: preset.options, rule: preset.rule };
 				const options = [0, 1, 2].map(i => ({ skill: form.elements[`skill${i}`]?.value, dc: Number(form.elements[`dc${i}`]?.value) || 0 })).filter(o => o.skill);
-				return { name: form.elements.name?.value?.trim() || L("Group.Title"), options };
+				return { name: form.elements.name?.value?.trim() || L("Group.Title"), options, rule: form.elements.rule?.value === "all" ? "all" : "half" };
 			}
 		}, { action: "cancel", label: L("Cancel"), icon: "fa-solid fa-xmark" }]
 	});
 }
 
-async function startGroup(key, { name, options }) {
+async function startGroup(key, { name, options, rule = "half" }) {
 	if (!options?.length || state.pending.has(key) || state.groups.has(key)) return;
-	const group = { id: newId(), name, options, rolls: new Map() };
+	const group = { id: newId(), name, options, rule, rolls: new Map() };
 	const mine = [];
 	for (const actor of characters()) {
 		const user = rollerFor(actor);
@@ -453,7 +454,7 @@ async function finishGroup(key) {
 	const results = [...group.rolls.values()].filter(r => r.status === "done").map(r => ({ actorName: r.actorName, skill: r.skill, total: r.total, outcome: r.outcome }));
 	if (!results.length) return renderAll();
 	const dcs = Object.fromEntries(group.options.map(o => [o.skill, o.dc]));
-	await addEntry(key, { type: "group", name: group.name, results, ...resolveGroup(results) }, { dcs });
+	await addEntry(key, { type: "group", name: group.name, results, ...resolveGroup(results, group.rule) }, { dcs });
 }
 
 /* -------------------------------------------- */
@@ -817,7 +818,7 @@ function groupPanelHTML(group) {
 	}).join("");
 	const options = group.options.map(o => `${esc(skillLabel(o.skill))} ${L("DC", { dc: o.dc })}`).join(" · ");
 	return `<div class="lucd20-sc-group">
-		<header><i class="fa-solid fa-people-group"></i> <strong>${esc(group.name)}</strong><span class="options">${options}</span></header>
+		<header><i class="fa-solid fa-people-group"></i> <strong>${esc(group.name)}</strong><span class="options">${options} · ${L(group.rule === "all" ? "Group.RuleAll" : "Group.RuleHalf")}</span></header>
 		<ol>${rows}</ol>
 		<div class="buttons">
 			<button type="button" class="ll-btn ll-btn-take" data-action="group-count"><i class="fa-solid fa-check ll-i"></i> ${L("Group.Count")}</button>

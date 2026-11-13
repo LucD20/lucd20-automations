@@ -47,7 +47,12 @@ function onClick(event) {
     event.preventDefault();
     event.stopImmediatePropagation();
     const scene = game.scenes.get(entryId(compass.closest("li")));
-    scene?.update({ navigation: !scene.navigation });
+    if (!scene) return;
+    // Switch the icon now; the server's update confirms it (v0.28.7).
+    const on = !scene.navigation;
+    compass.classList.toggle("on", on);
+    compass.dataset.on = String(on);
+    scene.update({ navigation: on });
     return;
   }
 

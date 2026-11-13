@@ -1800,6 +1800,7 @@ li:has(> .lucd20-scene-nav) {
   color: #f0c060;
   opacity: 0.3;
   cursor: pointer;
+  transition: none !important; /* on/off at once, no fade (owner) */
 }
 
 .lucd20-scene-nav.on {

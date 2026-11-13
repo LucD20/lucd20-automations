@@ -667,6 +667,8 @@ code.
   flickered in v0.19.0).
 - v0.28.6: the compass sits on the **top-left corner of the scene's
   thumbnail** (owner's request).
+- v0.28.7: the compass switches at once on click (no fade; the server update
+  follows).
 - v0.19.0: V14's scene name is an action link and Foundry handles the
   click first, so the left-click and the compass are now handled by a
   capture-phase listener on the document (before Foundry); pointer events on

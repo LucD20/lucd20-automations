@@ -651,7 +651,8 @@
       "ShowPlayers": "Mostrar aos jogadores",
       "Contribution": "{successes} de {checks} testes bem-sucedidos",
       "Missing": "A página de diário deste desafio não foi encontrada.",
-      "NotOver": "Este desafio ainda não acabou."
+      "NotOver": "Este desafio ainda não acabou.",
+      "Run": "Conduzir desafio de perícia"
     }
   },
   "EFFECT": {

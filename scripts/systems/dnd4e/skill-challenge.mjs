@@ -11,7 +11,8 @@ import { computeState, currentDC, isSpent, normalizeChallenge, otherSkill, resol
  * - A challenge is data on a journal text page (world or compendium), in
  *   flags[MODULE_ID].skillChallenge. Format: docs/skill-challenge.md.
  * - "Skill Challenges" button at the bottom of the Journal tab (GM): every
- *   challenge found, with Start / Continue / Reset.
+ *   challenge found, with Start / Continue / Reset. A journal entry that
+ *   holds a challenge also gets a "Run" button in its title bar.
  * - Runner window (GM): pick a character and a skill. The roll goes to that
  *   character's player (to the GM when nobody who owns it is online) and uses
  *   the system's own skill roll. The GM's client judges it against the DC and
@@ -207,10 +208,39 @@ async function onRollRequest({ userId, actorUuid, skill, checkId }) {
 	await executeAsGM("skillChallenge.result", { checkId, total });
 }
 
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * Dice So Nice: wait until the 3D dice of the roll just made have stopped on
+ * this client, so the result card never appears before the dice.
+ */
+async function waitForDice(userId) {
+	const dice3d = game.modules.get("dice-so-nice")?.active ? game.dice3d : null;
+	if (!dice3d || typeof dice3d.waitFor3DAnimationByMessageID !== "function") return;
+	const recent = () => (game.messages?.contents ?? []).filter(m => (m.author?.id ?? m.user?.id) === userId && m.rolls?.length && Date.now() - m.timestamp < 20000).at(-1);
+	let message = recent();
+	// The roll's message can reach this client a moment after the result does.
+	for (let i = 0; !message && i < 10; i++) {
+		await sleep(100);
+		message = recent();
+	}
+	if (!message) return;
+	await Promise.race([dice3d.waitFor3DAnimationByMessageID(message.id), sleep(12000)]);
+}
+
 /** The GM's client: a roll came back (total = null: it wasn't rolled). */
 async function finishCheck(checkId, total, senderId = null) {
 	const [key, pending] = [...state.pending].find(([, p]) => p.checkId === checkId) ?? [];
-	if (!pending || (senderId && senderId !== pending.userId)) return false;
+	if (!pending || pending.answered || (senderId && senderId !== pending.userId)) return false;
+	pending.answered = true;
+	if (total !== null && total !== undefined) {
+		try {
+			await waitForDice(pending.userId);
+		} catch (err) {
+			error("Skill Challenges: waiting for the dice failed.", err);
+		}
+	}
+	if (state.pending.get(key) !== pending) return false; // cancelled meanwhile
 	state.pending.delete(key);
 	const run = state.runs[key];
 	const def = run && await defFor(run);
@@ -564,9 +594,9 @@ function runnerHTML(key) {
 			</div>
 		</header>
 		${banner}
-		<div class="lucd20-loot-taker">
-			<label for="lucd20-sc-actor-${esc(key)}">${L("Character")}</label>
-			${pcs.length ? `<select id="lucd20-sc-actor-${esc(key)}" name="actor">${pcs.map(a => `<option value="${esc(a.id)}" ${a.id === actor?.id ? "selected" : ""}>${esc(a.name)}</option>`).join("")}</select>` : `<span class="label">${L("NoCharacters")}</span>`}
+		<div class="lucd20-sc-pcs" role="radiogroup" aria-label="${esc(L("Character"))}">
+			${pcs.length ? pcs.map(a => `<button type="button" class="pc${a.id === actor?.id ? " active" : ""}" role="radio" aria-checked="${a.id === actor?.id}" data-action="pick" data-actor="${esc(a.id)}" data-tooltip="${esc(a.name)}">
+				<img src="${esc(a.img || "icons/svg/mystery-man.svg")}" alt=""><span>${esc(a.name)}</span></button>`).join("") : `<span class="label">${L("NoCharacters")}</span>`}
 		</div>
 		<div class="lucd20-sc-scroll">
 			${group("primary")}${group("secondary")}${other}
@@ -587,6 +617,7 @@ class SkillChallengeRunner extends ApplicationV2 {
 		window: { title: "LUCD20.SkillChallenge.Title", icon: "fa-solid fa-list-check", resizable: true },
 		position: { width: 440, height: 640 },
 		actions: {
+			pick: SkillChallengeRunner.#onPick,
 			roll: SkillChallengeRunner.#onRoll,
 			rollOther: SkillChallengeRunner.#onRollOther,
 			manual: SkillChallengeRunner.#onManual,
@@ -637,10 +668,6 @@ class SkillChallengeRunner extends ApplicationV2 {
 	_onRender() {
 		const root = appElement(this);
 		const view = this.#view();
-		root?.querySelector('select[name="actor"]')?.addEventListener("change", event => {
-			view.actorId = event.target.value;
-			this.render();
-		});
 		root?.querySelector('select[name="otherSkill"]')?.addEventListener("change", event => (view.otherSkill = event.target.value));
 		root?.querySelector('input[name="otherDC"]')?.addEventListener("change", event => (view.otherDC = Number(event.target.value) || 0));
 	}
@@ -653,6 +680,11 @@ class SkillChallengeRunner extends ApplicationV2 {
 	#actor() {
 		const pcs = characters();
 		return pcs.find(a => a.id === this.#view().actorId) ?? pcs[0] ?? null;
+	}
+
+	static #onPick(event, target) {
+		this.#view().actorId = target.closest("[data-actor]")?.dataset.actor;
+		this.render();
 	}
 
 	static async #onRoll(event, target) {
@@ -727,6 +759,44 @@ function addDirectoryButton(root) {
 	footer.append(button);
 }
 
+/** "Run skill challenge" in the title bar of an open journal entry that has one. */
+function addSheetButtons() {
+	for (const app of foundry.applications.instances?.values() ?? []) {
+		const entry = app.document;
+		if (entry?.documentName !== "JournalEntry") continue;
+		const header = appElement(app)?.querySelector(".window-header");
+		if (!header) continue;
+		const pages = [...(entry.pages ?? [])].filter(page => normalizeChallenge(flagOf(page)));
+		const old = header.querySelector(".lucd20-sc-run");
+		if (!pages.length) {
+			old?.remove();
+			continue;
+		}
+		if (old) continue;
+		const button = document.createElement("button");
+		button.type = "button";
+		button.className = "lucd20-header-button lucd20-sc-run";
+		button.innerHTML = `<i class="fa-solid fa-list-check fa-fw" inert></i>`;
+		button.dataset.tooltip = L("Run");
+		button.setAttribute("aria-label", L("Run"));
+		button.addEventListener("click", event => {
+			event.preventDefault();
+			runFromEntry(entry);
+		});
+		header.insertBefore(button, header.querySelector('[data-action="toggleControls"]') ?? header.querySelector('[data-action="close"]'));
+	}
+}
+
+/** One challenge in the entry: run it. Several: the list. */
+function runFromEntry(entry) {
+	const pages = [...(entry.pages ?? [])].map(page => ({ page, def: normalizeChallenge(flagOf(page)) })).filter(p => p.def);
+	if (pages.length !== 1) return SkillChallengeList.open();
+	const { page, def } = pages[0];
+	state.defs.set(page.uuid, def);
+	SkillChallengeRunner.open(startRun({ uuid: page.uuid, name: page.name, def }));
+	renderAll();
+}
+
 /* -------------------------------------------- */
 /*  Feature                                     */
 /* -------------------------------------------- */
@@ -771,10 +841,11 @@ defineFeature({
 			}
 			feature.onCleanup(watchDOM("skill-challenge-button", () => {
 				addDirectoryButton(appElement(ui.journal) ?? document.getElementById("journal"));
+				addSheetButtons();
 			}));
 		}
 		feature.onCleanup(() => {
-			document.querySelectorAll(".lucd20-sc-open, .lucd20-directory-footer:empty").forEach(el => el.remove());
+			document.querySelectorAll(".lucd20-sc-open, .lucd20-sc-run, .lucd20-directory-footer:empty").forEach(el => el.remove());
 			SkillChallengeList.instance?.close();
 			for (const app of SkillChallengeRunner.all()) app.close();
 			state.pending.clear();

@@ -1307,16 +1307,23 @@ adventure text into this repo).
 
 | # | Phase | Notes |
 |---|---|---|
-| 29 | Core: format, list, runner, counting, chat cards, saved state | ✅ v0.31.0 |
+| 29 | Core: format, list, runner, counting, chat cards, saved state | ✅ v0.31.0; portraits, dice wait, Run button v0.31.1 |
 | 30 | Players' tracker, group checks, routes / stages, in-Foundry editor | questions first |
 
-### 9.3 Not built yet / to verify
+### 9.3 After the owner's first test (v0.31.1)
 
-- **"Run" button on the journal page itself** (part of Q40): not built. The
-  journal sheet's header in V14 could not be checked here **(verify)**; the
-  owner checks in Foundry, then it is added (phase 30).
+- **Character picker**: the PCs' portraits in a row (alphabetical); click one
+  to choose who rolls. Replaces the dropdown.
+- **Dice So Nice**: the GM's client waits for the 3D dice of that roll
+  (`game.dice3d.waitFor3DAnimationByMessageID`, at most 12 s) before judging
+  and posting the card **(verify)** in Foundry.
+- **Run button**: a journal entry with a challenge page gets a title-bar
+  button (before ⋮, header structure confirmed by the owner in V14). One
+  challenge in the entry: runs it. Several: opens the list.
 - "Open the journal page" in the list calls `entry.sheet.render(true,
   { pageId })` **(verify)** that it opens on the right page in V14.
+- **Asked for phase 30**: a window for players with the skills and their
+  descriptions (never DCs).
 
 ### 9.4 Questions for the owner
 

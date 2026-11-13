@@ -1194,7 +1194,8 @@
       "ShowPlayers": "Show players",
       "Contribution": "{successes} of {checks} checks succeeded",
       "Missing": "This challenge's journal page can't be found.",
-      "NotOver": "This challenge isn't over yet."
+      "NotOver": "This challenge isn't over yet.",
+      "Run": "Run skill challenge"
     }
   },
   "DND4EAUTO": {

@@ -118,7 +118,7 @@ const out = __dirname;
   await page.evaluate(sel => document.querySelector(sel).click(), '.lucd20-sc-row[data-uuid="JournalEntry.j1.JournalEntryPage.pg1"] [data-action="open"]');
   await page.waitForSelector(".lucd20-sc-runner .lucd20-sc-skill", { timeout: 3000 }).catch(async e => { console.log(errors, await page.evaluate(() => document.querySelector(".lucd20-sc-runner")?.outerHTML.slice(0, 600))); throw e; });
   assert.deepStrictEqual(await tally(page), ["0/4", "0/3"]);
-  await page.selectOption('.lucd20-sc-runner select[name="actor"]', "a1");
+  await page.click('.lucd20-sc-runner .lucd20-sc-pcs [data-actor="a1"]');
   await settle(page);
   // Nobody who owns Kira is online: the GM rolls. Nothing but the skill goes to the system's roll.
   await rollRow(page, "ath", 10);
@@ -147,7 +147,7 @@ const out = __dirname;
   await page.click('.lucd20-sc-runner [data-action="undo"]');
   await settle(page);
   assert.deepStrictEqual(await tally(page), ["3/4", "0/3"], "undo drops the last entry");
-  await page.selectOption('.lucd20-sc-runner select[name="actor"]', "a2");
+  await page.click('.lucd20-sc-runner .lucd20-sc-pcs [data-actor="a2"]');
   await settle(page);
   await page.selectOption('.lucd20-sc-runner select[name="otherSkill"]', "acr");
   await page.fill('.lucd20-sc-runner input[name="otherDC"]', "20");
@@ -194,7 +194,7 @@ const out = __dirname;
   const secretKey = await page.evaluate(() => window.__sc.keyOf("Compendium.x.y.JournalEntry.j2.JournalEntryPage.pg2"));
   const runner2 = ".lucd20-sc-runner"; // the mock windows have no id
   await page.waitForSelector(`${runner2} .lucd20-sc-skill`);
-  await page.selectOption(`${runner2} select[name="actor"]`, "a1");
+  await page.click(`${runner2} .lucd20-sc-pcs [data-actor="a1"]`);
   await settle(page);
   await page.click(`${runner2} .lucd20-sc-skill[data-skill="stl"] [data-action="roll"]`);
   await settle(page);
@@ -210,10 +210,52 @@ const out = __dirname;
   assert.ok(secretCards.length === 1 && secretCards[0].whisper?.includes("u1") && /14 vs DC 14/.test(secretCards[0].text), "secret: one card, whispered to the GM, with the numbers");
   await page.screenshot({ path: `${out}/p29-secret.png` });
 
+  // Dice So Nice: the card waits for the dice of that player's roll.
+  const dsn = await page.evaluate(async () => {
+    game.modules.set("dice-so-nice", { active: true });
+    let release; const order = [];
+    game.dice3d = { waitFor3DAnimationByMessageID: id => new Promise(r => { order.push(`wait:${id}`); release = () => { order.push("dice done"); r(true); }; }) };
+    const msgs = [{ id: "old", author: { id: "p1" }, rolls: [{}], timestamp: Date.now() - 60000 }, { id: "m1", author: { id: "p1" }, rolls: [{}], timestamp: Date.now() }];
+    game.messages = { contents: msgs };
+    window.__chat.length = 0;
+    document.querySelector('.lucd20-sc-runner .lucd20-sc-skill[data-skill="stl"] [data-action="roll"]').click();
+    await new Promise(r => setTimeout(r, 50));
+    const done = window.__sc.finishCheck(window.__emits.at(-1).payload.checkId, 20, "p1");
+    await new Promise(r => setTimeout(r, 150));
+    const before = window.__chat.length;
+    release();
+    await done;
+    order.push(`cards:${window.__chat.length}`);
+    game.modules.delete("dice-so-nice"); delete game.dice3d;
+    return { before, order };
+  });
+  assert.deepStrictEqual(dsn, { before: 0, order: ["wait:m1", "dice done", "cards:2"] }, "nothing in chat until the 3D dice stop");
+  await settle(page);
+
+  // A journal entry with a challenge gets a Run button in its title bar; one without doesn't.
+  const sheet = await page.evaluate(async () => {
+    const mk = (id, entry) => { const el = document.createElement("div"); el.id = id; el.innerHTML = `<header class="window-header"><h1 class="window-title">J</h1><button data-action="toggleControls"></button><button data-action="close"></button></header>`; document.body.append(el);
+      foundry.applications.instances.set(id, { document: Object.assign(entry, { documentName: "JournalEntry" }), element: el }); return el; };
+    const withOne = mk("js1", game.journal[0]);
+    const none = mk("js2", { name: "Plain", pages: [{ flags: {} }] });
+    document.body.append(document.createElement("i")); // any page change wakes the watcher
+    await new Promise(r => setTimeout(r, 100));
+    for (const app of window.__sc.SkillChallengeRunner.all()) await app.close();
+    const button = withOne.querySelector(".lucd20-sc-run");
+    const place = button?.nextElementSibling?.dataset.action;
+    button?.click();
+    await new Promise(r => setTimeout(r, 150));
+    const out = { has: !!button, place, none: !!none.querySelector(".lucd20-sc-run"), opened: document.querySelector(".lucd20-sc-runner .window-header")?.textContent ?? null, runners: document.querySelectorAll(".lucd20-sc-runner").length };
+    for (const app of window.__sc.SkillChallengeRunner.all()) await app.close();
+    foundry.applications.instances.delete("js1"); foundry.applications.instances.delete("js2"); withOne.remove(); none.remove();
+    return out;
+  });
+  assert.deepStrictEqual([sheet.has, sheet.place, sheet.none, sheet.runners], [true, "toggleControls", false, 1], "Run button before the ⋮ button, and it opens the runner");
+
   // The saved runs hold no DC and no GM text (players' clients receive world settings).
   const saved = await page.evaluate(() => JSON.stringify(game.settings.get("lucd20-automations", "skillChallenge_runs")));
   assert.ok(!/"dc"|GM only note|Climb the wall|They get across/.test(saved), "nothing secret in the saved runs");
-  assert.strictEqual(JSON.parse(saved)[secretKey].log.length, 1);
+  assert.strictEqual(JSON.parse(saved)[secretKey].log.length, 2);
 
   // Reset from the list; switching the feature off removes everything.
   await page.evaluate(sel => document.querySelector(sel).click(), '.lucd20-sc-row[data-uuid^="Compendium"] [data-action="reset"]');

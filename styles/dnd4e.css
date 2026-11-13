@@ -383,3 +383,14 @@ button .d4ea-btn-gold { color: #e0b000; }
 .lucd20-sc-card .who { margin: 4px 0; padding-left: 18px; font-size: 12px; }
 .lucd20-sc-card .outcome-text { margin-top: 6px; padding: 4px 6px; border-left: 3px solid #ee9b3a; background: rgba(238, 155, 58, 0.1); }
 .lucd20-sc-card button { margin-top: 6px; }
+
+/* Runner: character portraits (click one to choose who rolls) */
+.lucd20-loot-app .lucd20-sc-pcs { display: flex; flex: none; flex-wrap: wrap; gap: 6px; padding: 8px 10px; border-bottom: 1px solid var(--ll-border); background: var(--ll-bg-header); }
+.lucd20-loot-app .lucd20-sc-pcs .label { color: var(--ll-text-muted); font-size: 12px; }
+.lucd20-loot-app .lucd20-sc-pcs button.pc { display: flex; flex: none; flex-direction: column; align-items: center; gap: 2px; width: 58px; height: auto; margin: 0; padding: 3px 2px; border: 1px solid transparent; border-radius: var(--ll-radius); background: none; box-shadow: none; color: var(--ll-text-muted); font: inherit; font-size: 11px; line-height: 1.2; cursor: pointer; }
+.lucd20-loot-app .lucd20-sc-pcs button.pc img { width: 42px; height: 42px; border: 2px solid var(--ll-border-strong); border-radius: 50%; object-fit: cover; object-position: top; opacity: 0.6; }
+.lucd20-loot-app .lucd20-sc-pcs button.pc span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lucd20-loot-app .lucd20-sc-pcs button.pc:hover img { opacity: 1; border-color: #9793a6; }
+.lucd20-loot-app .lucd20-sc-pcs button.pc:focus-visible { outline: 2px solid var(--ll-accent); outline-offset: 1px; }
+.lucd20-loot-app .lucd20-sc-pcs button.pc.active { background: rgba(238, 155, 58, 0.12); border-color: var(--ll-accent-border); color: var(--ll-text); font-weight: 600; }
+.lucd20-loot-app .lucd20-sc-pcs button.pc.active img { opacity: 1; border-color: var(--ll-accent); }

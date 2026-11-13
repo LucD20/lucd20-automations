@@ -60,6 +60,7 @@ sets `game.system.id`.
 | `test20.js` | Door Icon Size, Secret Door Highlight, Locked Door Alert (19); secret door confirm |
 | `test21.js` | PF2e door locks (20) |
 | `test22.js` | Riding (21) |
+| `test23.js` | Token Scatter (22) |
 
 For a new feature, copy the closest test, keep its mock setup and replace the
 checks.

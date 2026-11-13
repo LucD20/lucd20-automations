@@ -436,7 +436,21 @@
       },
       "tokenScatter": {
         "Name": "Token Scatter",
-        "Hint": "Overlapping tokens spread apart a little on screen so each can be seen and targeted. A badge shows tokens stacked under a flyer."
+        "Hint": "Overlapping tokens at the same height spread apart a little on screen so each can be seen and targeted. Tokens flying over others get a stack badge: hover to fan them out, click to pick one. Hold Z to fan out every stack.",
+        "Setting": {
+          "spread": {
+            "Name": "Spread",
+            "Hint": "How far overlapping tokens move apart (fraction of a square)."
+          },
+          "ignoreDead": {
+            "Name": "Leave defeated tokens alone",
+            "Hint": "Dead, dying or unconscious tokens don't spread."
+          },
+          "stackBadge": {
+            "Name": "Stack badge for flyers",
+            "Hint": "A badge on tokens flying over others: hover fans the stack out, click shows a strip of portraits to select or target."
+          }
+        }
       },
       "tokenTooltip": {
         "Name": "Token Tooltip",
@@ -875,6 +889,11 @@
       "Disabled": "Riding is switched off.",
       "RideableOn": "Rideable (click to turn off)",
       "RideableOff": "Not rideable (click to make it Rideable)"
+    },
+    "TokenScatter": {
+      "Key": "Fan out stacked tokens",
+      "KeyHint": "While held, every stack of overlapping tokens (any elevation) is spread apart.",
+      "Stack": "{count} tokens stacked here (click to pick one)"
     }
   }
 }

@@ -2107,3 +2107,95 @@ li:has(> .lucd20-scene-nav) {
   border-color: #ffd166;
   box-shadow: 0 0 6px rgba(255, 209, 102, 0.6);
 }
+
+/* Token Scatter: stack badges and the portrait strip -------------------- */
+
+#lucd20-scatter-badges {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.lucd20-stack-badge {
+  position: fixed;
+  transform: translate(-60%, -40%);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  width: auto;
+  min-width: 0;
+  height: 20px;
+  margin: 0;
+  padding: 0 6px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 10px;
+  background: rgba(20, 20, 28, 0.85);
+  color: #fff;
+  font-size: 11px;
+  line-height: 18px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.lucd20-stack-badge:hover {
+  border-color: #ffd166;
+  color: #ffd166;
+}
+
+.lucd20-stack-strip {
+  position: fixed;
+  z-index: 60;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid #6b5a3a;
+  border-radius: 6px;
+  background: rgba(20, 20, 26, 0.95);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+.lucd20-stack-item {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  min-width: 0;
+  margin: 0;
+  padding: 2px;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+}
+
+.lucd20-stack-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border: none;
+}
+
+.lucd20-stack-item:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.lucd20-stack-item.controlled {
+  border-color: #ff9f1a;
+}
+
+.lucd20-stack-item.targeted {
+  border-color: #e05050;
+}
+
+.lucd20-stack-elev {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  padding: 0 3px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  font-size: 9px;
+  line-height: 12px;
+}

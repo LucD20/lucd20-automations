@@ -11,7 +11,7 @@ import { defineFeature } from "../core/registry.js";
  *   the further the shadow falls (down-right), the larger, fainter and
  *   blurrier it gets.
  * Only drawn for tokens this user can see. The shadow sits in the primary
- * canvas group at the ground (elevation 0), so it's under the token art.
+ * canvas group just below the flying token (token sort layer).
  */
 
 const state = { feature: null, attachedTo: null, flying: new Map(), time: 0 }; // flying: token id → { token, shadow, phase, basePivot }
@@ -32,8 +32,22 @@ function allTokens() {
   return Array.isArray(list) ? list : [...list];
 }
 
-/** A Graphics the primary group sorts at the ground, under token art. */
-function makeShadow() {
+const TOKENS_LAYER = () => foundry.canvas?.groups?.PrimaryCanvasGroup?.SORT_LAYERS?.TOKENS ?? 700;
+
+/**
+ * The shadow is a primary canvas object in the token sort layer, just below
+ * the flying token (v0.26.1: at elevation 0 with a very low sort it ended up
+ * under the scene background in V14). Lower tokens draw under it, so the
+ * shadow falls on them too.
+ */
+function placeInSort(g, token) {
+  g.elevation = Math.max(0, (token.document.elevation ?? 0) - 0.01);
+  g.sortLayer = TOKENS_LAYER();
+  g.sort = (token.document.sort ?? 0) - 1;
+  g.zIndex = (token.mesh?.zIndex ?? 0) - 1;
+}
+
+function makeShadow(token) {
   const PrimaryGraphics = foundry.canvas?.primary?.PrimaryGraphics;
   let g;
   try {
@@ -41,18 +55,21 @@ function makeShadow() {
   } catch {
     g = new PIXI.Graphics();
   }
-  g.elevation = 0;
-  g.sort = -1e6;
-  g.sortLayer = 0;
+  placeInSort(g, token);
   g.eventMode = "none";
   g.beginFill(SHADOW_COLOR, 1).drawCircle(0, 0, 50).endFill();
   const blur = new PIXI.BlurFilter(4);
   g.filters = [blur];
   g.lucd20Blur = blur;
   const parent = canvas.primary ?? canvas.stage;
-  // The primary group sorts by elevation; without PrimaryGraphics, put it at the bottom.
-  if (PrimaryGraphics && g instanceof PrimaryGraphics) parent.addChild(g);
-  else parent.addChildAt(g, 0);
+  if (PrimaryGraphics && g instanceof PrimaryGraphics) {
+    parent.addChild(g);
+    parent.sortDirty = true;
+  } else {
+    // No primary sorting: put it right under the token's art.
+    const index = token.mesh?.parent === parent ? parent.getChildIndex(token.mesh) : 0;
+    parent.addChildAt(g, Math.max(0, index));
+  }
   return g;
 }
 
@@ -82,7 +99,7 @@ function refreshList() {
         token,
         phase: Math.random() * Math.PI * 2,
         basePivot: { x: token.mesh.pivot?.x ?? 0, y: token.mesh.pivot?.y ?? 0 },
-        shadow: state.feature?.get("shadow") ? makeShadow() : null
+        shadow: state.feature?.get("shadow") ? makeShadow(token) : null
       });
     }
   }
@@ -126,6 +143,10 @@ function tick() {
     shadow.scale.set(radius / 50, (radius / 50) * 0.85);
     shadow.alpha = Math.max(0.12, 0.45 - 0.03 * h);
     if (shadow.lucd20Blur) shadow.lucd20Blur.blur = 3 + h * 1.5;
+    if (shadow.elevation !== Math.max(0, elevation - 0.01)) {
+      placeInSort(shadow, token);
+      if (shadow.parent) shadow.parent.sortDirty = true;
+    }
   }
 }
 

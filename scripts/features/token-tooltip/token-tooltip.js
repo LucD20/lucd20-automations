@@ -2,6 +2,8 @@ import { MODULE_ID } from "../../core/constants.js";
 import { defineFeature } from "../../core/registry.js";
 import { evaluate, clearCache } from "./expressions.js";
 import { presetFor } from "./presets.js";
+import { TooltipEditor } from "./editor.js";
+import { localize } from "../../core/constants.js";
 
 /**
  * Token Tooltip (replaces Token Tooltip Alt, simpler to set up).
@@ -184,5 +186,20 @@ defineFeature({
 
   onSettingChange() {
     refreshIfShown();
+  },
+
+  // GM: "Edit rows" button in the feature's card.
+  renderPanel() {
+    const count = tooltipConfig().rows?.length ?? 0;
+    const saved = !!game.settings.get(MODULE_ID, CONFIG_KEY)?.rows?.length;
+    return `<div class="lucd20-tt-panel">
+      <button type="button" data-action="featureAction" data-feature="tokenTooltip" data-feature-action="edit">
+        <i class="fa-solid fa-table-list"></i> ${localize("LUCD20.TokenTooltip.EditRows")}</button>
+      <span class="hint">${localize(saved ? "LUCD20.TokenTooltip.RowsSaved" : "LUCD20.TokenTooltip.RowsPreset", { count })}</span>
+    </div>`;
+  },
+
+  hubActions: {
+    edit: () => TooltipEditor.open(tooltipConfig())
   }
 });

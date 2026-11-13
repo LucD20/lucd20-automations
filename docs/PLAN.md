@@ -441,17 +441,21 @@ Decisions:
   pivot, so position, border, bars and hit area don't move).
 - It casts a **soft round shadow** on the ground: the higher it flies, the
   further the shadow falls (down-right), the larger, fainter and blurrier it
-  is (capped at 12 squares of height). The shadow is a `PrimaryGraphics` at
-  elevation 0, so it draws under token art; only for tokens this user sees.
+  is (capped at 12 squares of height). The shadow is a `PrimaryGraphics` in
+  the token sort layer just below the flyer (v0.27.0: at elevation 0 with a
+  very low sort it was hidden under the scene background in V14); only for
+  tokens this user sees.
 - One ticker callback for the flying tokens only; the list is rebuilt when
   tokens change.
 - Settings: hover motion · ground shadow.
 
 #### Token Tooltip — `tokenTooltip`
-*Replaces Token Tooltip Alt.* ✅ v0.26.0 (display + presets; editor and data
-browser are phase 24). Code: `scripts/features/token-tooltip/`.
-- **Hover** a token → a panel to its right (left if no room): dark, rounded,
-  accent-coloured border, rows of **coloured Font Awesome icon + bold value**,
+*Replaces Token Tooltip Alt.* ✅ v0.26.0 display + presets · v0.27.0 editor,
+data browser, import. Code: `scripts/features/token-tooltip/`.
+- **Hover** a token → a panel to its right (left if no room). v0.27.0: same
+  look as TTA's dark theme (owner: v0.26.0 was too bold, spaced and opaque):
+  Foundry's `ui/denim075.png` texture, black glow, 5px padding, 0.5rem gaps,
+  normal weight, accent border; rows of **coloured icon + value**,
   in **two columns** (filled top to bottom) when there are more than five rows
   (owner's screenshots, Q22). Follows pan and zoom and Token Scatter offsets;
   refreshes when the actor or token changes. Hover only (Q23).
@@ -487,6 +491,18 @@ browser are phase 24). Code: `scripts/features/token-tooltip/`.
 - Never leaks: only tokens this user can see; rows filtered per user.
   Values are written by the GM and run on every client (as TTA's functions).
 - Settings: border colour · text size (per player).
+- **Editor** (v0.27.0, GM; "Edit rows" in the feature's card): one line per
+  row: drag handle, icon field with live icon, colour, value (monospace,
+  grows with the text), who sees it, actor-type chips (all on = no filter),
+  **live preview** of the value on the selected token (— = hidden), delete.
+  **Data browser** (side panel): every value in the selected token's system
+  data with live values, searchable by path or value; clicking one inserts
+  `@path` at the cursor of the row being edited (inside a `{…}` block, else
+  as a new `{@path}` block; a bare path into an empty value). **Import from
+  Token Tooltip Alt** (Q26): paste its export; its lists are merged into rows
+  (`tta-import.js`: GM-only → gm, owned → owner, owned + friendly →
+  friendly, also neutral/hostile → all, players-only → others; types from
+  where each appeared). **Reset to defaults**. Nothing is saved until Save.
 
 #### Paused Movement Notice — `pauseNotifier`
 *Replaces Pause Notifier.* ✅ v0.17.0 · GM only, no options.
@@ -789,7 +805,8 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 | 21 | Riding | ✅ v0.23.0 |
 | 22 | Token Scatter | ✅ v0.24.0; badge dropped, flyers spread + Flying Tokens v0.25.0 |
 | 23 | Token Tooltip: display + presets | ✅ v0.26.0 |
-| 24–25 | Third pass: Token Tooltip editor, Pathfinding | §7 |
+| 24 | Token Tooltip editor, data browser, TTA import | ✅ v0.27.0 |
+| 25 | Pathfinding | §7 |
 
 ---
 
@@ -1026,7 +1043,7 @@ Source notes (from reading each module's code, Nov 2026):
 | 21 | Riding | ✅ v0.23.0 (spec in §3) |
 | 22 | Token Scatter + stack badge | ✅ v0.24.0 (spec in §3) |
 | 23 | Token Tooltip: display + PF2e presets | ✅ v0.26.0 (spec in §3) |
-| 24 | Token Tooltip: editor + data browser | |
+| 24 | Token Tooltip: editor + data browser | ✅ v0.27.0 (spec in §3) |
 | 25 | Pathfinding | last: most API risk |
 
 Each phase: ask its questions → build → harness test → minor version → owner
@@ -1050,6 +1067,7 @@ tests.
 | Q23 | Token Tooltip | When does it show? Which key shows all? | ✅ Hover (Alt optional, not built). |
 | Q24 | Token Tooltip | PF2e default rows and who sees them? | ✅ Ported from the owner's TTA exports (PF2e, SWADE, Wrath & Glory). |
 | Q25 | Token Tooltip | No expressions at all? | ✅ Owner is fine with expressions if intuitive: TTA-compatible expressions + data browser (phase 24). |
+| Q26b | Token Tooltip | Import from Token Tooltip Alt? | ✅ Yes (built v0.27.0). |
 | Q26 | Pathfinding | Always on, or a per-player toggle in Token controls? | Toggle, on by default. |
 | Q27 | Pathfinding | Do you use hex maps? | Square first; hex only if you use them. |
 | Q28 | Pathfinding | Players route only through explored/visible areas? | Yes (otherwise the path leaks the map). |

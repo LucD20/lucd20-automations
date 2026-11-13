@@ -905,6 +905,42 @@
       "Disabled": "Riding is switched off.",
       "RideableOn": "Rideable (click to turn off)",
       "RideableOff": "Not rideable (click to make it Rideable)"
+    },
+    "TokenTooltip": {
+      "EditRows": "Edit rows",
+      "RowsSaved": "{count} rows (your own).",
+      "RowsPreset": "{count} rows (system defaults).",
+      "EditorTitle": "Token Tooltip rows",
+      "EditorHint": "Value: a data path, text with {…} blocks (@path or &lt;path&gt; reads a value), or a script with return. Empty values hide the row. Click a value in the data browser to insert it.",
+      "NoToken": "no token selected",
+      "SelectToken": "Select a token to browse its data.",
+      "NoRows": "No rows yet. Add one, import, or reset to the defaults.",
+      "Drag": "Drag to reorder",
+      "Remove": "Remove row",
+      "PreviewHint": "Preview on the selected token (— = hidden)",
+      "ValuePlaceholder": "attributes.ac.value  or  {@saves.will.value + 10}",
+      "SearchData": "Search data (path or value)",
+      "BrowserHint": "Click to insert into the row you're editing.",
+      "More": "{count} more: narrow the search.",
+      "Add": "Add row",
+      "Browser": "Data browser",
+      "Import": "Import from Token Tooltip Alt",
+      "Reset": "Reset to defaults",
+      "Cancel": "Cancel",
+      "Save": "Save",
+      "ImportHint": "Paste a Token Tooltip Alt export (its Data Manager JSON). Its lists per GM/player, disposition and actor type are merged into rows here; this replaces the rows in the editor (nothing is saved until you click Save).",
+      "ImportEmpty": "No rows found in that export.",
+      "Imported": "Imported {count} rows. Check them, then Save.",
+      "ImportFailed": "Import failed: {error}",
+      "ResetConfirm": "Replace the rows in the editor with this system's defaults? Nothing is saved until you click Save.",
+      "Saved": "Token Tooltip rows saved.",
+      "Who": {
+        "gm": "GM only",
+        "owner": "Owners (and GM)",
+        "friendly": "Owners + on friendly tokens",
+        "others": "Players who don't own it",
+        "all": "Everyone"
+      }
     }
   }
 }

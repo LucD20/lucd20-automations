@@ -81,11 +81,18 @@ async function setup(page) {
     const hud = document.createElement("div"); hud.id = "token-hud";
     hud.innerHTML = '<div class="col left"></div><div class="col right"></div>';
     document.body.append(hud);
-    Hooks.callAll("renderTokenHUD", { document: __horse }, hud, {});
+    canvas.hud = { token: { document: __horse, element: hud } };
   });
+  await tick();
+  assert.ok(await page.isVisible("#token-hud .col.right .lucd20-rideable"), "horse button drawn without the render hook");
+  // Foundry re-draws the HUD → the button comes back
+  await page.evaluate(() => { document.querySelector("#token-hud").innerHTML = '<div class="col left"></div><div class="col right"></div>'; });
+  await tick();
+  assert.strictEqual(await page.$$eval("#token-hud .lucd20-rideable", e => e.length), 1, "button back after a re-draw");
   await page.click("#token-hud .lucd20-rideable");
   await tick();
   assert.ok(await page.evaluate(() => __horse.flags["lucd20-automations"].rideable), "HUD toggle marks it Rideable");
+  assert.ok(await page.evaluate(() => document.querySelector("#token-hud .lucd20-rideable").classList.contains("active")), "button shows it's on");
 
   // Player too far (Valeros is 2 squares left of the horse's edge)
   await page.evaluate(() => { game.user.isGM = false; game.user.id = "p1"; game.users.find(u => u.id === "p1"); });

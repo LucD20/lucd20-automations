@@ -3,6 +3,8 @@ import { defineFeature } from "../core/registry.js";
 import { executeAsGM, onGMRequest } from "../core/socket.js";
 import { addMoveRule } from "../core/movement-block.js";
 import { findFreeSpot, occupiedRects } from "../core/placement.js";
+import { watchDOM } from "../core/dom-watch.js";
+import { appElement } from "../core/dom.js";
 
 /**
  * Riding (replaces Rideable, only mounting).
@@ -203,27 +205,43 @@ async function toggle() {
   }
 }
 
-function addHudButton(hud, html) {
+/** The token the Token HUD is open for, and the HUD's element. */
+function hudState() {
+  const hud = canvas?.hud?.token;
+  const doc = hud?.document ?? hud?.object?.document ?? null;
+  const root = appElement(hud) ?? document.getElementById("token-hud");
+  return { doc, root };
+}
+
+/**
+ * GM: horse button in the Token HUD. Drawn by a DOM watcher (V14 re-draws the
+ * HUD without always calling the render hook), idempotent.
+ */
+function drawHudButton() {
   if (!game.user.isGM) return;
-  const root = html instanceof HTMLElement ? html : html?.[0] ?? hud.element;
-  const doc = hud.document ?? hud.object?.document;
+  const { doc, root } = hudState();
   if (!root || !doc) return;
-  root.querySelector(".lucd20-rideable")?.remove();
+  const on = isRideable(doc);
+  const existing = root.querySelector(".lucd20-rideable");
+  if (existing?.dataset.tokenId === doc.id && existing.classList.contains("active") === on) return;
+  existing?.remove();
   const column = root.querySelector(".col.right") ?? root.querySelector(".col.left") ?? root;
   const button = document.createElement("button");
   button.type = "button";
   button.className = "control-icon lucd20-rideable";
-  button.classList.toggle("active", isRideable(doc));
-  button.dataset.tooltip = localize(isRideable(doc) ? "LUCD20.Riding.RideableOn" : "LUCD20.Riding.RideableOff");
+  button.dataset.tokenId = doc.id;
+  button.classList.toggle("active", on);
+  button.dataset.tooltip = localize(on ? "LUCD20.Riding.RideableOn" : "LUCD20.Riding.RideableOff");
   button.innerHTML = '<i class="fa-solid fa-horse"></i>';
   button.addEventListener("click", async event => {
     event.preventDefault();
     event.stopPropagation();
-    const on = !isRideable(doc);
-    if (!on) for (const rider of ridersOf(doc)) await dismount(rider);
-    await doc.setFlag(MODULE_ID, "rideable", on);
-    button.classList.toggle("active", on);
-    button.dataset.tooltip = localize(on ? "LUCD20.Riding.RideableOn" : "LUCD20.Riding.RideableOff");
+    const target = hudState().doc;
+    if (!target) return;
+    const turnOn = !isRideable(target);
+    if (!turnOn) for (const rider of ridersOf(target)) await dismount(rider);
+    await target.setFlag(MODULE_ID, "rideable", turnOn);
+    drawHudButton();
   });
   column.append(button);
 }
@@ -263,7 +281,9 @@ defineFeature({
     // Riders can't move on their own.
     feature.onCleanup(addMoveRule("riding", doc => (ridingOf(doc) ? "LUCD20.Riding.Blocked" : null)));
 
-    feature.on("renderTokenHUD", addHudButton);
+    feature.on("renderTokenHUD", () => drawHudButton());
+    feature.onCleanup(watchDOM("riding-hud", drawHudButton));
+    feature.onCleanup(() => document.querySelectorAll(".lucd20-rideable").forEach(el => el.remove()));
 
     feature.on("updateToken", (doc, changes, options) => {
       if (!game.user.isActiveGM || options?.[OPT]) return;

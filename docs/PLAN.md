@@ -390,6 +390,8 @@ Decisions:
 *Replaces Rideable (only mounting).* ✅ v0.23.0 · no options.
 - The GM marks a token **Rideable** with a horse button in its Token HUD
   (gold when on; turning it off makes its riders get off) (Q12).
+  v0.23.1: the button is drawn by a DOM watcher on `canvas.hud.token`
+  (v0.23.0 relied on the render hook only and didn't show in V14).
 - **Mount**: select your token(s), target the Rideable token, press **M**
   (rebindable; owner checked M is free). Players: their own tokens, within 1
   square of the mount; the GM: any token, any distance (Q14). The rider's

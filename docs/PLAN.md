@@ -864,14 +864,15 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 | 23 | Token Tooltip: display + presets | ✅ v0.26.0 |
 | 24 | Token Tooltip editor, data browser, TTA import | ✅ v0.27.0 |
 | 25 | Pathfinding; tooltip helpers + hide while dragging | ✅ v0.28.0 |
+| 26–28 | Merge D&D 4e Combat Automation | §8 |
 
 ---
 
 ## 5. Open questions
 
 - Next pass: see §6.3 (all answered).
-- Third pass: see §7.3. Each question has a recommended default; build with
-  the default only if the owner says so.
+- Third pass: see §7.3 (all answered).
+- D&D 4e merge: see §8.3.
 
 ---
 
@@ -1131,3 +1132,88 @@ tests.
 | Q29 | Pathfinding | Avoid difficult terrain when searching? | ✅ Decided: yes when there's a better path; also avoid squares next to enemies; hold Q to ignore enemies, T to ignore terrain. |
 | Q30 | Token Scatter | Flyers: stack badge + strip of portraits + hold-to-fan key OK? | ✅ Built with key Z (v0.24.0), then dropped by the owner (v0.25.0): flyers just spread too, plus Flying Tokens. |
 | Q31 | Token Scatter | Per player, on by default? | ✅ Decided: yes. |
+
+---
+
+## 8. Merge: D&D 4e Combat Automation
+
+The owner's separate module `LucD20/dnd4e-combat-automation` (v0.13.0, ~6 900
+lines, EN + pt-BR) moves into this one, so there is one module to install.
+The old repo stays as it is; the owner disables the old module once the
+merged one works.
+
+What it has (from its code and README):
+- **Class features**: Hunter's Quarry, Warlock's Curse (+ Star Pact's Fate
+  of the Void), Barbarian rages (Bloodhunt Rage, Pressing Strike), marks
+  (Misdirected Mark, `api.applyMark`), Furious Assault, Prime Shot,
+  Bloodhunt, Defensive Mobility, Shadow Walk, Rampage, Half-Orc Resilience,
+  Words of Friendship, on-hit effects (Vicious Mockery, Dread Word, Curse of
+  the Dark Dream, Inspiring Shout, Great Cleave), temp-HP features,
+  conditional damage (Hellish Rebuke, Dire Radiance, Elven Accuracy, Fox's
+  Cunning), prone/shift riders read from power text.
+- **Combat**: cover (corner to corner, walls / enemy creatures) + a
+  per-player line preview; action tracker (standard, move, minor, immediate,
+  opportunity; pips in the combat tracker, Combat Tracker Dock, a floating
+  panel with the basic actions); automatic move-action spending; opportunity
+  attack cards; triggered-power cards; damage application from damage cards;
+  click-to-move squares for shifts and push / pull / slide; charge.
+- **Display**: readable roll breakdowns in chat, skill-check parts, modified
+  defences highlighted on sheets (system + Fox's sheets), automation /
+  translation symbols on powers (GM sets them world-wide), token badges for
+  quarry / curse / mark.
+- **GM tools**: monster text overrides (import / export a .json; macro
+  `api.translateExisting`).
+- **Language**: pt-BR translation; per-user "4e game language" (system +
+  module strings in another language than Foundry's UI; wraps
+  `i18n.setLanguage` at init).
+- Its own socket (`module.dnd4e-combat-automation`), settings, keybindings
+  (action panel, cover preview), API on `game.modules.get(...).api`, styles.
+
+### 8.1 Plan
+
+- **Code**: `scripts/systems/dnd4e/` keeps its folder structure (actions,
+  movement, reactions, features …) so the owner's mental map stays; only
+  the plumbing changes:
+  - `MODULE_ID` → this module; its socket → `core/socket.js`
+    (`executeAsGM`, `broadcast`); its `setting(key)` helper reads our
+    feature switches, so everything can be switched off without a reload
+    (its code already checks the setting each time it acts).
+  - Hooks it registers stay registered but gated by those switches.
+  - Styles → `styles/dnd4e.css` (its own look kept for the action panel,
+    cards and pickers; only new windows use the lucd20-loot-app look).
+  - API → `game.modules.get("lucd20-automations").api.dnd4e` (`applyMark`,
+    `computeCover`, `drawCoverPreview`, `openActionPanel`,
+    `translateExisting`); README macros updated.
+- **Settings**: a new **⚔️ D&D 4e** category (only in dnd4e), few cards
+  with the old switches as options (Q33).
+- **Language**: its strings go into `lang/en.json` under `LUCD20.DnD4e…`
+  (renamed from `DND4EAUTO.*`) and a new `lang/pt-BR.json` with the
+  Portuguese (Q34).
+- **Data**: a one-time GM migration copies the old module's world data
+  (monster texts, power-level marks) and live flags (quarry / curse / mark
+  effects, combatant action state) to this module's scope (Q35).
+- **Overlaps with existing features**: none conflict. Its 0-HP handling only
+  ends quarry / curse (our Defeat at 0 HP marks defeated); its move-action
+  spending works with Combat Movement; its opportunity cards complement
+  Pathfinding's "avoid squares next to enemies" (Q36).
+- **Tests**: the harness can't run the dnd4e system; a smoke test checks
+  everything registers in `?system=dnd4e` and the switches turn hooks off.
+  The owner tests in a 4e world.
+
+### 8.2 Build order
+
+| # | Phase | Notes |
+|---|---|---|
+| 26 | Move the code in, plumbing (module id, socket, settings → feature cards, API), styles, EN strings | old module disabled after |
+| 27 | pt-BR translation + 4e game language | |
+| 28 | Migration of the old module's data | |
+
+### 8.3 Questions for the owner
+
+| # | Question | Recommended |
+|---|---|---|
+| Q32 | Move it in mostly as it is (folder structure, look, behaviour), changing only the plumbing; refactor later only where needed? | Yes. |
+| Q33 | Settings cards in the D&D 4e category (old switches become options): **Class features** (quarry, curse, rage, marks, Prime Shot, class/race/feat rules, temp HP, conditional riders, power riders) · **Cover** (+ per-player line preview) · **Action tracker** (+ auto move actions, panel, warnings, dock pips) · **Opportunity attacks** · **Triggered powers** · **Damage application** · **Click-to-move & charge** · **Readable rolls & skill checks** · **Sheet highlights** · **Power symbols** (automation / translation) · **Token badges** · **Monster texts** (GM) · **4e game language** (per player). OK? | Yes. |
+| Q34 | Keep the Portuguese translation (a pt-BR file for the merged module; the rest of the module stays English until translated) and the "4e game language" option? | Yes. |
+| Q35 | Migrate the old module's data automatically the first time the GM loads the world (monster texts, power-level marks, current quarry / curse / mark effects, action state)? | Yes, then tell the GM it's done. |
+| Q36 | Any overlap you want merged rather than kept side by side (e.g. its opportunity-attack cards and Pathfinding's enemy avoidance, its 0-HP quarry end and Defeat at 0 HP)? | Keep side by side. |

@@ -44,6 +44,7 @@ async function setup(page) {
     window.__horse = mk("horse", "Horse", 400, 400, 2, []);
     window.__valeros = mk("val", "Valeros", 100, 400, 1, ["u1", "p1"]);
     window.__ezren = mk("ez", "Ezren", 700, 700, 1, ["u1", "p1"]);
+    __ezren.texture = { scaleX: 2, scaleY: 2 }; // iconic art at Scale 2
     window.__wall = mk("rock", "Rock", 600, 400, 1, []); // occupies the square right of the horse
     game.scenes = { get: id => (id === "s1" ? scene : null) };
     Object.assign(canvas, { ready: true, scene, grid: { size: 100 }, dimensions: { size: 100, width: 1000, height: 1000, sceneRect: { x: 0, y: 0, width: 1000, height: 1000 } }, tokens: { controlled: [], get: () => null }, interface: { createScrollingText() {} } });
@@ -121,6 +122,7 @@ async function setup(page) {
   await tick();
   v = await page.evaluate(() => [__ezren.x, __ezren.y, __ezren.flags["lucd20-automations"].riding.corner]);
   assert.deepStrictEqual(v, [490, 410, 1], "second rider: top-right corner");
+  assert.deepStrictEqual(await page.evaluate(() => [__ezren.texture.scaleX, __ezren.flags["lucd20-automations"].riding.scaleX]), [1.5, 2], "scale 2 → 1.5 (0.5 taken off), 2 kept to restore");
 
   // Mount moves → riders follow
   await page.evaluate(() => __horse.update({ x: 200, y: 200 }));
@@ -142,7 +144,7 @@ async function setup(page) {
   // GM drags a rider → it gets off (no snap back)
   await page.evaluate(() => __ezren.update({ x: 800, y: 800 }));
   await tick();
-  assert.deepStrictEqual(await page.evaluate(() => [__ezren.x, __ezren.texture.scaleX, !!__ezren.flags["lucd20-automations"]?.riding]), [800, 1, false], "dragged off: dismounted in place");
+  assert.deepStrictEqual(await page.evaluate(() => [__ezren.x, __ezren.texture.scaleX, !!__ezren.flags["lucd20-automations"]?.riding]), [800, 2, false], "dragged off: dismounted in place, scale 2 back");
 
   // Turning Rideable off dismounts riders
   await page.evaluate(() => { __select(__valeros); __target(__horse); __pressM(); });

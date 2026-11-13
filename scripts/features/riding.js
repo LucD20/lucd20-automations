@@ -13,8 +13,9 @@ import { appElement } from "../core/dom.js";
  * - Mount: select your token(s), target a Rideable token, press M. Players
  *   mount their own tokens within 1 square of the mount; the GM any token at
  *   any distance (Q14). The rider sits with its centre ~30 % in from one of the
- *   mount's corners (top-left first, then the others, Q13), at half its art
- *   scale, at the mount's elevation, drawn above it.
+ *   mount's corners (top-left first, then the others, Q13), with 0.5 taken off
+ *   its art scale (2 → 1.5, 1 → 0.5; min 0.25), at the mount's elevation,
+ *   drawn above it.
  * - While riding, the rider can't be moved on its own (shared movement block)
  *   and its vision comes from the mount's centre (`Token#_getVisionSourceData`,
  *   owner checked it exists in V14, Q15). When the mount moves, the active GM
@@ -32,7 +33,14 @@ import { appElement } from "../core/dom.js";
 
 const OPT = "lucd20Riding"; // update option on our own moves
 const INSET = 0.3; // rider centre, fraction of the mount's size in from the corner
-const SCALE = 0.5; // rider art scale while riding
+const SHRINK = 0.5; // taken off the rider's art scale while riding (owner: "reduce by 0.5")
+const MIN_SCALE = 0.25;
+
+/** Scale shown on the map minus 0.5 (keeps a mirrored sign), never below 0.25. */
+function ridingScale(shown) {
+  const sign = shown < 0 ? -1 : 1;
+  return sign * Math.max(MIN_SCALE, Math.abs(shown) - SHRINK);
+}
 const CORNERS = [[0, 0], [1, 0], [0, 1], [1, 1]]; // TL, TR, BL, BR
 
 const ridingOf = doc => doc?.getFlag?.(MODULE_ID, "riding") ?? null;
@@ -98,9 +106,16 @@ async function mount({ sceneId, riderIds, mountId }, senderId) {
       ...pos,
       elevation: mountDoc.elevation,
       sort: (mountDoc.sort ?? 0) + 1,
-      "texture.scaleX": (rider.texture?.scaleX ?? 1) * SCALE,
-      "texture.scaleY": (rider.texture?.scaleY ?? 1) * SCALE,
-      [`flags.${MODULE_ID}.riding`]: { mountId, corner, scaleX: rider.texture?.scaleX ?? 1, scaleY: rider.texture?.scaleY ?? 1, pf2e }
+      // From the scale it is shown at (PF2e may scale by size), back to the stored one on dismount.
+      "texture.scaleX": ridingScale(rider.texture?.scaleX ?? 1),
+      "texture.scaleY": ridingScale(rider.texture?.scaleY ?? 1),
+      [`flags.${MODULE_ID}.riding`]: {
+        mountId,
+        corner,
+        scaleX: rider._source?.texture?.scaleX ?? rider.texture?.scaleX ?? 1,
+        scaleY: rider._source?.texture?.scaleY ?? rider.texture?.scaleY ?? 1,
+        pf2e
+      }
     };
     // PF2e would otherwise put the size-linked scale back.
     if (pf2e) Object.assign(update, { "flags.pf2e.linkToActorSize": false, "flags.pf2e.autoscale": false });

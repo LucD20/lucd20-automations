@@ -396,8 +396,10 @@ Decisions:
   (rebindable; owner checked M is free). Players: their own tokens, within 1
   square of the mount; the GM: any token, any distance (Q14). The rider's
   centre sits **30 % in from a corner** of the mount (top-left, then
-  top-right, bottom-left, bottom-right) (Q13), at **half its art scale**, at
-  the mount's elevation, sorted just above it.
+  top-right, bottom-left, bottom-right) (Q13), with **0.5 taken off its art
+  scale** (owner, v0.23.2: "reduce by 0.5, not set to 0.5": 2 → 1.5, 1 → 0.5,
+  min 0.25; from the scale shown on the map, the stored value restored on
+  dismount), at the mount's elevation, sorted just above it.
 - While riding the rider is blocked from moving on its own (movement block:
   "Riding: press M to get off"), and its **vision comes from the mount's
   centre** (wraps `Token#_getVisionSourceData`; owner confirmed it exists in

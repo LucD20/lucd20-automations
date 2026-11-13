@@ -91,21 +91,24 @@ class Heap {
 }
 
 /**
- * Does the move p→q cross wall c = [x0, y0, x1, y1]? A wall end lying on the
- * move counts too, so a diagonal can't slip through the corner where two
- * walls meet.
+ * Does the move p→q touch wall c = [x0, y0, x1, y1] at all? Inclusive on
+ * purpose (v0.28.6): a wall running exactly through a square's centre, or
+ * along the move, blocks too. Used when Foundry's own test isn't available.
  */
 function segmentsCross(p, q, c) {
   const a = { x: c[0], y: c[1] };
   const b = { x: c[2], y: c[3] };
-  const o = (p1, p2, p3) => (p2.x - p1.x) * (p3.y - p1.y) - (p2.y - p1.y) * (p3.x - p1.x);
+  const o = (p1, p2, p3) => {
+    const v = (p2.x - p1.x) * (p3.y - p1.y) - (p2.y - p1.y) * (p3.x - p1.x);
+    return Math.abs(v) < 1e-9 ? 0 : Math.sign(v);
+  };
+  const on = (p1, p2, r) => Math.min(p1.x, p2.x) - 1e-9 <= r.x && r.x <= Math.max(p1.x, p2.x) + 1e-9 && Math.min(p1.y, p2.y) - 1e-9 <= r.y && r.y <= Math.max(p1.y, p2.y) + 1e-9;
   const d1 = o(a, b, p);
   const d2 = o(a, b, q);
   const d3 = o(p, q, a);
   const d4 = o(p, q, b);
-  if (((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0))) return true;
-  const within = r => Math.min(p.x, q.x) <= r.x && r.x <= Math.max(p.x, q.x) && Math.min(p.y, q.y) <= r.y && r.y <= Math.max(p.y, q.y);
-  return (d3 === 0 && within(a)) || (d4 === 0 && within(b));
+  if (d1 !== d2 && d3 !== d4) return true;
+  return (d1 === 0 && on(a, b, p)) || (d2 === 0 && on(a, b, q)) || (d3 === 0 && on(p, q, a)) || (d4 === 0 && on(p, q, b));
 }
 
 /* -------------------------------------------- */
@@ -129,13 +132,28 @@ function wallIndex(size) {
       buckets.get(k).push(c);
     }
   }
+  // Foundry's own collision test, when there is one: then the route agrees
+  // exactly with what Foundry blocks (doors, levels, one-way walls …).
+  const backend = CONFIG.Canvas?.polygonBackends?.move;
+  const foundryTest = typeof backend?.testCollision === "function"
+    ? (p, q) => {
+        try {
+          return !!backend.testCollision(p, q, { type: "move", mode: "any" });
+        } catch {
+          return null;
+        }
+      }
+    : null;
   return (p, q) => {
-    const [i0, i1] = [Math.floor(Math.min(p.x, q.x) / size), Math.floor(Math.max(p.x, q.x) / size)];
-    const [j0, j1] = [Math.floor(Math.min(p.y, q.y) / size), Math.floor(Math.max(p.y, q.y) / size)];
-    for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) {
-      for (const c of buckets.get(`${i},${j}`) ?? []) if (segmentsCross(p, q, c)) return true;
-    }
-    return false;
+    // Only ask when a wall is near: most moves have none, which keeps it fast.
+    const [i0, i1] = [Math.floor(Math.min(p.x, q.x) / size) - 1, Math.floor(Math.max(p.x, q.x) / size) + 1];
+    const [j0, j1] = [Math.floor(Math.min(p.y, q.y) / size) - 1, Math.floor(Math.max(p.y, q.y) / size) + 1];
+    const near = [];
+    for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) for (const c of buckets.get(`${i},${j}`) ?? []) near.push(c);
+    if (!near.length) return false;
+    const mine = near.some(c => segmentsCross(p, q, c));
+    const theirs = foundryTest?.(p, q);
+    return theirs === null || theirs === undefined ? mine : theirs || mine;
   };
 }
 
@@ -275,6 +293,7 @@ function context(token, { ignoreCost = false } = {}) {
     time: now,
     size,
     blocked: wallIndex(size),
+    wallHits: new Map(),
     terrain: feature.get("avoidTerrain") && !keyDown("KeyT") && !ignoreCost ? terrainGrid(token.document, size) : new Map(),
     threats: feature.get("avoidThreats") && !keyDown("KeyQ") ? threatGrid(token, size) : new Set(),
     explored: exploredTester(),
@@ -377,7 +396,15 @@ function route(ctx, from, to, w, h, startOdd) {
       const wc = cell * dirs.length + d;
       if (!wallCache[wc]) {
         p ??= centre(ci, cj);
-        wallCache[wc] = ctx.blocked(p, centre(i, j)) ? 2 : 1;
+        const q = centre(i, j);
+        // Kept for the whole drag (the context lives while nothing changes).
+        const key = `${p.x},${p.y},${q.x},${q.y}`;
+        let hit = ctx.wallHits.get(key);
+        if (hit === undefined) {
+          hit = ctx.blocked(p, q);
+          ctx.wallHits.set(key, hit);
+        }
+        wallCache[wc] = hit ? 2 : 1;
       }
       if (wallCache[wc] === 2) continue;
       const isGoal = i === to.i && j === to.j;

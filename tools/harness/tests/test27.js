@@ -146,6 +146,26 @@ const out = __dirname;
   console.log("150×150 round a long wall: ms, went round, fallback =", big);
   assert.ok(big[1] && !big[2], "big scene: routed round the wall, not Foundry's fallback");
 
+  // A second drag on the same big scene (same context): fast
+  const again = await page.evaluate(async () => {
+    const t0 = performance.now();
+    const res = CONFIG.Token.objectClass.prototype.findMovementPath.call(__mover, [{ x: 100, y: 300 }, { x: 14800, y: 400 }], { constrainOptions: {} });
+    await (res.result ?? res.promise);
+    return Math.round(performance.now() - t0);
+  });
+  console.log("next mouse move on the big scene: ms =", again);
+  // A freehand wall running exactly through square centres (x = 350) blocks
+  const centres = await page.evaluate(async () => {
+    canvas.dimensions.sceneRect = { x: 0, y: 0, width: 1200, height: 800 };
+    __walls.length = 0;
+    __walls.push({ document: { c: [350, 0, 350, 650], move: 20, door: 0, ds: 0 } });
+    Hooks.callAll("updateWall", {}, {}, {});
+    const res = CONFIG.Token.objectClass.prototype.findMovementPath.call(__mover, [{ x: 100, y: 300 }, { x: 500, y: 300 }], { constrainOptions: {} });
+    return (res.result ?? (await res.promise)).map(w => [w.x / 100, w.y / 100]);
+  });
+  console.log("wall through centres:", JSON.stringify(centres));
+  assert.ok(centres.some(p => p[1] >= 7), "goes round a wall that runs through square centres");
+
   // ---------- Player: explored areas only ----------
   page = await open("gm=0");
   await set(page, "pathfinding_enabled", true);

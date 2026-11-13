@@ -31,7 +31,7 @@ async function setupMocks(page) {
     document.body.append(dir);
     window.__drawScenes = () => {
       dir.innerHTML = `<header class="directory-header"><button class="create">Create</button></header><ol class="directory-list">
-        ${scenes.map(s => `<li class="directory-item entry scene" data-entry-id="${s.id}" style="display:flex;align-items:center;padding:4px"><a class="entry-name" data-action="activateEntry" style="flex:1">${s.name}</a></li>`).join("")}</ol>`;
+        ${scenes.map(s => `<li class="directory-item entry scene" data-entry-id="${s.id}" style="display:flex;align-items:center;gap:6px;padding:4px"><img class="thumbnail" src="icons/goblin.webp" style="width:64px;height:40px;object-fit:cover"><a class="entry-name" data-action="activateEntry" style="flex:1">${s.name}</a></li>`).join("")}</ol>`;
     };
     __drawScenes();
     // Foundry's own handler (capture phase on the app, like V14 seems to): opens the sheet
@@ -86,7 +86,9 @@ async function setupMocks(page) {
   await page.waitForTimeout(80);
   assert.strictEqual(await page.evaluate(() => game.scenes.get("sB").navigation), false, "clicking again removes it");
   assert.strictEqual(await page.evaluate(() => window.__sheetFor), undefined, "still no settings");
-  await page.screenshot({ path: `${out}/p16-scenes.png`, clip: { x: 720, y: 0, width: 280, height: 90 } });
+  const pos = await page.evaluate(() => { const li = document.querySelector('#scenes [data-entry-id="sA"]'); const b = li.querySelector(".lucd20-scene-nav").getBoundingClientRect(); const t = li.querySelector(".thumbnail").getBoundingClientRect(); return [Math.round(b.left - t.left), Math.round(b.top - t.top)]; });
+  assert.deepStrictEqual(pos, [3, 3], "compass on the thumbnail's top-left corner");
+  await page.screenshot({ path: `${out}/p16-scenes.png`, clip: { x: 720, y: 0, width: 280, height: 110 } });
   // option off → Foundry's click
   await set("sceneNavigation_clickToView", false);
   await page.click('#scenes [data-entry-id="sA"] .entry-name');

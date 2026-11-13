@@ -529,6 +529,12 @@ data browser, import. Code: `scripts/features/token-tooltip/`.
   straight path. The search now uses typed arrays with per-square wall /
   explored caches (limit 400 000); squares are mapped through Foundry's grid
   origin. 150 × 150 scene round a long wall ≈ 75 ms in the harness.
+  v0.28.6: the owner's log showed straight routes on the old scene: the wall
+  test missed walls running exactly through square centres (freehand walls).
+  Now inclusive, and when a wall is near a move Foundry's own collision test
+  (`CONFIG.Canvas.polygonBackends.move.testCollision`) decides too, so routes
+  agree with what Foundry blocks (doors, levels, one-way walls). Wall results
+  are kept for the whole drag (next mouse move on a big scene ≈ 85 ms).
 - **Per-player toggle** in Token controls (route icon), on by default (Q26).
 - **Cost** (owner, Q29): steps per the scene's diagonal rule (PF2e 5/10/5
   with the parity carried from the movement history); **difficult terrain**
@@ -659,6 +665,8 @@ code.
 - v0.20.0: the compass is a direct child of the scene row, placed over its
   right edge with CSS (V14's rows are thumbnails; it didn't show and
   flickered in v0.19.0).
+- v0.28.6: the compass sits on the **top-left corner of the scene's
+  thumbnail** (owner's request).
 - v0.19.0: V14's scene name is an action link and Foundry handles the
   click first, so the left-click and the compass are now handled by a
   capture-phase listener on the document (before Foundry); pointer events on

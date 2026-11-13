@@ -90,16 +90,25 @@ function drawToggles() {
       button = document.createElement("button");
       button.type = "button";
       button.className = "lucd20-scene-nav inline-control icon fa-solid fa-compass";
-      // A direct child of the row, placed with CSS over its right edge: V14's
-      // scene rows are thumbnails with the name drawn over them.
+      // A direct child of the row, placed over the thumbnail's top-left corner.
       li.append(button);
     }
+    placeOnThumbnail(li, button);
     button.dataset.on = String(on);
     button.classList.toggle("on", on);
     const tip = localize(on ? "LUCD20.SceneNavigation.InNav" : "LUCD20.SceneNavigation.NotInNav");
     button.dataset.tooltip = tip;
     button.setAttribute("aria-label", tip);
   }
+}
+
+/** Top-left corner of the scene's thumbnail (owner, v0.28.6); the row's top-left if there's none. */
+function placeOnThumbnail(li, button) {
+  const thumb = li.querySelector("img.thumbnail, .thumbnail, img");
+  const left = thumb ? thumb.offsetLeft + 3 : 3;
+  const top = thumb ? thumb.offsetTop + 3 : 3;
+  if (button.style.left !== `${left}px`) button.style.left = `${left}px`;
+  if (button.style.top !== `${top}px`) button.style.top = `${top}px`;
 }
 
 /* -------------------------------------------- */

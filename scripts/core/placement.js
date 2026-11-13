@@ -22,9 +22,10 @@ export function snapTopLeft(point, w, h, scene = canvas.scene) {
 }
 
 /** Rectangles of every token on the scene. */
-export function occupiedRects(scene = canvas.scene) {
+export function occupiedRects(scene = canvas.scene, { exclude = [] } = {}) {
   const size = gridSize(scene);
-  const tokens = scene?.tokens ? [...scene.tokens] : (canvas.tokens?.placeables ?? []).map(t => t.document);
+  let tokens = scene?.tokens ? [...scene.tokens] : (canvas.tokens?.placeables ?? []).map(t => t.document);
+  if (exclude.length) tokens = tokens.filter(t => !exclude.includes(t.id));
   return tokens.map(t => ({ x: t.x, y: t.y, w: t.width * size, h: t.height * size }));
 }
 

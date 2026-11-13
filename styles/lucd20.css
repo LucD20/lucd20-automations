@@ -2098,3 +2098,12 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-lock-config .lucd20-lock-dc input {
   width: 52px;
 }
+
+/* Riding: Rideable toggle in the Token HUD ----------------------------- */
+
+#token-hud .control-icon.lucd20-rideable.active,
+.token-hud .control-icon.lucd20-rideable.active {
+  color: #ffd166;
+  border-color: #ffd166;
+  box-shadow: 0 0 6px rgba(255, 209, 102, 0.6);
+}

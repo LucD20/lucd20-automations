@@ -432,7 +432,7 @@
       },
       "riding": {
         "Name": "Riding",
-        "Hint": "Mount a rideable token with M: your token rides it until you press M again."
+        "Hint": "Mark a token Rideable in its Token HUD. Select your token, target the mount and press M: your token rides it (half size, its vision from the mount's centre) until you press M again. Players mount their own tokens from within 1 square."
       },
       "tokenScatter": {
         "Name": "Token Scatter",
@@ -861,6 +861,20 @@
       "ResultPicked": "{name} picks the lock. The door is unlocked.",
       "ResultProgress": "{name} makes progress on the lock ({done} / {total}).",
       "ResultUnlocked": "{name} gets past the lock. The door is unlocked."
+    },
+    "Riding": {
+      "Key": "Mount / dismount",
+      "KeyHint": "Select your token and target a Rideable token to mount it; press again with the rider selected to get off.",
+      "Blocked": "Riding: press M to get off",
+      "SelectFirst": "Select the token that should ride first.",
+      "TargetFirst": "Target a Rideable token, then press M.",
+      "NotRideable": "That token isn't Rideable.",
+      "MountIsRiding": "That token is riding something itself.",
+      "TooFar": "{name} is too far away to mount.",
+      "NothingMounted": "Nothing was mounted.",
+      "Disabled": "Riding is switched off.",
+      "RideableOn": "Rideable (click to turn off)",
+      "RideableOff": "Not rideable (click to make it Rideable)"
     }
   }
 }

@@ -63,7 +63,7 @@ under a labelled sub-section (e.g. "PF2e").
                           · Combat Movement
 💬 Chat                 Chat Pins · Damage Log · Describe
 🗺️ Tokens & Placement   Multi-Token Edit · Folder Drop · Paused Movement Notice
-                          · Active Effect Highlight
+                          · Active Effect Highlight · Riding
 🚪 Doors                Door Icon Size · Secret Doors · Locked Door Alert (+ PF2e lock options)
 🎬 Scenes & Sound       Scene Navigation · Scene Palette · Hidden Track Names
 👁️ GM Vision            GM Vision Mode · Out-of-Sight Outlines
@@ -78,7 +78,7 @@ Scenes & Sound sit before Player Settings. Third pass (§7), greyed out until
 built:
 
 ```
-🗺️ Tokens & Placement   + Riding · Token Scatter · Token Tooltip · Pathfinding
+🗺️ Tokens & Placement   + Token Scatter · Token Tooltip · Pathfinding
 ```
 
 ---
@@ -386,6 +386,31 @@ Decisions:
   glow. Pure CSS behind a `<body>` class; the color is a CSS variable.
 - Settings: highlight color.
 
+#### Riding — `riding`
+*Replaces Rideable (only mounting).* ✅ v0.23.0 · no options.
+- The GM marks a token **Rideable** with a horse button in its Token HUD
+  (gold when on; turning it off makes its riders get off) (Q12).
+- **Mount**: select your token(s), target the Rideable token, press **M**
+  (rebindable; owner checked M is free). Players: their own tokens, within 1
+  square of the mount; the GM: any token, any distance (Q14). The rider's
+  centre sits **30 % in from a corner** of the mount (top-left, then
+  top-right, bottom-left, bottom-right) (Q13), at **half its art scale**, at
+  the mount's elevation, sorted just above it.
+- While riding the rider is blocked from moving on its own (movement block:
+  "Riding: press M to get off"), and its **vision comes from the mount's
+  centre** (wraps `Token#_getVisionSourceData`; owner confirmed it exists in
+  V14, Q15).
+- When the mount moves, the active GM moves its riders along the same
+  waypoints (`move` with ignoreWalls/ignoreCost), so they travel together
+  (Q16). If the GM drags a rider away, it simply gets off there.
+- **Dismount**: M with the rider selected → the closest free square it can
+  reach from the mount (no token, not across a wall; `core/placement.js`),
+  scale restored. Deleting the mount drops its riders the same way.
+- PF2e: "link to actor size" and autoscale are switched off while riding
+  and restored after (or removed, so PF2e's defaults apply).
+- All changes run on the active GM's client (`riding.mount` /
+  `riding.dismount` requests); our own moves carry an option flag.
+
 #### Paused Movement Notice — `pauseNotifier`
 *Replaces Pause Notifier.* ✅ v0.17.0 · GM only, no options.
 - V14 already stops a player's move while paused and shows "You cannot take
@@ -684,7 +709,8 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 | 18 | Describe | ✅ v0.20.0 |
 | 19 | Doors: Door Icon Size, Secret Door Highlight, Locked Door Alert | ✅ v0.21.0 |
 | 20 | PF2e door locks; secret doors toned down + ask before opening | ✅ v0.22.0 |
-| 21–25 | Third pass: Riding, Token Scatter, Token Tooltip (2), Pathfinding | §7 |
+| 21 | Riding | ✅ v0.23.0 |
+| 22–25 | Third pass: Token Scatter, Token Tooltip (2), Pathfinding | §7 |
 
 ---
 
@@ -918,7 +944,7 @@ Source notes (from reading each module's code, Nov 2026):
 |---|---|---|
 | 19 | Doors: Door Icon Size, Secret Door Highlight, Locked Door Alert | ✅ v0.21.0 (specs in §3) |
 | 20 | PF2e door locks (wall settings, card, best party member, unlock) | ✅ v0.22.0 (spec in §3) |
-| 21 | Riding | uses the movement block and placement helpers |
+| 21 | Riding | ✅ v0.23.0 (spec in §3) |
 | 22 | Token Scatter + stack badge | |
 | 23 | Token Tooltip: display + PF2e presets | |
 | 24 | Token Tooltip: editor + data browser | |
@@ -931,11 +957,11 @@ tests.
 
 | # | Feature | Question | Recommended |
 |---|---|---|---|
-| Q12 | Riding | Which tokens can be ridden, and where is the switch? | Only tokens marked Rideable; GM switch in the Token HUD (and the token's settings). |
-| Q13 | Riding | Where does the rider sit? Several riders? | Rider's centre ~30 % in from the mount's top-left corner; more riders take the other corners. |
-| Q14 | Riding | Who can mount, from how far? | Players mount their own tokens onto a Rideable token within 1 square; the GM any token, any distance. |
-| Q15 | Riding | Vision from the mount's centre (verify in V14 at build time). | Yes if it's a clean hook; otherwise skip. |
-| Q16 | Riding | Do riders move together with the mount (same animation) or jump at the end? | Together. |
+| Q12 | Riding | Which tokens can be ridden, and where is the switch? | ✅ Decided: as recommended. |
+| Q13 | Riding | Where does the rider sit? Several riders? | ✅ Decided: as recommended. |
+| Q14 | Riding | Who can mount, from how far? | ✅ Decided: as recommended. |
+| Q15 | Riding | Vision from the mount's centre (verify in V14 at build time). | ✅ V14 has `Token#_getVisionSourceData`: built. |
+| Q16 | Riding | Do riders move together with the mount (same animation) or jump at the end? | ✅ Decided: as recommended. |
 | Q17 | Locked Door Alert | Public message or whisper to the GM? Cooldown? | ✅ Decided: public; 10 s per player per door. |
 | Q18 | Secret Door Highlight | Purple ring + glow + eye-slash badge OK? Also mark the wall itself? | ✅ Decided: icon only, to try. |
 | Q19 | Door Icon Size | Default factor? | ✅ Decided: 1.5, per player, range 1–3. |

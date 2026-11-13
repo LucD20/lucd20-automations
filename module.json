@@ -1,0 +1,40 @@
+{
+  "id": "lucd20-automations",
+  "title": "LucD20 Automations",
+  "description": "Personal all-in-one automations: combat markers, chat pins, damage log, GM vision, folder drop, dice stats, PF2e search automation and more.",
+  "version": "0.32.0",
+  "compatibility": {
+    "minimum": "14",
+    "verified": "14.368"
+  },
+  "authors": [
+    {
+      "name": "LucD20",
+      "url": "https://github.com/LucD20"
+    }
+  ],
+  "esmodules": [
+    "scripts/main.js"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    },
+    {
+      "lang": "pt-BR",
+      "name": "Português (Brasil)",
+      "path": "lang/pt-BR.json"
+    }
+  ],
+  "socket": true,
+  "url": "https://github.com/LucD20/lucd20-automations",
+  "manifest": "https://github.com/LucD20/lucd20-automations/releases/latest/download/module.json",
+  "download": "https://github.com/LucD20/lucd20-automations/releases/latest/download/module.zip",
+  "bugs": "https://github.com/LucD20/lucd20-automations/issues",
+  "styles": [
+    "styles/lucd20.css",
+    "styles/dnd4e.css"
+  ]
+}

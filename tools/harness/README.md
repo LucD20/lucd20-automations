@@ -61,6 +61,7 @@ sets `game.system.id`.
 | `test21.js` | PF2e door locks (20) |
 | `test22.js` | Riding (21) |
 | `test23.js` | Token Scatter (22) |
+| `test24.js` | Flying Tokens (hover + shadow) |
 
 For a new feature, copy the closest test, keep its mock setup and replace the
 checks.

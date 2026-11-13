@@ -1,20 +1,15 @@
-import { MODULE_ID, localize } from "../core/constants.js";
 import { defineFeature } from "../core/registry.js";
 
 /**
  * Token Scatter (replaces Z-Scatter). Per player, on by default (Q31).
  *
- * - Tokens that overlap at the same elevation are drawn spread apart a little,
- *   so each can be seen, clicked and targeted. Only the drawing moves (the
- *   token container: art border, bars, effects, name, hit area; and its art
- *   mesh); positions are never changed. Not while a token is moving. Defeated
- *   tokens don't spread (option).
- * - Flying tokens over others (different elevations, Q30): the top token of
- *   such a stack gets a small badge (layers icon + count). Hovering it fans the
- *   stack out; clicking it opens a strip of portraits to select (your own) or
- *   target a token in it. Holding Z fans out every stack on screen.
- * - Only tokens this user can see take part, so nothing hidden is counted.
- * - Work happens only when tokens change, not every frame.
+ * Tokens that overlap are drawn spread apart a little, so each can be seen,
+ * clicked and targeted, whatever their elevation (owner, v0.24.1: flying
+ * tokens over others spread too; the stack badge and Z key were dropped).
+ * Only the drawing moves (the token container: border, bars, effects, name,
+ * hit area; and its art mesh); positions are never changed. Not while a token
+ * is moving. Defeated tokens don't spread (option). Only tokens this user can
+ * see take part. Work happens only when tokens change, not every frame.
  *
  * Layout (same idea as Z-Scatter, MIT): push each token away from its group's
  * centre (tokens on the exact same spot get evenly spaced directions), then a
@@ -24,11 +19,7 @@ import { defineFeature } from "../core/registry.js";
 const state = {
   feature: null,
   offsets: new Map(), // token id → {x, y} wanted
-  fanAll: false, // Z held
-  fanGroup: null, // ids fanned by hovering a badge
-  timer: null,
-  badges: null, // HTML layer
-  strip: null
+  timer: null
 };
 
 const PASSES = 8;
@@ -74,8 +65,8 @@ function rect(token) {
 
 const overlap = (a, b) => a.x < b.x + b.w - 1 && b.x < a.x + a.w - 1 && a.y < b.y + b.h - 1 && b.y < a.y + a.h - 1;
 
-/** Groups of overlapping tokens (connected), optionally regardless of elevation. */
-function groups(tokens, { anyElevation = false } = {}) {
+/** Groups of overlapping tokens (connected), any elevation. */
+function groups(tokens) {
   const rects = tokens.map(rect);
   const seen = new Set();
   const out = [];
@@ -89,7 +80,6 @@ function groups(tokens, { anyElevation = false } = {}) {
       group.push(a);
       for (let b = 0; b < tokens.length; b++) {
         if (seen.has(b)) continue;
-        if (!anyElevation && rects[a].el !== rects[b].el) continue;
         if (overlap(rects[a], rects[b])) {
           seen.add(b);
           stack.push(b);
@@ -207,19 +197,11 @@ function relayout() {
   const tokens = candidates();
   const offsets = new Map();
   for (const group of groups(tokens)) for (const [id, o] of layout(group)) offsets.set(id, o);
-  // Fanned stacks (Z held, or a hovered badge): different elevations too.
-  if (state.fanAll || state.fanGroup) {
-    for (const group of groups(tokens, { anyElevation: true })) {
-      if (!state.fanAll && !group.some(t => state.fanGroup.has(t.id))) continue;
-      for (const [id, o] of layout(group)) offsets.set(id, o);
-    }
-  }
   for (const token of allTokens()) {
     if (!token?.position || isAnimating(token)) continue;
     apply(token, offsets.get(token.id));
   }
   state.offsets = offsets;
-  drawBadges(tokens);
 }
 
 function schedule(delay = 0) {
@@ -238,150 +220,12 @@ function scheduleAfterMove(token) {
 }
 
 /* -------------------------------------------- */
-/*  Stack badges (flyers over others)           */
-/* -------------------------------------------- */
-
-function ensureLayer() {
-  if (state.badges?.isConnected) return state.badges;
-  const layer = document.createElement("div");
-  layer.id = "lucd20-scatter-badges";
-  document.body.append(layer);
-  state.badges = layer;
-  return layer;
-}
-
-function toScreen(x, y) {
-  if (!canvas?.stage?.worldTransform) return { x: -9999, y: -9999 };
-  const p = canvas.stage.worldTransform.apply(new PIXI.Point(x, y));
-  const board = canvas.app?.view?.getBoundingClientRect?.() ?? { left: 0, top: 0 };
-  return { x: p.x + board.left, y: p.y + board.top };
-}
-
-/** Stacks that mix elevations: [{ top, members }]. */
-function stacks(tokens) {
-  const out = [];
-  for (const group of groups(tokens, { anyElevation: true })) {
-    const levels = new Set(group.map(t => t.document.elevation ?? 0));
-    if (levels.size < 2) continue;
-    const sorted = [...group].sort((a, b) => (b.document.elevation ?? 0) - (a.document.elevation ?? 0) || (b.document.sort ?? 0) - (a.document.sort ?? 0));
-    out.push({ top: sorted[0], members: sorted });
-  }
-  return out;
-}
-
-function drawBadges(tokens = candidates()) {
-  const layer = ensureLayer();
-  if (!state.feature?.get("stackBadge")) {
-    layer.replaceChildren();
-    return;
-  }
-  const size = gridSize();
-  const wanted = stacks(tokens);
-  const keep = new Set();
-  for (const { top, members } of wanted) {
-    const key = members.map(t => t.id).sort().join(",");
-    keep.add(key);
-    let badge = layer.querySelector(`[data-key="${CSS.escape(key)}"]`);
-    if (!badge) {
-      badge = document.createElement("button");
-      badge.type = "button";
-      badge.className = "lucd20-stack-badge";
-      badge.dataset.key = key;
-      badge.addEventListener("mouseenter", () => {
-        state.fanGroup = new Set(key.split(","));
-        schedule();
-      });
-      badge.addEventListener("mouseleave", () => {
-        state.fanGroup = null;
-        schedule(150);
-      });
-      badge.addEventListener("click", event => {
-        event.preventDefault();
-        event.stopPropagation();
-        openStrip(badge, key.split(","));
-      });
-      layer.append(badge);
-    }
-    badge.innerHTML = `<i class="fa-solid fa-layer-group"></i><span>${members.length}</span>`;
-    badge.dataset.tooltip = localize("LUCD20.TokenScatter.Stack", { count: members.length });
-    const d = top.document;
-    const offset = state.offsets.get(top.id) ?? { x: 0, y: 0 };
-    const p = toScreen(d.x + d.width * size + offset.x, d.y + offset.y);
-    badge.style.left = `${Math.round(p.x)}px`;
-    badge.style.top = `${Math.round(p.y)}px`;
-  }
-  for (const badge of [...layer.children]) if (!keep.has(badge.dataset.key)) badge.remove();
-  if (state.strip && !keep.has(state.strip.dataset.key)) closeStrip();
-}
-
-function closeStrip() {
-  state.strip?.remove();
-  state.strip = null;
-}
-
-function openStrip(badge, ids) {
-  const key = ids.slice().sort().join(",");
-  if (state.strip?.dataset.key === key) return closeStrip();
-  closeStrip();
-  const strip = document.createElement("div");
-  strip.className = "lucd20-stack-strip";
-  strip.dataset.key = key;
-  const tokens = ids.map(id => canvas.tokens.get(id)).filter(t => t?.visible);
-  tokens.sort((a, b) => (b.document.elevation ?? 0) - (a.document.elevation ?? 0));
-  for (const token of tokens) {
-    const d = token.document;
-    const item = document.createElement("button");
-    item.type = "button";
-    item.className = "lucd20-stack-item";
-    item.classList.toggle("controlled", !!token.controlled);
-    item.classList.toggle("targeted", !!token.isTargeted);
-    // Names only where players could read them anyway (display mode, PF2e hidden names).
-    const modes = CONST.TOKEN_DISPLAY_MODES ?? {};
-    const shown = [modes.HOVER, modes.ALWAYS].includes(d.displayName) && d.playersCanSeeName !== false;
-    const name = game.user.isGM || d.isOwner || shown ? d.name : "";
-    const elevation = d.elevation ? `${d.elevation} ${canvas.scene?.grid?.units ?? ""}`.trim() : "";
-    item.dataset.tooltip = [name, elevation].filter(Boolean).join(" · ");
-    const img = document.createElement("img");
-    img.src = d.texture?.src && !/\.(webm|mp4)$/i.test(d.texture.src) ? d.texture.src : token.actor?.img ?? "icons/svg/mystery-man.svg";
-    img.alt = "";
-    item.append(img);
-    if (elevation) {
-      const tag = document.createElement("span");
-      tag.className = "lucd20-stack-elev";
-      tag.textContent = elevation;
-      item.append(tag);
-    }
-    item.addEventListener("click", event => {
-      event.preventDefault();
-      event.stopPropagation();
-      if (token.document.isOwner) token.control({ releaseOthers: !event.shiftKey });
-      else token.setTarget(!token.isTargeted, { releaseOthers: !event.shiftKey });
-      item.classList.toggle("controlled", !!token.controlled);
-      item.classList.toggle("targeted", !!token.isTargeted);
-    });
-    strip.append(item);
-  }
-  const rectB = badge.getBoundingClientRect();
-  strip.style.left = `${Math.round(rectB.left)}px`;
-  strip.style.top = `${Math.round(rectB.bottom + 4)}px`;
-  document.body.append(strip);
-  state.strip = strip;
-}
-
-function onOutside(event) {
-  if (state.strip && !state.strip.contains(event.target) && !event.target.closest?.(".lucd20-stack-badge")) closeStrip();
-}
-
-/* -------------------------------------------- */
 /*  Feature                                     */
 /* -------------------------------------------- */
 
 function clearAll() {
   for (const token of allTokens()) if (token?._lucd20Scatter) apply(token, null);
   state.offsets = new Map();
-  state.badges?.remove();
-  state.badges = null;
-  closeStrip();
 }
 
 defineFeature({
@@ -391,28 +235,7 @@ defineFeature({
   defaultEnabled: true,
   settings: {
     spread: { kind: "range", min: 0.1, max: 1, step: 0.05, default: 0.3 },
-    ignoreDead: { kind: "boolean", default: true },
-    stackBadge: { kind: "boolean", default: true }
-  },
-
-  init(feature) {
-    game.keybindings.register(MODULE_ID, "fanStacks", {
-      name: "LUCD20.TokenScatter.Key",
-      hint: "LUCD20.TokenScatter.KeyHint",
-      editable: [{ key: "KeyZ" }],
-      onDown: () => {
-        if (!feature.active) return false;
-        state.fanAll = true;
-        schedule();
-        return true;
-      },
-      onUp: () => {
-        if (!state.fanAll) return false;
-        state.fanAll = false;
-        schedule();
-        return true;
-      }
-    });
+    ignoreDead: { kind: "boolean", default: true }
   },
 
   enable(feature) {
@@ -438,14 +261,9 @@ defineFeature({
     // Who can see what (vision, hidden toggles, conditions).
     feature.on("sightRefresh", () => schedule(100));
     feature.on("updateActor", () => schedule(100));
-    feature.on("canvasPan", () => drawBadges());
-    document.addEventListener("pointerdown", onOutside, true);
     feature.onCleanup(() => {
-      document.removeEventListener("pointerdown", onOutside, true);
       clearTimeout(state.timer);
       state.timer = null;
-      state.fanAll = false;
-      state.fanGroup = null;
       clearAll();
     });
     schedule();

@@ -436,7 +436,7 @@
       },
       "tokenScatter": {
         "Name": "Token Scatter",
-        "Hint": "Overlapping tokens at the same height spread apart a little on screen so each can be seen and targeted. Tokens flying over others get a stack badge: hover to fan them out, click to pick one. Hold Z to fan out every stack.",
+        "Hint": "Overlapping tokens spread apart a little on screen (flying ones too), so each can be seen, clicked and targeted. Their real positions don't change.",
         "Setting": {
           "spread": {
             "Name": "Spread",
@@ -445,10 +445,6 @@
           "ignoreDead": {
             "Name": "Leave defeated tokens alone",
             "Hint": "Dead, dying or unconscious tokens don't spread."
-          },
-          "stackBadge": {
-            "Name": "Stack badge for flyers",
-            "Hint": "A badge on tokens flying over others: hover fans the stack out, click shows a strip of portraits to select or target."
           }
         }
       },
@@ -491,6 +487,18 @@
           "autoUnlock": {
             "Name": "Unlock on success",
             "Hint": "A successful try unlocks the door. Force Open also opens it, and on a plain success breaks it (it becomes secret so it can't be closed)."
+          }
+        }
+      },
+      "flyingTokens": {
+        "Name": "Flying Tokens",
+        "Hint": "Tokens above elevation 0 hover gently and cast a soft round shadow on the ground, further away the higher they fly.",
+        "Setting": {
+          "hover": {
+            "Name": "Hover motion"
+          },
+          "shadow": {
+            "Name": "Ground shadow"
           }
         }
       }
@@ -889,11 +897,6 @@
       "Disabled": "Riding is switched off.",
       "RideableOn": "Rideable (click to turn off)",
       "RideableOff": "Not rideable (click to make it Rideable)"
-    },
-    "TokenScatter": {
-      "Key": "Fan out stacked tokens",
-      "KeyHint": "While held, every stack of overlapping tokens (any elevation) is spread apart.",
-      "Stack": "{count} tokens stacked here (click to pick one)"
     }
   }
 }

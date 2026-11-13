@@ -80,46 +80,14 @@ async function setup(page) {
   assert.deepStrictEqual(await meshOff("a1"), o.a1, "art moves with the token");
   // Partial overlap pushed apart along x
   assert.ok(o.b1[0] < 0 && o.b2[0] > 0, "partial overlap pushed apart");
-  // Different elevations stay stacked
-  assert.deepStrictEqual([o.c1, o.d1, o.e1], [[0, 0], [0, 0], [0, 0]], "flyers not spread by default");
+  // Flyers over a Large creature spread too (any elevation)
+  assert.ok([o.c1, o.d1, o.e1].every(p => p[0] || p[1]), "flyers spread over the creature below");
   // Dead token doesn't spread (f1 alone then)
   assert.deepStrictEqual([o.f1, o.f2], [[0, 0], [0, 0]], "defeated left alone");
-  // Hidden token not counted: b-group has only b1, b2 (h1 invisible to players), no badge for it
-  // Badge on the top flyer (e1), count 3
-  const badges = await page.$$eval(".lucd20-stack-badge", els => els.map(e => [e.innerText.trim(), Math.round(parseFloat(e.style.left)), Math.round(parseFloat(e.style.top))]));
-  console.log("badges:", badges);
-  assert.deepStrictEqual(badges, [["3", 350, 350]], "one badge, on the top flyer's corner, count 3 (hidden token not counted)");
+  // Hidden token (h1 on b1, 10 ft) isn't counted for players: b1/b2 offsets are a plain pair
+  assert.deepStrictEqual(o.h1, [0, 0], "hidden token not moved");
+  assert.strictEqual(await page.$$eval(".lucd20-stack-badge", e => e.length), 0, "no badges any more");
   await page.screenshot({ path: `${out}/p22-scatter.png` });
-
-  // Hover the badge → that stack fans out
-  await page.hover(".lucd20-stack-badge");
-  await page.waitForTimeout(250);
-  o = await offs();
-  assert.ok([o.c1, o.d1, o.e1].some(p => p[0] || p[1]), "hover fans the stack");
-  await page.screenshot({ path: `${out}/p22-fan.png` });
-  // Click → strip of portraits, top flyer first; click the owned one → control, the other → target
-  await page.click(".lucd20-stack-badge");
-  await page.waitForTimeout(80);
-  const items = await page.$$eval(".lucd20-stack-item", els => els.map(e => e.dataset.tooltip));
-  console.log("strip:", items);
-  assert.deepStrictEqual(items, ["E1 · 30 ft", "D1 · 20 ft", "C1"], "portraits, highest first");
-  await page.screenshot({ path: `${out}/p22-strip.png` });
-  await page.click(".lucd20-stack-item >> nth=0");
-  await page.click(".lucd20-stack-item >> nth=1");
-  assert.deepStrictEqual(await page.evaluate(() => [window.__controlled, window.__targeted]), ["e1", "d1"], "select own, target others");
-  await page.mouse.click(700, 550);
-  await page.waitForTimeout(250);
-  assert.strictEqual(await page.$$eval(".lucd20-stack-strip", e => e.length), 0, "strip closes on outside click");
-  o = await offs();
-  assert.deepStrictEqual([o.c1, o.d1, o.e1], [[0, 0], [0, 0], [0, 0]], "leaving the badge restacks");
-
-  // Hold Z → every stack, any elevation
-  await page.evaluate(() => window.__keybindings["lucd20-automations.fanStacks"].onDown());
-  await page.waitForTimeout(250);
-  o = await offs();
-  assert.ok([o.c1, o.d1, o.e1].some(p => p[0] || p[1]), "Z fans flyers");
-  await page.evaluate(() => window.__keybindings["lucd20-automations.fanStacks"].onUp());
-  await page.waitForTimeout(250);
 
   // A token moves away → re-layout (b2 leaves b1)
   await page.evaluate(() => { const t = __tok("b2"); t.document.x = 700; t.position.set(700, 100); t.mesh.position.set(750, 150); Hooks.callAll("updateToken", t.document, { x: 700 }, {}); });

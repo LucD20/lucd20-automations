@@ -63,7 +63,7 @@ under a labelled sub-section (e.g. "PF2e").
                           · Combat Movement
 💬 Chat                 Chat Pins · Damage Log · Describe
 🗺️ Tokens & Placement   Multi-Token Edit · Folder Drop · Paused Movement Notice
-                          · Active Effect Highlight · Riding · Token Scatter
+                          · Active Effect Highlight · Riding · Token Scatter · Flying Tokens
 🚪 Doors                Door Icon Size · Secret Doors · Locked Door Alert (+ PF2e lock options)
 🎬 Scenes & Sound       Scene Navigation · Scene Palette · Hidden Track Names
 👁️ GM Vision            GM Vision Mode · Out-of-Sight Outlines
@@ -417,25 +417,34 @@ Decisions:
 
 #### Token Scatter — `tokenScatter`
 *Replaces Z-Scatter.* ✅ v0.24.0 · per player, on by default (Q31).
-- Tokens that overlap (any part) **at the same elevation** are drawn spread
-  apart a little, so each can be seen, clicked and targeted. Only the drawing
-  moves: the token container (border, bars, effects, name, hit area) and its
-  art mesh; documents never change. Not while a token is moving. Defeated
-  (dead, dying, unconscious) tokens are left alone (option).
+- Tokens that overlap (any part) are drawn spread apart a little, so each can
+  be seen, clicked and targeted, **whatever their elevation** (v0.25.0, owner:
+  flyers over others spread too; the v0.24.0 stack badge, portrait strip and
+  Z key were dropped as unnecessary). Only the drawing moves: the token
+  container (border, bars, effects, name, hit area) and its art mesh;
+  documents never change. Not while a token is moving. Defeated (dead,
+  dying, unconscious) tokens are left alone (option).
 - Layout as in Z-Scatter (MIT): push away from the group's centre (tokens on
   the exact same spot get evenly spaced directions), up to 8 passes pushing
   overlapping pairs apart (bigger tokens move less), offsets capped.
-- **Flyers over others** (Q30): the top token of a stack that mixes
-  elevations gets a **badge** (layers icon + count) at its top-right corner.
-  Hover → that stack fans out; click → a **strip of portraits** (highest
-  first, with elevation): click your own to select it, others to target
-  (Shift adds). **Hold Z** to fan out every stack (owner: Z is free).
-- Only tokens this user can see take part (`token.visible`), so hidden tokens
-  are never counted; names in the strip only where players could read them.
+- Only tokens this user can see take part (`token.visible`).
 - Recomputed only when tokens change (create/delete/update, after the move
   animation ends, sight refresh, actor updates); Foundry's own re-positioning
-  (`refreshToken`) gets the offset re-applied. Badges follow pan/zoom.
-- Settings: spread (0.1–1, 0.3) · leave defeated tokens alone · stack badge.
+  (`refreshToken`) gets the offset re-applied.
+- Settings: spread (0.1–1, 0.3) · leave defeated tokens alone.
+
+#### Flying Tokens — `flyingTokens`
+*Owner's request (from an old module).* ✅ v0.25.0 · per player, on by default.
+- A token above elevation 0 **hovers**: its art drifts slowly up/down and a
+  little sideways, each token on its own rhythm (through the art mesh's
+  pivot, so position, border, bars and hit area don't move).
+- It casts a **soft round shadow** on the ground: the higher it flies, the
+  further the shadow falls (down-right), the larger, fainter and blurrier it
+  is (capped at 12 squares of height). The shadow is a `PrimaryGraphics` at
+  elevation 0, so it draws under token art; only for tokens this user sees.
+- One ticker callback for the flying tokens only; the list is rebuilt when
+  tokens change.
+- Settings: hover motion · ground shadow.
 
 #### Paused Movement Notice — `pauseNotifier`
 *Replaces Pause Notifier.* ✅ v0.17.0 · GM only, no options.
@@ -736,7 +745,7 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 | 19 | Doors: Door Icon Size, Secret Door Highlight, Locked Door Alert | ✅ v0.21.0 |
 | 20 | PF2e door locks; secret doors toned down + ask before opening | ✅ v0.22.0 |
 | 21 | Riding | ✅ v0.23.0 |
-| 22 | Token Scatter | ✅ v0.24.0 |
+| 22 | Token Scatter | ✅ v0.24.0; badge dropped, flyers spread + Flying Tokens v0.25.0 |
 | 23–25 | Third pass: Token Tooltip (2), Pathfinding | §7 |
 
 ---
@@ -1002,5 +1011,5 @@ tests.
 | Q27 | Pathfinding | Do you use hex maps? | Square first; hex only if you use them. |
 | Q28 | Pathfinding | Players route only through explored/visible areas? | Yes (otherwise the path leaks the map). |
 | Q29 | Pathfinding | Avoid difficult terrain when searching? | Not at first; the ruler still shows the cost. |
-| Q30 | Token Scatter | Flyers: stack badge + strip of portraits + hold-to-fan key OK? | ✅ Decided: yes; key Z. |
+| Q30 | Token Scatter | Flyers: stack badge + strip of portraits + hold-to-fan key OK? | ✅ Built with key Z (v0.24.0), then dropped by the owner (v0.25.0): flyers just spread too, plus Flying Tokens. |
 | Q31 | Token Scatter | Per player, on by default? | ✅ Decided: yes. |

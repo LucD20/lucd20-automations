@@ -458,8 +458,20 @@ defineFeature({
     }
     feature.wrap(TokenClass.prototype, "findMovementPath", function (original, waypoints, options) {
       const c = options?.constrainOptions;
+      // Debug (owner, v0.28.2): CONFIG.debug.lucd20Pathfinding = true logs every call.
+      const debug = CONFIG.debug?.lucd20Pathfinding;
+      if (debug) {
+        console.log(`${MODULE_ID} | Pathfinding call`, {
+          token: this.document?.name,
+          waypoints: foundry.utils.deepClone?.(waypoints) ?? waypoints,
+          options: { ...options, constrainOptions: { ...(c ?? {}), history: c?.history ? "(history)" : undefined } },
+          active: isActive(),
+          squareGrid: squareGrid(),
+          walls: (canvas.walls?.placeables ?? []).length
+        });
+      }
       // ignoreCost (Foundry sets it for the GM): still route around walls, just without terrain costs.
-      const skip = !isActive() ? "off" : !squareGrid() ? "not a square grid" : c?.ignoreWalls ? "Foundry asked to ignore walls" : !Array.isArray(waypoints) || waypoints.length < 2 ? null : "";
+      const skip = !isActive() ? "off" : !squareGrid() ? "not a square grid" : c?.ignoreWalls ? "Foundry asked to ignore walls" : !Array.isArray(waypoints) || waypoints.length < 2 ? "fewer than two waypoints" : "";
       if (skip !== "") {
         if (skip && !state.logged.has(skip)) {
           state.logged.add(skip);
@@ -478,6 +490,7 @@ defineFeature({
           } catch (err) {
             console.error(`${MODULE_ID} | Pathfinding failed.`, err);
           }
+          if (CONFIG.debug?.lucd20Pathfinding) console.log(`${MODULE_ID} | Pathfinding result`, path ? path.map(w => `${w.x},${w.y}`).join(" → ") : "no route (Foundry's own path used)");
           if (path) return resolve(path);
           // No route found (or an error): Foundry's own result.
           const fallback = original(waypoints, options);

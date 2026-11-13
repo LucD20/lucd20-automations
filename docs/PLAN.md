@@ -64,7 +64,7 @@ under a labelled sub-section (e.g. "PF2e").
 💬 Chat                 Chat Pins · Damage Log · Describe
 🗺️ Tokens & Placement   Multi-Token Edit · Folder Drop · Paused Movement Notice
                           · Active Effect Highlight · Riding · Token Scatter · Flying Tokens
-                          · Token Tooltip
+                          · Token Tooltip · Pathfinding
 🚪 Doors                Door Icon Size · Secret Doors · Locked Door Alert (+ PF2e lock options)
 🎬 Scenes & Sound       Scene Navigation · Scene Palette · Hidden Track Names
 👁️ GM Vision            GM Vision Mode · Out-of-Sight Outlines
@@ -75,12 +75,8 @@ under a labelled sub-section (e.g. "PF2e").
 ```
 
 Every feature of the next pass (§6) is built (v0.14.0–v0.20.0). Doors and
-Scenes & Sound sit before Player Settings. Third pass (§7), greyed out until
-built:
-
-```
-🗺️ Tokens & Placement   + Pathfinding
-```
+Scenes & Sound sit before Player Settings. Every feature of the third pass
+(§7) is built (v0.21.0–v0.28.0).
 
 ---
 
@@ -476,10 +472,17 @@ data browser, import. Code: `scripts/features/token-tooltip/`.
      `data`, `_token`, as TTA's functions (`Ray` provided).
   A row is **hidden when its value or any block is empty / null / undefined /
   NaN** (no more null-check boilerplate). `{value, max}` objects show as
-  `value/max`. Helpers: `distance()` (from your controlled token, else your
-  character's: PF2e `token.distanceTo`, else edge-to-edge with elevation and
-  the scene's diagonal rule, adjacent = 1 square), `hpStatus(v, max)`
-  (Healthy / Grazed / Bloodied / Critical / Ø), `signed(n)`. Assignments stay
+  `value/max`. **Helpers** (v0.28.0, owner: "make the expression easier",
+  so common rows are one short call; listed with live examples on the
+  editor's **Helpers** tab, click to insert): `hp(@attributes.hp [, "nice"])`
+  (value, "(temp)", Ø at 0, the owner's "Nice" at 69 %),
+  `hpStatus(@attributes.hp [, "nice"])` (Healthy / Grazed / Bloodied /
+  Critical / Ø), `dc(@saves.will.value)` (+10, hidden when missing),
+  `speed("fly")` (PF2e, hidden when absent), `fraction(@x)`, `distance()`
+  (from your controlled token, else your character's: PF2e
+  `token.distanceTo`, else edge-to-edge with elevation and the scene's
+  diagonal rule, adjacent = 1 square), `signed(n)`. The presets use them
+  (`{hp(@attributes.hp, "nice")}` instead of the five-line expression). Assignments stay
   in a per-evaluation sandbox (no globals leak).
 - **Presets** (Q24, from the owner's TTA exports): PF2e (HP with temp and the
   owner's "Nice" at 69 %, AC, hero points, save/Perception/Stealth/Athletics
@@ -488,6 +491,7 @@ data browser, import. Code: `scripts/features/token-tooltip/`.
   adjacent, power points, size, scale), Wrath & Glory (wounds, shock, faith,
   defence, resilience, speed, passive awareness, corruption, wrath), and a
   generic one. Pro-only icons swapped for Free look-alikes.
+- Hidden while a drag on the map is in progress (v0.28.0: it froze in place).
 - Never leaks: only tokens this user can see; rows filtered per user.
   Values are written by the GM and run on every client (as TTA's functions).
 - Settings: border colour · text size (per player).
@@ -503,6 +507,37 @@ data browser, import. Code: `scripts/features/token-tooltip/`.
   (`tta-import.js`: GM-only → gm, owned → owner, owned + friendly →
   friendly, also neutral/hostile → all, players-only → others; types from
   where each appeared). **Reset to defaults**. Nothing is saved until Save.
+
+#### Pathfinding — `pathfinding`
+*Replaces Wayfinder.* ✅ v0.28.0 · square grids only (Q27).
+- While dragging a token, Foundry's ruler shows the **cheapest route around
+  walls and closed doors** (open doors are passable); your own waypoints are
+  kept and each leg is routed. Wraps `CONFIG.Token.objectClass.prototype.
+  findMovementPath` with V14's `{ result, promise, cancel }` contract
+  (Wayfinder's, MIT, was the reference). Off on gridless/hex scenes and when
+  Foundry asks to ignore walls or cost; if no route is found, Foundry's own
+  result is used.
+- **Per-player toggle** in Token controls (route icon), on by default (Q26).
+- **Cost** (owner, Q29): steps per the scene's diagonal rule (PF2e 5/10/5
+  with the parity carried from the movement history); **difficult terrain**
+  (regions with a movement-cost behaviour; system behaviours that mark
+  difficult terrain) costs its multiplier (+0.25 so equal routes avoid it) —
+  **hold T** while dragging to ignore terrain; squares **next to a visible
+  enemy** (opposite disposition, not defeated; no reach/reaction logic, on
+  purpose) cost +4 squares to pass through, except the destination —
+  **hold Q** to ignore. Only tokens this user can see count, so nothing
+  leaks. Note: T is also Foundry's target key.
+- **Players only route through explored or visible areas** (Q28):
+  `canvas.fog.isPointExplored` if V14 has it, else the explored fog texture is
+  read once per drag (Wayfinder's approach), plus what's visible now. The GM
+  routes anywhere.
+- Plain-JS A* with a binary heap on grid cells (state = cell + diagonal
+  parity), token footprint, walls in a bucket grid (a wall end on the move
+  blocks too, so diagonals can't slip through corners), collinear points
+  dropped. Cached per drag; rebuilt on wall/region/token changes. 60 × 60
+  maze ≈ 50 ms in the harness.
+- Settings: avoid difficult terrain · avoid squares next to enemies ·
+  players: explored areas only (all on).
 
 #### Paused Movement Notice — `pauseNotifier`
 *Replaces Pause Notifier.* ✅ v0.17.0 · GM only, no options.
@@ -806,7 +841,7 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 | 22 | Token Scatter | ✅ v0.24.0; badge dropped, flyers spread + Flying Tokens v0.25.0 |
 | 23 | Token Tooltip: display + presets | ✅ v0.26.0 |
 | 24 | Token Tooltip editor, data browser, TTA import | ✅ v0.27.0 |
-| 25 | Pathfinding | §7 |
+| 25 | Pathfinding; tooltip helpers + hide while dragging | ✅ v0.28.0 |
 
 ---
 
@@ -1044,7 +1079,7 @@ Source notes (from reading each module's code, Nov 2026):
 | 22 | Token Scatter + stack badge | ✅ v0.24.0 (spec in §3) |
 | 23 | Token Tooltip: display + PF2e presets | ✅ v0.26.0 (spec in §3) |
 | 24 | Token Tooltip: editor + data browser | ✅ v0.27.0 (spec in §3) |
-| 25 | Pathfinding | last: most API risk |
+| 25 | Pathfinding | ✅ v0.28.0 (spec in §3) |
 
 Each phase: ask its questions → build → harness test → minor version → owner
 tests.
@@ -1068,9 +1103,9 @@ tests.
 | Q24 | Token Tooltip | PF2e default rows and who sees them? | ✅ Ported from the owner's TTA exports (PF2e, SWADE, Wrath & Glory). |
 | Q25 | Token Tooltip | No expressions at all? | ✅ Owner is fine with expressions if intuitive: TTA-compatible expressions + data browser (phase 24). |
 | Q26b | Token Tooltip | Import from Token Tooltip Alt? | ✅ Yes (built v0.27.0). |
-| Q26 | Pathfinding | Always on, or a per-player toggle in Token controls? | Toggle, on by default. |
-| Q27 | Pathfinding | Do you use hex maps? | Square first; hex only if you use them. |
-| Q28 | Pathfinding | Players route only through explored/visible areas? | Yes (otherwise the path leaks the map). |
-| Q29 | Pathfinding | Avoid difficult terrain when searching? | Not at first; the ruler still shows the cost. |
+| Q26 | Pathfinding | Always on, or a per-player toggle in Token controls? | ✅ Decided: toggle. |
+| Q27 | Pathfinding | Do you use hex maps? | ✅ No: square grids only. |
+| Q28 | Pathfinding | Players route only through explored/visible areas? | ✅ Decided: explored only. |
+| Q29 | Pathfinding | Avoid difficult terrain when searching? | ✅ Decided: yes when there's a better path; also avoid squares next to enemies; hold Q to ignore enemies, T to ignore terrain. |
 | Q30 | Token Scatter | Flyers: stack badge + strip of portraits + hold-to-fan key OK? | ✅ Built with key Z (v0.24.0), then dropped by the owner (v0.25.0): flyers just spread too, plus Flying Tokens. |
 | Q31 | Token Scatter | Per player, on by default? | ✅ Decided: yes. |

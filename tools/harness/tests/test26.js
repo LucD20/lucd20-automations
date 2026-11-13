@@ -66,6 +66,23 @@ const out = __dirname;
   assert.strictEqual(await page.$eval(`${last} textarea[name="value"]`, e => e.value), "Lvl {@details.level.value}", "inserted as a block");
   assert.strictEqual(await page.$eval(`${last} .tt-preview`, e => e.textContent), "Lvl 5");
   await page.screenshot({ path: `${out}/p24-browser.png` });
+  // Helpers tab: list with live examples; click inserts into the focused row
+  await page.click('.lucd20-tooltip-editor .tt-tab[data-tab="helpers"]');
+  await page.waitForTimeout(50);
+  const helpers = await page.$$eval(".lucd20-tooltip-editor .tt-helper", e => e.map(x => x.innerText.replace(/\s+/g, " ").trim()));
+  console.log("helpers:", helpers.slice(0, 3));
+  assert.ok(helpers[0].startsWith("hp(@attributes.hp)") && helpers[0].includes("→ 62"), "hp helper with live example");
+  await page.click('.lucd20-tooltip-editor [data-action="add"]');
+  await page.waitForTimeout(50);
+  await page.focus('.lucd20-tooltip-editor .tt-row:last-child textarea[name="value"]');
+  await page.click('.lucd20-tooltip-editor .tt-helper[data-index="2"]');
+  await page.waitForTimeout(50);
+  assert.strictEqual(await page.$eval(".lucd20-tooltip-editor .tt-row:last-child textarea", e => e.value), "{hpStatus(@attributes.hp)}");
+  assert.strictEqual(await page.$eval(".lucd20-tooltip-editor .tt-row:last-child .tt-preview", e => e.textContent), "Healthy");
+  await page.screenshot({ path: `${out}/p24-helpers.png` });
+  await page.click('.lucd20-tooltip-editor .tt-row:last-child [data-action="remove"]');
+  await page.click('.lucd20-tooltip-editor .tt-tab[data-tab="data"]');
+  await page.waitForTimeout(50);
   // Types chips: turn off npc for the new row
   await page.click(`${last} .tt-type[data-type="npc"]`);
   await page.waitForTimeout(50);

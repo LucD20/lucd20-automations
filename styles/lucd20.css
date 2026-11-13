@@ -2227,3 +2227,20 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-tooltip-editor .tt-path { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lucd20-tooltip-editor .tt-val { flex: none; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ll-accent-text); }
 .lucd20-tooltip-editor .tt-footer-gap { flex: 1; }
+
+.lucd20-tooltip-editor .tt-tabs { display: flex; gap: 2px; padding: 6px 6px 0; border-bottom: 1px solid var(--ll-border); }
+.lucd20-tooltip-editor button.tt-tab {
+  flex: 1; width: auto; height: auto; min-height: 0; margin: 0; padding: 4px 6px;
+  border: 1px solid transparent; border-bottom: none; border-radius: 4px 4px 0 0; background: none; color: var(--ll-text-muted); font-size: 12px;
+}
+.lucd20-tooltip-editor button.tt-tab.on { border-color: var(--ll-border); background: var(--ll-bg-raised); color: var(--ll-text); }
+.lucd20-tooltip-editor .tt-tabs + .tt-browser-head, .lucd20-tooltip-editor .tt-tabs + .tt-browser-hint { margin-top: 6px; }
+.lucd20-tooltip-editor .tt-helper-list { margin: 0; padding: 0 4px 6px; list-style: none; }
+.lucd20-tooltip-editor button.tt-helper {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 100%; height: auto; min-height: 0; margin: 0 0 4px;
+  padding: 5px 6px; border: 1px solid var(--ll-border); border-radius: 4px; background: var(--ll-bg-raised); color: var(--ll-text); text-align: left;
+}
+.lucd20-tooltip-editor button.tt-helper:hover { border-color: var(--ll-accent-border); }
+.lucd20-tooltip-editor .tt-helper code { font-family: "Fira Mono", Consolas, monospace; font-size: 12px; color: var(--ll-accent-text); background: none; border: none; padding: 0; }
+.lucd20-tooltip-editor .tt-helper-desc { font-size: 12px; color: var(--ll-text-muted); white-space: normal; }
+.lucd20-tooltip-editor .tt-helper-example { font-size: 12px; font-weight: bold; }

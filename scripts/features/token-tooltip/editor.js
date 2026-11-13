@@ -1,5 +1,5 @@
 import { MODULE_ID, localize } from "../../core/constants.js";
-import { evaluate, clearCache } from "./expressions.js";
+import { evaluate, clearCache, HELPERS } from "./expressions.js";
 import { presetFor } from "./presets.js";
 import { importTTA } from "./tta-import.js";
 
@@ -77,7 +77,9 @@ export class TooltipEditor extends ApplicationV2 {
       save: TooltipEditor.#onSave,
       cancel: TooltipEditor.#onCancel,
       toggleType: TooltipEditor.#onToggleType,
-      pick: TooltipEditor.#onPick
+      pick: TooltipEditor.#onPick,
+      tab: TooltipEditor.#onTab,
+      helper: TooltipEditor.#onHelper
     }
   };
 
@@ -92,6 +94,7 @@ export class TooltipEditor extends ApplicationV2 {
     this.rows = foundry.utils.deepClone(config?.rows ?? []);
     this.showBrowser = true;
     this.search = "";
+    this.tab = "data"; // side panel: "data" or "helpers"
     this.focused = 0; // row index the data browser inserts into
   }
 
@@ -136,6 +139,17 @@ export class TooltipEditor extends ApplicationV2 {
       ${entries.length > shown.length ? `<p class="tt-browser-more">${esc(localize("LUCD20.TokenTooltip.More", { count: entries.length - shown.length }))}</p>` : ""}`;
   }
 
+  helpersHTML(token) {
+    return `<ul class="tt-helper-list">${HELPERS.map((h, i) => {
+      const example = token ? evaluate(h.insert, token) : undefined;
+      return `<li><button type="button" class="tt-helper" data-action="helper" data-index="${i}">
+        <code>${esc(h.sig)}</code>
+        <span class="tt-helper-desc">${esc(localize(`LUCD20.TokenTooltip.Helper.${h.key}`))}</span>
+        ${example !== undefined ? `<span class="tt-helper-example">→ ${esc(example)}</span>` : ""}
+      </button></li>`;
+    }).join("")}</ul>`;
+  }
+
   async _renderHTML() {
     const token = previewToken();
     const types = actorTypes();
@@ -151,9 +165,16 @@ export class TooltipEditor extends ApplicationV2 {
           </div>
           ${this.showBrowser ? `
           <aside class="tt-browser">
+            <nav class="tt-tabs">
+              <button type="button" class="tt-tab ${this.tab === "data" ? "on" : ""}" data-action="tab" data-tab="data">${icon("fa-sitemap")} ${esc(localize("LUCD20.TokenTooltip.TabData"))}</button>
+              <button type="button" class="tt-tab ${this.tab === "helpers" ? "on" : ""}" data-action="tab" data-tab="helpers">${icon("fa-wand-magic-sparkles")} ${esc(localize("LUCD20.TokenTooltip.TabHelpers"))}</button>
+            </nav>
+            ${this.tab === "data" ? `
             <div class="tt-browser-head">${icon("fa-magnifying-glass")}<input type="search" name="search" value="${esc(this.search)}" placeholder="${esc(localize("LUCD20.TokenTooltip.SearchData"))}"></div>
             <p class="tt-browser-hint">${esc(localize("LUCD20.TokenTooltip.BrowserHint"))}</p>
-            <div class="tt-browser-body">${this.browserHTML(token)}</div>
+            <div class="tt-browser-body">${this.browserHTML(token)}</div>` : `
+            <p class="tt-browser-hint">${esc(localize("LUCD20.TokenTooltip.HelpersHint"))}</p>
+            <div class="tt-browser-body">${this.helpersHTML(token)}</div>`}
           </aside>` : ""}
         </div>
         <footer class="lucd20-loot-footer">
@@ -297,6 +318,26 @@ export class TooltipEditor extends ApplicationV2 {
       const insert = inBlock ? `@${path}` : `{@${path}}`;
       row.value = row.value.slice(0, a) + insert + row.value.slice(b);
     } else row.value += ` {@${path}}`;
+    this.render();
+  }
+
+  static #onTab(event, target) {
+    this.tab = target.dataset.tab === "helpers" ? "helpers" : "data";
+    this.render();
+  }
+
+  /** Insert a helper: replaces an empty value, else goes in at the cursor. */
+  static #onHelper(event, target) {
+    const helper = HELPERS[Number(target.dataset.index)];
+    const row = this.rows[this.focused];
+    if (!helper || !row) return;
+    const textarea = this.element.querySelector(`.tt-row[data-index="${this.focused}"] textarea[name="value"]`);
+    if (!row.value?.trim()) row.value = helper.insert;
+    else if (textarea && typeof textarea.selectionStart === "number") {
+      const { selectionStart: a, selectionEnd: b } = textarea;
+      row.value = row.value.slice(0, a) + helper.insert + row.value.slice(b);
+    } else row.value += ` ${helper.insert}`;
+    clearCache();
     this.render();
   }
 

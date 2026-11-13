@@ -22,7 +22,7 @@ import { localize } from "../../core/constants.js";
 
 export const CONFIG_KEY = "tokenTooltipConfig";
 
-const state = { feature: null, el: null, token: null };
+const state = { feature: null, el: null, token: null, dragging: false };
 
 /** The world's rows: saved config, else the system's preset. */
 export function tooltipConfig() {
@@ -110,7 +110,7 @@ function position() {
 }
 
 function show(token) {
-  if (!token?.actor || !token.visible) return hide();
+  if (state.dragging || !token?.actor || !token.visible) return hide();
   const rows = tooltipRows(token);
   if (!rows.length) return hide();
   const el = panel();
@@ -177,6 +177,22 @@ defineFeature({
       if (doc === state.token?.document) hide();
     });
     feature.on("canvasTearDown", hide);
+    // Hidden while dragging on the map (v0.28.0: it froze in place during a drag).
+    const down = event => {
+      if (event.button === 0 && event.target === canvas?.app?.view) {
+        state.dragging = true;
+        hide();
+      }
+    };
+    const up = () => {
+      state.dragging = false;
+    };
+    document.addEventListener("pointerdown", down, true);
+    document.addEventListener("pointerup", up, true);
+    feature.onCleanup(() => {
+      document.removeEventListener("pointerdown", down, true);
+      document.removeEventListener("pointerup", up, true);
+    });
     feature.onCleanup(() => {
       hide();
       state.el?.remove();

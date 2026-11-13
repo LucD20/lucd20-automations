@@ -11,14 +11,12 @@
  *   types: actor types it applies to ([] = all)
  */
 
-const HP_NUMBERS =
-  "{hp=<attributes.hp.value>; hpm=<attributes.hp.max>; hpt=<attributes.hp.temp> || 0; " +
-  "hp == 0 ? \"Ø\" : hp == floor(hpm*0.69) ? (hpt ? concat(\"Nice (\", hpt, \")\") : \"Nice\") : hpt ? concat(hp, \" (\", hpt, \")\") : hp}";
-const HP_STATUS =
-  "{hp=<attributes.hp.value>; hpm=<attributes.hp.max>; " +
-  "hp <= 0 ? \"Ø\" : hp == floor(hpm*0.69) || hp == 69 ? \"Nice\" : hpStatus(hp, hpm)}";
-const DISTANCE = "{d=distance(); d === null ? \"\" : concat(\"~\", ceil(d))}";
-const speed = type => `{<movement.speeds.${type}.value> || ""}`;
+// v0.28.0: the helpers make these one short call each (same results as the owner's TTA expressions).
+const HP_NUMBERS = '{hp(@attributes.hp, "nice")}';
+const HP_STATUS = '{hpStatus(@attributes.hp, "nice")}';
+const DISTANCE = "~{ceil(distance())}";
+const speed = type => `{speed("${type}")}`;
+const dc = path => `{dc(@${path})}`;
 
 const CREATURES = ["character", "npc", "familiar", "vehicle"];
 
@@ -29,12 +27,12 @@ export const PRESETS = {
       { icon: "fa-heart", color: "#cd1818", value: HP_STATUS, who: "others", types: ["npc", "hazard", "familiar"] },
       { icon: "fa-shield-halved", color: "#74a2be", value: "attributes.ac.value", who: "owner", types: [...CREATURES, "hazard"] },
       { icon: "fa-star", color: "#f2df07", value: "resources.heroPoints", who: "owner", types: ["character"] },
-      { icon: "fa-chess-rook", color: "#c8621e", value: "{<saves.fortitude.value> ? <saves.fortitude.value> + 10 : \"\"}", who: "gm", types: [] },
-      { icon: "fa-person-running", color: "#2fbc6c", value: "{<saves.reflex.value> ? <saves.reflex.value> + 10 : \"\"}", who: "gm", types: [] },
-      { icon: "fa-brain", color: "#cd1dbf", value: "{<saves.will.value> ? <saves.will.value> + 10 : \"\"}", who: "gm", types: [] },
-      { icon: "fa-eye", color: "#369fba", value: "{<perception.value> + 10}", who: "gm", types: ["npc", "familiar"] },
-      { icon: "fa-eye-slash", color: "#8661b3", value: "{<skills.stealth.value> + 10}", who: "gm", types: ["npc", "hazard", "familiar"] },
-      { icon: "fa-hand-fist", color: "#a3430f", value: "{<skills.athletics.value> + 10}", who: "gm", types: ["character", "npc", "familiar"] },
+      { icon: "fa-chess-rook", color: "#c8621e", value: dc("saves.fortitude.value"), who: "gm", types: [] },
+      { icon: "fa-person-running", color: "#2fbc6c", value: dc("saves.reflex.value"), who: "gm", types: [] },
+      { icon: "fa-brain", color: "#cd1dbf", value: dc("saves.will.value"), who: "gm", types: [] },
+      { icon: "fa-eye", color: "#369fba", value: dc("perception.value"), who: "gm", types: ["npc", "familiar"] },
+      { icon: "fa-eye-slash", color: "#8661b3", value: dc("skills.stealth.value"), who: "gm", types: ["npc", "hazard", "familiar"] },
+      { icon: "fa-hand-fist", color: "#a3430f", value: dc("skills.athletics.value"), who: "gm", types: ["character", "npc", "familiar"] },
       { icon: "fa-shoe-prints", color: "#999999", value: speed("land"), who: "owner", types: CREATURES },
       { icon: "fa-worm", color: "#999999", value: speed("burrow"), who: "owner", types: CREATURES },
       { icon: "fa-person-hiking", color: "#999999", value: speed("climb"), who: "owner", types: CREATURES },

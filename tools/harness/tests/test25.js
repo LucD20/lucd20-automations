@@ -79,6 +79,11 @@ async function setup(page, { gm }) {
   // Pan: follows
   await page.evaluate(() => { canvas.stage.position.set(-100, 0); canvas.app.renderer.render(canvas.stage); Hooks.callAll("canvasPan", canvas, {}); });
   assert.strictEqual(await page.$eval("#lucd20-token-tooltip", e => Math.round(e.getBoundingClientRect().left)), 508, "follows the pan");
+  // Dragging on the map hides it, and it doesn't come back until the button is released
+  await page.evaluate(() => { const v = canvas.app.view; v.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0 })); Hooks.callAll("hoverToken", __t.goblin, true); });
+  assert.ok(!(await page.isVisible("#lucd20-token-tooltip")), "hidden while dragging");
+  await page.evaluate(() => { document.dispatchEvent(new PointerEvent("pointerup", { bubbles: true })); Hooks.callAll("hoverToken", __t.goblin, true); });
+  assert.ok(await page.isVisible("#lucd20-token-tooltip"), "back after the drag");
   // Hover out → hidden
   await page.evaluate(() => Hooks.callAll("hoverToken", __t.goblin, false));
   assert.ok(!(await page.isVisible("#lucd20-token-tooltip")), "hidden on hover out");

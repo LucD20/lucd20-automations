@@ -17,8 +17,11 @@
  *
  * A row is hidden when its value (or any {…} block) is empty, null,
  * undefined or NaN, so "hide when there's nothing" needs no extra code.
- * Objects with value/max show as "value/max". Helpers: distance() (from your
- * token, in scene units), hpStatus(value, max), signed(n).
+ * Objects with value/max show as "value/max". Helpers (v0.28.0, so common
+ * rows are one short call): hp(@attributes.hp [, "nice"]),
+ * hpStatus(@attributes.hp [, "nice"]), dc(@saves.will.value),
+ * speed("fly") (PF2e), fraction(@x), distance() (from your token, in scene
+ * units), signed(n). HELPERS below lists them for the editor.
  *
  * Rows are written by the GM (a world setting) and run on every client, like
  * Token Tooltip Alt's functions.
@@ -48,14 +51,52 @@ function typeOf(x) {
   return t === "object" ? "Object" : t;
 }
 
-function hpStatus(value, max) {
-  if (!(max > 0)) return "";
+/** "nice" option: the owner's joke, "Nice" at 69 % of max HP (or exactly 69). */
+function isNice(value, max) {
+  return value === Math.floor(max * 0.69) || value === 69;
+}
+
+/** hp(@attributes.hp [, "nice"]) → "62", "62 (5)" with temp HP, "Ø" at 0. */
+function hp(obj, option) {
+  if (!obj || typeof obj !== "object") return obj;
+  const { value, max } = obj;
+  const temp = Number(obj.temp) || 0;
+  if (typeof value !== "number") return undefined;
+  if (value <= 0 && !temp) return "Ø";
+  const base = option === "nice" && max > 0 && isNice(value, max) ? "Nice" : String(value);
+  return temp ? `${base} (${temp})` : base;
+}
+
+/** hpStatus(@attributes.hp) or hpStatus(value, max) → Healthy / Grazed / Bloodied / Critical / Ø. */
+function hpStatus(value, max, option) {
+  if (value && typeof value === "object") return hpStatus(value.value, value.max, max);
+  if (!(max > 0) || typeof value !== "number") return undefined;
   if (value <= 0) return "Ø";
+  if (option === "nice" && isNice(value, max)) return "Nice";
   const r = value / max;
   if (r < 0.26) return "Critical";
   if (r < 0.51) return "Bloodied";
   if (r < 0.76) return "Grazed";
   return "Healthy";
+}
+
+/** dc(@saves.will.value) → the modifier + 10 (hidden when there's no modifier). */
+function dc(mod) {
+  if (mod && typeof mod === "object") mod = mod.value ?? mod.totalModifier ?? mod.mod;
+  return typeof mod === "number" ? mod + 10 : undefined;
+}
+
+/** PF2e speed("fly"): that speed, hidden when the creature doesn't have it. */
+function speed(type, actor) {
+  const sys = actor?.system ?? {};
+  const v = sys.movement?.speeds?.[type]?.value ?? (type === "land" ? sys.attributes?.speed?.total ?? sys.attributes?.speed?.value : sys.attributes?.speed?.otherSpeeds?.find?.(s => s.type === type)?.value);
+  return v || undefined;
+}
+
+/** "value/max" from an object (or two numbers). */
+function fraction(value, max) {
+  if (value && typeof value === "object") return fraction(value.value, value.max);
+  return typeof value === "number" ? (typeof max === "number" ? `${value}/${max}` : String(value)) : undefined;
 }
 
 const signed = n => (typeof n === "number" && !Number.isNaN(n) ? (n >= 0 ? `+${n}` : `${n}`) : n);
@@ -111,8 +152,12 @@ function baseScope(token) {
     _token: ref,
     Ray,
     __get: path => getPath(actor?.system, path),
-    distance: () => tokenDistance(ref, token),
+    distance: () => tokenDistance(ref, token) ?? undefined,
+    hp,
     hpStatus,
+    dc,
+    speed: type => speed(type, actor),
+    fraction,
     signed,
     concat: (...parts) => parts.map(p => (p === null || p === undefined ? "" : String(p))).join(""),
     string: x => (x === null || x === undefined ? "" : String(x)),
@@ -260,3 +305,17 @@ export function evaluate(value, token) {
 export function clearCache() {
   cache.clear();
 }
+
+/** For the editor's helper list: signature, what it does, what to insert. */
+export const HELPERS = [
+  { sig: "hp(@attributes.hp)", insert: "{hp(@attributes.hp)}", key: "hp" },
+  { sig: 'hp(@attributes.hp, "nice")', insert: '{hp(@attributes.hp, "nice")}', key: "hpNice" },
+  { sig: "hpStatus(@attributes.hp)", insert: "{hpStatus(@attributes.hp)}", key: "hpStatus" },
+  { sig: "dc(@saves.will.value)", insert: "{dc(@saves.will.value)}", key: "dc" },
+  { sig: 'speed("fly")', insert: '{speed("fly")}', key: "speed" },
+  { sig: "fraction(@resources.focus)", insert: "{fraction(@resources.focus)}", key: "fraction" },
+  { sig: "distance()", insert: "~{ceil(distance())}", key: "distance" },
+  { sig: "signed(@perception.value)", insert: "{signed(@perception.value)}", key: "signed" },
+  { sig: "a ? b : c", insert: '{@x > 0 ? @x : ""}', key: "ternary" },
+  { sig: "return …", insert: "return data.attributes.hp.value;", key: "script" }
+];

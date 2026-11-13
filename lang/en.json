@@ -462,7 +462,21 @@
       },
       "pathfinding": {
         "Name": "Pathfinding",
-        "Hint": "Dragging a token routes it around walls along the shortest path."
+        "Hint": "Dragging a token routes it around walls along the cheapest path, avoiding difficult terrain and squares next to enemies when there's a better way. Hold Q while dragging to ignore enemies, T to ignore terrain. Toggle it in the Token controls.",
+        "Setting": {
+          "avoidTerrain": {
+            "Name": "Avoid difficult terrain",
+            "Hint": "Regions with a movement cost count what they cost. Hold T while dragging to ignore."
+          },
+          "avoidThreats": {
+            "Name": "Avoid squares next to enemies",
+            "Hint": "Squares next to a visible enemy cost extra (no reach or reaction checks). Hold Q while dragging to ignore."
+          },
+          "exploredOnly": {
+            "Name": "Players: explored areas only",
+            "Hint": "Players' routes only go through explored or visible areas, so they can't reveal the map."
+          }
+        }
       },
       "doorIconSize": {
         "Name": "Door Icon Size",
@@ -911,7 +925,7 @@
       "RowsSaved": "{count} rows (your own).",
       "RowsPreset": "{count} rows (system defaults).",
       "EditorTitle": "Token Tooltip rows",
-      "EditorHint": "Value: a data path, text with {…} blocks (@path or &lt;path&gt; reads a value), or a script with return. Empty values hide the row. Click a value in the data browser to insert it.",
+      "EditorHint": "Value: a data path, text with {…} blocks (@path reads a value; helpers like hp(@attributes.hp) on the Helpers tab), or a script with return. Empty values hide the row.",
       "NoToken": "no token selected",
       "SelectToken": "Select a token to browse its data.",
       "NoRows": "No rows yet. Add one, import, or reset to the defaults.",
@@ -940,7 +954,25 @@
         "friendly": "Owners + on friendly tokens",
         "others": "Players who don't own it",
         "all": "Everyone"
+      },
+      "TabData": "Data",
+      "TabHelpers": "Helpers",
+      "HelpersHint": "Click to insert into the row you're editing. The arrow shows the result on the selected token.",
+      "Helper": {
+        "hp": "HP: value, \"(temp)\" when there is temp HP, Ø at 0.",
+        "hpNice": "Same, with \"Nice\" at 69 %.",
+        "hpStatus": "Healthy / Grazed / Bloodied / Critical / Ø (good for players on NPCs).",
+        "dc": "A modifier as a DC (+10). Hidden when missing.",
+        "speed": "PF2e: a speed (land, fly, swim, climb, burrow). Hidden when the creature doesn't have it.",
+        "fraction": "value/max of anything with a value and a max.",
+        "distance": "Distance from your token, rounded up.",
+        "signed": "A modifier with its sign (+7, −1).",
+        "ternary": "Show something only when a condition holds (\"\" hides the row).",
+        "script": "A JavaScript function body: token, actor, data, _token."
       }
+    },
+    "Pathfinding": {
+      "Tool": "Pathfinding (route around walls)"
     }
   }
 }

@@ -67,6 +67,7 @@ sets `game.system.id`.
 | `test27.js` | Pathfinding (25) |
 | `test28.js` | D&D 4e merge: loads in dnd4e, cards, settings map, API; nothing in PF2e (26) |
 | `test29.js` | D&D 4e Skill Challenges: rules engine, list, runner, rolls sent to players, chat cards, nothing secret saved or sent (29) |
+| `test30.js` | Skill Challenges: players' window and rolls, hidden skills, group checks, routes, stages, thresholds, editor (30) |
 
 For a new feature, copy the closest test, keep its mock setup and replace the
 checks.

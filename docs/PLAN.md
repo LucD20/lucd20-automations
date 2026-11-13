@@ -865,7 +865,7 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 | 24 | Token Tooltip editor, data browser, TTA import | ✅ v0.27.0 |
 | 25 | Pathfinding; tooltip helpers + hide while dragging | ✅ v0.28.0 |
 | 26–28 | Merge D&D 4e Combat Automation | §8 |
-| 29–30 | D&D 4e Skill Challenges | §9 (29: ✅ v0.31.0) |
+| 29–30 | D&D 4e Skill Challenges | ✅ v0.31.0, v0.32.0 (§9) |
 
 ---
 
@@ -1308,7 +1308,7 @@ adventure text into this repo).
 | # | Phase | Notes |
 |---|---|---|
 | 29 | Core: format, list, runner, counting, chat cards, saved state | ✅ v0.31.0; portraits, dice wait, Run button v0.31.1 |
-| 30 | Players' tracker, group checks, routes / stages, in-Foundry editor | questions first |
+| 30 | Players' window + rolls, hidden skills, group checks, routes, stages, thresholds, editor | ✅ v0.32.0 |
 
 ### 9.3 After the owner's first test (v0.31.1)
 
@@ -1325,7 +1325,37 @@ adventure text into this repo).
 - **Asked for phase 30**: a window for players with the skills and their
   descriptions (never DCs).
 
-### 9.4 Questions for the owner
+### 9.4 Phase 30 (v0.32.0): Q47–Q56, as recommended except Q48
 
-Q37–Q46 answered (all as recommended). Phase 30 questions are asked before
-building it.
+- **Players' window** (Q47–Q49): opens by itself when an open challenge
+  starts; a button at the bottom of their Journal tab reopens it while one
+  runs (a player who joins later only gets the button). Shows the name, the
+  tally and each visible skill with its `description` and a **difficulty
+  word** (owner's change to Q48: Easier / Easy / Medium / Hard / Harder, from
+  the DC and the challenge's level, or set per skill; can be switched off per
+  challenge with `hints`). No DCs, limits, GM notes, stages or thresholds.
+- **How players get it**: a second world setting `skillChallenge_public`,
+  written by the GM's client with `publicView()` (engine) for open, running
+  challenges only. Secret challenges are never in it.
+- **Player rolls** (Q50): Roll per skill for their own character; the GM's
+  client checks the request (owner, skill visible and not used up, nothing
+  else being rolled) and then sends the normal roll request. Per-run switch
+  in the runner (hand icon).
+- **Hidden skills** (Q51): `hidden: true`; eye button on the runner row.
+- **Group checks** (Q52): runner button; a preset from the data or up to
+  three typed skills with a DC. Every PC's player picks one of the skills
+  and rolls (the GM for absent players). Panel with each result, Skip, Count
+  now, Cancel. At least half succeed = 1 success, else 1 failure.
+- **Routes** (Q53): picked in the runner until the first roll; a route
+  overrides fields of listed skills, adds or removes skills.
+- **Stages** (Q54): shown in the runner; "Wrong stage −N" sets the modifier
+  for the next check, or the penalty is automatic when the stage lists its
+  skills. Players don't see stages.
+- **Other rules** (Q55): failure thresholds (text whispered to the GM when
+  reached), "successes needed" − / + in the runner, and a **modifier for the
+  next check** (covers bribes and similar).
+- **Editor** (Q56): pencil in the list and the runner, world pages only;
+  a form for everything except routes, which are edited as JSON in the same
+  window. "New challenge" in the list creates a journal entry and opens it.
+- Files: `skill-challenge-shared.mjs`, `-player.mjs`, `-editor.mjs` next to
+  the two from phase 29. Tests: `test29.js`, `test30.js`.

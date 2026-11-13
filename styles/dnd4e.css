@@ -394,3 +394,75 @@ button .d4ea-btn-gold { color: #e0b000; }
 .lucd20-loot-app .lucd20-sc-pcs button.pc:focus-visible { outline: 2px solid var(--ll-accent); outline-offset: 1px; }
 .lucd20-loot-app .lucd20-sc-pcs button.pc.active { background: rgba(238, 155, 58, 0.12); border-color: var(--ll-accent-border); color: var(--ll-text); font-weight: 600; }
 .lucd20-loot-app .lucd20-sc-pcs button.pc.active img { opacity: 1; border-color: var(--ll-accent); }
+
+/* Skill Challenges, phase 30: bars, group checks, players' window, editor */
+.lucd20-loot-app .lucd20-sc-bar { display: flex; flex: none; align-items: center; gap: 8px; min-height: 38px; padding: 4px 10px; border-bottom: 1px solid var(--ll-border); font-size: 13px; }
+.lucd20-loot-app .lucd20-sc-bar label,
+.lucd20-loot-app .lucd20-sc-bar .label { flex: none; margin: 0; color: var(--ll-text-muted); font-size: 12px; }
+.lucd20-loot-app .lucd20-sc-bar .grow { flex: 1; }
+.lucd20-loot-app .lucd20-sc-bar select { flex: 1; min-width: 0; width: auto; height: 28px; margin: 0; }
+.lucd20-loot-app .lucd20-sc-bar input[type="number"] { flex: none; width: 54px; height: 28px; margin: 0; text-align: center; }
+.lucd20-loot-app .lucd20-sc-bar input[type="number"].set { border-color: var(--ll-accent); color: var(--ll-accent-text); font-weight: 700; }
+.lucd20-loot-app .lucd20-sc-bar .needed { min-width: 18px; text-align: center; font-variant-numeric: tabular-nums; }
+.lucd20-loot-app button.ll-btn.on { border-color: var(--ll-accent); background: rgba(238, 155, 58, 0.2); color: var(--ll-accent-text); }
+.lucd20-loot-app .lucd20-sc-head .meta .buttons { display: inline-flex; gap: 4px; }
+.lucd20-loot-app .lucd20-sc-skill .chip.penalty { border-color: var(--ll-danger-border); color: var(--ll-danger-text); }
+.lucd20-loot-app .lucd20-sc-skill.concealed .name { font-style: italic; opacity: 0.75; }
+.lucd20-loot-app .lucd20-sc-notes.threshold { padding-left: 8px; border-left: 3px solid var(--ll-border-strong); }
+.lucd20-loot-app .lucd20-sc-notes.threshold.reached { border-left-color: #c2473d; color: var(--ll-text); }
+
+.lucd20-loot-app .lucd20-sc-group { flex: none; padding: 8px 10px; border-bottom: 1px solid var(--ll-border); background: var(--ll-bg-raised); font-size: 13px; }
+.lucd20-loot-app .lucd20-sc-group header { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.lucd20-loot-app .lucd20-sc-group header > i { color: var(--ll-accent-text); }
+.lucd20-loot-app .lucd20-sc-group .options { margin-left: auto; color: var(--ll-text-muted); font-size: 12px; }
+.lucd20-loot-app .lucd20-sc-group ol { margin: 6px 0; padding: 0; list-style: none; }
+.lucd20-loot-app .lucd20-sc-group li { display: flex; align-items: center; gap: 8px; min-height: 28px; }
+.lucd20-loot-app .lucd20-sc-group li strong { flex: 1; min-width: 0; }
+.lucd20-loot-app .lucd20-sc-group .muted { color: var(--ll-text-muted); }
+.lucd20-loot-app .lucd20-sc-group .success { color: #8fe0a6; }
+.lucd20-loot-app .lucd20-sc-group .failure { color: var(--ll-danger-text); }
+.lucd20-loot-app .lucd20-sc-group .buttons { display: flex; gap: 6px; }
+.lucd20-loot-app.lucd20-sc-dialog .window-content { padding: 12px; gap: 10px; overflow: visible; }
+.lucd20-loot-app .lucd20-sc-group-form { display: flex; flex-direction: column; gap: 8px; }
+.lucd20-loot-app .lucd20-sc-group-form .hint { color: var(--ll-text-muted); font-size: 12px; }
+.lucd20-loot-app .lucd20-sc-group-form .row { display: flex; align-items: center; gap: 8px; }
+.lucd20-loot-app .lucd20-sc-group-form .row > span { flex: none; width: 110px; color: var(--ll-text-muted); font-size: 12px; }
+.lucd20-loot-app .lucd20-sc-group-form .row select,
+.lucd20-loot-app .lucd20-sc-group-form .row input[type="text"] { flex: 1; min-width: 0; width: auto; height: 28px; margin: 0; }
+.lucd20-loot-app .lucd20-sc-group-form .row label { display: inline-flex; flex: none; align-items: center; gap: 6px; margin: 0; color: var(--ll-text-muted); font-size: 12px; }
+.lucd20-loot-app .lucd20-sc-group-form .row input[type="number"] { width: 54px; height: 28px; margin: 0; text-align: center; }
+
+/* Players' window */
+.lucd20-loot-app .lucd20-sc-public + .lucd20-sc-public { margin-top: 14px; }
+.lucd20-loot-app .lucd20-sc-public .lucd20-sc-head { margin: 10px 0 0; border: 1px solid var(--ll-border); border-radius: var(--ll-radius); }
+.lucd20-loot-app .lucd20-sc-public h3 { margin: 0; padding: 0; border: none; font-size: 16px; font-weight: 700; }
+.lucd20-loot-app .lucd20-sc-skill .chip.diff { font-weight: 600; }
+.lucd20-loot-app .lucd20-sc-skill .chip.diff.easier,
+.lucd20-loot-app .lucd20-sc-skill .chip.diff.easy { border-color: #3f8f57; color: #8fe0a6; }
+.lucd20-loot-app .lucd20-sc-skill .chip.diff.medium { border-color: var(--ll-accent-border); color: var(--ll-accent-text); }
+.lucd20-loot-app .lucd20-sc-skill .chip.diff.hard,
+.lucd20-loot-app .lucd20-sc-skill .chip.diff.harder { border-color: var(--ll-danger-border); color: var(--ll-danger-text); }
+.lucd20-sc-card .who li.success .outcome { color: #3f8f57; }
+.lucd20-sc-card .who li.failure .outcome { color: #c2473d; }
+
+/* Editor */
+.lucd20-loot-app .lucd20-sc-editor section { padding-top: 4px; }
+.lucd20-loot-app .lucd20-sc-editor .hint { margin: 0 0 6px; color: var(--ll-text-muted); font-size: 12px; }
+.lucd20-loot-app .lucd20-sc-editor .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
+.lucd20-loot-app .lucd20-sc-editor label.f { display: flex; flex-direction: column; gap: 3px; min-width: 0; margin: 0; }
+.lucd20-loot-app .lucd20-sc-editor label.f > span { color: var(--ll-text-muted); font-size: 11px; line-height: 1.2; }
+.lucd20-loot-app .lucd20-sc-editor label.f.wide { grid-column: 1 / -1; }
+.lucd20-loot-app .lucd20-sc-editor label.f.check { grid-column: span 2; flex-direction: row; align-items: center; gap: 8px; }
+.lucd20-loot-app .lucd20-sc-editor label.f.check > span { color: var(--ll-text); font-size: 13px; }
+.lucd20-loot-app .lucd20-sc-editor input[type="text"],
+.lucd20-loot-app .lucd20-sc-editor input[type="number"],
+.lucd20-loot-app .lucd20-sc-editor select { width: 100%; height: 28px; margin: 0; }
+.lucd20-loot-app .lucd20-sc-editor textarea { width: 100%; min-height: 44px; margin: 0; resize: vertical; font: inherit; }
+.lucd20-loot-app .lucd20-sc-editor textarea.routes { min-height: 110px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; }
+.lucd20-loot-app .lucd20-sc-editor .items { margin: 0 0 8px; padding: 0; list-style: none; }
+.lucd20-loot-app .lucd20-sc-editor .item { margin-bottom: 8px; padding: 8px; border: 1px solid var(--ll-border); border-radius: var(--ll-radius); background: var(--ll-bg-raised); }
+.lucd20-loot-app .lucd20-sc-editor .item > header { display: flex; align-items: center; gap: 8px; }
+.lucd20-loot-app .lucd20-sc-editor .item > header strong { flex: 1; min-width: 0; }
+.lucd20-loot-app .lucd20-sc-editor .item .tools { display: inline-flex; gap: 4px; }
+@container (max-width: 480px) { .lucd20-loot-app .lucd20-sc-editor .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.lucd20-loot-app .lucd20-sc-editor textarea { padding: 4px 6px; border: 1px solid var(--ll-border-strong); border-radius: var(--ll-radius); background: var(--ll-bg-sunken); color: var(--ll-text); }

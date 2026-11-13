@@ -1101,6 +1101,10 @@
     },
     "Pathfinding": {
       "Tool": "Pathfinding (route around walls)"
+    },
+    "DnD4e": {
+      "Migrated": "D&D 4e Combat Automation's data moved into LucD20 Automations: {texts} monster texts, {levels} power marks, {switches} switches, {docs} actors / effects / tokens / combatants / messages. You can disable the old module.",
+      "MigrationFailed": "LucD20 Automations: moving D&D 4e Combat Automation's data failed (see the console, F12). It will try again on the next load."
     }
   },
   "DND4EAUTO": {

@@ -1221,13 +1221,30 @@ What it has (from its code and README):
 - Smoke test `test28.js`: loads in dnd4e (13 cards, map, API, hooks) and
   nothing of it in PF2e.
 
+### 8.1c Done in phases 27–28 (v0.30.0)
+
+- `lang/pt-BR.json` (registered in `module.json`): the old module's
+  Portuguese (`DND4EAUTO`, plus its translations of the dnd4e system and
+  Fox's sheet: `DND4E`, `EFFECT`, `Fox4e`), the 4e cards and messages in
+  Portuguese. Everything else falls back to English. The "4e game language"
+  card (per player, off by default, reload) merges the system's and this
+  module's files for the chosen language, as before.
+- `migration.mjs`, once (world setting `dnd4eMigrated`), on the active GM:
+  old world data (monster texts, power marks) merged in; old world switches
+  onto the cards; flags under `dnd4e-combat-automation` copied to ours on
+  actors, their effects, tokens, unlinked tokens' effects, combatants and
+  chat messages (marked `migratedFrom4e`; old flags left in place). Each
+  player's old client options (localStorage) migrate on their own client,
+  once. A permanent notification says what moved. On failure it tries again
+  next load.
+
 ### 8.2 Build order
 
 | # | Phase | Notes |
 |---|---|---|
 | 26 | Move the code in, plumbing (module id, socket, settings → feature cards, API), styles, EN strings | ✅ v0.29.0 |
-| 27 | pt-BR translation + 4e game language | |
-| 28 | Migration of the old module's data | |
+| 27 | pt-BR translation + 4e game language | ✅ v0.30.0 |
+| 28 | Migration of the old module's data | ✅ v0.30.0 (with 27: both modules can't run together, so the data had to move before the owner switches) |
 
 ### 8.3 Questions for the owner
 

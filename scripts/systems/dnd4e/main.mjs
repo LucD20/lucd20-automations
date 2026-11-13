@@ -1,6 +1,7 @@
 import { MODULE_ID } from "./constants.mjs";
 import { registerSettings } from "./settings.mjs";
 import "./cards.mjs";
+import { registerMigration } from "./migration.mjs";
 import { registerSocket } from "./effects.mjs";
 import { actorFromSpeaker, log, waitForDice } from "./utils.mjs";
 import * as quarry from "./features/quarry.mjs";
@@ -42,6 +43,7 @@ Hooks.once("lucd20-automations.init", () => {
 	// Must run in "init": Foundry loads translations right after this hook.
 	registerGameLanguage();
 	registerSettings();
+	registerMigration();
 	registerHooks();
 	registerPreviewHooks();
 	registerBadgeHooks();

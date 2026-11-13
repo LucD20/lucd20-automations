@@ -1,0 +1,616 @@
+{
+  "DND4EAUTO": {
+    "Settings": {
+      "enableQuarry": {
+        "Name": "Automatizar Presa do Caçador",
+        "Hint": "Usar Presa do Caçador marca o inimigo visível mais próximo (ou seu alvo) e oferece o dano extra na janela de dano, uma vez por turno."
+      },
+      "enableCurse": {
+        "Name": "Automatizar Maldição do Bruxo",
+        "Hint": "Usar Maldição do Bruxo amaldiçoa o inimigo visível mais próximo (ou seu alvo) e oferece o dano extra na janela de dano, uma vez por turno. Bruxos do Pacto Estelar recebem Destino do Vácuo quando um inimigo amaldiçoado cai."
+      },
+      "enableRage": {
+        "Name": "Automatizar fúrias do Bárbaro",
+        "Hint": "Usar um poder de fúria coloca o bárbaro nessa fúria até o fim do encontro (encerrando a anterior) e oferece os bônus de dano que dependem da fúria."
+      },
+      "enableMarks": {
+        "Name": "Automatizar marcas",
+        "Hint": "Poderes como Marca Indireta aplicam a marca nos alvos atingidos. As marcas usam a condição de marca do sistema, então o -2 é aplicado pelo próprio dnd4e."
+      },
+      "enableCover": {
+        "Name": "Cobertura automática",
+        "Hint": "Calcula cobertura e cobertura superior (linhas de canto a canto) e marca na janela de ataque. Ataques de área não são automatizados."
+      },
+      "warnNotNearest": {
+        "Name": "Avisar quando o alvo não é o inimigo mais próximo",
+        "Hint": "Para Presa do Caçador e Maldição do Bruxo."
+      },
+      "coverPreview": {
+        "Name": "Linhas de prévia da cobertura",
+        "Hint": "Enquanto você mira um token, desenha as linhas de cobertura a partir do seu token. Só você vê."
+      },
+      "preloadIndexes": {
+        "Name": "Pré-carregar índices dos compêndios",
+        "Hint": "Carrega os índices dos compêndios em segundo plano quando o jogo abre, para a primeira ficha aberta não travar alguns segundos."
+      },
+      "debug": {
+        "Name": "Log de depuração",
+        "Hint": "Escreve mensagens de diagnóstico no console do navegador."
+      },
+      "gameLanguage": {
+        "Name": "Idioma do jogo 4e",
+        "Hint": "Idioma do sistema dnd4e (atributos, perícias, condições, rótulos da ficha) e deste módulo, independente do idioma da interface do Foundry. Textos que faltam na tradução ficam no idioma do Foundry. Requer recarregar.",
+        "Foundry": "Igual ao Foundry"
+      },
+      "actionTracker": {
+        "Name": "Rastreador de ações",
+        "Hint": "Controla ações padrão, de movimento, mínimas, imediatas e de oportunidade por turno. Usar um poder gasta a ação dele (com trocas). Mostra marcadores no Combat Tracker."
+      },
+      "actionPanel": {
+        "Name": "Abrir o painel de ações no combate",
+        "Hint": "Abre o painel flutuante de ações automaticamente quando um combate começa."
+      },
+      "actionWarnings": {
+        "Name": "Avisar ações gastas além do limite",
+        "Hint": "Mostra um aviso quando uma ação indisponível é usada (a ação acontece mesmo assim)."
+      },
+      "tokenBadges": {
+        "Name": "Selos de presa/maldição/marca nos tokens",
+        "Hint": "Mostra um selo grande e colorido com o retrato de quem marcou no canto superior direito do token."
+      },
+      "dockPips": {
+        "Name": "Marcadores de ação no Combat Tracker Dock",
+        "Hint": "Mostra os marcadores de ação em cada retrato do módulo Combat Tracker Dock, se ele estiver ativo."
+      },
+      "opportunityAttacks": {
+        "Name": "Avisos de ataque de oportunidade",
+        "Hint": "Quando um inimigo sai de um quadrado adjacente a uma criatura sem ajustar, ou faz um ataque à distância/de área ao lado dela, envia um cartão privado no chat a quem controla essa criatura, com um botão para o ataque de oportunidade."
+      },
+      "autoMoveActions": {
+        "Name": "Mover o token gasta ações de movimento",
+        "Hint": "No turno do combatente, arrastar o token gasta uma ação de movimento (deslocamento por ação; ajuste conta como ação de ajustar; usa a ação padrão quando necessário). Teletransporte, desfazer, investida e tokens de jogadores arrastados pelo mestre são ignorados."
+      },
+      "reactionPrompts": {
+        "Name": "Avisos de poderes com gatilho",
+        "Hint": "Oferece poderes com Gatilho (Precisão Élfica, Astúcia da Raposa, Assalto Furioso, Investida Célere, Cólera Infernal e qualquer poder, inclusive de monstros, com gatilho parecido) num cartão privado no chat quando o gatilho acontece."
+      },
+      "damageTargets": {
+        "Name": "Aplicar dano nos alvos do ataque",
+        "Hint": "Os cartões de dano ganham botões para aplicar o dano nos alvos do ataque original (cliques de jogadores são aplicados pelo mestre), nos tokens selecionados, e um botão para trocar o alvo."
+      },
+      "powerRiders": {
+        "Name": "Efeitos de poderes ao acertar",
+        "Hint": "Aplica Zombaria Malévola, Palavra Pavorosa, Maldição do Sonho Obscuro e Grito Inspirador nos alvos atingidos (com penalidades de ataque/defesa), cura aliados que acertam um alvo do Grito Inspirador e oferece o dano extra do Grande Trespassar."
+      },
+      "primeShot": {
+        "Name": "Tiro Primoroso",
+        "Hint": "+1 nas jogadas de ataque à distância de quem tem Tiro Primoroso quando nenhum aliado está mais perto do alvo."
+      },
+      "tempHpFeatures": {
+        "Name": "PV temporários de características",
+        "Hint": "Vigor da Fúria Sangrenta (automático quando seu ataque derruba um inimigo), Half-Orc Resilience (automático na primeira vez que você fica sangrando no encontro) e Virtude da Bravura (cartão para o bardo quando um aliado a até 5 quadrados deixa um inimigo sangrando ou o derruba)."
+      },
+      "classFeatures": {
+        "Name": "Regras de classe, raça e talentos",
+        "Hint": "Bloodhunt (+1 racial contra inimigos sangrando), Defensive Mobility (+2 de CA contra ataques de oportunidade), Shadow Walk (camuflagem depois de andar 3 quadrados), Rampage (ataque básico corpo a corpo grátis depois de um crítico) e Palavras de Amizade (+5 no próximo teste de Diplomacia)."
+      },
+      "sheetModHighlights": {
+        "Name": "Destacar defesas modificadas nas fichas",
+        "Hint": "Colore as defesas alteradas por efeitos temporários (vermelho = penalidade, verde = bônus) e lista os efeitos no tooltip."
+      },
+      "readableRolls": {
+        "Name": "Rolagens legíveis no chat",
+        "Hint": "Troca as variáveis da rolagem no chat (@wepAttack, @powerMod...) por nomes e valores, e mostra os modificadores automáticos do módulo."
+      },
+      "conditionalRiders": {
+        "Name": "Dano condicional e bônus de rolagem",
+        "Hint": "Cólera Infernal rola o dano de fogo; Radiância Atroz causa o dano extra quando o alvo se aproxima; Precisão Élfica rola de novo o último ataque; Astúcia da Raposa e Destino do Vácuo somam o bônus no próximo ataque."
+      },
+      "clickMovement": {
+        "Name": "Movimento por quadrados",
+        "Hint": "Destaca os quadrados para ajustar e empurrar / puxar / conduzir; clique para mover. Ao acertar, abre sozinho depois da rolagem; se pular, fica um botão no chat."
+      },
+      "powerLevels": {
+        "Name": "Símbolos de automação e tradução",
+        "Hint": "Mostra o nível de automação (◆) e de tradução (■) ao lado do nome dos poderes, nas fichas e nos cartões do chat. O mestre pode clicar num símbolo para mudar."
+      }
+    },
+    "Keybindings": {
+      "toggleCoverPreview": "Ligar/desligar prévia de cobertura",
+      "toggleActionPanel": "Abrir/fechar painel de ações"
+    },
+    "Warn": {
+      "NoGM": "Nenhum mestre conectado, então o efeito em {name} não pode ser aplicado.",
+      "OneTarget": "{power}: mire em apenas uma criatura (ou em nenhuma, para escolher o inimigo mais próximo).",
+      "NotNearest": "{power}: {target} não é o inimigo visível mais próximo (o mais próximo está a {distance} quadrados). Aplicado mesmo assim.",
+      "NoEnemyVisible": "{power}: nenhum inimigo visível encontrado.",
+      "NoSourceToken": "Coloque e selecione seu token na cena primeiro.",
+      "AlreadyCursed": "{target} já está sob uma Maldição do Bruxo.",
+      "NoAllyInRange": "Marca Indireta: nenhum aliado a até 5 quadrados para ser quem marca."
+    },
+    "Info": {
+      "AlreadyQuarry": "{target} já é sua presa.",
+      "FuriousAssaultArmed": "{name}: Assalto Furioso preparado, o dano extra vai aparecer na próxima rolagem de dano."
+    },
+    "Dialog": {
+      "ChooseNearestTitle": "{power}: escolha o inimigo",
+      "ChooseNearestHint": "Estes inimigos estão empatados como os mais próximos. Qual deles?",
+      "ChooseMarkerTitle": "{power}: quem marca o alvo?",
+      "ChooseMarkerHint": "Escolha um aliado a até 5 quadrados de você."
+    },
+    "Effect": {
+      "QuarryName": "Presa de {source}",
+      "QuarryDesc": "Presa do Caçador de {source}. Dura até o fim do encontro, até esta criatura ser derrotada ou até uma nova presa ser designada.",
+      "CurseName": "Amaldiçoado por {source}",
+      "CurseDesc": "Maldição do Bruxo de {source}. Dura até o fim do encontro ou até esta criatura chegar a 0 pontos de vida.",
+      "MarkName": "Marcado por {source}",
+      "MarkDesc": "Marcado por {source} ({power}): -2 nas jogadas de ataque que não incluam {source}.",
+      "RageName": "Fúria: {power}",
+      "FateName": "Destino do Vácuo (+{bonus})",
+      "FateDesc": "+bônus em uma jogada de d20 durante seu próximo turno. Perdido se não for usado."
+    },
+    "Chat": {
+      "QuarryDesignated": "<strong>{source}</strong> designa <strong>{target}</strong> como sua presa.",
+      "CursePlaced": "<strong>{source}</strong> lança a Maldição do Bruxo em <strong>{target}</strong>.",
+      "Marked": "<strong>{targets}</strong> marcado(s) por <strong>{marker}</strong>.",
+      "RageStart": "<strong>{actor}</strong> entra em <strong>{power}</strong>!",
+      "RageManual": "O benefício contínuo desta fúria ainda não é automatizado; aplique manualmente.",
+      "FateOfTheVoid": "<strong>{target}</strong> caiu sob a maldição de {actor}: Destino do Vácuo, +{bonus} em uma jogada de d20 durante seu próximo turno."
+    },
+    "Damage": {
+      "Legend": "Dano extra (automação 4e)",
+      "Quarry": "Presa do Caçador +{formula}",
+      "QuarryTarget": "Contra sua presa {target}.",
+      "QuarryUsed": "Já causado desde o início do seu turno.",
+      "Curse": "Maldição do Bruxo +{formula}",
+      "CurseTarget": "Contra o amaldiçoado {target}.",
+      "CurseUsed": "Já causado neste turno.",
+      "BloodhuntRage": "Fúria da Caçada de Sangue +{formula}",
+      "BloodhuntActive": "Você ou o alvo está sangrando.",
+      "BloodhuntInactive": "Nem você nem o alvo está sangrando.",
+      "RagingBonus": "{power} (em fúria) +{formula}",
+      "RagingBonusHint": "Dano extra porque você está em fúria.",
+      "FuriousAssault": "Assalto Furioso +{formula}",
+      "FuriousAssaultHint": "Dano extra do Assalto Furioso (1[A] em ataques com arma, 1d8 nos outros)."
+    },
+    "Cover": {
+      "Label": "Cobertura",
+      "MeleeLabel": "Corpo a corpo/contíguo",
+      "RangedLabel": "À distância",
+      "None": "nenhuma",
+      "Cover": "cobertura (-2)",
+      "Superior": "superior (-5)",
+      "NoLoE": "Sem linha de efeito?"
+    },
+    "Actions": {
+      "standard": "Padrão",
+      "move": "Movimento",
+      "minor": "Mínima",
+      "immediate": "Imediata",
+      "opportunity": "Oportunidade",
+      "free": "Livre",
+      "Available": "disponível",
+      "Spent": "gasta",
+      "PanelTitle": "Rastreador de Ações",
+      "NoCombatant": "Selecione um token que esteja no combate.",
+      "YourTurn": "Turno dele",
+      "NotYourTurn": "Aguardando",
+      "ActionPoints": "Pontos de Ação",
+      "TradeNote": "{from} usada como {to}",
+      "WarnNone": "{name} não tem mais ação {action} neste turno.",
+      "WarnNotYourTurn": "{name}: ações {action} só podem ser feitas no próprio turno.",
+      "WarnImmediateOwnTurn": "{name}: ações imediatas não podem ser feitas no próprio turno.",
+      "WarnImmediateUsed": "{name} já fez uma ação imediata nesta rodada.",
+      "WarnOpportunityOwnTurn": "{name}: ações de oportunidade não podem ser feitas no próprio turno.",
+      "WarnOpportunityUsed": "{name} já fez uma ação de oportunidade neste turno.",
+      "WarnSecondWindUsed": "{name} já usou Retomar o Fôlego neste encontro.",
+      "WarnNoActionPoint": "{name} não tem Pontos de Ação.",
+      "Basic": {
+        "walk": "Andar",
+        "shift": "Ajustar",
+        "run": "Correr",
+        "standUp": "Levantar",
+        "charge": "Investida",
+        "totalDefense": "Defesa Total",
+        "secondWind": "Retomar o Fôlego",
+        "aidAnother": "Prestar Ajuda",
+        "ready": "Preparar",
+        "actionPoint": "Ponto de Ação"
+      },
+      "Chat": {
+        "walk": "<strong>{name}</strong> anda.",
+        "shift": "<strong>{name}</strong> se ajusta.",
+        "run": "<strong>{name}</strong> corre (−5 nos ataques e concede vantagem de combate até o início do próximo turno).",
+        "standUp": "<strong>{name}</strong> se levanta.",
+        "charge": "<strong>{name}</strong> faz uma investida! (+1 no ataque; o ataque básico faz parte da investida.)",
+        "totalDefense": "<strong>{name}</strong> faz Defesa Total (+2 em todas as defesas até o início do próximo turno).",
+        "aidAnother": "<strong>{name}</strong> presta ajuda.",
+        "ready": "<strong>{name}</strong> prepara uma ação."
+      },
+      "WarnShiftTooFar": "{name} ajustou {squares} quadrados, mas só pode ajustar {budget}.",
+      "FreeShiftRefund": "{power}: o ajuste de {name} fazia parte do poder, então a ação de movimento foi devolvida.",
+      "FreeShiftGranted": "{power}: {name} pode ajustar {squares} quadrado(s) neste turno sem gastar a ação de movimento."
+    },
+    "Opportunity": {
+      "Title": "Ataque de oportunidade",
+      "ReasonMove": "<strong>{provoker}</strong> se afastou de <strong>{threat}</strong> sem ajustar.",
+      "ReasonRanged": "<strong>{provoker}</strong> fez um ataque à distância ao lado de <strong>{threat}</strong>.",
+      "ReasonArea": "<strong>{provoker}</strong> fez um ataque de área ao lado de <strong>{threat}</strong>.",
+      "Button": "{threat}: atacar {provoker}",
+      "Note": "Ignore se foi movimento forçado (empurrar, puxar, conduzir) ou se a criatura não pode agir.",
+      "NotOwner": "Você não controla esta criatura.",
+      "NoBasic": "{name} não tem ataque básico corpo a corpo.",
+      "Used": "Ação de oportunidade já usada"
+    },
+    "Reaction": {
+      "Title": "Reação disponível",
+      "Button": "Usar {power}",
+      "Unavailable": "{power} indisponível",
+      "ReasonSelfMiss": "<strong>{actor}</strong> errou {targets}.",
+      "ReasonHitEnemy": "<strong>{actor}</strong> acertou {targets}.",
+      "ReasonHitYou": "<strong>{enemy}</strong> acertou <strong>{actor}</strong>.",
+      "ReasonMeleeAttacked": "<strong>{enemy}</strong> faz um ataque corpo a corpo contra <strong>{actor}</strong>.",
+      "ReasonAttacked": "<strong>{enemy}</strong> ataca <strong>{actor}</strong>.",
+      "ReasonDrop": "<strong>{actor}</strong> derrubou <strong>{target}</strong> a 0 pontos de vida."
+    },
+    "DamageApply": {
+      "Damage": "Dano",
+      "Half": "Metade",
+      "Selected": "Selecionados",
+      "None": "sem alvos",
+      "Retarget": "Trocar para os alvos atuais",
+      "RetargetHint": "Substitui os alvos deste cartão pelos tokens que você está mirando agora.",
+      "TargetsHint": "Alvos do ataque original",
+      "NoTargets": "Este cartão não tem alvos. Mire os tokens e use Trocar alvo.",
+      "NoSelection": "Selecione pelo menos um token.",
+      "NoCurrentTargets": "Mire pelo menos um token primeiro."
+    },
+    "OnHit": {
+      "MockeryName": "{power}: −2 nos ataques",
+      "MockeryDesc": "−2 nas jogadas de ataque até o fim do próximo turno do bardo.",
+      "DreadfulName": "{power}: −{penalty} Vontade",
+      "DreadfulDesc": "−{penalty} em Vontade até o fim do próximo turno do bruxo.",
+      "DarkDreamDesc": "Sob o sonho obscuro (termina com teste de resistência): o bruxo pode conduzi-lo 1 quadrado com uma ação mínima, uma vez por rodada.",
+      "StirringName": "{power} (+{heal} PV para aliados que acertarem)",
+      "StirringDesc": "Até o fim do encontro, um aliado de {source} que acertar esta criatura recupera {heal} pontos de vida.",
+      "StirringHeal": "<strong>{actor}</strong> recupera {heal} pontos de vida (Grito Inspirador).",
+      "PrimeShot": "Tiro Primoroso",
+      "GreatCleave": "Grande Trespassar +{count} (inimigos adjacentes)",
+      "GreatCleaveHint": "+1 de dano para cada inimigo adjacente a você.",
+      "AutoModsLegend": "Modificadores automáticos (automação 4e)",
+      "Prone": "<strong>{target}</strong> fica derrubado ({power})."
+    },
+    "TempHp": {
+      "Rageblood": "<strong>{actor}</strong> recebe {amount} pontos de vida temporários (Vigor da Fúria Sangrenta, {target} caiu).",
+      "ValorTitle": "Virtude da Bravura",
+      "ValorDropped": "<strong>{ally}</strong> derrubou <strong>{enemy}</strong>.",
+      "ValorBloodied": "<strong>{ally}</strong> deixou <strong>{enemy}</strong> sangrando.",
+      "ValorButton": "Dar {amount} PV temporários a {ally}",
+      "ValorUsed": "Já usada nesta rodada",
+      "ValorGranted": "<strong>{bard}</strong> dá {amount} pontos de vida temporários a <strong>{ally}</strong> (Virtude da Bravura).",
+      "ValorNotHigher": "{ally} já tem essa quantidade de PV temporários; Virtude da Bravura usada sem efeito.",
+      "Resilience": "<strong>{actor}</strong> recebe {amount} pontos de vida temporários ({feature}, primeira vez sangrando no encontro)."
+    },
+    "RollVars": {
+      "wepAttack": "Arma (Treinamento)",
+      "impAttack": "Implemento",
+      "powerMod": "Atributo",
+      "lvhalf": "½ Nível",
+      "bonus": "Bônus situacional",
+      "powBase": "Dano do poder",
+      "powMax": "Dano do poder (máximo)",
+      "wepDamage": "Arma",
+      "impDamage": "Implemento",
+      "wepCritBonus": "Crítico da arma",
+      "impCritBonus": "Crítico do implemento",
+      "highCrit": "Crítico Alto",
+      "versatile": "Versátil",
+      "extraDamage": "Dano extra",
+      "bonusDamage": "Bônus de dano",
+      "ammo": "Munição",
+      "wep2ndryDamage": "Dano secundário da arma",
+      "powerModNamed": "Atributo ({ability})",
+      "fixed": "Bônus fixo",
+      "sectionBonus": "Bônus",
+      "sectionSituational": "Situacional",
+      "sectionPenalty": "Penalidades",
+      "effectBonus": "Efeitos ativos",
+      "effectBonusTyped": "Efeitos ({type})",
+      "bonusType": {
+        "untyped": "sem tipo",
+        "feat": "talento",
+        "item": "item",
+        "power": "poder",
+        "race": "racial"
+      },
+      "training": "Treinamento",
+      "armourPen": "Penalidade de armadura",
+      "skillOther": "Outros bônus",
+      "wordsOfFriendship": "Palavras de Amizade",
+      "fateOfTheVoid": "Destino do Vácuo"
+    },
+    "Conditional": {
+      "FoxArmed": "{name}: o próximo ataque básico ganha +{bonus} (Astúcia da Raposa).",
+      "NoLastAttack": "{name} não tem um ataque recente para rolar de novo.",
+      "Rerolling": "{power}: rolando o ataque de novo contra os mesmos alvos. Use o segundo resultado.",
+      "DireName": "{power}: aproximar-se causa {formula}",
+      "DireDesc": "Na primeira vez que esta criatura se aproximar de {source} no próximo turno dela, sofre {formula} de dano.",
+      "DireFlavor": "{power}: {target} se aproximou"
+    },
+    "Move": {
+      "Bar": {
+        "shift": "Ajustar {name}: até {squares} quadrado(s)",
+        "push": "Empurrar {name}: até {squares} quadrado(s)",
+        "pull": "Puxar {name}: até {squares} quadrado(s)",
+        "slide": "Conduzir {name}: até {squares} quadrado(s)",
+        "charge": "Investida em {target}: até {squares} quadrados"
+      },
+      "Hint": "Clique num quadrado destacado · Esc ou botão direito pula",
+      "Skip": "Pular",
+      "Count": "{steps}/{squares}",
+      "NoSquares": "{name} não tem quadrado para onde ir.",
+      "TokenGone": "O token não está mais na cena.",
+      "Button": {
+        "shift": "Ajustar {name} {squares}",
+        "push": "Empurrar {name} {squares}",
+        "pull": "Puxar {name} {squares}",
+        "slide": "Conduzir {name} {squares}"
+      },
+      "Done": {
+        "shift": "{name} ajustou.",
+        "push": "{name} foi empurrado.",
+        "pull": "{name} foi puxado.",
+        "slide": "{name} foi conduzido."
+      },
+      "FollowUp": "você ou um aliado adjacente a {target} pode fazer um ataque básico corpo a corpo contra ele como ação livre (+{bonus}).",
+      "FollowUpButton": "{name} ataca (+{bonus})",
+      "MinorSlide": "Conduzir {name} {squares} (ação mínima)",
+      "Step": "Passo a passo",
+      "StepHint": "Clique um trecho de cada vez e confirme (Shift+clique adiciona um trecho em qualquer modo)",
+      "HintStep": "Clique os quadrados um de cada vez · Enter confirma · botão direito / Backspace desfaz · Esc pula",
+      "HintCharge": "Clique no quadrado final da investida · Esc ou botão direito cancela",
+      "Confirm": "Confirmar"
+    },
+    "Charge": {
+      "ChooseAttack": "Ataque da investida",
+      "ChooseAttackHint": "Qual ataque {name} faz no fim da investida?",
+      "ChooseTarget": "Investida",
+      "ChooseTargetHint": "Escolha o inimigo da investida.",
+      "NoEnemy": "{name} não tem inimigo para investir daqui.",
+      "Reason": {
+        "tooClose": "{name} não pode fazer investida em {target}: o quadrado mais próximo para atacar fica a menos de 2 quadrados.",
+        "tooFar": "{name} não pode fazer investida em {target}: o quadrado mais próximo para atacar fica a {nearest} quadrados (deslocamento {speed}).",
+        "occupied": "{name} não pode fazer investida em {target}: o quadrado mais próximo para atacar está ocupado.",
+        "blocked": "{name} não pode fazer investida em {target}: não há caminho que se aproxime a cada quadrado até o quadrado mais próximo para atacar."
+      }
+    },
+    "Levels": {
+      "auto": "Automação",
+      "tr": "Tradução",
+      "Name0": "Cinza",
+      "Name1": "Bronze",
+      "Name2": "Prata",
+      "Name3": "Dourado",
+      "autoDesc0": "Não automatizado.",
+      "autoDesc1": "Pouco automatizado.",
+      "autoDesc2": "Moderadamente automatizado.",
+      "autoDesc3": "Automatizado (ou não precisa de automação).",
+      "trDesc0": "Não existe tradução.",
+      "trDesc1": "Tradução não oficial.",
+      "trDesc2": "Tradução parcialmente não oficial (trechos marcados com *asteriscos*).",
+      "trDesc3": "Tradução oficial.",
+      "Manual": "Definido pelo mestre",
+      "Guessed": "Estimado pelo módulo",
+      "GMHint": "Clique para mudar",
+      "UseGuess": "Estimativa do módulo",
+      "ChooseHint": "Escolha o nível de {power}. Vale para todas as cópias deste poder no mundo."
+    },
+    "Features": {
+      "ShadowWalk": "<strong>{actor}</strong> se afastou 3 quadrados de onde começou o turno: camuflagem até o fim do próximo turno ({feature}).",
+      "ShadowWalkDesc": "Camuflagem (−2 nas jogadas de ataque contra esta criatura) até o fim do próximo turno dela.",
+      "Rampage": "<strong>{actor}</strong> conseguiu um acerto crítico com <strong>{power}</strong> e pode fazer um ataque básico corpo a corpo como ação livre.",
+      "RampageButton": "Ataque básico corpo a corpo (ação livre)",
+      "WordsArmed": "{actor}: +5 de bônus de poder no próximo teste de Diplomacia até o fim do próximo turno ({power}).",
+      "WordsDesc": "+5 de bônus de poder no próximo teste de Diplomacia. Termina depois desse teste ou no fim do próximo turno."
+    },
+    "TextOverrides": {
+      "Title": "Textos de monstros",
+      "Button": "Importar / exportar",
+      "MenuHint": "Arquivo com textos substitutos para monstros (nome, poderes, descrição). Importe num mundo novo para trazer todos de uma vez. Só texto: os números continuam os do compêndio.",
+      "Stored": "Este mundo tem textos para {count} monstros.",
+      "Hint": "Importar soma o arquivo ao que já existe (o mesmo monstro é substituído) e atualiza os atores e tokens que já estão no mundo. Monstros novos arrastados do compêndio já chegam com o texto. Exportar baixa tudo o que está guardado neste mundo.",
+      "Import": "Importar arquivo",
+      "Export": "Exportar",
+      "NoFile": "Escolha um arquivo .json para importar.",
+      "Imported": "Textos importados: {count} monstros. Atualizados: {actors} atores, {tokens} tokens.",
+      "Invalid": "Arquivo inválido: não é um arquivo de textos de monstros."
+    }
+  },
+  "LUCD20": {
+    "Category": {
+      "dnd4e": {
+        "Label": "D&D 4e",
+        "Hint": "Automação de combate de D&D 4e (antigo módulo D&D 4e Combat Automation)."
+      }
+    },
+    "Feature": {
+      "dnd4eClassFeatures": {
+        "Name": "Características de classe",
+        "Hint": "Presa do Caçador, Maldição do Bruxo, fúrias, marcas e outras regras de classe, raça e talentos, aplicadas ao usar poderes.",
+        "Setting": {
+          "quarry": {
+            "Name": "Automatizar Presa do Caçador",
+            "Hint": "Usar Presa do Caçador marca o inimigo visível mais próximo (ou seu alvo) e oferece o dano extra na janela de dano, uma vez por turno."
+          },
+          "curse": {
+            "Name": "Automatizar Maldição do Bruxo",
+            "Hint": "Usar Maldição do Bruxo amaldiçoa o inimigo visível mais próximo (ou seu alvo) e oferece o dano extra na janela de dano, uma vez por turno. Bruxos do Pacto Estelar recebem Destino do Vácuo quando um inimigo amaldiçoado cai."
+          },
+          "rage": {
+            "Name": "Automatizar fúrias do Bárbaro",
+            "Hint": "Usar um poder de fúria coloca o bárbaro nessa fúria até o fim do encontro (encerrando a anterior) e oferece os bônus de dano que dependem da fúria."
+          },
+          "marks": {
+            "Name": "Automatizar marcas",
+            "Hint": "Poderes como Marca Indireta aplicam a marca nos alvos atingidos. As marcas usam a condição de marca do sistema, então o -2 é aplicado pelo próprio dnd4e."
+          },
+          "warnNotNearest": {
+            "Name": "Avisar quando o alvo não é o inimigo mais próximo",
+            "Hint": "Para Presa do Caçador e Maldição do Bruxo."
+          },
+          "primeShot": {
+            "Name": "Tiro Primoroso",
+            "Hint": "+1 nas jogadas de ataque à distância de quem tem Tiro Primoroso quando nenhum aliado está mais perto do alvo."
+          },
+          "classFeatures": {
+            "Name": "Regras de classe, raça e talentos",
+            "Hint": "Bloodhunt (+1 racial contra inimigos sangrando), Defensive Mobility (+2 de CA contra ataques de oportunidade), Shadow Walk (camuflagem depois de andar 3 quadrados), Rampage (ataque básico corpo a corpo grátis depois de um crítico) e Palavras de Amizade (+5 no próximo teste de Diplomacia)."
+          },
+          "tempHpFeatures": {
+            "Name": "PV temporários de características",
+            "Hint": "Vigor da Fúria Sangrenta (automático quando seu ataque derruba um inimigo), Half-Orc Resilience (automático na primeira vez que você fica sangrando no encontro) e Virtude da Bravura (cartão para o bardo quando um aliado a até 5 quadrados deixa um inimigo sangrando ou o derruba)."
+          },
+          "conditionalRiders": {
+            "Name": "Dano condicional e bônus de rolagem",
+            "Hint": "Cólera Infernal rola o dano de fogo; Radiância Atroz causa o dano extra quando o alvo se aproxima; Precisão Élfica rola de novo o último ataque; Astúcia da Raposa e Destino do Vácuo somam o bônus no próximo ataque."
+          },
+          "powerRiders": {
+            "Name": "Efeitos de poderes ao acertar",
+            "Hint": "Aplica Zombaria Malévola, Palavra Pavorosa, Maldição do Sonho Obscuro e Grito Inspirador nos alvos atingidos (com penalidades de ataque/defesa), cura aliados que acertam um alvo do Grito Inspirador e oferece o dano extra do Grande Trespassar."
+          }
+        }
+      },
+      "dnd4eCover": {
+        "Name": "Cobertura",
+        "Hint": "Calcula cobertura e cobertura superior (linhas de canto a canto) e marca na janela de ataque. Ataques de área não são automatizados.",
+        "Setting": {
+          "preview": {
+            "Name": "Linhas de prévia da cobertura",
+            "Hint": "Enquanto você mira um token, desenha as linhas de cobertura a partir do seu token. Só você vê."
+          }
+        }
+      },
+      "dnd4eActionTracker": {
+        "Name": "Rastreador de ações",
+        "Hint": "Controla ações padrão, de movimento, mínimas, imediatas e de oportunidade por turno. Usar um poder gasta a ação dele (com trocas). Mostra marcadores no Combat Tracker.",
+        "Setting": {
+          "autoMoveActions": {
+            "Name": "Mover o token gasta ações de movimento",
+            "Hint": "No turno do combatente, arrastar o token gasta uma ação de movimento (deslocamento por ação; ajuste conta como ação de ajustar; usa a ação padrão quando necessário). Teletransporte, desfazer, investida e tokens de jogadores arrastados pelo mestre são ignorados."
+          },
+          "panel": {
+            "Name": "Abrir o painel de ações no combate",
+            "Hint": "Abre o painel flutuante de ações automaticamente quando um combate começa."
+          },
+          "warnings": {
+            "Name": "Avisar ações gastas além do limite",
+            "Hint": "Mostra um aviso quando uma ação indisponível é usada (a ação acontece mesmo assim)."
+          },
+          "dockPips": {
+            "Name": "Marcadores de ação no Combat Tracker Dock",
+            "Hint": "Mostra os marcadores de ação em cada retrato do módulo Combat Tracker Dock, se ele estiver ativo."
+          }
+        }
+      },
+      "dnd4eOpportunity": {
+        "Name": "Ataques de oportunidade",
+        "Hint": "Quando um inimigo sai de um quadrado adjacente a uma criatura sem ajustar, ou faz um ataque à distância/de área ao lado dela, envia um cartão privado no chat a quem controla essa criatura, com um botão para o ataque de oportunidade."
+      },
+      "dnd4eTriggeredPowers": {
+        "Name": "Poderes com gatilho",
+        "Hint": "Oferece poderes com Gatilho (Precisão Élfica, Astúcia da Raposa, Assalto Furioso, Investida Célere, Cólera Infernal e qualquer poder, inclusive de monstros, com gatilho parecido) num cartão privado no chat quando o gatilho acontece."
+      },
+      "dnd4eDamageApply": {
+        "Name": "Aplicar dano",
+        "Hint": "Os cartões de dano ganham botões para aplicar o dano nos alvos do ataque original (cliques de jogadores são aplicados pelo mestre), nos tokens selecionados, e um botão para trocar o alvo."
+      },
+      "dnd4eClickMovement": {
+        "Name": "Movimento por quadrados e investida",
+        "Hint": "Destaca os quadrados para ajustar e empurrar / puxar / conduzir; clique para mover. Ao acertar, abre sozinho depois da rolagem; se pular, fica um botão no chat."
+      },
+      "dnd4eReadableRolls": {
+        "Name": "Rolagens legíveis e testes de perícia",
+        "Hint": "Troca as variáveis da rolagem no chat (@wepAttack, @powerMod...) por nomes e valores, e mostra os modificadores automáticos do módulo."
+      },
+      "dnd4eSheetHighlights": {
+        "Name": "Destaques nas fichas",
+        "Hint": "Colore as defesas alteradas por efeitos temporários (vermelho = penalidade, verde = bônus) e lista os efeitos no tooltip."
+      },
+      "dnd4ePowerSymbols": {
+        "Name": "Símbolos dos poderes",
+        "Hint": "Mostra o nível de automação (◆) e de tradução (■) ao lado do nome dos poderes, nas fichas e nos cartões do chat. O mestre pode clicar num símbolo para mudar."
+      },
+      "dnd4eTokenBadges": {
+        "Name": "Selos nos tokens",
+        "Hint": "Mostra um selo grande e colorido com o retrato de quem marcou no canto superior direito do token."
+      },
+      "dnd4eMonsterTexts": {
+        "Name": "Textos de monstros",
+        "Hint": "Arquivo com textos substitutos para monstros (nome, poderes, descrição). Importe num mundo novo para trazer todos de uma vez. Só texto: os números continuam os do compêndio."
+      },
+      "dnd4eGameLanguage": {
+        "Name": "Idioma do jogo 4e",
+        "Hint": "Idioma do sistema dnd4e (atributos, perícias, condições, rótulos da ficha) e deste módulo, independente do idioma da interface do Foundry. Textos que faltam na tradução ficam no idioma do Foundry. Requer recarregar.",
+        "Setting": {
+          "language": {
+            "Name": "Idioma do jogo 4e",
+            "Hint": "Vale depois de recarregar."
+          }
+        }
+      }
+    },
+    "DnD4e": {
+      "Migrated": "Os dados do D&D 4e Combat Automation foram passados para o LucD20 Automations: {texts} textos de monstros, {levels} marcas de poderes, {switches} opções, {docs} atores / efeitos / tokens / combatentes / mensagens. Pode desativar o módulo antigo.",
+      "MigrationFailed": "LucD20 Automations: falhou ao passar os dados do D&D 4e Combat Automation (veja o console, F12). Vai tentar de novo ao recarregar."
+    }
+  },
+  "EFFECT": {
+    "statusBloodied": "Sangrando",
+    "statusDazed": "Pasmo",
+    "statusStunned": "Atordoado",
+    "statusHelpless": "Indefeso",
+    "statusRestrained": "Impedido",
+    "statusSlowed": "Lento",
+    "statusCharging": "Em Investida",
+    "statusRunning": "Correndo",
+    "statusSqueezing": "Espremido",
+    "statusCover": "Cobertura",
+    "statusCoverSup": "Cobertura Superior",
+    "statusGrantingCA": "Concedendo Vantagem de Combate",
+    "statusProne": "Derrubado"
+  },
+  "DND4E": {
+    "ConDazed": "Pasmo",
+    "ConStunned": "Atordoado",
+    "ConHelpless": "Indefeso",
+    "ConRestrained": "Impedido",
+    "ConSlowed": "Lento",
+    "CommonAttackRestrained": "Impedido",
+    "CommonAttackSqueez": "Espremido",
+    "SecondWind": "Retomar o Fôlego",
+    "Movement": {
+      "Shift": "Ajustar"
+    },
+    "TOKEN": {
+      "MOVEMENT": {
+        "ACTIONS": {
+          "shift": {
+            "label": "Ajustar"
+          },
+          "charge": {
+            "label": "Investida"
+          }
+        }
+      }
+    },
+    "HealingSurgesShort": "Pulsos",
+    "CommonAttackProne": "Derrubado",
+    "ConProne": "Derrubado",
+    "CommonAttackLongRange": "Longo alcance",
+    "WeaponRangeLong": "Longo alcance"
+  },
+  "Fox4e": {
+    "Value": "Valor",
+    "Max": "Max"
+  }
+}

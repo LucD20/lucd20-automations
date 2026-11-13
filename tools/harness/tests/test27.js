@@ -132,6 +132,19 @@ const out = __dirname;
   });
   console.log("60×60 maze: ms, waypoints =", ms);
   assert.ok(ms[1] > 20, "a winding route was found");
+  // A big older scene: 150 × 150 squares with one long wall to go round
+  const big = await page.evaluate(async () => {
+    canvas.dimensions.sceneRect = { x: 0, y: 0, width: 15000, height: 15000 };
+    __walls.length = 0;
+    __walls.push({ document: { c: [7500, 0, 7500, 14500], move: 20, door: 0, ds: 0 } });
+    Hooks.callAll("updateWall", {}, {}, {});
+    const t0 = performance.now();
+    const res = CONFIG.Token.objectClass.prototype.findMovementPath.call(__mover, [{ x: 100, y: 300 }, { x: 14800, y: 300 }], { constrainOptions: {} });
+    const path = res.result ?? (await res.promise);
+    return [Math.round(performance.now() - t0), path.some(w => w.y >= 14500), path.some(w => w.foundry)];
+  });
+  console.log("150×150 round a long wall: ms, went round, fallback =", big);
+  assert.ok(big[1] && !big[2], "big scene: routed round the wall, not Foundry's fallback");
 
   // ---------- Player: explored areas only ----------
   page = await open("gm=0");

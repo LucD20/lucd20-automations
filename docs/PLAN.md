@@ -524,6 +524,11 @@ data browser, import. Code: `scripts/features/token-tooltip/`.
   moving straight, so the route is now computed right away and returned as
   `result` (plus a resolved `promise`), with every waypoint complete.
   `CONFIG.debug.lucd20Pathfinding = true` logs each call and result.
+  v0.28.4: worked on new scenes but not older ones (owner). Likely cause: big
+  older scenes ran past the 60 000-step limit and fell back to Foundry's
+  straight path. The search now uses typed arrays with per-square wall /
+  explored caches (limit 400 000); squares are mapped through Foundry's grid
+  origin. 150 × 150 scene round a long wall ≈ 75 ms in the harness.
 - **Per-player toggle** in Token controls (route icon), on by default (Q26).
 - **Cost** (owner, Q29): steps per the scene's diagonal rule (PF2e 5/10/5
   with the parity carried from the movement history); **difficult terrain**
@@ -542,7 +547,7 @@ data browser, import. Code: `scripts/features/token-tooltip/`.
   parity), token footprint, walls in a bucket grid (a wall end on the move
   blocks too, so diagonals can't slip through corners), collinear points
   dropped. Cached per drag; rebuilt on wall/region/token changes. 60 × 60
-  maze ≈ 50 ms in the harness.
+  maze ≈ 25 ms in the harness (v0.28.4).
 - Settings: avoid difficult terrain · avoid squares next to enemies ·
   players: explored areas only (all on).
 

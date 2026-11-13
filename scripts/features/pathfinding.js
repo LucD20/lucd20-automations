@@ -30,7 +30,7 @@ import { defineFeature } from "../core/registry.js";
 
 const ACTIVE_KEY = "pathfindingActive";
 const THREAT_COST = 4; // extra squares for stepping through a threatened square
-const MAX_NODES = 60000;
+const MAX_NODES = 400000;
 const state = { feature: null, versions: 0, context: null, logged: new Set() };
 
 /* -------------------------------------------- */
@@ -174,7 +174,8 @@ function terrainGrid(doc, size) {
           inside = false;
         }
         if (!inside) continue;
-        const k = `${Math.floor(x / size)},${Math.floor(y / size)}`;
+        const o = gridOrigin();
+        const k = `${Math.floor((x + size / 2 - o.x) / size)},${Math.floor((y + size / 2 - o.y) / size)}`;
         costs.set(k, Math.max(costs.get(k) ?? 1, mult));
       }
     }
@@ -196,8 +197,9 @@ function threatGrid(mover, size) {
   if (enemy === null) return set;
   for (const t of canvas.tokens?.placeables ?? []) {
     if (t === mover || !t.visible || t.document.disposition !== enemy || isDown(t)) continue;
-    const i0 = Math.floor(t.document.x / size);
-    const j0 = Math.floor(t.document.y / size);
+    const o = gridOrigin();
+    const i0 = Math.round((t.document.x - o.x) / size);
+    const j0 = Math.round((t.document.y - o.y) / size);
     for (let i = i0 - 1; i <= i0 + t.document.width; i++) for (let j = j0 - 1; j <= j0 + t.document.height; j++) set.add(`${i},${j}`);
   }
   return set;
@@ -250,6 +252,17 @@ function exploredTester() {
   }
 }
 
+/** Where the grid's square (0, 0) starts, per Foundry (0, 0 on every scene we've seen). */
+function gridOrigin() {
+  try {
+    const p = canvas.grid.getTopLeftPoint?.({ i: 0, j: 0 });
+    if (p && Number.isFinite(p.x) && Number.isFinite(p.y)) return { x: p.x, y: p.y };
+  } catch {
+    /* fall through */
+  }
+  return { x: 0, y: 0 };
+}
+
 function context(token, { ignoreCost = false } = {}) {
   const size = canvas.grid.size;
   const flags = `${keyDown("KeyQ")}|${keyDown("KeyT")}|${ignoreCost}`;
@@ -265,7 +278,8 @@ function context(token, { ignoreCost = false } = {}) {
     terrain: feature.get("avoidTerrain") && !keyDown("KeyT") && !ignoreCost ? terrainGrid(token.document, size) : new Map(),
     threats: feature.get("avoidThreats") && !keyDown("KeyQ") ? threatGrid(token, size) : new Set(),
     explored: exploredTester(),
-    rect: canvas.dimensions.sceneRect
+    rect: canvas.dimensions.sceneRect,
+    origin: gridOrigin()
   };
   return state.context;
 }
@@ -285,65 +299,103 @@ function diagonalRule() {
   return () => 1;
 }
 
-/** Cheapest route from cell a to cell b for a w×h token. Returns cells or null. */
+/**
+ * Cheapest route from cell `from` to cell `to` for a w×h token. Returns cells
+ * or null. v0.28.4: typed arrays and per-square caches instead of string keys
+ * (big older scenes ran past the old 60 000-step limit and fell back to
+ * Foundry's straight line).
+ */
 function route(ctx, from, to, w, h, startOdd) {
-  const { size, rect } = ctx;
+  const { size, rect, origin } = ctx;
   const diag = diagonalRule();
-  const minI = Math.floor(rect.x / size);
-  const minJ = Math.floor(rect.y / size);
-  const maxI = Math.floor((rect.x + rect.width) / size) - w;
-  const maxJ = Math.floor((rect.y + rect.height) / size) - h;
-  const centre = (i, j) => ({ x: (i + w / 2) * size, y: (j + h / 2) * size });
-  const cells = (i, j) => {
-    const out = [];
-    for (let a = 0; a < w; a++) for (let b = 0; b < h; b++) out.push(`${i + a},${j + b}`);
-    return out;
+  const minI = Math.floor((rect.x - origin.x) / size);
+  const minJ = Math.floor((rect.y - origin.y) / size);
+  const maxI = Math.floor((rect.x + rect.width - origin.x) / size) - w;
+  const maxJ = Math.floor((rect.y + rect.height - origin.y) / size) - h;
+  const inside = (i, j) => i >= minI && j >= minJ && i <= maxI && j <= maxJ;
+  if (!inside(from.i, from.j) || !inside(to.i, to.j)) return null;
+  const cols = maxI - minI + 1;
+  const rows = maxJ - minJ + 1;
+  const cellCount = cols * rows;
+  const idx = (i, j) => (j - minJ) * cols + (i - minI);
+  const centre = (i, j) => ({ x: origin.x + (i + w / 2) * size, y: origin.y + (j + h / 2) * size });
+
+  // Per-square terrain multiplier and threat flag for this footprint.
+  const footMult = new Float32Array(cellCount).fill(1);
+  const footThreat = new Uint8Array(cellCount);
+  const spread = (map, write) => {
+    for (const [key, value] of map instanceof Map ? map : [...map].map(k => [k, 1])) {
+      const [ci, cj] = key.split(",").map(Number);
+      // Every top-left position whose footprint covers this square.
+      for (let i = ci - w + 1; i <= ci; i++) for (let j = cj - h + 1; j <= cj; j++) if (inside(i, j)) write(idx(i, j), value);
+    }
+  };
+  spread(ctx.terrain, (k, v) => (footMult[k] = Math.max(footMult[k], v)));
+  spread(ctx.threats, k => (footThreat[k] = 1));
+
+  const explored = new Uint8Array(cellCount); // 0 unknown, 1 yes, 2 no
+  const isExplored = (i, j) => {
+    const k = idx(i, j);
+    if (!explored[k]) explored[k] = ctx.explored(centre(i, j)) ? 1 : 2;
+    return explored[k] === 1;
   };
   const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
   if (diag) dirs.push([1, 1], [1, -1], [-1, 1], [-1, -1]);
+  const wallCache = new Uint8Array(cellCount * dirs.length); // 0 unknown, 1 open, 2 blocked
+
+  const states = cellCount * 2;
+  const g = new Float64Array(states).fill(Infinity);
+  const parent = new Int32Array(states).fill(-1);
   const heuristic = (i, j) => Math.max(Math.abs(i - to.i), Math.abs(j - to.j));
-  const startKey = `${from.i},${from.j},${startOdd ? 1 : 0}`;
+  const start = idx(from.i, from.j) * 2 + (startOdd ? 1 : 0);
+  g[start] = 0;
   const open = new Heap();
-  const best = new Map([[startKey, 0]]);
-  const parent = new Map();
-  open.push({ i: from.i, j: from.j, odd: !!startOdd, g: 0, f: heuristic(from.i, from.j), key: startKey });
+  open.push({ s: start, f: heuristic(from.i, from.j) });
   let expanded = 0;
   while (open.size) {
-    const cur = open.pop();
-    if (cur.g > (best.get(cur.key) ?? Infinity)) continue;
-    if (cur.i === to.i && cur.j === to.j) {
+    const { s, f } = open.pop();
+    const cell = s >> 1;
+    const odd = s & 1;
+    const ci = (cell % cols) + minI;
+    const cj = Math.floor(cell / cols) + minJ;
+    if (f - heuristic(ci, cj) > g[s] + 1e-9) continue; // stale entry
+    if (ci === to.i && cj === to.j) {
       const out = [];
-      for (let k = cur.key; k; k = parent.get(k)) {
-        const [i, j] = k.split(",").map(Number);
-        out.push({ i, j });
+      for (let k = s; k !== -1; k = parent[k]) {
+        const c = k >> 1;
+        out.push({ i: (c % cols) + minI, j: Math.floor(c / cols) + minJ });
       }
       return out.reverse();
     }
     if (++expanded > MAX_NODES) return null;
-    const p = centre(cur.i, cur.j);
-    for (const [di, dj] of dirs) {
-      const i = cur.i + di;
-      const j = cur.j + dj;
-      if (i < minI || j < minJ || i > maxI || j > maxJ) continue;
-      const q = centre(i, j);
-      if (ctx.blocked(p, q)) continue;
+    let p = null;
+    for (let d = 0; d < dirs.length; d++) {
+      const [di, dj] = dirs[d];
+      const i = ci + di;
+      const j = cj + dj;
+      if (!inside(i, j)) continue;
+      const wc = cell * dirs.length + d;
+      if (!wallCache[wc]) {
+        p ??= centre(ci, cj);
+        wallCache[wc] = ctx.blocked(p, centre(i, j)) ? 2 : 1;
+      }
+      if (wallCache[wc] === 2) continue;
       const isGoal = i === to.i && j === to.j;
-      if (!isGoal && !ctx.explored(q)) continue;
-      const isDiag = di && dj;
-      let step = isDiag ? diag(cur.odd) : 1;
-      const odd = isDiag ? !cur.odd : cur.odd;
-      const footprint = cells(i, j);
-      let mult = 1;
-      for (const c of footprint) mult = Math.max(mult, ctx.terrain.get(c) ?? 1);
+      if (!isGoal && !isExplored(i, j)) continue;
+      const n = idx(i, j);
+      const isDiag = di !== 0 && dj !== 0;
+      let step = isDiag ? diag(!!odd) : 1;
+      const nOdd = isDiag ? 1 - odd : odd;
+      const mult = footMult[n];
       // A little extra on difficult squares: of two equally costly routes, the one that avoids them wins.
       if (mult > 1) step = step * mult + 0.25;
-      if (!isGoal && footprint.some(c => ctx.threats.has(c))) step += THREAT_COST;
-      const g = cur.g + step;
-      const key = `${i},${j},${odd ? 1 : 0}`;
-      if (g >= (best.get(key) ?? Infinity)) continue;
-      best.set(key, g);
-      parent.set(key, cur.key);
-      open.push({ i, j, odd, g, f: g + heuristic(i, j), key });
+      if (!isGoal && footThreat[n]) step += THREAT_COST;
+      const ns = n * 2 + nOdd;
+      const ng = g[s] + step;
+      if (ng >= g[ns]) continue;
+      g[ns] = ng;
+      parent[ns] = s;
+      open.push({ s: ns, f: ng + heuristic(i, j) });
     }
   }
   return null;
@@ -389,7 +441,8 @@ function solve(token, waypoints, options) {
   const ctx = context(token, { ignoreCost: !!options?.constrainOptions?.ignoreCost });
   const size = ctx.size;
   const full = fullWaypoints(doc, waypoints);
-  const cellOf = w => ({ i: Math.round(w.x / size), j: Math.round(w.y / size) });
+  const { origin } = ctx;
+  const cellOf = w => ({ i: Math.round((w.x - origin.x) / size), j: Math.round((w.y - origin.y) / size) });
   let odd = false;
   try {
     const history = options?.constrainOptions?.history;
@@ -408,7 +461,7 @@ function solve(token, waypoints, options) {
     const cells = route(ctx, cellOf(a), cellOf(b), Math.max(1, Math.round(a.width)), Math.max(1, Math.round(a.height)), odd);
     if (!cells) return null;
     for (const c of simplify(cells).slice(1, -1)) {
-      out.push({ ...a, x: c.i * size, y: c.j * size, snapped: true, explicit: false, checkpoint: true });
+      out.push({ ...a, x: origin.x + c.i * size, y: origin.y + c.j * size, snapped: true, explicit: false, checkpoint: true });
     }
     out.push({ ...b, ...waypoints[k] });
     // Diagonal parity carries on (PF2e 5/10/5).

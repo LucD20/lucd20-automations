@@ -78,7 +78,7 @@ export class TooltipEditor extends ApplicationV2 {
       cancel: TooltipEditor.#onCancel,
       toggleType: TooltipEditor.#onToggleType,
       pick: TooltipEditor.#onPick,
-      tab: TooltipEditor.#onTab,
+      sideTab: TooltipEditor.#onTab, // not "tab": ApplicationV2 handles that action itself
       helper: TooltipEditor.#onHelper
     }
   };
@@ -166,8 +166,8 @@ export class TooltipEditor extends ApplicationV2 {
           ${this.showBrowser ? `
           <aside class="tt-browser">
             <nav class="tt-tabs">
-              <button type="button" class="tt-tab ${this.tab === "data" ? "on" : ""}" data-action="tab" data-tab="data">${icon("fa-sitemap")} ${esc(localize("LUCD20.TokenTooltip.TabData"))}</button>
-              <button type="button" class="tt-tab ${this.tab === "helpers" ? "on" : ""}" data-action="tab" data-tab="helpers">${icon("fa-wand-magic-sparkles")} ${esc(localize("LUCD20.TokenTooltip.TabHelpers"))}</button>
+              <button type="button" class="tt-tab ${this.tab === "data" ? "on" : ""}" data-action="sideTab" data-tab="data">${icon("fa-sitemap")} ${esc(localize("LUCD20.TokenTooltip.TabData"))}</button>
+              <button type="button" class="tt-tab ${this.tab === "helpers" ? "on" : ""}" data-action="sideTab" data-tab="helpers">${icon("fa-wand-magic-sparkles")} ${esc(localize("LUCD20.TokenTooltip.TabHelpers"))}</button>
             </nav>
             ${this.tab === "data" ? `
             <div class="tt-browser-head">${icon("fa-magnifying-glass")}<input type="search" name="search" value="${esc(this.search)}" placeholder="${esc(localize("LUCD20.TokenTooltip.SearchData"))}"></div>

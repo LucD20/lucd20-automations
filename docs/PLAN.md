@@ -474,7 +474,8 @@ data browser, import. Code: `scripts/features/token-tooltip/`.
   NaN** (no more null-check boilerplate). `{value, max}` objects show as
   `value/max`. **Helpers** (v0.28.0, owner: "make the expression easier",
   so common rows are one short call; listed with live examples on the
-  editor's **Helpers** tab, click to insert): `hp(@attributes.hp [, "nice"])`
+  editor's **Helpers** tab, click to insert; v0.28.1: the tab button's action
+  was named "tab", which ApplicationV2 handles itself, so it didn't click): `hp(@attributes.hp [, "nice"])`
   (value, "(temp)", Ø at 0, the owner's "Nice" at 69 %),
   `hpStatus(@attributes.hp [, "nice"])` (Healthy / Grazed / Bloodied /
   Critical / Ø), `dc(@saves.will.value)` (+10, hidden when missing),
@@ -515,8 +516,10 @@ data browser, import. Code: `scripts/features/token-tooltip/`.
   kept and each leg is routed. Wraps `CONFIG.Token.objectClass.prototype.
   findMovementPath` with V14's `{ result, promise, cancel }` contract
   (Wayfinder's, MIT, was the reference). Off on gridless/hex scenes and when
-  Foundry asks to ignore walls or cost; if no route is found, Foundry's own
-  result is used.
+  Foundry asks to ignore walls; if no route is found, Foundry's own result is
+  used. v0.28.1: when Foundry asks to ignore cost (likely what it does for the
+  GM: v0.28.0 routed for players but not the GM), walls still count and
+  only terrain is ignored; a skipped search logs its reason once.
 - **Per-player toggle** in Token controls (route icon), on by default (Q26).
 - **Cost** (owner, Q29): steps per the scene's diagonal rule (PF2e 5/10/5
   with the parity carried from the movement history); **difficult terrain**

@@ -104,6 +104,14 @@ const out = __dirname;
   console.log("holding T:", JSON.stringify(withT));
   assert.deepStrictEqual(withT.map(p => p.slice(0, 2)), [[1, 3], [4, 3]], "T ignores terrain: straight line");
   await page.evaluate(() => game.keyboard.downKeys.delete("KeyT"));
+  // GM: Foundry passes ignoreCost → still routes around walls, terrain ignored
+  const gmPath = await page.evaluate(async () => {
+    const res = CONFIG.Token.objectClass.prototype.findMovementPath.call(__mover, [{ x: 100, y: 300 }, { x: 400, y: 300 }], { constrainOptions: { ignoreCost: true } });
+    return (res.result ?? (await res.promise)).map(w => [w.x / 100, w.y / 100, !!w.foundry]);
+  });
+  console.log("ignoreCost:", JSON.stringify(gmPath));
+  assert.deepStrictEqual(gmPath.map(p => p.slice(0, 2)), [[1, 3], [4, 3]], "ignoreCost: our route (terrain ignored)");
+  assert.ok(!gmPath.some(p => p[2]), "ignoreCost doesn't switch routing off");
 
   // Toggle off (per player) → Foundry's own result
   await page.evaluate(() => game.settings.set("lucd20-automations", "pathfindingActive", false));

@@ -21,7 +21,8 @@ import { defineFeature } from "../core/registry.js";
  * - Players only route through explored or currently visible areas (Q28),
  *   so a route can't reveal unexplored corridors. The GM routes anywhere.
  *
- * Off on gridless/hex scenes and when Foundry asks to ignore walls or cost.
+ * Off on gridless/hex scenes and when Foundry asks to ignore walls. When it
+ * asks to ignore cost (it does for the GM), walls still count, terrain doesn't.
  * Per-player toggle in Token controls (Q26), on by default.
  * Plain JavaScript A* (binary heap); walls in a bucket grid rebuilt when
  * walls change. Wayfinder (MIT) was the reference for the contract.
@@ -30,7 +31,7 @@ import { defineFeature } from "../core/registry.js";
 const ACTIVE_KEY = "pathfindingActive";
 const THREAT_COST = 4; // extra squares for stepping through a threatened square
 const MAX_NODES = 60000;
-const state = { feature: null, versions: 0, context: null };
+const state = { feature: null, versions: 0, context: null, logged: new Set() };
 
 /* -------------------------------------------- */
 /*  Small helpers                               */
@@ -249,9 +250,9 @@ function exploredTester() {
   }
 }
 
-function context(token) {
+function context(token, { ignoreCost = false } = {}) {
   const size = canvas.grid.size;
-  const flags = `${keyDown("KeyQ")}|${keyDown("KeyT")}`;
+  const flags = `${keyDown("KeyQ")}|${keyDown("KeyT")}|${ignoreCost}`;
   const key = `${canvas.scene?.id}|${token.id}|${state.versions}|${flags}`;
   const now = Date.now();
   if (state.context?.key === key && now - state.context.time < 1500) return state.context;
@@ -261,7 +262,7 @@ function context(token) {
     time: now,
     size,
     blocked: wallIndex(size),
-    terrain: feature.get("avoidTerrain") && !keyDown("KeyT") ? terrainGrid(token.document, size) : new Map(),
+    terrain: feature.get("avoidTerrain") && !keyDown("KeyT") && !ignoreCost ? terrainGrid(token.document, size) : new Map(),
     threats: feature.get("avoidThreats") && !keyDown("KeyQ") ? threatGrid(token, size) : new Set(),
     explored: exploredTester(),
     rect: canvas.dimensions.sceneRect
@@ -385,7 +386,7 @@ function fullWaypoints(doc, waypoints) {
 
 function solve(token, waypoints, options) {
   const doc = token.document;
-  const ctx = context(token);
+  const ctx = context(token, { ignoreCost: !!options?.constrainOptions?.ignoreCost });
   const size = ctx.size;
   const full = fullWaypoints(doc, waypoints);
   const cellOf = w => ({ i: Math.round(w.x / size), j: Math.round(w.y / size) });
@@ -457,7 +458,13 @@ defineFeature({
     }
     feature.wrap(TokenClass.prototype, "findMovementPath", function (original, waypoints, options) {
       const c = options?.constrainOptions;
-      if (!isActive() || !squareGrid() || c?.ignoreWalls || c?.ignoreCost || !Array.isArray(waypoints) || waypoints.length < 2) {
+      // ignoreCost (Foundry sets it for the GM): still route around walls, just without terrain costs.
+      const skip = !isActive() ? "off" : !squareGrid() ? "not a square grid" : c?.ignoreWalls ? "Foundry asked to ignore walls" : !Array.isArray(waypoints) || waypoints.length < 2 ? null : "";
+      if (skip !== "") {
+        if (skip && !state.logged.has(skip)) {
+          state.logged.add(skip);
+          console.log(`${MODULE_ID} | Pathfinding skipped: ${skip}.`);
+        }
         return original(waypoints, options);
       }
       let cancelled = false;

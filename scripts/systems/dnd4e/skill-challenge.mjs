@@ -1,0 +1,788 @@
+import { MODULE_ID, error, localize } from "../../core/constants.js";
+import { defineFeature } from "../../core/registry.js";
+import { appElement } from "../../core/dom.js";
+import { watchDOM } from "../../core/dom-watch.js";
+import { broadcast, executeAsGM, onBroadcast, onGMRequest } from "../../core/socket.js";
+import { computeState, currentDC, isSpent, normalizeChallenge, otherSkill, resolveCheck, waitingBonus } from "./skill-challenge-engine.mjs";
+
+/*
+ * Skill Challenges (D&D 4e): run a challenge at the table.
+ *
+ * - A challenge is data on a journal text page (world or compendium), in
+ *   flags[MODULE_ID].skillChallenge. Format: docs/skill-challenge.md.
+ * - "Skill Challenges" button at the bottom of the Journal tab (GM): every
+ *   challenge found, with Start / Continue / Reset.
+ * - Runner window (GM): pick a character and a skill. The roll goes to that
+ *   character's player (to the GM when nobody who owns it is online) and uses
+ *   the system's own skill roll. The GM's client judges it against the DC and
+ *   counts it. Undo, and manual + Success / + Failure for improvised ideas.
+ * - Chat: one card per check. Open challenge: public, never with a DC.
+ *   Secret challenge: whispered to the GM (the player only sees the roll).
+ *   When it ends, a result card goes to the GM with "Show players".
+ * - Runs are kept in a world setting (several can run at once, they survive
+ *   reloads). Players' clients receive world settings, so a run stores no DC
+ *   and no GM text: only the page's uuid, its name and the log.
+ */
+
+const FLAG = "skillChallenge";
+const RUNS_KEY = "skillChallenge_runs";
+const esc = value => Handlebars.escapeExpression(String(value ?? ""));
+const { ApplicationV2, DialogV2 } = foundry.applications.api;
+const L = (key, data) => localize(`LUCD20.SkillChallenge.${key}`, data);
+
+const state = {
+	feature: null,
+	runs: {}, // key → { uuid, name, visibility, log, started, endPosted }
+	found: null, // [{ uuid, name, source, def }] (null = not searched yet)
+	defs: new Map(), // uuid → normalized challenge
+	pending: new Map(), // run key → { checkId, userId, actorUuid, actorName, skillDef }
+	view: new Map() // run key → { actorId, otherSkill, otherDC }
+};
+
+/* -------------------------------------------- */
+/*  Skills & characters                         */
+/* -------------------------------------------- */
+
+const skillIds = () => Object.keys(CONFIG.DND4E?.skills ?? {});
+
+function skillLabel(id) {
+	const label = CONFIG.DND4E?.skills?.[id]?.label;
+	return label ? game.i18n.localize(label) : id;
+}
+
+/** Player characters that can be asked to roll. */
+function characters() {
+	const pcs = (game.actors?.contents ?? [...(game.actors ?? [])]).filter(a => a.type === "Player Character");
+	const owned = pcs.filter(a => a.hasPlayerOwner);
+	return (owned.length ? owned : pcs).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+const skillTotal = (actor, skill) => {
+	const total = Number(actor?.system?.skills?.[skill]?.total);
+	return Number.isFinite(total) ? total : null;
+};
+const signed = n => (n >= 0 ? `+${n}` : `−${Math.abs(n)}`);
+
+/** Who rolls for this character: its player if online, else this GM. */
+function rollerFor(actor) {
+	const owners = game.users.filter(u => u.active && !u.isGM && actor.testUserPermission?.(u, "OWNER"));
+	return owners.find(u => u.character?.id === actor.id) ?? owners[0] ?? game.user;
+}
+
+/* -------------------------------------------- */
+/*  Finding challenges                          */
+/* -------------------------------------------- */
+
+const keyOf = uuid => uuid.replace(/[^A-Za-z0-9]/g, "_");
+const flagOf = page => page?.flags?.[MODULE_ID]?.[FLAG] ?? null;
+
+function collect(entry, source, out) {
+	for (const page of entry.pages ?? []) {
+		const def = normalizeChallenge(flagOf(page));
+		if (!def) continue;
+		state.defs.set(page.uuid, def);
+		out.push({ uuid: page.uuid, name: page.name, entry: entry.name, source, def });
+	}
+}
+
+/** Every challenge in the world's journals and in journal compendiums. */
+async function findChallenges({ refresh = false } = {}) {
+	if (state.found && !refresh) return state.found;
+	const out = [];
+	for (const entry of game.journal ?? []) collect(entry, null, out);
+	for (const pack of game.packs ?? []) {
+		if (pack.documentName !== "JournalEntry") continue;
+		try {
+			for (const entry of await pack.getDocuments()) collect(entry, pack.metadata?.label ?? pack.collection, out);
+		} catch (err) {
+			error(`Skill Challenges: could not read ${pack.collection}.`, err);
+		}
+	}
+	out.sort((a, b) => a.name.localeCompare(b.name));
+	state.found = out;
+	return out;
+}
+
+/** The challenge a run belongs to (read again from its page, so edits apply). */
+async function defFor(run) {
+	try {
+		const page = await fromUuid(run.uuid);
+		const def = normalizeChallenge(flagOf(page));
+		if (def) state.defs.set(run.uuid, def);
+	} catch (err) {
+		error("Skill Challenges: could not load the challenge's page.", err);
+	}
+	return state.defs.get(run.uuid) ?? null;
+}
+
+/* -------------------------------------------- */
+/*  Runs                                        */
+/* -------------------------------------------- */
+
+const isSecret = run => run.visibility === "secret";
+const gmIds = () => game.users.filter(u => u.isGM).map(u => u.id);
+const newId = () => foundry.utils.randomID?.() ?? Math.random().toString(36).slice(2, 18);
+
+async function saveRuns() {
+	try {
+		await game.settings.set(MODULE_ID, RUNS_KEY, state.runs);
+	} catch (err) {
+		error("Could not save the skill challenges.", err);
+	}
+}
+
+function startRun(found) {
+	const key = keyOf(found.uuid);
+	if (!state.runs[key]) {
+		const fallback = state.feature?.get("playersSeeProgress") ? "open" : "secret";
+		state.runs[key] = { uuid: found.uuid, name: found.name, visibility: found.def.visibility ?? fallback, log: [], started: Date.now(), endPosted: null };
+		saveRuns();
+	}
+	return key;
+}
+
+/** Add a log entry, save, tell the table, and close the challenge if it is decided. */
+async function addEntry(key, entry, detail = {}) {
+	const run = state.runs[key];
+	const def = run && await defFor(run);
+	if (!def) return;
+	run.log.push({ id: newId(), t: Date.now(), ...entry });
+	const st = computeState(def, run.log);
+	await saveRuns();
+	renderAll();
+	await postCard(run, def, st, entry, detail);
+	if (st.status !== "running" && run.endPosted !== st.status) {
+		run.endPosted = st.status;
+		await saveRuns();
+		await postEndCard(key, run, def, st);
+	}
+}
+
+async function undo(key) {
+	const run = state.runs[key];
+	const def = run && await defFor(run);
+	if (!def || !run.log.length) return;
+	run.log.pop();
+	const st = computeState(def, run.log);
+	if (st.status === "running") run.endPosted = null;
+	await saveRuns();
+	renderAll();
+	await postCard(run, def, st, { type: "undo" });
+}
+
+/* -------------------------------------------- */
+/*  Rolling                                     */
+/* -------------------------------------------- */
+
+async function requestCheck(key, actor, skillDef) {
+	if (state.pending.has(key)) return;
+	const user = rollerFor(actor);
+	const pending = { checkId: newId(), userId: user.id, userName: user.name, actorUuid: actor.uuid, actorName: actor.name, skillDef };
+	state.pending.set(key, pending);
+	renderAll();
+	if (user.id !== game.user.id) {
+		broadcast("skillChallenge.roll", { userId: user.id, actorUuid: actor.uuid, skill: skillDef.skill, checkId: pending.checkId });
+		return;
+	}
+	let total = null;
+	try {
+		total = (await actor.rollSkill(skillDef.skill))?.total ?? null;
+	} catch (err) {
+		error("Skill Challenges: the roll failed.", err);
+	}
+	await finishCheck(pending.checkId, total);
+}
+
+/** A player's client: the GM asked this user to roll. Only the skill is sent, never the DC. */
+async function onRollRequest({ userId, actorUuid, skill, checkId }) {
+	if (userId !== game.user.id || !state.feature?.active) return;
+	let total = null;
+	try {
+		const actor = await fromUuid(actorUuid);
+		ui.notifications?.info(L("Asked", { actor: actor.name, skill: skillLabel(skill) }));
+		total = (await actor.rollSkill(skill))?.total ?? null;
+	} catch (err) {
+		error("Skill Challenges: the roll failed.", err);
+	}
+	await executeAsGM("skillChallenge.result", { checkId, total });
+}
+
+/** The GM's client: a roll came back (total = null: it wasn't rolled). */
+async function finishCheck(checkId, total, senderId = null) {
+	const [key, pending] = [...state.pending].find(([, p]) => p.checkId === checkId) ?? [];
+	if (!pending || (senderId && senderId !== pending.userId)) return false;
+	state.pending.delete(key);
+	const run = state.runs[key];
+	const def = run && await defFor(run);
+	if (!def || total === null || total === undefined || !Number.isFinite(Number(total))) {
+		renderAll();
+		return false;
+	}
+	const { skillDef } = pending;
+	const result = resolveCheck(skillDef, computeState(def, run.log), Number(total));
+	await addEntry(key, {
+		type: "check", actorName: pending.actorName, actorUuid: pending.actorUuid, userId: pending.userId,
+		skillId: skillDef.id, skill: skillDef.skill, total: Number(total), bonus: result.bonus,
+		outcome: result.outcome, ds: result.ds, df: result.df, grant: result.grant
+	}, { dc: result.dc, skillDef });
+	return true;
+}
+
+/* -------------------------------------------- */
+/*  Chat cards                                  */
+/* -------------------------------------------- */
+
+function tallyHTML(def, st) {
+	const pips = (n, max, cls) => Array.from({ length: max }, (_, i) => `<i class="pip ${cls}${i < n ? " on" : ""}"></i>`).join("");
+	return `<div class="lucd20-sc-tally">
+		<span class="track success"><span class="label">${L("Successes")}</span><span class="pips">${pips(st.successes, def.successes, "success")}</span><b>${Math.min(st.successes, def.successes)}/${def.successes}</b></span>
+		<span class="track failure"><span class="label">${L("Failures")}</span><span class="pips">${pips(st.failures, def.failures, "failure")}</span><b>${Math.min(st.failures, def.failures)}/${def.failures}</b></span>
+	</div>`;
+}
+
+function grantText(grant) {
+	const skills = grant.skills?.length ? grant.skills.map(skillLabel).join(", ") : "";
+	const value = signed(grant.value);
+	return skills ? L("Effect.BonusFor", { value, skills }) : L("Effect.Bonus", { value });
+}
+
+/** What a log entry did, in words. */
+function effectText(entry, skillDef) {
+	const parts = [];
+	if (entry.ds > 0) parts.push(L("Effect.Success"));
+	if (entry.ds < 0) parts.push(L("Effect.SuccessRemoved"));
+	if (entry.df > 0) parts.push(L("Effect.Failure"));
+	if (entry.df < 0) parts.push(L("Effect.Cancel"));
+	if (entry.grant?.value) parts.push(grantText(entry.grant));
+	if (!parts.length && entry.type === "check") {
+		if (entry.outcome === "failure") parts.push(L("Effect.NoFailure"));
+		else if (skillDef?.effect === "success") parts.push(L("Effect.Spent"));
+		else if (skillDef?.effect === "cancelFailure") parts.push(L("Effect.NothingToCancel"));
+		else parts.push(L("Effect.NoSuccess"));
+	}
+	return parts.join(" · ");
+}
+
+/** One card per change. Public for an open challenge (no DC); whispered to the GM for a secret one. */
+async function postCard(run, def, st, entry, { dc, skillDef } = {}) {
+	const secret = isSecret(run);
+	const lines = [`<header><i class="fa-solid fa-list-check"></i> <strong>${esc(run.name)}</strong>${secret ? `<span class="secret">${L("Secret")}</span>` : ""}</header>`];
+	let cls = "";
+	if (entry.type === "check") {
+		cls = entry.outcome;
+		lines.push(`<p class="line"><strong>${esc(entry.actorName)}</strong> · ${esc(skillLabel(entry.skill))}: <span class="outcome">${L(entry.outcome === "success" ? "Success" : "Failure")}</span></p>`);
+		// Only on the GM's private card: the numbers.
+		if (secret && dc !== undefined) lines.push(`<p class="meta">${rollText(entry, dc)}</p>`);
+	} else if (entry.type === "undo") {
+		lines.push(`<p class="line">${L("Undone")}</p>`);
+	} else {
+		lines.push(`<p class="line">${L("ByGM")}</p>`);
+	}
+	const effect = entry.type === "undo" ? "" : effectText(entry, skillDef);
+	if (effect) lines.push(`<p class="effect">${esc(effect)}</p>`);
+	lines.push(tallyHTML(def, st));
+	const data = {
+		content: `<div class="lucd20-sc-card ${cls}">${lines.join("")}</div>`,
+		speaker: { alias: L("Speaker") }
+	};
+	if (secret) data.whisper = gmIds();
+	try {
+		await ChatMessage.create(data);
+	} catch (err) {
+		error("Skill Challenges: could not post the card.", err);
+	}
+}
+
+const rollText = (entry, dc) => L("RollVsDC", { total: entry.total, bonus: entry.bonus ? ` ${signed(entry.bonus)}` : "", dc });
+
+function contributors(run) {
+	const by = new Map();
+	for (const e of run.log) {
+		if (e.type !== "check") continue;
+		const c = by.get(e.actorName) ?? { checks: 0, successes: 0 };
+		c.checks += 1;
+		if (e.outcome === "success") c.successes += 1;
+		by.set(e.actorName, c);
+	}
+	return [...by].map(([name, c]) => `<li><strong>${esc(name)}</strong>: ${L("Contribution", c)}</li>`).join("");
+}
+
+function resultBody(run, def, st) {
+	const text = st.status === "success" ? def.successText : def.failureText;
+	const who = contributors(run);
+	return [
+		`<p class="result">${L(st.status === "success" ? "ResultSuccess" : "ResultFailure")}</p>`,
+		tallyHTML(def, st),
+		who ? `<ul class="who">${who}</ul>` : "",
+		text ? `<p class="outcome-text">${esc(text).replace(/\n/g, "<br>")}</p>` : ""
+	].join("");
+}
+
+/** The result goes to the GM first; "Show players" posts the public card. */
+async function postEndCard(key, run, def, st) {
+	const header = `<header><i class="fa-solid fa-flag-checkered"></i> <strong>${esc(run.name)}</strong><span class="secret">${L("GMOnly")}</span></header>`;
+	const xp = def.xp ? `<p class="meta">${L("XP", { level: def.level, xp: def.xp })}</p>` : "";
+	const button = `<button type="button" data-lucd20-sc="reveal" data-key="${esc(key)}"><i class="fa-solid fa-bullhorn"></i> ${L("ShowPlayers")}</button>`;
+	try {
+		await ChatMessage.create({
+			content: `<div class="lucd20-sc-card end ${st.status}">${header}${resultBody(run, def, st)}${xp}${button}</div>`,
+			whisper: gmIds(),
+			speaker: { alias: L("Speaker") }
+		});
+	} catch (err) {
+		error("Skill Challenges: could not post the result.", err);
+	}
+}
+
+async function revealResult(key) {
+	const run = state.runs[key];
+	const def = run && await defFor(run);
+	if (!def) return ui.notifications?.warn(L("Missing"));
+	const st = computeState(def, run.log);
+	if (st.status === "running") return ui.notifications?.warn(L("NotOver"));
+	const header = `<header><i class="fa-solid fa-flag-checkered"></i> <strong>${esc(run.name)}</strong></header>`;
+	await ChatMessage.create({
+		content: `<div class="lucd20-sc-card end ${st.status}">${header}${resultBody(run, def, st)}</div>`,
+		speaker: { alias: L("Speaker") }
+	});
+}
+
+function onRenderChatMessage(message, html) {
+	const root = html instanceof HTMLElement ? html : html?.[0];
+	for (const button of root?.querySelectorAll?.('[data-lucd20-sc="reveal"]') ?? []) {
+		if (!game.user.isGM) button.remove();
+		else button.addEventListener("click", event => {
+			event.preventDefault();
+			revealResult(button.dataset.key);
+		});
+	}
+}
+
+/* -------------------------------------------- */
+/*  List window                                 */
+/* -------------------------------------------- */
+
+function statusPill(def, run) {
+	if (!run) return `<span class="pill off">${L("Status.New")}</span>`;
+	const st = computeState(def, run.log);
+	const tally = `${st.successes}/${def.successes} · ${st.failures}/${def.failures}`;
+	if (st.status === "success") return `<span class="pill found"><i class="fa-solid fa-check"></i> ${L("Success")} ${tally}</span>`;
+	if (st.status === "failure") return `<span class="pill failed"><i class="fa-solid fa-xmark"></i> ${L("Failure")} ${tally}</span>`;
+	return `<span class="pill hidden">${L("Status.Running")} ${tally}</span>`;
+}
+
+function listHTML(found) {
+	if (found === null) return `<div class="lucd20-loot-empty"><i class="fa-solid fa-spinner fa-spin ll-empty-art"></i><p class="sub">${L("Searching")}</p></div>`;
+	const rows = found.map(f => {
+		const run = state.runs[keyOf(f.uuid)];
+		const where = [f.source ?? L("World"), f.entry !== f.name ? f.entry : null].filter(Boolean).join(" · ");
+		const what = [f.def.level ? L("Level", { level: f.def.level }) : null, L(f.def.failures === 1 ? "GoalOneFailure" : "Goal", f.def)].filter(Boolean).join(" · ");
+		return `<li class="lucd20-sc-row" data-uuid="${esc(f.uuid)}">
+			<div class="who"><span class="name">${esc(f.name)}</span><span class="sub">${esc(what)}</span><span class="sub">${esc(where)}</span></div>
+			${statusPill(f.def, run)}
+			<div class="actions">
+				<button type="button" class="ll-btn ll-btn-take" data-action="open"><i class="fa-solid ${run ? "fa-play" : "fa-flag"} ll-i"></i> ${L(run ? "Continue" : "Start")}</button>
+				<button type="button" class="ll-btn ll-btn-square" data-action="page" data-tooltip="${esc(L("OpenPage"))}" aria-label="${esc(L("OpenPage"))}"><i class="fa-solid fa-book-open ll-i"></i></button>
+				<button type="button" class="ll-btn ll-btn-square ll-btn-danger" data-action="reset" ${run ? "" : "disabled"} data-tooltip="${esc(L("Reset"))}" aria-label="${esc(L("Reset"))}"><i class="fa-solid fa-rotate-left ll-i"></i></button>
+			</div>
+		</li>`;
+	}).join("");
+	const body = found.length
+		? `<ol class="lucd20-sc-list">${rows}</ol>`
+		: `<div class="lucd20-loot-empty"><i class="fa-solid fa-list-check ll-empty-art"></i><p class="title">${L("Empty")}</p><p class="sub">${L("EmptyHint")}</p></div>`;
+	return `<div class="lucd20-sc-body">
+		<div class="lucd20-sc-scroll">${body}</div>
+		<footer class="lucd20-loot-footer"><button type="button" class="ll-btn ll-btn-footer" data-action="refresh"><i class="fa-solid fa-rotate ll-i"></i> ${L("Refresh")}</button></footer>
+	</div>`;
+}
+
+class SkillChallengeList extends ApplicationV2 {
+	static DEFAULT_OPTIONS = {
+		id: "lucd20-skill-challenges",
+		classes: ["lucd20-loot-app", "lucd20-sc-list-window"],
+		window: { title: "LUCD20.SkillChallenge.Title", icon: "fa-solid fa-list-check", resizable: true },
+		position: { width: 520, height: 480 },
+		actions: {
+			open: SkillChallengeList.#onOpen,
+			page: SkillChallengeList.#onPage,
+			reset: SkillChallengeList.#onReset,
+			refresh: SkillChallengeList.#onRefresh
+		}
+	};
+
+	static get instance() {
+		return foundry.applications.instances?.get(this.DEFAULT_OPTIONS.id) ?? null;
+	}
+
+	static open() {
+		const app = this.instance ?? new this();
+		app.render({ force: true });
+		if (!state.found) findChallenges().then(() => app.rendered && app.render());
+		return app;
+	}
+
+	async _renderHTML() {
+		return listHTML(state.found);
+	}
+
+	_replaceHTML(result, content) {
+		const top = content.querySelector(".lucd20-sc-scroll")?.scrollTop ?? 0;
+		content.innerHTML = result;
+		const scroll = content.querySelector(".lucd20-sc-scroll");
+		if (scroll) scroll.scrollTop = top;
+	}
+
+	static #found(target) {
+		const uuid = target.closest("[data-uuid]")?.dataset.uuid;
+		return state.found?.find(f => f.uuid === uuid) ?? null;
+	}
+
+	static #onOpen(event, target) {
+		const found = SkillChallengeList.#found(target);
+		if (!found) return;
+		SkillChallengeRunner.open(startRun(found));
+		this.render();
+	}
+
+	static async #onPage(event, target) {
+		const page = await fromUuid(SkillChallengeList.#found(target)?.uuid ?? "");
+		(page?.parent ?? page)?.sheet?.render(true, { pageId: page.id });
+	}
+
+	static async #onReset(event, target) {
+		const found = SkillChallengeList.#found(target);
+		if (!found) return;
+		const ok = await DialogV2.confirm({
+			window: { title: L("ResetTitle"), icon: "fa-solid fa-rotate-left" },
+			content: `<p>${L("ResetContent", { name: esc(found.name) })}</p>`
+		});
+		if (!ok) return;
+		const key = keyOf(found.uuid);
+		delete state.runs[key];
+		state.pending.delete(key);
+		SkillChallengeRunner.instance(key)?.close();
+		await saveRuns();
+		renderAll();
+	}
+
+	static async #onRefresh() {
+		state.found = null;
+		this.render();
+		await findChallenges({ refresh: true });
+		this.render();
+	}
+}
+
+/* -------------------------------------------- */
+/*  Runner window                               */
+/* -------------------------------------------- */
+
+const EFFECT_ICONS = { bonus: "fa-circle-plus", cancelFailure: "fa-eraser", none: "fa-circle-minus" };
+
+function skillRowHTML(s, st, actor, locked) {
+	const dc = currentDC(s, st);
+	const spent = isSpent(s, st);
+	const total = skillTotal(actor, s.skill);
+	const bonus = waitingBonus(s, st);
+	const chips = [`<span class="chip dc" ${s.dcStep ? `data-tooltip="${esc(L("DCStep", { step: signed(s.dcStep) }))}"` : ""}>${L("DC", { dc })}${s.dcStep ? ` <i class="fa-solid fa-arrow-trend-up"></i>` : ""}</span>`];
+	if (s.max) chips.push(`<span class="chip${spent ? " spent" : ""}" data-tooltip="${esc(L(s.effect === "success" ? "MaxSuccesses" : "MaxUses", { max: s.max }))}">${st.wins[s.id] ?? 0}/${s.max}</span>`);
+	if (s.effect !== "success") chips.push(`<span class="chip effect" data-tooltip="${esc(L(`Does.${s.effect}`, { value: signed(s.bonus) }))}"><i class="fa-solid ${EFFECT_ICONS[s.effect]}"></i></span>`);
+	if (bonus) chips.push(`<span class="chip bonus">${signed(bonus)}</span>`);
+	return `<li class="lucd20-sc-skill${spent ? " spent" : ""}" data-skill="${esc(s.id)}">
+		<div class="main">
+			<span class="name">${esc(skillLabel(s.skill))}${total === null ? "" : ` <span class="mod">${signed(total)}</span>`}</span>
+			<span class="chips">${chips.join("")}</span>
+			<button type="button" class="ll-btn ll-btn-take" data-action="roll" ${locked || spent || !actor ? "disabled" : ""}><i class="fa-solid fa-dice-d20 ll-i"></i> ${L("Roll")}</button>
+		</div>
+		${s.note ? `<p class="note">${esc(s.note)}</p>` : ""}
+	</li>`;
+}
+
+function logHTML(def, run) {
+	// Replay the log to show each check's DC at the time (the log itself stores none).
+	const rows = [];
+	const sofar = [];
+	for (const e of run.log) {
+		const before = computeState(def, sofar);
+		sofar.push(e);
+		if (e.type === "check") {
+			const s = def.skills.find(x => x.id === e.skillId);
+			const numbers = s ? rollText(e, currentDC(s, before)) : L("RollOnly", { total: e.total });
+			rows.push(`<li class="${e.outcome}"><span class="what"><strong>${esc(e.actorName)}</strong> · ${esc(skillLabel(e.skill))} <span class="numbers">${numbers}</span></span><span class="did">${esc(effectText(e, s))}</span></li>`);
+		} else {
+			rows.push(`<li class="manual"><span class="what">${L("ByGM")}</span><span class="did">${esc(effectText(e))}</span></li>`);
+		}
+	}
+	return rows.reverse().join("");
+}
+
+function runnerHTML(key) {
+	const run = state.runs[key];
+	const def = run && state.defs.get(run.uuid);
+	if (!run) return `<div class="lucd20-loot-empty"><p class="title">${L("Missing")}</p></div>`;
+	if (!def) return `<div class="lucd20-loot-empty"><i class="fa-solid fa-spinner fa-spin ll-empty-art"></i><p class="sub">${L("Searching")}</p></div>`;
+	const st = computeState(def, run.log);
+	const view = state.view.get(key) ?? {};
+	const pcs = characters();
+	const actor = pcs.find(a => a.id === view.actorId) ?? pcs[0] ?? null;
+	const pending = state.pending.get(key);
+	const over = st.status !== "running";
+	const locked = over || !!pending;
+	const secret = isSecret(run);
+
+	const banner = pending
+		? `<div class="lucd20-sc-banner waiting"><i class="fa-solid fa-hourglass-half"></i><span>${L("Waiting", { user: esc(pending.userName), actor: esc(pending.actorName), skill: esc(skillLabel(pending.skillDef.skill)) })}</span>
+				<button type="button" class="ll-btn" data-action="cancelPending">${L("Cancel")}</button></div>`
+		: over
+			? `<div class="lucd20-sc-banner ${st.status}"><i class="fa-solid ${st.status === "success" ? "fa-check" : "fa-xmark"}"></i><span>${L(st.status === "success" ? "ResultSuccess" : "ResultFailure")}</span>
+				<button type="button" class="ll-btn" data-action="reveal"><i class="fa-solid fa-bullhorn ll-i"></i> ${L("ShowPlayers")}</button></div>`
+			: st.bonuses.length
+				? `<div class="lucd20-sc-banner bonus"><i class="fa-solid fa-circle-plus"></i><span>${st.bonuses.map(g => esc(grantText(g))).join(" · ")}</span></div>`
+				: "";
+
+	const group = role => {
+		const list = def.skills.filter(s => s.role === role);
+		return list.length ? `<h4>${L(role === "primary" ? "Primary" : "Secondary")}</h4><ol class="lucd20-sc-skills">${list.map(s => skillRowHTML(s, st, actor, locked)).join("")}</ol>` : "";
+	};
+	const others = skillIds();
+	const otherSkillId = others.includes(view.otherSkill) ? view.otherSkill : others[0];
+	const other = others.length ? `<h4>${L("Other")}</h4>
+		<div class="lucd20-sc-other">
+			<select name="otherSkill" aria-label="${esc(L("Other"))}">${others.map(id => `<option value="${esc(id)}" ${id === otherSkillId ? "selected" : ""}>${esc(skillLabel(id))}</option>`).join("")}</select>
+			<label>${L("DCLabel")} <input type="number" name="otherDC" value="${esc(view.otherDC ?? 10)}" min="0" step="1"></label>
+			<button type="button" class="ll-btn ll-btn-take" data-action="rollOther" ${locked || !actor ? "disabled" : ""}><i class="fa-solid fa-dice-d20 ll-i"></i> ${L("Roll")}</button>
+		</div>` : "";
+	const notes = [def.note, def.successText && `${L("OnSuccess")}: ${def.successText}`, def.failureText && `${L("OnFailure")}: ${def.failureText}`].filter(Boolean);
+	const log = logHTML(def, run);
+
+	return `<div class="lucd20-sc-body">
+		<header class="lucd20-sc-head">
+			${tallyHTML(def, st)}
+			<div class="meta">
+				<span>${[def.level ? L("Level", { level: def.level }) : null, def.xp ? L("XPShort", { xp: def.xp }) : null].filter(Boolean).join(" · ")}</span>
+				<button type="button" class="ll-btn" data-action="visibility" data-tooltip="${esc(L(secret ? "SecretHint" : "OpenHint"))}"><i class="fa-solid ${secret ? "fa-eye-slash" : "fa-eye"} ll-i"></i> ${L(secret ? "SecretLabel" : "OpenLabel")}</button>
+			</div>
+		</header>
+		${banner}
+		<div class="lucd20-loot-taker">
+			<label for="lucd20-sc-actor-${esc(key)}">${L("Character")}</label>
+			${pcs.length ? `<select id="lucd20-sc-actor-${esc(key)}" name="actor">${pcs.map(a => `<option value="${esc(a.id)}" ${a.id === actor?.id ? "selected" : ""}>${esc(a.name)}</option>`).join("")}</select>` : `<span class="label">${L("NoCharacters")}</span>`}
+		</div>
+		<div class="lucd20-sc-scroll">
+			${group("primary")}${group("secondary")}${other}
+			${notes.length ? `<h4>${L("Notes")}</h4>${notes.map(n => `<p class="lucd20-sc-notes">${esc(n).replace(/\n/g, "<br>")}</p>`).join("")}` : ""}
+			${log ? `<h4>${L("Log")}</h4><ol class="lucd20-sc-log">${log}</ol>` : ""}
+		</div>
+		<footer class="lucd20-loot-footer">
+			<button type="button" class="ll-btn ll-btn-footer" data-action="manual" data-ds="1" ${over ? "disabled" : ""}><i class="fa-solid fa-plus ll-i"></i> ${L("Success")}</button>
+			<button type="button" class="ll-btn ll-btn-footer" data-action="manual" data-df="1" ${over ? "disabled" : ""}><i class="fa-solid fa-plus ll-i"></i> ${L("Failure")}</button>
+			<button type="button" class="ll-btn ll-btn-footer sc-undo" data-action="undo" ${run.log.length && !pending ? "" : "disabled"}><i class="fa-solid fa-rotate-left ll-i"></i> ${L("Undo")}</button>
+		</footer>
+	</div>`;
+}
+
+class SkillChallengeRunner extends ApplicationV2 {
+	static DEFAULT_OPTIONS = {
+		classes: ["lucd20-loot-app", "lucd20-sc-runner"],
+		window: { title: "LUCD20.SkillChallenge.Title", icon: "fa-solid fa-list-check", resizable: true },
+		position: { width: 440, height: 640 },
+		actions: {
+			roll: SkillChallengeRunner.#onRoll,
+			rollOther: SkillChallengeRunner.#onRollOther,
+			manual: SkillChallengeRunner.#onManual,
+			undo: SkillChallengeRunner.#onUndo,
+			cancelPending: SkillChallengeRunner.#onCancelPending,
+			visibility: SkillChallengeRunner.#onVisibility,
+			reveal: SkillChallengeRunner.#onReveal
+		}
+	};
+
+	constructor(key) {
+		super({ id: SkillChallengeRunner.idFor(key) });
+		this.key = key;
+	}
+
+	static idFor = key => `lucd20-sc-run-${key}`;
+
+	static instance(key) {
+		return foundry.applications.instances?.get(this.idFor(key)) ?? null;
+	}
+
+	static all() {
+		return [...(foundry.applications.instances?.values() ?? [])].filter(app => app instanceof SkillChallengeRunner);
+	}
+
+	static open(key) {
+		const app = this.instance(key) ?? new this(key);
+		const run = state.runs[key];
+		if (run) defFor(run).then(() => app.render({ force: true }));
+		return app;
+	}
+
+	get title() {
+		return state.runs[this.key]?.name ?? L("Title");
+	}
+
+	async _renderHTML() {
+		return runnerHTML(this.key);
+	}
+
+	_replaceHTML(result, content) {
+		const top = content.querySelector(".lucd20-sc-scroll")?.scrollTop ?? 0;
+		content.innerHTML = result;
+		const scroll = content.querySelector(".lucd20-sc-scroll");
+		if (scroll) scroll.scrollTop = top;
+	}
+
+	_onRender() {
+		const root = appElement(this);
+		const view = this.#view();
+		root?.querySelector('select[name="actor"]')?.addEventListener("change", event => {
+			view.actorId = event.target.value;
+			this.render();
+		});
+		root?.querySelector('select[name="otherSkill"]')?.addEventListener("change", event => (view.otherSkill = event.target.value));
+		root?.querySelector('input[name="otherDC"]')?.addEventListener("change", event => (view.otherDC = Number(event.target.value) || 0));
+	}
+
+	#view() {
+		if (!state.view.has(this.key)) state.view.set(this.key, {});
+		return state.view.get(this.key);
+	}
+
+	#actor() {
+		const pcs = characters();
+		return pcs.find(a => a.id === this.#view().actorId) ?? pcs[0] ?? null;
+	}
+
+	static async #onRoll(event, target) {
+		const def = state.defs.get(state.runs[this.key]?.uuid);
+		const skillDef = def?.skills.find(s => s.id === target.closest("[data-skill]")?.dataset.skill);
+		const actor = this.#actor();
+		if (skillDef && actor) await requestCheck(this.key, actor, skillDef);
+	}
+
+	static async #onRollOther() {
+		const root = appElement(this);
+		const skill = root?.querySelector('select[name="otherSkill"]')?.value;
+		const dc = Number(root?.querySelector('input[name="otherDC"]')?.value);
+		const actor = this.#actor();
+		if (!skill || !actor || !Number.isFinite(dc)) return;
+		Object.assign(this.#view(), { otherSkill: skill, otherDC: dc });
+		await requestCheck(this.key, actor, otherSkill(skill, dc));
+	}
+
+	static async #onManual(event, target) {
+		await addEntry(this.key, { type: "manual", ds: Number(target.dataset.ds) || 0, df: Number(target.dataset.df) || 0 });
+	}
+
+	static async #onUndo() {
+		await undo(this.key);
+	}
+
+	static #onCancelPending() {
+		state.pending.delete(this.key);
+		renderAll();
+	}
+
+	static async #onVisibility() {
+		const run = state.runs[this.key];
+		if (!run) return;
+		run.visibility = isSecret(run) ? "open" : "secret";
+		await saveRuns();
+		renderAll();
+	}
+
+	static async #onReveal() {
+		await revealResult(this.key);
+	}
+}
+
+function renderAll() {
+	const list = SkillChallengeList.instance;
+	if (list?.rendered) list.render();
+	for (const app of SkillChallengeRunner.all()) if (app.rendered) app.render();
+}
+
+/* -------------------------------------------- */
+/*  Journal tab button                          */
+/* -------------------------------------------- */
+
+function addDirectoryButton(root) {
+	if (!root || root.querySelector(".lucd20-sc-open")) return;
+	let footer = root.querySelector(".directory-footer");
+	if (!footer) {
+		footer = document.createElement("footer");
+		footer.className = "directory-footer action-buttons lucd20-directory-footer";
+		root.append(footer);
+	}
+	const button = document.createElement("button");
+	button.type = "button";
+	button.className = "lucd20-sc-open";
+	button.innerHTML = `<i class="fa-solid fa-list-check"></i> ${L("Title")}`;
+	button.addEventListener("click", event => {
+		event.preventDefault();
+		SkillChallengeList.open();
+	});
+	footer.append(button);
+}
+
+/* -------------------------------------------- */
+/*  Feature                                     */
+/* -------------------------------------------- */
+
+defineFeature({
+	id: "dnd4eSkillChallenge",
+	category: "dnd4e",
+	systems: ["dnd4e"],
+	scope: "world",
+	gmOnly: true,
+	defaultEnabled: true,
+	settings: {
+		playersSeeProgress: { kind: "boolean", default: true }
+	},
+	onSettingChange() {},
+
+	init() {
+		game.settings.register(MODULE_ID, RUNS_KEY, {
+			scope: "world",
+			config: false,
+			type: Object,
+			default: {},
+			onChange: value => {
+				if (game.user.isActiveGM) return; // this client's copy is the source
+				state.runs = foundry.utils.deepClone(value ?? {});
+				renderAll();
+			}
+		});
+		// Always registered; they do nothing while the feature is off.
+		onBroadcast("skillChallenge.roll", payload => onRollRequest(payload));
+		onGMRequest("skillChallenge.result", ({ checkId, total }, senderId) => (state.feature?.active ? finishCheck(checkId, total, senderId) : false));
+	},
+
+	enable(feature) {
+		state.feature = feature;
+		feature.on("renderChatMessageHTML", onRenderChatMessage);
+		if (game.user.isGM) {
+			state.runs = foundry.utils.deepClone(game.settings.get(MODULE_ID, RUNS_KEY) ?? {});
+			// New, changed or removed journal pages: search again next time the list opens.
+			for (const hook of ["createJournalEntryPage", "updateJournalEntryPage", "deleteJournalEntryPage", "createJournalEntry", "deleteJournalEntry"]) {
+				feature.on(hook, () => (state.found = null));
+			}
+			feature.onCleanup(watchDOM("skill-challenge-button", () => {
+				addDirectoryButton(appElement(ui.journal) ?? document.getElementById("journal"));
+			}));
+		}
+		feature.onCleanup(() => {
+			document.querySelectorAll(".lucd20-sc-open, .lucd20-directory-footer:empty").forEach(el => el.remove());
+			SkillChallengeList.instance?.close();
+			for (const app of SkillChallengeRunner.all()) app.close();
+			state.pending.clear();
+			state.found = null;
+			state.feature = null;
+		});
+	}
+});
+
+/** For the harness. */
+export const _test = { state, SkillChallengeList, SkillChallengeRunner, findChallenges, startRun, finishCheck, keyOf };

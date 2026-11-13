@@ -37,7 +37,7 @@ const out = __dirname;
   await page.waitForTimeout(150);
   const cards = await page.$$eval('.lucd20-hub-category[data-category="dnd4e"] .lucd20-feature', els => els.map(e => [e.innerText.split("\n")[0].trim(), e.classList.contains("planned")]));
   console.log(cards);
-  assert.strictEqual(cards.length, 13, "13 cards");
+  assert.strictEqual(cards.length, 14, "14 cards (13 from the merge + Skill Challenges)");
   assert.ok(cards.every(c => !c[1]), "all built");
   await page.evaluate(() => { const f = document.querySelector("form.lucd20-hub"); f.style.height = "960px"; });
   await page.screenshot({ path: `${out}/p26-dnd4e-cards.png` });

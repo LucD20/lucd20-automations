@@ -865,6 +865,7 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 | 24 | Token Tooltip editor, data browser, TTA import | ✅ v0.27.0 |
 | 25 | Pathfinding; tooltip helpers + hide while dragging | ✅ v0.28.0 |
 | 26–28 | Merge D&D 4e Combat Automation | §8 |
+| 29–30 | D&D 4e Skill Challenges | §9 (29: ✅ v0.31.0) |
 
 ---
 
@@ -873,6 +874,7 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 - Next pass: see §6.3 (all answered).
 - Third pass: see §7.3 (all answered).
 - D&D 4e merge: see §8.3.
+- Skill Challenges: see §9.4.
 
 ---
 
@@ -1255,3 +1257,68 @@ What it has (from its code and README):
 | Q34 | Keep the Portuguese translation (a pt-BR file for the merged module; the rest of the module stays English until translated) and the "4e game language" option? | Yes. |
 | Q35 | Migrate the old module's data automatically the first time the GM loads the world (monster texts, power-level marks, current quarry / curse / mark effects, action state)? | Yes, then tell the GM it's done. |
 | Q36 | Any overlap you want merged rather than kept side by side (e.g. its opportunity-attack cards and Pathfinding's enemy avoidance, its 0-HP quarry end and Defeat at 0 HP)? | Keep side by side. |
+
+---
+
+## 9. D&D 4e Skill Challenges
+
+A tool to run a 4e skill challenge at the table. The tool is generic and lives
+here; the challenges themselves are data on journal pages (the owner's
+adventures are in the private `LucD20/lucd20-personal` module: never copy
+adventure text into this repo).
+
+### 9.1 Decisions (Q37–Q46, all as recommended)
+
+- **Data**: a normal journal text page with
+  `flags["lucd20-automations"].skillChallenge` (format:
+  `docs/skill-challenge.md`). The page text is what the GM reads; the flag is
+  what the tool runs. Works from the world and from any journal compendium.
+- **Running state**: world setting `skillChallenge_runs`, one record per
+  started challenge (several at once, survive reloads). A record is only the
+  page's uuid, its name, open/secret and a **log**; the tally, uses per skill,
+  current DCs and waiting bonuses are replayed from the log, so Undo drops the
+  last entry. **No DC and no GM text is stored**: players' clients receive
+  world settings. The compendium is never written to.
+- **Opening**: "Skill Challenges" button at the bottom of the Journal tab
+  (GM): every challenge found, with Start / Continue, open the page, Reset.
+- **Rolling**: the GM picks a character and a skill in the runner. The roll
+  goes to that character's player if online (else the GM rolls) through the
+  system's own `actor.rollSkill`, so readable-roll parts and bonuses apply.
+  Only the skill is sent, never the DC. The GM's client judges and counts;
+  only the asked player's answer is accepted. Undo, manual + Success /
+  + Failure, and an "Other skill" row (any skill, typed DC).
+- **Players see**: per challenge. Open = a public card per check ("Stealth:
+  Success", what it did, the tally), never a DC. Secret = the card is
+  whispered to the GM with the numbers; the player only sees the roll.
+- **Rules automated (29)**: DC per skill, primary / secondary, maximum
+  successes per skill, DC +N per use, secondary effects (bonus to the next
+  check, penalty on a failed check, cancel a failure, nothing). A waiting
+  bonus is added by the GM's client when judging (it is not put in the roll).
+- **End**: result card to the GM (tally, who contributed, outcome text, XP)
+  with **Show players**, which posts the public card (no XP). XP is not
+  awarded automatically.
+- **Settings**: one card "Skill Challenges" in D&D 4e, `gmOnly`, on by
+  default; option "Players see progress by default".
+- Code: `scripts/systems/dnd4e/skill-challenge-engine.mjs` (rules, no Foundry
+  calls) and `skill-challenge.mjs` (feature, windows, chat). Windows use the
+  `lucd20-loot-app` look; styles at the end of `styles/dnd4e.css`. EN + pt-BR.
+
+### 9.2 Build order
+
+| # | Phase | Notes |
+|---|---|---|
+| 29 | Core: format, list, runner, counting, chat cards, saved state | ✅ v0.31.0 |
+| 30 | Players' tracker, group checks, routes / stages, in-Foundry editor | questions first |
+
+### 9.3 Not built yet / to verify
+
+- **"Run" button on the journal page itself** (part of Q40): not built. The
+  journal sheet's header in V14 could not be checked here **(verify)**; the
+  owner checks in Foundry, then it is added (phase 30).
+- "Open the journal page" in the list calls `entry.sheet.render(true,
+  { pageId })` **(verify)** that it opens on the right page in V14.
+
+### 9.4 Questions for the owner
+
+Q37–Q46 answered (all as recommended). Phase 30 questions are asked before
+building it.

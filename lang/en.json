@@ -651,6 +651,16 @@
             "Hint": "Takes effect after a reload."
           }
         }
+      },
+      "dnd4eSkillChallenge": {
+        "Name": "Skill Challenges",
+        "Hint": "Run a skill challenge at the table: pick a character and a skill, the player rolls, and the module judges the roll against the DC and counts successes and failures. Challenges are journal pages; open them from the Skill Challenges button at the bottom of the Journal tab. Players never see a DC.",
+        "Setting": {
+          "playersSeeProgress": {
+            "Name": "Players see progress by default",
+            "Hint": "For challenges that don't say so themselves: on = each check's result and the tally go to chat for everyone; off = secret, results are whispered to the GM. Can be switched per challenge in its window."
+          }
+        }
       }
     },
     "ForceSettings": {
@@ -1105,6 +1115,86 @@
     "DnD4e": {
       "Migrated": "D&D 4e Combat Automation's data moved into LucD20 Automations: {texts} monster texts, {levels} power marks, {switches} switches, {docs} actors / effects / tokens / combatants / messages. You can disable the old module.",
       "MigrationFailed": "LucD20 Automations: moving D&D 4e Combat Automation's data failed (see the console, F12). It will try again on the next load."
+    },
+    "SkillChallenge": {
+      "Title": "Skill Challenges",
+      "Speaker": "Skill Challenge",
+      "World": "World journal",
+      "Searching": "Looking for challenges…",
+      "Empty": "No skill challenges found.",
+      "EmptyHint": "A challenge is a journal page (in the world or in a compendium) with skill challenge data.",
+      "Refresh": "Refresh",
+      "Start": "Start",
+      "Continue": "Continue",
+      "Reset": "Reset (clear its progress)",
+      "OpenPage": "Open the journal page",
+      "ResetTitle": "Reset the challenge",
+      "ResetContent": "Clear all progress of <strong>{name}</strong>? Its successes, failures and log are deleted.",
+      "Level": "Level {level}",
+      "XPShort": "{xp} XP",
+      "XP": "Level {level} · {xp} XP (GM: award it yourself)",
+      "Goal": "{successes} successes before {failures} failures",
+      "GoalOneFailure": "{successes} successes before 1 failure",
+      "Status": {
+        "New": "Not started",
+        "Running": "Running"
+      },
+      "Successes": "Successes",
+      "Failures": "Failures",
+      "Success": "Success",
+      "Failure": "Failure",
+      "Primary": "Primary skills",
+      "Secondary": "Secondary skills",
+      "Other": "Other skill",
+      "Notes": "GM notes",
+      "Log": "Log",
+      "OnSuccess": "On success",
+      "OnFailure": "On failure",
+      "Character": "Character",
+      "NoCharacters": "No player characters in this world.",
+      "Roll": "Roll",
+      "DC": "DC {dc}",
+      "DCLabel": "DC",
+      "DCStep": "The DC changes by {step} each time this skill is used.",
+      "MaxSuccesses": "Successes from this skill (maximum {max})",
+      "MaxUses": "Successful uses of this skill (maximum {max})",
+      "Does": {
+        "bonus": "A success gives {value} to the next check and doesn't count as a success.",
+        "cancelFailure": "A success cancels 1 failure and doesn't count as a success.",
+        "none": "A success doesn't count as a success in the challenge."
+      },
+      "Effect": {
+        "Success": "1 success",
+        "SuccessRemoved": "1 success removed",
+        "Failure": "1 failure",
+        "Cancel": "1 failure cancelled",
+        "Bonus": "{value} to the next check",
+        "BonusFor": "{value} to the next check with {skills}",
+        "NoFailure": "Doesn't count as a failure",
+        "NoSuccess": "Doesn't count as a success",
+        "Spent": "This skill can't give more successes",
+        "NothingToCancel": "No failure to cancel"
+      },
+      "RollVsDC": "{total}{bonus} vs DC {dc}",
+      "RollOnly": "{total}",
+      "Waiting": "Waiting for {user} to roll {skill} for {actor}…",
+      "Cancel": "Cancel",
+      "Asked": "The GM asks for a {skill} check from {actor}.",
+      "Undo": "Undo",
+      "Undone": "The last result was undone.",
+      "ByGM": "Changed by the GM",
+      "Secret": "Secret",
+      "GMOnly": "GM only",
+      "SecretLabel": "Secret",
+      "OpenLabel": "Players see progress",
+      "SecretHint": "Secret: results and the tally are whispered to the GM. Click to let players see them.",
+      "OpenHint": "Each result and the tally go to chat for everyone (never a DC). Click to make it secret.",
+      "ResultSuccess": "The challenge succeeded.",
+      "ResultFailure": "The challenge failed.",
+      "ShowPlayers": "Show players",
+      "Contribution": "{successes} of {checks} checks succeeded",
+      "Missing": "This challenge's journal page can't be found.",
+      "NotOver": "This challenge isn't over yet."
     }
   },
   "DND4EAUTO": {

@@ -298,3 +298,88 @@ button .d4ea-btn-grey { color: #7b7b7b; }
 button .d4ea-btn-bronze { color: #b0702c; }
 button .d4ea-btn-silver { color: #9aa6b0; }
 button .d4ea-btn-gold { color: #e0b000; }
+
+/* Skill Challenges ------------------------------------------------------- */
+/* Windows carry .lucd20-loot-app (tokens and buttons from the Loot Pile). */
+
+.lucd20-sc-open { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin: 4px 0 0; }
+
+.lucd20-loot-app .lucd20-sc-body { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+.lucd20-loot-app .lucd20-sc-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 0 10px 10px; }
+.lucd20-loot-app .lucd20-sc-scroll h4 { margin: 12px 0 4px; padding: 0; border: none; color: var(--ll-text-muted); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.lucd20-loot-app .lucd20-sc-scroll ol { margin: 0; padding: 0; list-style: none; }
+
+/* List window */
+.lucd20-loot-app .lucd20-sc-list { padding-top: 4px; }
+.lucd20-loot-app .lucd20-sc-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 8px 2px; border-bottom: 1px solid var(--ll-border); }
+.lucd20-loot-app .lucd20-sc-row .who { display: flex; flex: 1 1 180px; flex-direction: column; min-width: 0; }
+.lucd20-loot-app .lucd20-sc-row .name { font-size: 15px; font-weight: 700; overflow-wrap: anywhere; }
+.lucd20-loot-app .lucd20-sc-row .sub { color: var(--ll-text-muted); font-size: 12px; }
+.lucd20-loot-app .lucd20-sc-row .actions { display: flex; flex: none; gap: 4px; margin-left: auto; }
+.lucd20-loot-app .pill.failed { border-color: var(--ll-danger-border); color: var(--ll-danger-text); }
+
+/* Tally (also used in chat cards, where it has its own colors below) */
+.lucd20-sc-tally { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+.lucd20-sc-tally .track { display: inline-flex; align-items: center; gap: 6px; }
+.lucd20-sc-tally .label { font-size: 12px; opacity: 0.8; }
+.lucd20-sc-tally .pips { display: inline-flex; flex-wrap: wrap; gap: 3px; }
+.lucd20-sc-tally .pip { width: 11px; height: 11px; border: 1px solid currentColor; border-radius: 50%; opacity: 0.45; }
+.lucd20-sc-tally .pip.on { opacity: 1; }
+.lucd20-sc-tally .pip.success.on { border-color: #3f8f57; background: #3f8f57; }
+.lucd20-sc-tally .pip.failure.on { border-color: #c2473d; background: #c2473d; }
+.lucd20-sc-tally b { font-variant-numeric: tabular-nums; }
+
+/* Runner */
+.lucd20-loot-app .lucd20-sc-head { display: flex; flex: none; flex-direction: column; gap: 8px; padding: 10px; border-bottom: 1px solid var(--ll-border); background: var(--ll-bg-header); }
+.lucd20-loot-app .lucd20-sc-head .lucd20-sc-tally { font-size: 15px; }
+.lucd20-loot-app .lucd20-sc-head .lucd20-sc-tally .pip { width: 14px; height: 14px; }
+.lucd20-loot-app .lucd20-sc-head .meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--ll-text-muted); font-size: 12px; }
+.lucd20-loot-app .lucd20-sc-banner { display: flex; flex: none; align-items: center; gap: 8px; padding: 6px 10px; border-bottom: 1px solid var(--ll-border); background: var(--ll-bg-raised); font-size: 13px; }
+.lucd20-loot-app .lucd20-sc-banner span { flex: 1; min-width: 0; }
+.lucd20-loot-app .lucd20-sc-banner.waiting > i,
+.lucd20-loot-app .lucd20-sc-banner.bonus > i { color: var(--ll-accent-text); }
+.lucd20-loot-app .lucd20-sc-banner.success { background: rgba(63, 143, 87, 0.22); }
+.lucd20-loot-app .lucd20-sc-banner.failure { background: rgba(194, 71, 61, 0.22); }
+
+.lucd20-loot-app .lucd20-sc-skill { padding: 5px 0; border-bottom: 1px solid var(--ll-border); }
+.lucd20-loot-app .lucd20-sc-skill .main { display: flex; align-items: center; gap: 8px; }
+.lucd20-loot-app .lucd20-sc-skill .name { flex: 1; min-width: 0; font-weight: 600; }
+.lucd20-loot-app .lucd20-sc-skill .mod { color: var(--ll-text-muted); font-weight: 400; font-variant-numeric: tabular-nums; }
+.lucd20-loot-app .lucd20-sc-skill .chips { display: inline-flex; flex: none; gap: 4px; }
+.lucd20-loot-app .lucd20-sc-skill .chip { display: inline-flex; align-items: center; gap: 4px; min-height: 22px; padding: 0 7px; border: 1px solid var(--ll-border-strong); border-radius: 11px; font-size: 12px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.lucd20-loot-app .lucd20-sc-skill .chip.dc { border-color: var(--ll-accent-border); color: var(--ll-accent-text); font-weight: 600; }
+.lucd20-loot-app .lucd20-sc-skill .chip.bonus { border-color: #3f8f57; color: #8fe0a6; }
+.lucd20-loot-app .lucd20-sc-skill .chip.effect { color: var(--ll-text-muted); }
+.lucd20-loot-app .lucd20-sc-skill .chip.spent { color: var(--ll-text-muted); }
+.lucd20-loot-app .lucd20-sc-skill.spent .name { color: var(--ll-text-muted); text-decoration: line-through; }
+.lucd20-loot-app .lucd20-sc-skill .note,
+.lucd20-loot-app .lucd20-sc-notes { margin: 3px 0 0; color: var(--ll-text-muted); font-size: 12px; line-height: 1.4; }
+.lucd20-loot-app .lucd20-sc-notes + .lucd20-sc-notes { margin-top: 6px; }
+
+.lucd20-loot-app .lucd20-sc-other { display: flex; align-items: center; gap: 8px; }
+.lucd20-loot-app .lucd20-sc-other select { flex: 1; min-width: 0; width: auto; height: 28px; margin: 0; }
+.lucd20-loot-app .lucd20-sc-other label { display: inline-flex; flex: none; align-items: center; gap: 6px; margin: 0; color: var(--ll-text-muted); font-size: 12px; }
+.lucd20-loot-app .lucd20-sc-other input[type="number"] { width: 54px; height: 28px; margin: 0; text-align: center; }
+
+.lucd20-loot-app .lucd20-sc-log li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0 10px; padding: 4px 0 4px 8px; border-left: 3px solid var(--ll-border-strong); border-bottom: 1px solid var(--ll-border); font-size: 13px; }
+.lucd20-loot-app .lucd20-sc-log li.success { border-left-color: #3f8f57; }
+.lucd20-loot-app .lucd20-sc-log li.failure { border-left-color: #c2473d; }
+.lucd20-loot-app .lucd20-sc-log .numbers,
+.lucd20-loot-app .lucd20-sc-log .did { color: var(--ll-text-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.lucd20-loot-app.lucd20-sc-runner .lucd20-loot-footer .sc-undo { margin-left: auto; }
+
+/* Chat cards */
+.lucd20-sc-card header { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 14px; }
+.lucd20-sc-card header .secret { margin-left: auto; padding: 0 6px; border-radius: 3px; background: #7d1f1f; color: #fff; font-size: 10px; font-weight: bold; letter-spacing: 0.05em; text-transform: uppercase; }
+.lucd20-sc-card p { margin: 0 0 4px; }
+.lucd20-sc-card .outcome { font-weight: 700; }
+.lucd20-sc-card.success .outcome,
+.lucd20-sc-card.end.success .result { color: #3f8f57; }
+.lucd20-sc-card.failure .outcome,
+.lucd20-sc-card.end.failure .result { color: #c2473d; }
+.lucd20-sc-card .meta,
+.lucd20-sc-card .effect { font-size: 12px; opacity: 0.85; }
+.lucd20-sc-card .result { font-size: 15px; font-weight: 700; }
+.lucd20-sc-card .who { margin: 4px 0; padding-left: 18px; font-size: 12px; }
+.lucd20-sc-card .outcome-text { margin-top: 6px; padding: 4px 6px; border-left: 3px solid #ee9b3a; background: rgba(238, 155, 58, 0.1); }
+.lucd20-sc-card button { margin-top: 6px; }

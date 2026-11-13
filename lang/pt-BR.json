@@ -557,11 +557,101 @@
             "Hint": "Vale depois de recarregar."
           }
         }
+      },
+      "dnd4eSkillChallenge": {
+        "Name": "Desafios de Perícia",
+        "Hint": "Conduza um desafio de perícia na mesa: escolha um personagem e uma perícia, o jogador rola, e o módulo compara a rolagem com a CD e conta sucessos e fracassos. Os desafios são páginas de diário; abra-os pelo botão Desafios de Perícia no fim da aba Diário. Os jogadores nunca veem uma CD.",
+        "Setting": {
+          "playersSeeProgress": {
+            "Name": "Jogadores veem o progresso por padrão",
+            "Hint": "Para desafios que não definem isso: ligado = o resultado de cada teste e a contagem vão para o chat de todos; desligado = secreto, os resultados são sussurrados ao Mestre. Pode ser trocado por desafio na janela dele."
+          }
+        }
       }
     },
     "DnD4e": {
       "Migrated": "Os dados do D&D 4e Combat Automation foram passados para o LucD20 Automations: {texts} textos de monstros, {levels} marcas de poderes, {switches} opções, {docs} atores / efeitos / tokens / combatentes / mensagens. Pode desativar o módulo antigo.",
       "MigrationFailed": "LucD20 Automations: falhou ao passar os dados do D&D 4e Combat Automation (veja o console, F12). Vai tentar de novo ao recarregar."
+    },
+    "SkillChallenge": {
+      "Title": "Desafios de Perícia",
+      "Speaker": "Desafio de Perícia",
+      "World": "Diário do mundo",
+      "Searching": "Procurando desafios…",
+      "Empty": "Nenhum desafio de perícia encontrado.",
+      "EmptyHint": "Um desafio é uma página de diário (no mundo ou num compêndio) com dados de desafio de perícia.",
+      "Refresh": "Atualizar",
+      "Start": "Iniciar",
+      "Continue": "Continuar",
+      "Reset": "Reiniciar (apagar o progresso)",
+      "OpenPage": "Abrir a página do diário",
+      "ResetTitle": "Reiniciar o desafio",
+      "ResetContent": "Apagar todo o progresso de <strong>{name}</strong>? Os sucessos, os fracassos e o registro são excluídos.",
+      "Level": "Nível {level}",
+      "XPShort": "{xp} XP",
+      "XP": "Nível {level} · {xp} XP (Mestre: conceda você mesmo)",
+      "Goal": "{successes} sucessos antes de {failures} fracassos",
+      "GoalOneFailure": "{successes} sucessos antes de 1 fracasso",
+      "Status": {
+        "New": "Não iniciado",
+        "Running": "Em andamento"
+      },
+      "Successes": "Sucessos",
+      "Failures": "Fracassos",
+      "Success": "Sucesso",
+      "Failure": "Fracasso",
+      "Primary": "Perícias primárias",
+      "Secondary": "Perícias secundárias",
+      "Other": "Outra perícia",
+      "Notes": "Notas do Mestre",
+      "Log": "Registro",
+      "OnSuccess": "Em caso de sucesso",
+      "OnFailure": "Em caso de fracasso",
+      "Character": "Personagem",
+      "NoCharacters": "Nenhum personagem de jogador neste mundo.",
+      "Roll": "Rolar",
+      "DC": "CD {dc}",
+      "DCLabel": "CD",
+      "DCStep": "A CD muda em {step} a cada uso desta perícia.",
+      "MaxSuccesses": "Sucessos com esta perícia (máximo {max})",
+      "MaxUses": "Usos bem-sucedidos desta perícia (máximo {max})",
+      "Does": {
+        "bonus": "Um sucesso dá {value} no próximo teste e não conta como sucesso.",
+        "cancelFailure": "Um sucesso cancela 1 fracasso e não conta como sucesso.",
+        "none": "Um sucesso não conta como sucesso no desafio."
+      },
+      "Effect": {
+        "Success": "1 sucesso",
+        "SuccessRemoved": "1 sucesso removido",
+        "Failure": "1 fracasso",
+        "Cancel": "1 fracasso cancelado",
+        "Bonus": "{value} no próximo teste",
+        "BonusFor": "{value} no próximo teste de {skills}",
+        "NoFailure": "Não conta como fracasso",
+        "NoSuccess": "Não conta como sucesso",
+        "Spent": "Esta perícia não pode dar mais sucessos",
+        "NothingToCancel": "Nenhum fracasso para cancelar"
+      },
+      "RollVsDC": "{total}{bonus} contra CD {dc}",
+      "RollOnly": "{total}",
+      "Waiting": "Aguardando {user} rolar {skill} por {actor}…",
+      "Cancel": "Cancelar",
+      "Asked": "O Mestre pede um teste de {skill} de {actor}.",
+      "Undo": "Desfazer",
+      "Undone": "O último resultado foi desfeito.",
+      "ByGM": "Alterado pelo Mestre",
+      "Secret": "Secreto",
+      "GMOnly": "Só o Mestre",
+      "SecretLabel": "Secreto",
+      "OpenLabel": "Jogadores veem o progresso",
+      "SecretHint": "Secreto: os resultados e a contagem são sussurrados ao Mestre. Clique para os jogadores verem.",
+      "OpenHint": "Cada resultado e a contagem vão para o chat de todos (nunca uma CD). Clique para tornar secreto.",
+      "ResultSuccess": "O desafio foi bem-sucedido.",
+      "ResultFailure": "O desafio fracassou.",
+      "ShowPlayers": "Mostrar aos jogadores",
+      "Contribution": "{successes} de {checks} testes bem-sucedidos",
+      "Missing": "A página de diário deste desafio não foi encontrada.",
+      "NotOver": "Este desafio ainda não acabou."
     }
   },
   "EFFECT": {

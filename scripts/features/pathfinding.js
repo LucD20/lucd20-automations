@@ -400,7 +400,7 @@ function solve(token, waypoints, options) {
   } catch {
     odd = false;
   }
-  const out = [waypoints[0]];
+  const out = [{ ...full[0], ...waypoints[0] }];
   for (let k = 1; k < full.length; k++) {
     const a = full[k - 1];
     const b = full[k];
@@ -410,7 +410,7 @@ function solve(token, waypoints, options) {
     for (const c of simplify(cells).slice(1, -1)) {
       out.push({ ...a, x: c.i * size, y: c.j * size, snapped: true, explicit: false, checkpoint: true });
     }
-    out.push(waypoints[k]);
+    out.push({ ...b, ...waypoints[k] });
     // Diagonal parity carries on (PF2e 5/10/5).
     for (let n = 1; n < cells.length; n++) if (cells[n].i !== cells[n - 1].i && cells[n].j !== cells[n - 1].j) odd = !odd;
   }
@@ -479,25 +479,17 @@ defineFeature({
         }
         return original(waypoints, options);
       }
-      let cancelled = false;
-      const token = this;
-      const promise = new Promise(resolve => {
-        setTimeout(() => {
-          if (cancelled) return resolve(null);
-          let path = null;
-          try {
-            path = solve(token, waypoints, options);
-          } catch (err) {
-            console.error(`${MODULE_ID} | Pathfinding failed.`, err);
-          }
-          if (CONFIG.debug?.lucd20Pathfinding) console.log(`${MODULE_ID} | Pathfinding result`, path ? path.map(w => `${w.x},${w.y}`).join(" → ") : "no route (Foundry's own path used)");
-          if (path) return resolve(path);
-          // No route found (or an error): Foundry's own result.
-          const fallback = original(waypoints, options);
-          resolve(fallback?.result ?? fallback?.promise ?? null);
-        }, 0);
-      });
-      return { result: undefined, promise, cancel: () => (cancelled = true) };
+      // v0.28.3: computed right away and returned as `result` (fast: ~50 ms on a big
+      // maze). v0.28.2 only returned a promise and V14 kept its straight path.
+      let path = null;
+      try {
+        path = solve(this, waypoints, options);
+      } catch (err) {
+        console.error(`${MODULE_ID} | Pathfinding failed.`, err);
+      }
+      if (CONFIG.debug?.lucd20Pathfinding) console.log(`${MODULE_ID} | Pathfinding result`, path ? path.map(w => `${w.x},${w.y}`).join(" → ") : "no route (Foundry's own path used)");
+      if (!path) return original(waypoints, options); // no route found: Foundry's own
+      return { result: path, promise: Promise.resolve(path), cancel: () => {} };
     });
     const bump = () => (state.versions++, (state.context = null));
     for (const hook of ["createWall", "updateWall", "deleteWall", "createRegion", "updateRegion", "deleteRegion",

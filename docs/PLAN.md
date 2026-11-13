@@ -520,6 +520,10 @@ data browser, import. Code: `scripts/features/token-tooltip/`.
   used. v0.28.1: when Foundry asks to ignore cost (likely what it does for the
   GM: v0.28.0 routed for players but not the GM), walls still count and
   only terrain is ignored; a skipped search logs its reason once.
+  v0.28.3: the owner's debug log showed routes being found but V14 still
+  moving straight, so the route is now computed right away and returned as
+  `result` (plus a resolved `promise`), with every waypoint complete.
+  `CONFIG.debug.lucd20Pathfinding = true` logs each call and result.
 - **Per-player toggle** in Token controls (route icon), on by default (Q26).
 - **Cost** (owner, Q29): steps per the scene's diagonal rule (PF2e 5/10/5
   with the parity carried from the movement history); **difficult terrain**

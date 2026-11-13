@@ -1186,9 +1186,10 @@ What it has (from its code and README):
     `translateExisting`); README macros updated.
 - **Settings**: a new **⚔️ D&D 4e** category (only in dnd4e), few cards
   with the old switches as options (Q33).
-- **Language**: its strings go into `lang/en.json` under `LUCD20.DnD4e…`
-  (renamed from `DND4EAUTO.*`) and a new `lang/pt-BR.json` with the
-  Portuguese (Q34).
+- **Language**: its strings go into `lang/en.json` under their own root
+  `DND4EAUTO.*` (kept as is, so ~400 strings and their code stay untouched;
+  the cards' names are under `LUCD20.Feature.dnd4e*`) and a new
+  `lang/pt-BR.json` with the Portuguese (Q34).
 - **Data**: a one-time GM migration copies the old module's world data
   (monster texts, power-level marks) and live flags (quarry / curse / mark
   effects, combatant action state) to this module's scope (Q35).
@@ -1200,11 +1201,31 @@ What it has (from its code and README):
   everything registers in `?system=dnd4e` and the switches turn hooks off.
   The owner tests in a 4e world.
 
+### 8.1b Done in phase 26 (v0.29.0)
+
+- Code in `scripts/systems/dnd4e/` (same layout, `.mjs` kept); icons in
+  `assets/dnd4e/`; styles `styles/dnd4e.css`; docs `docs/dnd4e.md` (its
+  README, macros updated).
+- `MODULE_ID` is ours, so flags, the power-level data setting and the socket
+  channel are this module's. The old socket messages (`op: …`) share our
+  channel with ours (`type: …`); each side ignores the other's.
+- Startup: our `main.js` calls `Hooks.callAll("lucd20-automations.init")`
+  after the feature cards' settings are registered; the 4e code starts from
+  there, only in dnd4e (its hooks on `updateActor`, chat messages … would
+  otherwise run in other systems too). `api.dnd4e` is added after ours.
+- Settings → 13 cards (`cards.mjs`, `SETTING_MAP`): the old `setting(key)`
+  helper reads them, so everything switches off without a reload. Debug
+  logging: `CONFIG.debug.lucd20dnd4e = true`. Keybindings kept (action panel,
+  cover preview), unbound by default. Monster texts: the import / export
+  window opens from its card (no extra button in Foundry's settings).
+- Smoke test `test28.js`: loads in dnd4e (13 cards, map, API, hooks) and
+  nothing of it in PF2e.
+
 ### 8.2 Build order
 
 | # | Phase | Notes |
 |---|---|---|
-| 26 | Move the code in, plumbing (module id, socket, settings → feature cards, API), styles, EN strings | old module disabled after |
+| 26 | Move the code in, plumbing (module id, socket, settings → feature cards, API), styles, EN strings | ✅ v0.29.0 |
 | 27 | pt-BR translation + 4e game language | |
 | 28 | Migration of the old module's data | |
 
@@ -1212,7 +1233,7 @@ What it has (from its code and README):
 
 | # | Question | Recommended |
 |---|---|---|
-| Q32 | Move it in mostly as it is (folder structure, look, behaviour), changing only the plumbing; refactor later only where needed? | Yes. |
+| Q32 | Move it in mostly as it is (folder structure, look, behaviour), changing only the plumbing; refactor later only where needed? | ✅ Yes (all of Q32–Q36 as recommended). |
 | Q33 | Settings cards in the D&D 4e category (old switches become options): **Class features** (quarry, curse, rage, marks, Prime Shot, class/race/feat rules, temp HP, conditional riders, power riders) · **Cover** (+ per-player line preview) · **Action tracker** (+ auto move actions, panel, warnings, dock pips) · **Opportunity attacks** · **Triggered powers** · **Damage application** · **Click-to-move & charge** · **Readable rolls & skill checks** · **Sheet highlights** · **Power symbols** (automation / translation) · **Token badges** · **Monster texts** (GM) · **4e game language** (per player). OK? | Yes. |
 | Q34 | Keep the Portuguese translation (a pt-BR file for the merged module; the rest of the module stays English until translated) and the "4e game language" option? | Yes. |
 | Q35 | Migrate the old module's data automatically the first time the GM loads the world (monster texts, power-level marks, current quarry / curse / mark effects, action state)? | Yes, then tell the GM it's done. |

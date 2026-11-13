@@ -74,6 +74,10 @@
       "exploration": {
         "Label": "Exploration",
         "Hint": "PF2e Search automation and hazard detection."
+      },
+      "dnd4e": {
+        "Label": "D&D 4e",
+        "Hint": "D&D 4e combat automation (merged from D&D 4e Combat Automation)."
       }
     },
     "Feature": {
@@ -521,6 +525,130 @@
           },
           "shadow": {
             "Name": "Ground shadow"
+          }
+        }
+      },
+      "dnd4eClassFeatures": {
+        "Name": "Class features",
+        "Hint": "Hunter's Quarry, Warlock's Curse, rages, marks and other class, race and feat rules, applied when powers are used.",
+        "Setting": {
+          "quarry": {
+            "Name": "Automate Hunter's Quarry",
+            "Hint": "Using Hunter's Quarry tags the nearest visible enemy (or your target) and offers the extra damage in the damage dialog, once per turn."
+          },
+          "curse": {
+            "Name": "Automate Warlock's Curse",
+            "Hint": "Using Warlock's Curse tags the nearest visible enemy (or your target) and offers the extra damage in the damage dialog, once per turn. Star Pact warlocks get Fate of the Void when a cursed enemy drops."
+          },
+          "rage": {
+            "Name": "Automate Barbarian rages",
+            "Hint": "Using a rage power puts the barbarian in that rage until the end of the encounter (ending the previous one) and offers rage-dependent damage bonuses."
+          },
+          "marks": {
+            "Name": "Automate marks",
+            "Hint": "Powers like Misdirected Mark apply the mark to hit targets. Marks use the system's mark status, so the -2 penalty is applied by the dnd4e system."
+          },
+          "warnNotNearest": {
+            "Name": "Warn when the target isn't the nearest enemy",
+            "Hint": "For Hunter's Quarry and Warlock's Curse."
+          },
+          "primeShot": {
+            "Name": "Prime Shot",
+            "Hint": "+1 to ranged attack rolls for characters with Prime Shot when no ally is nearer to the target."
+          },
+          "classFeatures": {
+            "Name": "Class, racial and feat rules",
+            "Hint": "Bloodhunt (+1 racial vs bloodied foes), Defensive Mobility (+2 AC vs opportunity attacks), Shadow Walk (concealment after moving 3 squares), Rampage (free melee basic attack after a critical hit) and Words of Friendship (+5 to the next Diplomacy check)."
+          },
+          "tempHpFeatures": {
+            "Name": "Temporary HP features",
+            "Hint": "Rageblood Vigor (automatic when your attack drops an enemy), Half-Orc Resilience (automatic the first time you are bloodied in an encounter) and Virtue of Valor (card for the bard when an ally within 5 squares bloodies or drops an enemy)."
+          },
+          "conditionalRiders": {
+            "Name": "Conditional damage and roll riders",
+            "Hint": "Infernal Wrath rolls its fire damage; Dire Radiance deals its extra damage when the target moves closer; Elven Accuracy rerolls your last attack; Fox's Cunning and Fate of the Void add their bonus to the next attack."
+          },
+          "powerRiders": {
+            "Name": "Power riders on hit",
+            "Hint": "Apply Vicious Mockery, Dreadful Word, Curse of the Dark Dream and Stirring Shout to hit targets (with attack/defense penalties), heal allies who hit a Stirring Shout target, and offer Great Cleave's extra damage."
+          }
+        }
+      },
+      "dnd4eCover": {
+        "Name": "Cover",
+        "Hint": "Compute cover and superior cover (corner-to-corner lines) and tick them in the attack dialog. Area attacks are not automated.",
+        "Setting": {
+          "preview": {
+            "Name": "Cover preview lines",
+            "Hint": "While you target a token, draw the cover lines from your token. Only you see them."
+          }
+        }
+      },
+      "dnd4eActionTracker": {
+        "Name": "Action tracker",
+        "Hint": "Track standard, move, minor, immediate and opportunity actions per turn. Using a power spends its action (with trades). Shows pips in the Combat Tracker.",
+        "Setting": {
+          "autoMoveActions": {
+            "Name": "Moving a token spends move actions",
+            "Hint": "On a combatant's own turn, dragging its token spends a move action (walk speed per move action, shift speed for shifts; standard actions are traded when needed). Teleports, undo, charges and GM-dragged player tokens are ignored."
+          },
+          "panel": {
+            "Name": "Open the action panel in combat",
+            "Hint": "Open the floating action panel automatically when a combat starts."
+          },
+          "warnings": {
+            "Name": "Warn on overspent actions",
+            "Hint": "Show a warning when an action is used that isn't available (the action still goes through)."
+          },
+          "dockPips": {
+            "Name": "Action pips on Combat Tracker Dock",
+            "Hint": "Show the action pips on each portrait of the Combat Tracker Dock module, if it is active."
+          }
+        }
+      },
+      "dnd4eOpportunity": {
+        "Name": "Opportunity attacks",
+        "Hint": "When an enemy leaves a square adjacent to a creature without shifting, or makes a ranged/area attack next to it, whisper a chat card to that creature's controller with a button for the opportunity attack."
+      },
+      "dnd4eTriggeredPowers": {
+        "Name": "Triggered powers",
+        "Hint": "Offer powers with a Trigger (Elven Accuracy, Fox's Cunning, Furious Assault, Swift Charge, Infernal Wrath, and any power or monster power with a similar trigger) as a whispered chat card when the trigger happens."
+      },
+      "dnd4eDamageApply": {
+        "Name": "Damage application",
+        "Hint": "Damage cards get buttons that apply damage to the targets of the original attack (players' clicks are applied by the GM), to the selected tokens, and a Retarget button."
+      },
+      "dnd4eClickMovement": {
+        "Name": "Click-to-move & charge",
+        "Hint": "Highlight the squares for shifts and push / pull / slide, then click to move. Hit riders open automatically after the roll; skipping leaves a button in chat."
+      },
+      "dnd4eReadableRolls": {
+        "Name": "Readable rolls & skill checks",
+        "Hint": "Replace the roll variables in chat (@wepAttack, @powerMod...) with labels and values, and show the module's automatic modifiers."
+      },
+      "dnd4eSheetHighlights": {
+        "Name": "Sheet highlights",
+        "Hint": "Colour defences changed by temporary effects (red = penalty, green = bonus) and list the effects in their tooltip."
+      },
+      "dnd4ePowerSymbols": {
+        "Name": "Power symbols",
+        "Hint": "Show the ◆ automation and ■ translation level next to power names in sheets and chat cards. The GM can click a symbol to set it."
+      },
+      "dnd4eTokenBadges": {
+        "Name": "Token badges",
+        "Hint": "Show a large coloured badge with the source's portrait on the top-right of marked tokens."
+      },
+      "dnd4eMonsterTexts": {
+        "Name": "Monster texts",
+        "Hint": "File with replacement text for monsters (name, powers, description). Import it in a new world to bring them all at once. Text only: numbers stay the compendium's."
+      },
+      "dnd4eGameLanguage": {
+        "Name": "4e game language",
+        "Hint": "Language for the dnd4e system (abilities, skills, conditions, sheet labels) and this module, independent of Foundry's interface language. Strings missing from the translation stay in Foundry's language. Requires reload.",
+        "Setting": {
+          "language": {
+            "Name": "4e game language",
+            "Hint": "Takes effect after a reload."
           }
         }
       }
@@ -973,6 +1101,433 @@
     },
     "Pathfinding": {
       "Tool": "Pathfinding (route around walls)"
+    }
+  },
+  "DND4EAUTO": {
+    "Settings": {
+      "enableQuarry": {
+        "Name": "Automate Hunter's Quarry",
+        "Hint": "Using Hunter's Quarry tags the nearest visible enemy (or your target) and offers the extra damage in the damage dialog, once per turn."
+      },
+      "enableCurse": {
+        "Name": "Automate Warlock's Curse",
+        "Hint": "Using Warlock's Curse tags the nearest visible enemy (or your target) and offers the extra damage in the damage dialog, once per turn. Star Pact warlocks get Fate of the Void when a cursed enemy drops."
+      },
+      "enableRage": {
+        "Name": "Automate Barbarian rages",
+        "Hint": "Using a rage power puts the barbarian in that rage until the end of the encounter (ending the previous one) and offers rage-dependent damage bonuses."
+      },
+      "enableMarks": {
+        "Name": "Automate marks",
+        "Hint": "Powers like Misdirected Mark apply the mark to hit targets. Marks use the system's mark status, so the -2 penalty is applied by the dnd4e system."
+      },
+      "enableCover": {
+        "Name": "Automatic cover",
+        "Hint": "Compute cover and superior cover (corner-to-corner lines) and tick them in the attack dialog. Area attacks are not automated."
+      },
+      "warnNotNearest": {
+        "Name": "Warn when the target isn't the nearest enemy",
+        "Hint": "For Hunter's Quarry and Warlock's Curse."
+      },
+      "coverPreview": {
+        "Name": "Cover preview lines",
+        "Hint": "While you target a token, draw the cover lines from your token. Only you see them."
+      },
+      "preloadIndexes": {
+        "Name": "Preload compendium indexes",
+        "Hint": "Load compendium indexes in the background when the game starts, so the first character sheet you open doesn't stall for a few seconds."
+      },
+      "debug": {
+        "Name": "Debug logging",
+        "Hint": "Write diagnostic messages to the browser console."
+      },
+      "gameLanguage": {
+        "Name": "4e game language",
+        "Hint": "Language for the dnd4e system (abilities, skills, conditions, sheet labels) and this module, independent of Foundry's interface language. Strings missing from the translation stay in Foundry's language. Requires reload.",
+        "Foundry": "Same as Foundry"
+      },
+      "actionTracker": {
+        "Name": "Action Tracker",
+        "Hint": "Track standard, move, minor, immediate and opportunity actions per turn. Using a power spends its action (with trades). Shows pips in the Combat Tracker."
+      },
+      "actionPanel": {
+        "Name": "Open the action panel in combat",
+        "Hint": "Open the floating action panel automatically when a combat starts."
+      },
+      "actionWarnings": {
+        "Name": "Warn on overspent actions",
+        "Hint": "Show a warning when an action is used that isn't available (the action still goes through)."
+      },
+      "tokenBadges": {
+        "Name": "Quarry/curse/mark badges on tokens",
+        "Hint": "Show a large coloured badge with the source's portrait on the top-right of marked tokens."
+      },
+      "dockPips": {
+        "Name": "Action pips on Combat Tracker Dock",
+        "Hint": "Show the action pips on each portrait of the Combat Tracker Dock module, if it is active."
+      },
+      "opportunityAttacks": {
+        "Name": "Opportunity attack prompts",
+        "Hint": "When an enemy leaves a square adjacent to a creature without shifting, or makes a ranged/area attack next to it, whisper a chat card to that creature's controller with a button for the opportunity attack."
+      },
+      "autoMoveActions": {
+        "Name": "Moving a token spends move actions",
+        "Hint": "On a combatant's own turn, dragging its token spends a move action (walk speed per move action, shift speed for shifts; standard actions are traded when needed). Teleports, undo, charges and GM-dragged player tokens are ignored."
+      },
+      "reactionPrompts": {
+        "Name": "Triggered power prompts",
+        "Hint": "Offer powers with a Trigger (Elven Accuracy, Fox's Cunning, Furious Assault, Swift Charge, Infernal Wrath, and any power or monster power with a similar trigger) as a whispered chat card when the trigger happens."
+      },
+      "damageTargets": {
+        "Name": "Apply damage to the attack's targets",
+        "Hint": "Damage cards get buttons that apply damage to the targets of the original attack (players' clicks are applied by the GM), to the selected tokens, and a Retarget button."
+      },
+      "powerRiders": {
+        "Name": "Power riders on hit",
+        "Hint": "Apply Vicious Mockery, Dreadful Word, Curse of the Dark Dream and Stirring Shout to hit targets (with attack/defense penalties), heal allies who hit a Stirring Shout target, and offer Great Cleave's extra damage."
+      },
+      "primeShot": {
+        "Name": "Prime Shot",
+        "Hint": "+1 to ranged attack rolls for characters with Prime Shot when no ally is nearer to the target."
+      },
+      "tempHpFeatures": {
+        "Name": "Temporary HP features",
+        "Hint": "Rageblood Vigor (automatic when your attack drops an enemy), Half-Orc Resilience (automatic the first time you are bloodied in an encounter) and Virtue of Valor (card for the bard when an ally within 5 squares bloodies or drops an enemy)."
+      },
+      "classFeatures": {
+        "Name": "Class, racial and feat rules",
+        "Hint": "Bloodhunt (+1 racial vs bloodied foes), Defensive Mobility (+2 AC vs opportunity attacks), Shadow Walk (concealment after moving 3 squares), Rampage (free melee basic attack after a critical hit) and Words of Friendship (+5 to the next Diplomacy check)."
+      },
+      "sheetModHighlights": {
+        "Name": "Highlight modified defences on sheets",
+        "Hint": "Colour defences changed by temporary effects (red = penalty, green = bonus) and list the effects in their tooltip."
+      },
+      "readableRolls": {
+        "Name": "Readable roll breakdowns in chat",
+        "Hint": "Replace the roll variables in chat (@wepAttack, @powerMod...) with labels and values, and show the module's automatic modifiers."
+      },
+      "conditionalRiders": {
+        "Name": "Conditional damage and roll riders",
+        "Hint": "Infernal Wrath rolls its fire damage; Dire Radiance deals its extra damage when the target moves closer; Elven Accuracy rerolls your last attack; Fox's Cunning and Fate of the Void add their bonus to the next attack."
+      },
+      "clickMovement": {
+        "Name": "Click-to-move squares",
+        "Hint": "Highlight the squares for shifts and push / pull / slide, then click to move. Hit riders open automatically after the roll; skipping leaves a button in chat."
+      },
+      "powerLevels": {
+        "Name": "Automation and translation symbols",
+        "Hint": "Show the ◆ automation and ■ translation level next to power names in sheets and chat cards. The GM can click a symbol to set it."
+      }
+    },
+    "Keybindings": {
+      "toggleCoverPreview": "Toggle cover preview",
+      "toggleActionPanel": "Toggle action panel"
+    },
+    "Warn": {
+      "NoGM": "No GM is connected, so the effect on {name} can't be applied.",
+      "OneTarget": "{power}: target only one creature (or none, to pick the nearest enemy).",
+      "NotNearest": "{power}: {target} isn't the nearest enemy you can see (nearest is {distance} squares away). Applied anyway.",
+      "NoEnemyVisible": "{power}: no visible enemy found.",
+      "NoSourceToken": "Place and select your token on the scene first.",
+      "AlreadyCursed": "{target} is already under a Warlock's Curse.",
+      "NoAllyInRange": "Misdirected Mark: no ally within 5 squares to be the marker."
+    },
+    "Info": {
+      "AlreadyQuarry": "{target} is already your quarry.",
+      "FuriousAssaultArmed": "{name}: Furious Assault armed, the extra damage will appear in the next damage roll."
+    },
+    "Dialog": {
+      "ChooseNearestTitle": "{power}: choose the enemy",
+      "ChooseNearestHint": "These enemies are tied for the nearest. Which one?",
+      "ChooseMarkerTitle": "{power}: who marks the target?",
+      "ChooseMarkerHint": "Choose an ally within 5 squares of you."
+    },
+    "Effect": {
+      "QuarryName": "Quarry of {source}",
+      "QuarryDesc": "{source}'s Hunter's Quarry. Lasts until the end of the encounter, until this creature is defeated, or until a new quarry is designated.",
+      "CurseName": "Cursed by {source}",
+      "CurseDesc": "{source}'s Warlock's Curse. Lasts until the end of the encounter or until this creature drops to 0 hit points.",
+      "MarkName": "Marked by {source}",
+      "MarkDesc": "Marked by {source} ({power}): -2 to attack rolls that don't include {source}.",
+      "RageName": "Rage: {power}",
+      "FateName": "Fate of the Void (+{bonus})",
+      "FateDesc": "+bonus to one d20 roll during your next turn. Lost if unused."
+    },
+    "Chat": {
+      "QuarryDesignated": "<strong>{source}</strong> designates <strong>{target}</strong> as their quarry.",
+      "CursePlaced": "<strong>{source}</strong> places a Warlock's Curse on <strong>{target}</strong>.",
+      "Marked": "<strong>{targets}</strong> marked by <strong>{marker}</strong>.",
+      "RageStart": "<strong>{actor}</strong> enters <strong>{power}</strong>!",
+      "RageManual": "This rage's ongoing benefit isn't automated yet; apply it by hand.",
+      "FateOfTheVoid": "<strong>{target}</strong> fell under {actor}'s curse: Fate of the Void, +{bonus} to one d20 roll during your next turn."
+    },
+    "Damage": {
+      "Legend": "Extra damage (4e automation)",
+      "Quarry": "Hunter's Quarry +{formula}",
+      "QuarryTarget": "Against your quarry {target}.",
+      "QuarryUsed": "Already dealt since the start of your turn.",
+      "Curse": "Warlock's Curse +{formula}",
+      "CurseTarget": "Against the cursed {target}.",
+      "CurseUsed": "Already dealt this turn.",
+      "BloodhuntRage": "Bloodhunt Rage +{formula}",
+      "BloodhuntActive": "You or the target is bloodied.",
+      "BloodhuntInactive": "Neither you nor the target is bloodied.",
+      "RagingBonus": "{power} (raging) +{formula}",
+      "RagingBonusHint": "Extra damage because you are raging.",
+      "FuriousAssault": "Furious Assault +{formula}",
+      "FuriousAssaultHint": "Extra damage from Furious Assault (1[W] for weapon attacks, 1d8 otherwise)."
+    },
+    "Cover": {
+      "Label": "Cover",
+      "MeleeLabel": "Melee/close",
+      "RangedLabel": "Ranged",
+      "None": "none",
+      "Cover": "cover (-2)",
+      "Superior": "superior (-5)",
+      "NoLoE": "No line of effect?"
+    },
+    "Actions": {
+      "standard": "Standard",
+      "move": "Move",
+      "minor": "Minor",
+      "immediate": "Immediate",
+      "opportunity": "Opportunity",
+      "free": "Free",
+      "Available": "available",
+      "Spent": "spent",
+      "PanelTitle": "Action Tracker",
+      "NoCombatant": "Select a token that is in combat.",
+      "YourTurn": "Its turn",
+      "NotYourTurn": "Waiting",
+      "ActionPoints": "Action Points",
+      "TradeNote": "{from} used as {to}",
+      "WarnNone": "{name} has no {action} action left this turn.",
+      "WarnNotYourTurn": "{name}: {action} actions are only taken on your own turn.",
+      "WarnImmediateOwnTurn": "{name}: immediate actions can't be taken on your own turn.",
+      "WarnImmediateUsed": "{name} already took an immediate action this round.",
+      "WarnOpportunityOwnTurn": "{name}: opportunity actions can't be taken on your own turn.",
+      "WarnOpportunityUsed": "{name} already took an opportunity action this turn.",
+      "WarnSecondWindUsed": "{name} already used Second Wind this encounter.",
+      "WarnNoActionPoint": "{name} has no Action Points.",
+      "Basic": {
+        "walk": "Walk",
+        "shift": "Shift",
+        "run": "Run",
+        "standUp": "Stand Up",
+        "charge": "Charge",
+        "totalDefense": "Total Defense",
+        "secondWind": "Second Wind",
+        "aidAnother": "Aid Another",
+        "ready": "Ready",
+        "actionPoint": "Action Point"
+      },
+      "Chat": {
+        "walk": "<strong>{name}</strong> walks.",
+        "shift": "<strong>{name}</strong> shifts.",
+        "run": "<strong>{name}</strong> runs (−5 to attacks, grants combat advantage until the start of their next turn).",
+        "standUp": "<strong>{name}</strong> stands up.",
+        "charge": "<strong>{name}</strong> charges! (+1 to the attack; the basic attack is part of the charge.)",
+        "totalDefense": "<strong>{name}</strong> takes Total Defense (+2 to all defenses until the start of their next turn).",
+        "aidAnother": "<strong>{name}</strong> aids another.",
+        "ready": "<strong>{name}</strong> readies an action."
+      },
+      "WarnShiftTooFar": "{name} shifted {squares} squares but can only shift {budget}.",
+      "FreeShiftRefund": "{power}: {name}'s shift was part of the power, so the move action is refunded.",
+      "FreeShiftGranted": "{power}: {name} can shift {squares} square(s) this turn without spending a move action."
+    },
+    "Opportunity": {
+      "Title": "Opportunity attack",
+      "ReasonMove": "<strong>{provoker}</strong> moved away from <strong>{threat}</strong> without shifting.",
+      "ReasonRanged": "<strong>{provoker}</strong> made a ranged attack next to <strong>{threat}</strong>.",
+      "ReasonArea": "<strong>{provoker}</strong> made an area attack next to <strong>{threat}</strong>.",
+      "Button": "{threat}: attack {provoker}",
+      "Note": "Ignore if it was forced movement (push, pull, slide) or the creature can't act.",
+      "NotOwner": "You don't control this creature.",
+      "NoBasic": "{name} has no melee basic attack.",
+      "Used": "Opportunity action already used"
+    },
+    "Reaction": {
+      "Title": "Reaction available",
+      "Button": "Use {power}",
+      "Unavailable": "{power} unavailable",
+      "ReasonSelfMiss": "<strong>{actor}</strong> missed {targets}.",
+      "ReasonHitEnemy": "<strong>{actor}</strong> hit {targets}.",
+      "ReasonHitYou": "<strong>{enemy}</strong> hit <strong>{actor}</strong>.",
+      "ReasonMeleeAttacked": "<strong>{enemy}</strong> makes a melee attack against <strong>{actor}</strong>.",
+      "ReasonAttacked": "<strong>{enemy}</strong> attacks <strong>{actor}</strong>.",
+      "ReasonDrop": "<strong>{actor}</strong> dropped <strong>{target}</strong> to 0 hit points."
+    },
+    "DamageApply": {
+      "Damage": "Damage",
+      "Half": "Half",
+      "Selected": "Selected",
+      "None": "no targets",
+      "Retarget": "Retarget to my current targets",
+      "RetargetHint": "Replace this card's targets with the tokens you are targeting now.",
+      "TargetsHint": "Targets of the original attack",
+      "NoTargets": "This card has no targets. Target tokens and use Retarget.",
+      "NoSelection": "Select at least one token.",
+      "NoCurrentTargets": "Target at least one token first."
+    },
+    "OnHit": {
+      "MockeryName": "{power}: −2 to attacks",
+      "MockeryDesc": "−2 penalty to attack rolls until the end of the bard's next turn.",
+      "DreadfulName": "{power}: −{penalty} Will",
+      "DreadfulDesc": "−{penalty} penalty to Will until the end of the warlock's next turn.",
+      "DarkDreamDesc": "Subjected to the dark dream (save ends): the warlock can slide it 1 square as a minor action once per round.",
+      "StirringName": "{power} (+{heal} HP to allies who hit)",
+      "StirringDesc": "Until the end of the encounter, an ally of {source} who hits this creature regains {heal} hit points.",
+      "StirringHeal": "<strong>{actor}</strong> regains {heal} hit points (Stirring Shout).",
+      "PrimeShot": "Prime Shot",
+      "GreatCleave": "Great Cleave +{count} (adjacent enemies)",
+      "GreatCleaveHint": "+1 damage for each enemy adjacent to you.",
+      "AutoModsLegend": "Automatic modifiers (4e automation)",
+      "Prone": "<strong>{target}</strong> falls prone ({power})."
+    },
+    "TempHp": {
+      "Rageblood": "<strong>{actor}</strong> gains {amount} temporary hit points (Rageblood Vigor, {target} dropped).",
+      "ValorTitle": "Virtue of Valor",
+      "ValorDropped": "<strong>{ally}</strong> dropped <strong>{enemy}</strong>.",
+      "ValorBloodied": "<strong>{ally}</strong> bloodied <strong>{enemy}</strong>.",
+      "ValorButton": "Give {ally} {amount} temporary HP",
+      "ValorUsed": "Already used this round",
+      "ValorGranted": "<strong>{bard}</strong> gives <strong>{ally}</strong> {amount} temporary hit points (Virtue of Valor).",
+      "ValorNotHigher": "{ally} already has as many temporary hit points; Virtue of Valor used without effect.",
+      "Resilience": "<strong>{actor}</strong> gains {amount} temporary hit points ({feature}, first time bloodied this encounter)."
+    },
+    "RollVars": {
+      "wepAttack": "Weapon (Training)",
+      "impAttack": "Implement",
+      "powerMod": "Ability",
+      "lvhalf": "½ Level",
+      "bonus": "Situational bonus",
+      "powBase": "Power damage",
+      "powMax": "Power damage (max)",
+      "wepDamage": "Weapon",
+      "impDamage": "Implement",
+      "wepCritBonus": "Weapon crit",
+      "impCritBonus": "Implement crit",
+      "highCrit": "High Crit",
+      "versatile": "Versatile",
+      "extraDamage": "Extra damage",
+      "bonusDamage": "Damage bonus",
+      "ammo": "Ammunition",
+      "wep2ndryDamage": "Weapon secondary damage",
+      "powerModNamed": "Ability ({ability})",
+      "fixed": "Fixed bonus",
+      "sectionBonus": "Bonuses",
+      "sectionSituational": "Situational",
+      "sectionPenalty": "Penalties",
+      "effectBonus": "Active effects",
+      "effectBonusTyped": "Effects ({type})",
+      "bonusType": {
+        "untyped": "untyped",
+        "feat": "feat",
+        "item": "item",
+        "power": "power",
+        "race": "racial"
+      },
+      "training": "Training",
+      "armourPen": "Armor penalty",
+      "skillOther": "Other bonuses",
+      "wordsOfFriendship": "Words of Friendship",
+      "fateOfTheVoid": "Fate of the Void"
+    },
+    "Conditional": {
+      "FoxArmed": "{name}: the next basic attack gets +{bonus} (Fox's Cunning).",
+      "NoLastAttack": "{name} has no recent attack to reroll.",
+      "Rerolling": "{power}: rolling the attack again against the same targets. Use the second roll.",
+      "DireName": "{power}: moving closer deals {formula}",
+      "DireDesc": "The first time this creature moves closer to {source} on its next turn, it takes {formula} damage.",
+      "DireFlavor": "{power}: {target} moved closer"
+    },
+    "Move": {
+      "Bar": {
+        "shift": "Shift {name}: up to {squares} square(s)",
+        "push": "Push {name}: up to {squares} square(s)",
+        "pull": "Pull {name}: up to {squares} square(s)",
+        "slide": "Slide {name}: up to {squares} square(s)",
+        "charge": "Charge {target}: up to {squares} squares"
+      },
+      "Hint": "Click a highlighted square · Esc or right click skips",
+      "Skip": "Skip",
+      "Count": "{steps}/{squares}",
+      "NoSquares": "{name} has no square to move to.",
+      "TokenGone": "The token is no longer on the scene.",
+      "Button": {
+        "shift": "Shift {name} {squares}",
+        "push": "Push {name} {squares}",
+        "pull": "Pull {name} {squares}",
+        "slide": "Slide {name} {squares}"
+      },
+      "Done": {
+        "shift": "{name} shifted.",
+        "push": "{name} was pushed.",
+        "pull": "{name} was pulled.",
+        "slide": "{name} was slid."
+      },
+      "FollowUp": "you or an ally adjacent to {target} can make a melee basic attack against it as a free action (+{bonus}).",
+      "FollowUpButton": "{name} attacks (+{bonus})",
+      "MinorSlide": "Slide {name} {squares} (minor action)",
+      "Step": "Step by step",
+      "StepHint": "Click one stretch at a time and confirm (Shift+click adds a single stretch in either mode)",
+      "HintStep": "Click squares one at a time · Enter confirms · right click / Backspace undoes · Esc skips",
+      "HintCharge": "Click the end square of the charge · Esc or right click cancels",
+      "Confirm": "Confirm"
+    },
+    "Charge": {
+      "ChooseAttack": "Charge attack",
+      "ChooseAttackHint": "Which attack does {name} make at the end of the charge?",
+      "ChooseTarget": "Charge",
+      "ChooseTargetHint": "Choose the enemy to charge.",
+      "NoEnemy": "{name} has no enemy that can be charged from here.",
+      "Reason": {
+        "tooClose": "{name} can't charge {target}: the nearest square to attack from is less than 2 squares away.",
+        "tooFar": "{name} can't charge {target}: the nearest square to attack from is {nearest} squares away (speed {speed}).",
+        "occupied": "{name} can't charge {target}: the nearest square to attack from is occupied.",
+        "blocked": "{name} can't charge {target}: there is no path getting closer every square to the nearest square to attack from."
+      }
+    },
+    "Levels": {
+      "auto": "Automation",
+      "tr": "Translation",
+      "Name0": "Grey",
+      "Name1": "Bronze",
+      "Name2": "Silver",
+      "Name3": "Gold",
+      "autoDesc0": "Not automated.",
+      "autoDesc1": "A little automated.",
+      "autoDesc2": "Moderately automated.",
+      "autoDesc3": "Automated (or needs no automation).",
+      "trDesc0": "No translation.",
+      "trDesc1": "Unofficial translation.",
+      "trDesc2": "Partly unofficial translation (passages marked with *asterisks*).",
+      "trDesc3": "Official translation.",
+      "Manual": "Set by the GM",
+      "Guessed": "Estimated by the module",
+      "GMHint": "Click to change",
+      "UseGuess": "Module's estimate",
+      "ChooseHint": "Choose the level for {power}. It applies to every copy of this power in the world."
+    },
+    "Features": {
+      "ShadowWalk": "<strong>{actor}</strong> moved 3 squares away from where the turn started: concealment until the end of the next turn ({feature}).",
+      "ShadowWalkDesc": "Concealment (−2 to attack rolls against this creature) until the end of its next turn.",
+      "Rampage": "<strong>{actor}</strong> scored a critical hit with <strong>{power}</strong> and can make a melee basic attack as a free action.",
+      "RampageButton": "Melee basic attack (free action)",
+      "WordsArmed": "{actor}: +5 power bonus to the next Diplomacy check before the end of the next turn ({power}).",
+      "WordsDesc": "+5 power bonus to the next Diplomacy check. Ends after that check or at the end of the next turn."
+    },
+    "TextOverrides": {
+      "Title": "Monster texts",
+      "Button": "Import / export",
+      "MenuHint": "File with replacement text for monsters (name, powers, description). Import it in a new world to bring them all at once. Text only: numbers stay the compendium's.",
+      "Stored": "This world has text for {count} monsters.",
+      "Hint": "Import merges the file with what is stored (the same monster is replaced) and updates the actors and tokens already in the world. New monsters dragged from a compendium get the text on creation. Export downloads everything stored in this world.",
+      "Import": "Import file",
+      "Export": "Export",
+      "NoFile": "Choose a .json file to import.",
+      "Imported": "Texts imported: {count} monsters. Updated: {actors} actors, {tokens} tokens.",
+      "Invalid": "Invalid file: not a monster text file."
     }
   }
 }

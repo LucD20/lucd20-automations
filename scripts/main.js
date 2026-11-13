@@ -35,6 +35,9 @@ Hooks.once("init", () => {
     broadcast,
     executeAsGM
   };
+
+  // System code that needs our settings registered first (D&D 4e: adds api.dnd4e).
+  Hooks.callAll("lucd20-automations.init");
 });
 
 Hooks.once("ready", () => {

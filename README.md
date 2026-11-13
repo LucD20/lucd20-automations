@@ -8,6 +8,12 @@ are loaded only for that system (PF2e first).
 See [docs/PLAN.md](docs/PLAN.md) for decisions, the settings layout, feature
 specs and build order.
 
+## D&D 4e
+
+The former module **D&D 4e Combat Automation** is part of this one now
+(category **D&D 4e**, only in dnd4e worlds). Its documentation and macros:
+[docs/dnd4e.md](docs/dnd4e.md). Disable the old module after updating.
+
 ## Credits
 
 Turn marker images in `assets/markers/` come from

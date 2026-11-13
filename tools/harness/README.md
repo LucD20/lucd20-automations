@@ -65,6 +65,7 @@ sets `game.system.id`.
 | `test25.js` | Token Tooltip display, who sees what, expressions (23) |
 | `test26.js` | Token Tooltip editor, data browser, helpers, TTA import (24) |
 | `test27.js` | Pathfinding (25) |
+| `test28.js` | D&D 4e merge: loads in dnd4e, cards, settings map, API; nothing in PF2e (26) |
 
 For a new feature, copy the closest test, keep its mock setup and replace the
 checks.

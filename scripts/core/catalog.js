@@ -17,7 +17,8 @@ export const CATEGORIES = [
   { id: "doors", icon: "fa-solid fa-door-closed" },
   { id: "scenes", icon: "fa-solid fa-clapperboard" },
   { id: "playerSettings", icon: "fa-solid fa-user-lock" },
-  { id: "exploration", icon: "fa-solid fa-magnifying-glass", systems: ["pf2e"] }
+  { id: "exploration", icon: "fa-solid fa-magnifying-glass", systems: ["pf2e"] },
+  { id: "dnd4e", icon: "fa-solid fa-dragon", systems: ["dnd4e"] }
 ];
 
 export const FEATURE_ORDER = [
@@ -55,7 +56,20 @@ export const FEATURE_ORDER = [
   { id: "diceStats", category: "statistics", phase: 8 },
   { id: "forceSettings", category: "playerSettings", phase: 2 },
   { id: "searchAutomation", category: "exploration", phase: 11, systems: ["pf2e"] },
-  { id: "hazardDetection", category: "exploration", phase: 11, systems: ["pf2e"] }
+  { id: "hazardDetection", category: "exploration", phase: 11, systems: ["pf2e"] },
+  { id: "dnd4eClassFeatures", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
+  { id: "dnd4eCover", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
+  { id: "dnd4eActionTracker", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
+  { id: "dnd4eOpportunity", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
+  { id: "dnd4eTriggeredPowers", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
+  { id: "dnd4eDamageApply", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
+  { id: "dnd4eClickMovement", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
+  { id: "dnd4eReadableRolls", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
+  { id: "dnd4eSheetHighlights", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
+  { id: "dnd4ePowerSymbols", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
+  { id: "dnd4eTokenBadges", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
+  { id: "dnd4eMonsterTexts", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
+  { id: "dnd4eGameLanguage", category: "dnd4e", phase: 26, systems: ["dnd4e"] }
 ];
 
 /** Whether a category / feature entry applies to the active game system. */

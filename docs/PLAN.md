@@ -866,6 +866,7 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 | 25 | Pathfinding; tooltip helpers + hide while dragging | ✅ v0.28.0 |
 | 26–28 | Merge D&D 4e Combat Automation | §8 |
 | 29–30 | D&D 4e Skill Challenges | ✅ v0.31.0, v0.32.0 (§9) |
+| 31 | Scene Audit | ✅ v0.33.0 (§10) |
 
 ---
 
@@ -1360,3 +1361,27 @@ adventure text into this repo).
   window. "New challenge" in the list creates a journal entry and opens it.
 - Files: `skill-challenge-shared.mjs`, `-player.mjs`, `-editor.mjs` next to
   the two from phase 29. Tests: `test29.js`, `test30.js`.
+
+---
+
+## 10. Scene Audit — `sceneAudit`
+
+*New, generic (any system).* GM only, off by default, in Scenes & Sound.
+Made so the owner can report what is wrong on an imported map without
+describing positions in words (Q81–Q87, all as recommended).
+
+- **Mark a problem** (flag tool in the Token controls): click a square or drag
+  over several; a small dialog asks the kind (missing wall, wrong wall, door,
+  token, grid / alignment, other) and a note.
+- **Scene Audit** (clipboard tool): the list for the open scene, with show on
+  map, edit, remove; Export this scene, Export all marked scenes, Clear all.
+- Marks are kept on the scene (flag `audit`) and drawn for the GM only:
+  numbered magenta boxes on `canvas.interface`.
+- **Export**: one JSON file (`format: "lucd20-scene-audit"`), for one scene or
+  for all scenes that have marks. Per scene: name, image, grid, the marks,
+  and the scene's walls, doors, tokens, notes and lights as they are now, so
+  hand-made corrections in Foundry can be copied back into a scene's source.
+  Positions are in squares from the top-left corner of the map image
+  (padding is taken out). One file on purpose: the owner can attach at most
+  five files to a message.
+- Code: `scripts/features/scene-audit.js`. Test: `test31.js`.

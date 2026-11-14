@@ -1,0 +1,113 @@
+const { chromium } = require("playwright");
+const assert = require("assert");
+const fs = require("fs");
+const out = __dirname;
+
+/** Phase 31: Scene Audit (marking squares, the list, the exported report). */
+(async () => {
+  const browser = await chromium.launch();
+  const errors = [];
+  const page = await browser.newPage({ viewport: { width: 1000, height: 800 }, acceptDownloads: true });
+  page.on("pageerror", e => errors.push(`${e.message} ${e.stack?.split("\n").slice(1, 3).join(" ")}`));
+  page.on("console", m => m.type() === "error" && !m.text().includes("Failed to load resource") && errors.push(m.text()));
+  await page.goto("http://localhost:8765/index.html?gm=1&system=dnd4e");
+  await page.waitForFunction(() => window.__done, null, { timeout: 15000 });
+  await page.evaluate(() => window.__hub?.close());
+
+  const info = await page.evaluate(async () => {
+    const ID = "lucd20-automations";
+    // A scene whose map image starts 200 px in (padding), 100 px squares.
+    const scene = {
+      id: "s1", name: "Test Cellar", width: 1000, height: 800, padding: 0.25, flags: {},
+      grid: { size: 100, type: 1, distance: 1, units: "sq" },
+      dimensions: { sceneX: 200, sceneY: 200, size: 100 },
+      initialLevel: { background: { src: "maps/cellar.webp" } },
+      walls: [{ c: [200, 200, 500, 200], door: 0, ds: 0, move: 20, sight: 20, dir: 0 }, { c: [500, 200, 500, 300], door: 1, ds: 2, move: 20, sight: 20, dir: 0 }],
+      tokens: [{ name: "Goblin", actorId: "a1", x: 450, y: 600, width: 1, height: 1, hidden: true }],
+      notes: [{ x: 250, y: 250, text: "Start", entryId: "j1", pageId: "p1" }],
+      lights: [],
+      async setFlag(scope, key, value) { (this.flags[scope] ??= {})[key] = structuredClone(value); Hooks.callAll("updateScene", this, { flags: { [scope]: { [key]: value } } }); }
+    };
+    const other = { ...scene, id: "s2", name: "Unmarked", flags: {} };
+    game.scenes = [scene, other];
+    Object.assign(canvas, { ready: true, scene, dimensions: scene.dimensions, interface: new PIXI.Container(), app: { view: document.body } });
+    foundry.utils.randomID = () => Math.random().toString(36).slice(2, 12);
+    game.version = "14.368";
+    window.ui.notifications.warn = m => (window.__warns ??= []).push(m);
+    window.ui.controls = { render() { window.__controls = (window.__controls ?? 0) + 1; } };
+    await game.settings.set(ID, "sceneAudit_enabled", true);
+    await new Promise(r => setTimeout(r, 50));
+    const mod = await import("/modules/lucd20-automations/scripts/features/scene-audit.js");
+    window.__audit = mod;
+    // Scene controls: the two tools land in the Token controls (V13+ object form).
+    const controls = { tokens: { tools: {} } };
+    Hooks.callAll("getSceneControlButtons", controls);
+    // The dialog: answer with the default button on a real form.
+    window.__dialogMode = undefined;
+    window.__dialogPrep = form => { form.elements.kind.value = "wallMissing"; form.elements.note.value = " wall along the north side "; };
+    // Drag from canvas (430, 610) to (660, 720): squares (2,4) to (4,5) of the map image.
+    const placer = new mod._test.Placer();
+    const cells = placer.cells({ x: 430, y: 610 }, { x: 660, y: 720 });
+    await mod._test.addMark(cells);
+    window.__dialogPrep = form => { form.elements.kind.value = "token"; form.elements.note.value = ""; };
+    await mod._test.addMark(placer.cells({ x: 250, y: 250 }, { x: 250, y: 250 }));
+    window.__dialogMode = "lock";
+    return { tools: Object.keys(controls.tokens.tools), cells, marks: mod._test.marksOf(scene), drawn: canvas.interface.children[0]?.children.length, controls: window.__controls };
+  });
+  assert.deepStrictEqual(info.tools, ["lucd20AuditMark", "lucd20AuditList"], "two tools in the Token controls");
+  assert.deepStrictEqual(info.cells, { c0: 2, r0: 4, c1: 4, r1: 5 }, "squares are counted from the map image, not the padded canvas");
+  assert.deepStrictEqual(info.marks.map(m => [m.kind, m.note, m.cells]), [["wallMissing", "wall along the north side", { c0: 2, r0: 4, c1: 4, r1: 5 }], ["token", "", { c0: 0, r0: 0, c1: 0, r1: 0 }]]);
+  assert.strictEqual(info.drawn, 4, "each mark is drawn: a box and its number");
+
+  // The list window.
+  await page.evaluate(() => window.__audit._test.AuditWindow.open());
+  await page.waitForSelector(".lucd20-audit-row");
+  const rows = await page.$$eval(".lucd20-audit-row", els => els.map(e => e.innerText.replace(/\s+/g, " ").trim()));
+  console.log(rows);
+  assert.ok(rows[0].startsWith("1 Missing wall squares 2, 4 to 4, 5 wall along the north side") && rows[1].startsWith("2 Token square 0, 0"));
+  await page.screenshot({ path: `${out}/p31-audit.png` });
+
+  // Export this scene: one JSON file.
+  const [dl] = await Promise.all([page.waitForEvent("download"), page.click('.lucd20-audit-window [data-action="exportScene"]')]);
+  assert.strictEqual(dl.suggestedFilename(), "scene-audit-test-cellar.json");
+  const report = JSON.parse(fs.readFileSync(await dl.path(), "utf8"));
+  const s = report.scenes[0];
+  assert.deepStrictEqual([report.format, report.version, report.scenes.length, s.name, s.image], ["lucd20-scene-audit", 1, 1, "Test Cellar", "maps/cellar.webp"]);
+  assert.deepStrictEqual(s.marks, [{ n: 1, kind: "wallMissing", note: "wall along the north side", cells: { c0: 2, r0: 4, c1: 4, r1: 5 } }, { n: 2, kind: "token", note: "", cells: { c0: 0, r0: 0, c1: 0, r1: 0 } }]);
+  assert.deepStrictEqual(s.walls, [{ c: [0, 0, 3, 0], door: 0, ds: 0, move: 20, sight: 20, dir: 0 }, { c: [3, 0, 3, 1], door: 1, ds: 2, move: 20, sight: 20, dir: 0 }], "walls in squares from the image corner");
+  assert.deepStrictEqual(s.tokens, [{ name: "Goblin", actorId: "a1", col: 2.5, row: 4, width: 1, height: 1, hidden: true }]);
+  assert.deepStrictEqual([s.notes[0].col, s.notes[0].row, s.notes[0].entryId, s.size.squaresWide, s.size.sceneX], [0.5, 0.5, "j1", 10, 200]);
+  // Export all: only scenes that have marks.
+  const [dl2] = await Promise.all([page.waitForEvent("download"), page.click('.lucd20-audit-window [data-action="exportAll"]')]);
+  assert.deepStrictEqual(JSON.parse(fs.readFileSync(await dl2.path(), "utf8")).scenes.map(x => x.name), ["Test Cellar"]);
+
+  // Remove one, then switch the feature off: marks stay on the scene, the drawing and window go.
+  await page.click('.lucd20-audit-row:nth-child(2) [data-action="remove"]');
+  await page.waitForTimeout(100);
+  assert.strictEqual(await page.locator(".lucd20-audit-row").count(), 1);
+  const off = await page.evaluate(async () => {
+    await game.settings.set("lucd20-automations", "sceneAudit_enabled", false);
+    await new Promise(r => setTimeout(r, 50));
+    const controls = { tokens: { tools: {} } };
+    Hooks.callAll("getSceneControlButtons", controls);
+    return { drawn: canvas.interface.children.length, win: document.querySelectorAll(".lucd20-audit-window").length, tools: Object.keys(controls.tokens.tools).length, kept: window.__audit._test.marksOf(game.scenes[0]).length };
+  });
+  assert.deepStrictEqual(off, { drawn: 0, win: 0, tools: 0, kept: 1 }, "switched off without a reload");
+
+  // A player's client: nothing.
+  const p2 = await browser.newPage();
+  await p2.goto("http://localhost:8765/index.html?gm=0&system=dnd4e");
+  await p2.waitForFunction(() => window.__done, null, { timeout: 15000 });
+  const player = await p2.evaluate(async () => {
+    await game.settings.set("lucd20-automations", "sceneAudit_enabled", true);
+    await new Promise(r => setTimeout(r, 50));
+    const controls = { tokens: { tools: {} } };
+    Hooks.callAll("getSceneControlButtons", controls);
+    return Object.keys(controls.tokens.tools).length;
+  });
+  assert.strictEqual(player, 0, "no tools for players");
+
+  assert.deepStrictEqual(errors, [], "no page errors");
+  console.log("PHASE 31 CHECKS PASSED");
+  await browser.close();
+})().catch(err => { console.error(err); process.exit(1); });

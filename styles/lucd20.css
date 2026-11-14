@@ -2245,3 +2245,19 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-tooltip-editor .tt-helper code { font-family: "Fira Mono", Consolas, monospace; font-size: 12px; color: var(--ll-accent-text); background: none; border: none; padding: 0; }
 .lucd20-tooltip-editor .tt-helper-desc { font-size: 12px; color: var(--ll-text-muted); white-space: normal; }
 .lucd20-tooltip-editor .tt-helper-example { font-size: 12px; font-weight: bold; }
+
+/* Scene Audit ----------------------------------------------------------- */
+/* Uses the Loot Pile tokens and buttons (windows carry .lucd20-loot-app). */
+.lucd20-loot-app .lucd20-audit-body { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+.lucd20-loot-app .lucd20-audit-scene { display: flex; flex: none; align-items: baseline; justify-content: space-between; gap: 10px; margin: 0; padding: 8px 10px; border-bottom: 1px solid var(--ll-border); background: var(--ll-bg-header); }
+.lucd20-loot-app .lucd20-audit-scene span { color: var(--ll-text-muted); font-size: 12px; }
+.lucd20-loot-app .lucd20-audit-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 0 10px; }
+.lucd20-loot-app .lucd20-audit-list { margin: 0; padding: 0; list-style: none; }
+.lucd20-loot-app .lucd20-audit-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--ll-border); }
+.lucd20-loot-app .lucd20-audit-row .n { display: grid; flex: none; place-content: center; width: 26px; height: 26px; border: 2px solid #ff3df2; border-radius: 50%; font-weight: 700; font-variant-numeric: tabular-nums; }
+.lucd20-loot-app .lucd20-audit-row .who { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.lucd20-loot-app .lucd20-audit-row .name { font-weight: 600; }
+.lucd20-loot-app .lucd20-audit-row .sub { color: var(--ll-text-muted); font-size: 12px; font-weight: 400; }
+.lucd20-loot-app .lucd20-audit-row .note { font-size: 13px; overflow-wrap: anywhere; }
+.lucd20-loot-app .lucd20-audit-row .actions { display: flex; flex: none; gap: 3px; }
+.lucd20-loot-app.lucd20-audit-dialog .window-content { padding: 0 0 12px; overflow: visible; }

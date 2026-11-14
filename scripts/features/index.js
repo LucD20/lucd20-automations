@@ -25,6 +25,7 @@ import "./status-highlight.js";
 import "./scene-navigation.js";
 import "./scene-palette.js";
 import "./hidden-track-names.js";
+import "./scene-audit.js";
 import "./door-icon-size.js";
 import "./secret-door-highlight.js";
 import "./locked-door-alert.js";

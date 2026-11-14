@@ -53,6 +53,7 @@ export const FEATURE_ORDER = [
   { id: "sceneNavigation", category: "scenes", phase: 16 },
   { id: "scenePalette", category: "scenes", phase: 16 },
   { id: "hiddenTrackNames", category: "scenes", phase: 17 },
+  { id: "sceneAudit", category: "scenes", phase: 31 },
   { id: "diceStats", category: "statistics", phase: 8 },
   { id: "forceSettings", category: "playerSettings", phase: 2 },
   { id: "searchAutomation", category: "exploration", phase: 11, systems: ["pf2e"] },

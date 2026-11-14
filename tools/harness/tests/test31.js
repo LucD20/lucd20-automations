@@ -45,18 +45,27 @@ const out = __dirname;
     // The dialog: answer with the default button on a real form.
     window.__dialogMode = undefined;
     window.__dialogPrep = form => { form.elements.kind.value = "wallMissing"; form.elements.note.value = " wall along the north side "; };
-    // Drag from canvas (430, 610) to (660, 720): squares (2,4) to (4,5) of the map image.
-    const placer = new mod._test.Placer();
-    const cells = placer.cells({ x: 430, y: 610 }, { x: 660, y: 720 });
-    await mod._test.addMark(cells);
+    // Pick an L: clicks on canvas points inside squares (2,4), (2,5), (3,5) of the map image; one extra click is taken back.
+    mod._test.Placer.start();
+    const placer = mod._test.state.placer;
+    const bar = () => document.querySelector(".lucd20-audit-bar");
+    const doneDisabled = bar().querySelector('[data-do="done"]').disabled;
+    for (const p of [{ x: 430, y: 610 }, { x: 430, y: 720 }, { x: 560, y: 720 }, { x: 760, y: 720 }, { x: 770, y: 730 }]) placer.toggle(placer.square(p));
+    const barText = bar().querySelector(".text").textContent;
+    const preview = canvas.interface.children.length;
+    bar().querySelector('[data-do="done"]').click();
+    await new Promise(r => setTimeout(r, 50));
     window.__dialogPrep = form => { form.elements.kind.value = "token"; form.elements.note.value = ""; };
-    await mod._test.addMark(placer.cells({ x: 250, y: 250 }, { x: 250, y: 250 }));
+    await mod._test.addMark([[0, 0]]);
     window.__dialogMode = "lock";
-    return { tools: Object.keys(controls.tokens.tools), cells, marks: mod._test.marksOf(scene), drawn: canvas.interface.children[0]?.children.length, controls: window.__controls };
+    // A mark saved by v0.33.0 (one rectangle) still reads as squares.
+    const old = mod._test.squaresOf({ cells: { c0: 12, r0: 7, c1: 13, r1: 8 } });
+    return { tools: Object.keys(controls.tokens.tools), doneDisabled, barText, preview, barGone: !bar(), old, marks: mod._test.marksOf(scene), drawn: canvas.interface.children[0]?.children.length, controls: window.__controls };
   });
   assert.deepStrictEqual(info.tools, ["lucd20AuditMark", "lucd20AuditList"], "two tools in the Token controls");
-  assert.deepStrictEqual(info.cells, { c0: 2, r0: 4, c1: 4, r1: 5 }, "squares are counted from the map image, not the padded canvas");
-  assert.deepStrictEqual(info.marks.map(m => [m.kind, m.note, m.cells]), [["wallMissing", "wall along the north side", { c0: 2, r0: 4, c1: 4, r1: 5 }], ["token", "", { c0: 0, r0: 0, c1: 0, r1: 0 }]]);
+  assert.deepStrictEqual([info.doneDisabled, info.barText, info.preview, info.barGone], [true, "3 squares picked", 1, true], "a bar shows the count; Done is off until something is picked");
+  assert.deepStrictEqual(info.marks.map(m => [m.kind, m.note, m.squares]), [["wallMissing", "wall along the north side", [[2, 4], [2, 5], [3, 5]]], ["token", "", [[0, 0]]]], "an L of three squares, counted from the map image, not the padded canvas");
+  assert.deepStrictEqual(info.old, [[12, 7], [13, 7], [12, 8], [13, 8]]);
   assert.strictEqual(info.drawn, 4, "each mark is drawn: a box and its number");
 
   // The list window.
@@ -64,7 +73,7 @@ const out = __dirname;
   await page.waitForSelector(".lucd20-audit-row");
   const rows = await page.$$eval(".lucd20-audit-row", els => els.map(e => e.innerText.replace(/\s+/g, " ").trim()));
   console.log(rows);
-  assert.ok(rows[0].startsWith("1 Missing wall squares 2, 4 to 4, 5 wall along the north side") && rows[1].startsWith("2 Token square 0, 0"));
+  assert.ok(rows[0].startsWith("1 Missing wall 3 squares between 2, 4 and 3, 5 wall along the north side") && rows[1].startsWith("2 Token square 0, 0"));
   await page.screenshot({ path: `${out}/p31-audit.png` });
 
   // Export this scene: one JSON file.
@@ -73,7 +82,7 @@ const out = __dirname;
   const report = JSON.parse(fs.readFileSync(await dl.path(), "utf8"));
   const s = report.scenes[0];
   assert.deepStrictEqual([report.format, report.version, report.scenes.length, s.name, s.image], ["lucd20-scene-audit", 1, 1, "Test Cellar", "maps/cellar.webp"]);
-  assert.deepStrictEqual(s.marks, [{ n: 1, kind: "wallMissing", note: "wall along the north side", cells: { c0: 2, r0: 4, c1: 4, r1: 5 } }, { n: 2, kind: "token", note: "", cells: { c0: 0, r0: 0, c1: 0, r1: 0 } }]);
+  assert.deepStrictEqual(s.marks, [{ n: 1, kind: "wallMissing", note: "wall along the north side", squares: [[2, 4], [2, 5], [3, 5]], bounds: { c0: 2, r0: 4, c1: 3, r1: 5 } }, { n: 2, kind: "token", note: "", squares: [[0, 0]], bounds: { c0: 0, r0: 0, c1: 0, r1: 0 } }]);
   assert.deepStrictEqual(s.walls, [{ c: [0, 0, 3, 0], door: 0, ds: 0, move: 20, sight: 20, dir: 0 }, { c: [3, 0, 3, 1], door: 1, ds: 2, move: 20, sight: 20, dir: 0 }], "walls in squares from the image corner");
   assert.deepStrictEqual(s.tokens, [{ name: "Goblin", actorId: "a1", col: 2.5, row: 4, width: 1, height: 1, hidden: true }]);
   assert.deepStrictEqual([s.notes[0].col, s.notes[0].row, s.notes[0].entryId, s.size.squaresWide, s.size.sceneX], [0.5, 0.5, "j1", 10, 200]);

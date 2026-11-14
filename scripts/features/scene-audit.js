@@ -11,8 +11,9 @@ import { appElement } from "../core/dom.js";
  * maintains the scene's source can then fix it from the file, or copy over
  * what the GM corrected by hand in Foundry.
  *
- * - Two tools in the Token controls: "Mark a problem" (click a square or drag
- *   over several, then say what is wrong) and "Scene Audit" (the list).
+ * - Two tools in the Token controls: "Mark a problem" (click squares one by
+ *   one, or drag, to pick any shape; Done; then say what is wrong) and
+ *   "Scene Audit" (the list).
  * - Marks are kept on the scene (flag `audit`) and drawn for the GM only.
  * - Export: one JSON file, for this scene or for every scene with marks.
  *   Positions are in squares counted from the top-left of the map image.
@@ -45,7 +46,27 @@ function frame(scene = canvas.scene) {
   return { x: d?.sceneX ?? 0, y: d?.sceneY ?? 0, size: d?.size ?? scene?.grid?.size ?? 100 };
 }
 
-const cellsText = c => (c.c0 === c.c1 && c.r0 === c.r1 ? L("Cell", { col: c.c0, row: c.r0 }) : L("Cells", { c0: c.c0, r0: c.r0, c1: c.c1, r1: c.r1 }));
+/** The squares of a mark as [[col, row], …] (marks made before v0.33.1 stored one rectangle). */
+function squaresOf(mark) {
+  if (Array.isArray(mark.squares)) return mark.squares;
+  const c = mark.cells ?? { c0: 0, r0: 0, c1: 0, r1: 0 };
+  const out = [];
+  for (let row = c.r0; row <= c.r1; row++) for (let col = c.c0; col <= c.c1; col++) out.push([col, row]);
+  return out;
+}
+
+/** The rectangle around a set of squares. */
+function bounds(squares) {
+  const cols = squares.map(q => q[0]);
+  const rows = squares.map(q => q[1]);
+  return { c0: Math.min(...cols), r0: Math.min(...rows), c1: Math.max(...cols), r1: Math.max(...rows) };
+}
+
+function squaresText(squares) {
+  if (squares.length === 1) return L("Cell", { col: squares[0][0], row: squares[0][1] });
+  const b = bounds(squares);
+  return L("Cells", { count: squares.length, c0: b.c0, r0: b.r0, c1: b.c1, r1: b.r1 });
+}
 
 /** Ask what is wrong. → { kind, note } or null. */
 async function askMark(mark = {}) {
@@ -66,11 +87,12 @@ async function askMark(mark = {}) {
   });
 }
 
-async function addMark(cells) {
+async function addMark(squares) {
+  if (!squares.length) return;
   const answer = await askMark();
   if (!answer || typeof answer !== "object") return;
   const scene = canvas.scene;
-  await saveMarks(scene, [...marksOf(scene), { id: newId(), cells, ...answer }]);
+  await saveMarks(scene, [...marksOf(scene), { id: newId(), squares, ...answer }]);
 }
 
 /* -------------------------------------------- */
@@ -87,10 +109,12 @@ function redraw() {
   const layer = new PIXI.Container();
   layer.eventMode = "none";
   marks.forEach((mark, i) => {
-    const c = mark.cells;
+    const squares = squaresOf(mark);
+    const c = { c0: squares[0][0], r0: squares[0][1] }; // the number sits on the first square
     const box = new PIXI.Graphics();
-    box.lineStyle(Math.max(3, size / 25), 0xff3df2, 0.95).beginFill(0xff3df2, 0.18)
-      .drawRect(x + c.c0 * size, y + c.r0 * size, (c.c1 - c.c0 + 1) * size, (c.r1 - c.r0 + 1) * size).endFill();
+    box.lineStyle(Math.max(3, size / 25), 0xff3df2, 0.95).beginFill(0xff3df2, 0.18);
+    for (const [col, row] of squares) box.drawRect(x + col * size, y + row * size, size, size);
+    box.endFill();
     layer.addChild(box);
     const label = new PIXI.Text(String(i + 1), { fontFamily: "Signika, sans-serif", fontSize: size * 0.55, fontWeight: "700", fill: 0xffffff, stroke: 0x000000, strokeThickness: Math.max(4, size / 16) });
     label.anchor.set(0.5);
@@ -101,17 +125,21 @@ function redraw() {
   state.layer = layer;
 }
 
-/** Click a square, or drag over several. Right-click or Esc stops. */
+/**
+ * Pick the squares of a mark: each click adds a square (click it again to take
+ * it out), dragging paints over several, so any shape works (an L, a corridor).
+ * A small bar at the top has Done and Cancel; Enter and Esc do the same.
+ */
 class Placer {
   constructor() {
     for (const name of ["down", "move", "up", "key", "context"]) this[name] = this[name].bind(this);
+    this.squares = new Map(); // "col,row" → [col, row]
   }
 
   static start() {
     state.placer?.stop();
     state.placer = new Placer();
     state.placer.begin();
-    ui.notifications?.info(L("PlaceHint"));
   }
 
   begin() {
@@ -120,6 +148,18 @@ class Placer {
     window.addEventListener("pointerup", this.up, true);
     window.addEventListener("keydown", this.key, true);
     window.addEventListener("contextmenu", this.context, true);
+    this.bar = document.createElement("div");
+    this.bar.className = "lucd20-audit-bar";
+    this.bar.innerHTML = `<i class="fa-solid fa-flag"></i><span class="text"></span>
+      <button type="button" data-do="done"><i class="fa-solid fa-check"></i> ${L("Done")}</button>
+      <button type="button" data-do="cancel"><i class="fa-solid fa-xmark"></i> ${L("Cancel")}</button>`;
+    this.bar.addEventListener("click", event => {
+      const what = event.target.closest("[data-do]")?.dataset.do;
+      if (what === "done") this.finish();
+      else if (what === "cancel") this.stop();
+    });
+    document.body.append(this.bar);
+    this.refresh();
   }
 
   stop() {
@@ -130,7 +170,15 @@ class Placer {
     window.removeEventListener("contextmenu", this.context, true);
     this.preview?.destroy();
     this.preview = null;
+    this.bar?.remove();
+    this.bar = null;
     if (state.placer === this) state.placer = null;
+  }
+
+  async finish() {
+    const squares = [...this.squares.values()];
+    this.stop();
+    await addMark(squares);
   }
 
   point(event) {
@@ -139,22 +187,36 @@ class Placer {
     return canvas.stage.worldTransform.applyInverse(new PIXI.Point(event.clientX - rect.left, event.clientY - rect.top));
   }
 
-  cells(a, b) {
+  /** The square under a canvas point, counted from the map image's corner. */
+  square(p) {
     const { x, y, size } = frame();
-    const col = p => Math.floor((p.x - x) / size);
-    const row = p => Math.floor((p.y - y) / size);
-    return { c0: Math.min(col(a), col(b)), r0: Math.min(row(a), row(b)), c1: Math.max(col(a), col(b)), r1: Math.max(row(a), row(b)) };
+    return [Math.floor((p.x - x) / size), Math.floor((p.y - y) / size)];
   }
 
-  draw(c) {
+  /** Add or take out one square. `on` forces it (used while dragging). */
+  toggle(square, on) {
+    const key = square.join(",");
+    const add = on ?? !this.squares.has(key);
+    if (add) this.squares.set(key, square);
+    else this.squares.delete(key);
+    this.refresh();
+    return add;
+  }
+
+  refresh() {
     const { x, y, size } = frame();
     if (!this.preview) {
       this.preview = new PIXI.Graphics();
       this.preview.eventMode = "none";
       (canvas.interface ?? canvas.controls ?? canvas.stage).addChild(this.preview);
     }
-    this.preview.clear().lineStyle(3, 0xff3df2, 0.95).beginFill(0xff3df2, 0.2)
-      .drawRect(x + c.c0 * size, y + c.r0 * size, (c.c1 - c.c0 + 1) * size, (c.r1 - c.r0 + 1) * size).endFill();
+    this.preview.clear().lineStyle(3, 0xff3df2, 0.95).beginFill(0xff3df2, 0.25);
+    for (const [col, row] of this.squares.values()) this.preview.drawRect(x + col * size, y + row * size, size, size);
+    this.preview.endFill();
+    const text = this.bar?.querySelector(".text");
+    if (text) text.textContent = this.squares.size ? L("Picked", { count: this.squares.size }) : L("PlaceHint");
+    const done = this.bar?.querySelector('[data-do="done"]');
+    if (done) done.disabled = !this.squares.size;
   }
 
   down(event) {
@@ -163,26 +225,29 @@ class Placer {
     if (event.button !== 0) return;
     event.preventDefault();
     event.stopPropagation();
-    this.start = this.point(event);
-    this.draw(this.cells(this.start, this.start));
+    // The first square decides what the drag does: paint squares in, or take them out.
+    this.painting = { on: this.toggle(this.square(this.point(event))) };
   }
 
   move(event) {
-    if (!this.start || event.target !== canvas.app?.view) return;
-    this.draw(this.cells(this.start, this.point(event)));
+    if (!this.painting || event.target !== canvas.app?.view) return;
+    this.toggle(this.square(this.point(event)), this.painting.on);
   }
 
-  async up(event) {
-    if (!this.start || event.button !== 0) return;
+  up(event) {
+    if (!this.painting || event.button !== 0) return;
     event.preventDefault();
     event.stopPropagation();
-    const cells = this.cells(this.start, this.point(event));
-    this.stop();
-    await addMark(cells);
+    this.painting = null;
   }
 
   key(event) {
     if (event.key === "Escape") this.cancel(event);
+    else if (event.key === "Enter" && this.squares.size) {
+      event.preventDefault();
+      event.stopPropagation();
+      this.finish();
+    }
   }
 
   context(event) {
@@ -215,7 +280,7 @@ export function sceneReport(scene) {
     image: level?.background?.src ?? scene.background?.src ?? null,
     grid: { size, type: scene.grid?.type ?? null, distance: scene.grid?.distance ?? null, units: scene.grid?.units ?? null },
     size: { squaresWide: round((scene.width ?? 0) / size), squaresHigh: round((scene.height ?? 0) / size), width: scene.width, height: scene.height, padding: scene.padding, sceneX: x, sceneY: y },
-    marks: marksOf(scene).map((m, i) => ({ n: i + 1, kind: m.kind, note: m.note, cells: m.cells })),
+    marks: marksOf(scene).map((m, i) => ({ n: i + 1, kind: m.kind, note: m.note, squares: squaresOf(m), bounds: bounds(squaresOf(m)) })),
     walls: list(scene.walls).map(w => ({ c: [gx(w.c[0]), gy(w.c[1]), gx(w.c[2]), gy(w.c[3])], door: w.door, ds: w.ds, move: w.move, sight: w.sight, dir: w.dir })),
     tokens: list(scene.tokens).map(t => ({ name: t.name, actorId: t.actorId ?? t.actor?.id ?? null, col: gx(t.x), row: gy(t.y), width: t.width, height: t.height, hidden: !!t.hidden })),
     notes: list(scene.notes).map(n => ({ col: gx(n.x), row: gy(n.y), text: n.text, entryId: n.entryId, pageId: n.pageId })),
@@ -230,7 +295,7 @@ export function auditReport(scenes) {
     exported: new Date().toISOString(),
     foundry: game.version ?? game.release?.version ?? null,
     system: game.system?.id ?? null,
-    about: "Positions are in squares from the top-left corner of the map image (col, row; walls as [x1, y1, x2, y2]). cells: c0,r0 = first square, c1,r1 = last square of a mark.",
+    about: "Positions are in squares from the top-left corner of the map image (col, row; walls as [x1, y1, x2, y2]). A mark lists its squares as [col, row]; bounds is the rectangle around them.",
     scenes: scenes.map(sceneReport)
   };
 }
@@ -294,7 +359,7 @@ class AuditWindow extends ApplicationV2 {
     const others = [...(game.scenes ?? [])].filter(s => s !== scene && marksOf(s).length).length;
     const rows = marks.map((m, i) => `<li class="lucd20-audit-row" data-id="${esc(m.id)}">
         <span class="n">${i + 1}</span>
-        <div class="who"><span class="name">${L(`Kinds.${m.kind}`)} <span class="sub">${esc(cellsText(m.cells))}</span></span>${m.note ? `<span class="note">${esc(m.note)}</span>` : ""}</div>
+        <div class="who"><span class="name">${L(`Kinds.${m.kind}`)} <span class="sub">${esc(squaresText(squaresOf(m)))}</span></span>${m.note ? `<span class="note">${esc(m.note)}</span>` : ""}</div>
         <div class="actions">
           <button type="button" class="ll-btn ll-btn-square" data-action="pan" data-tooltip="${esc(L("Pan"))}" aria-label="${esc(L("Pan"))}"><i class="fa-solid fa-location-crosshairs ll-i"></i></button>
           <button type="button" class="ll-btn ll-btn-square" data-action="edit" data-tooltip="${esc(L("Edit"))}" aria-label="${esc(L("Edit"))}"><i class="fa-solid fa-pen ll-i"></i></button>
@@ -344,7 +409,7 @@ class AuditWindow extends ApplicationV2 {
     const { marks, index } = AuditWindow.#mark(target);
     if (index < 0) return;
     const { x, y, size } = frame();
-    const c = marks[index].cells;
+    const c = bounds(squaresOf(marks[index]));
     canvas.animatePan?.({ x: x + ((c.c0 + c.c1 + 1) / 2) * size, y: y + ((c.r0 + c.r1 + 1) / 2) * size, duration: 300 });
   }
 
@@ -423,4 +488,4 @@ defineFeature({
 });
 
 /** For the harness. */
-export const _test = { AuditWindow, Placer, addMark, marksOf, state };
+export const _test = { AuditWindow, Placer, addMark, marksOf, squaresOf, state };

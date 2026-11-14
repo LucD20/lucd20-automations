@@ -2261,3 +2261,7 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-loot-app .lucd20-audit-row .note { font-size: 13px; overflow-wrap: anywhere; }
 .lucd20-loot-app .lucd20-audit-row .actions { display: flex; flex: none; gap: 3px; }
 .lucd20-loot-app.lucd20-audit-dialog .window-content { padding: 0 0 12px; overflow: visible; }
+.lucd20-audit-bar { position: fixed; top: 12px; left: 50%; z-index: 10000; display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid #ff3df2; border-radius: 4px; background: #1b1a21; color: #efe6d8; font-size: 14px; transform: translateX(-50%); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.6); }
+.lucd20-audit-bar > i { color: #ff3df2; }
+.lucd20-audit-bar button { display: inline-flex; align-items: center; gap: 5px; width: auto; height: 28px; margin: 0; padding: 0 10px; border: 1px solid #5c596a; border-radius: 4px; background: #26252e; color: inherit; font: inherit; font-size: 13px; cursor: pointer; }
+.lucd20-audit-bar button:disabled { opacity: 0.45; cursor: not-allowed; }

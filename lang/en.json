@@ -664,7 +664,7 @@
       },
       "sceneAudit": {
         "Name": "Scene Audit",
-        "Hint": "For checking imported maps. Mark squares where something is wrong (a missing wall, a misplaced token …), then export one file that says where each mark is and lists the scene's walls, doors, tokens and notes as they are now. Tools: the flag and the clipboard in the Token controls. Only the GM sees the marks."
+        "Hint": "For checking imported maps. Pick the squares where something is wrong, one click each, in any shape (a missing wall, a misplaced token …), then export one file that says where each mark is and lists the scene's walls, doors, tokens and notes as they are now. Tools: the flag and the clipboard in the Token controls. Only the GM sees the marks."
       }
     },
     "ForceSettings": {
@@ -1331,7 +1331,7 @@
       "Title": "Scene Audit",
       "Mark": "Mark a problem",
       "MarkTitle": "What is wrong here?",
-      "PlaceHint": "Click a square, or drag over several. Right-click or Esc to cancel.",
+      "PlaceHint": "Click squares to pick them (click again to take one out), or drag.",
       "Kind": "Kind",
       "Kinds": {
         "wallMissing": "Missing wall",
@@ -1346,7 +1346,7 @@
       "Save": "Save",
       "Cancel": "Cancel",
       "Cell": "square {col}, {row}",
-      "Cells": "squares {c0}, {r0} to {c1}, {r1}",
+      "Cells": "{count} squares between {c0}, {r0} and {c1}, {r1}",
       "Count": "{count} marks",
       "Others": "{count} other scenes have marks",
       "NoScene": "No scene is open",
@@ -1361,7 +1361,9 @@
       "Exported": "Scene audit exported ({count} scenes).",
       "NothingToExport": "There is nothing to export.",
       "Clear": "Clear all marks",
-      "ClearConfirm": "Remove every mark on <strong>{name}</strong>?"
+      "ClearConfirm": "Remove every mark on <strong>{name}</strong>?",
+      "Picked": "{count} squares picked",
+      "Done": "Done"
     }
   },
   "DND4EAUTO": {

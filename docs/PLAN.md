@@ -1370,8 +1370,10 @@ adventure text into this repo).
 Made so the owner can report what is wrong on an imported map without
 describing positions in words (Q81–Q87, all as recommended).
 
-- **Mark a problem** (flag tool in the Token controls): click a square or drag
-  over several; a small dialog asks the kind (missing wall, wrong wall, door,
+- **Mark a problem** (flag tool in the Token controls): each click picks a
+  square (click again to take it out), dragging paints, so a mark can have
+  any shape (v0.33.1; it was one rectangle). A bar at the top has Done and
+  Cancel (Enter / Esc). Then a small dialog asks the kind (missing wall, wrong wall, door,
   token, grid / alignment, other) and a note.
 - **Scene Audit** (clipboard tool): the list for the open scene, with show on
   map, edit, remove; Export this scene, Export all marked scenes, Clear all.

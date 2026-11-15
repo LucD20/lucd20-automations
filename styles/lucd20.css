@@ -1597,9 +1597,107 @@ button.lucd20-lock.mode-lock {
 .lucd20-loot-app .lucd20-loot-footer button.ll-btn-all { flex: 1 1 100%; }
 .lucd20-loot-app .lucd20-loot-footer.is-gm [data-action="deletePile"] { margin-left: auto; }
 
+/* 3b. Claims and coins (phase 33; from docs/mockups/loot-claims.html) ------ */
+
+/* A row's colour says what was asked: one claim, a contest, or only the stash. */
+.lucd20-loot-app .ll-row { min-height: 38px; border-bottom: 1px solid rgba(255, 255, 255, 0.04); border-radius: 0; }
+.lucd20-loot-app .ll-row.is-claimed { background: rgba(238, 155, 58, 0.13); box-shadow: inset 3px 0 0 var(--ll-accent); }
+.lucd20-loot-app .ll-row.is-contested { background: rgba(190, 60, 45, 0.24); box-shadow: inset 3px 0 0 #e0604a; }
+.lucd20-loot-app .ll-row.is-stash { background: rgba(110, 140, 190, 0.14); box-shadow: inset 3px 0 0 #7f9cc9; }
+
+.lucd20-loot-app .ll-requests { display: inline-flex; flex: none; align-items: center; justify-content: flex-end; gap: 8px; min-width: 96px; }
+.lucd20-loot-app .ll-tokens { display: inline-flex; }
+.lucd20-loot-app .ll-tokens .lucd20-loot-portrait { width: 28px; height: 28px; border-color: var(--ll-accent); }
+.lucd20-loot-app .ll-tokens .lucd20-loot-portrait + .lucd20-loot-portrait { margin-left: -6px; }
+.lucd20-loot-app .ll-tokens .lucd20-loot-portrait.is-me { border-width: 2px; border-color: #ffd9a8; box-shadow: 0 0 0 2px rgba(238, 155, 58, 0.5); }
+.lucd20-loot-app .ll-stash-count { display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 7px; border: 1px solid #7f9cc9; border-radius: 12px; color: #b9cdea; font-size: 12px; }
+
+/* Fixed button widths so the columns line up down the list. */
+.lucd20-loot-app .ll-row button.ll-btn-a { width: 158px; justify-content: center; }
+.lucd20-loot-app .ll-row button.ll-btn-b { width: 130px; justify-content: center; }
+.lucd20-loot-app .ll-row button.ll-btn-wide { width: 258px; justify-content: center; }
+.lucd20-loot-app .ll-row button.ll-btn-wide span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lucd20-loot-app button.ll-btn-on,
+.lucd20-loot-app button.ll-btn-on:hover { background: var(--ll-accent); border-color: var(--ll-accent); color: #1b1a21; font-style: italic; font-weight: 700; }
+.lucd20-loot-app button.ll-btn-on.is-stash,
+.lucd20-loot-app button.ll-btn-on.is-stash:hover { background: #7f9cc9; border-color: #7f9cc9; }
+
+.lucd20-loot-app .lucd20-loot-coins { display: flex; flex: none; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 8px 10px; border-bottom: 1px solid var(--ll-border); background: var(--ll-bg-sunken); }
+.lucd20-loot-app .ll-coins-title { display: inline-flex; align-items: center; gap: 6px; color: var(--ll-accent-text); font-weight: 700; }
+.lucd20-loot-app .ll-coin-list { display: flex; flex: 1; flex-wrap: wrap; gap: 6px; }
+.lucd20-loot-app .ll-coin { padding: 2px 8px; border: 1px solid var(--ll-border); border-radius: 12px; background: var(--ll-bg-raised); color: var(--ll-text-muted); font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.lucd20-loot-app .ll-coin b { color: var(--ll-text); }
+.lucd20-loot-app .ll-coin-ad { border-color: #8fe3e8; }
+.lucd20-loot-app .ll-coin-pp { border-color: #9fb4c9; }
+.lucd20-loot-app .ll-coin-gp { border-color: #d9a520; }
+.lucd20-loot-app .ll-coin-sp { border-color: #a8a8a8; }
+.lucd20-loot-app .ll-coin-cp { border-color: #b56a3a; }
+.lucd20-loot-app .ll-coin-actions { display: flex; gap: 6px; }
+.lucd20-loot-app .ll-coins-note { color: var(--ll-text-muted); font-size: 12px; }
+
+/* "Give to…" */
+.lucd20-loot-app .ll-give { gap: 4px; padding: 10px; }
+.lucd20-loot-app .ll-what { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.lucd20-loot-app button.ll-give-row { justify-content: flex-start; gap: 10px; width: 100%; height: 42px; font-size: 15px; font-weight: 600; }
+
+/* "Who gets it?" */
+.lucd20-loot-app .ll-contest { overflow-y: auto; }
+.lucd20-loot-app .ll-item-card { margin: 10px; padding: 10px; border: 1px solid var(--ll-border); border-radius: var(--ll-radius); background: var(--ll-bg-raised); }
+.lucd20-loot-app .ll-item-card header { display: flex; align-items: center; gap: 10px; }
+.lucd20-loot-app .ll-item-card .who { display: flex; flex: 1; align-items: center; gap: 8px; min-width: 0; font-size: 16px; }
+.lucd20-loot-app .ll-item-text { max-height: 220px; margin-top: 8px; overflow-y: auto; line-height: 1.4; }
+.lucd20-loot-app .ll-item-text:empty { display: none; }
+.lucd20-loot-app .ll-item-text p { margin: 0 0 6px; }
+.lucd20-loot-app .ll-contenders { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 22px; padding: 4px 10px 14px; }
+.lucd20-loot-app .ll-contender { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.lucd20-loot-app .ll-contender .sub { color: var(--ll-text-muted); font-size: 12px; }
+.lucd20-loot-app .lucd20-loot-portrait.large { width: 64px; height: 64px; border: 2px solid var(--ll-accent-border); }
+.lucd20-loot-app .ll-versus { color: var(--ll-text-muted); font-style: italic; }
+.lucd20-loot-app .ll-award { align-items: center; justify-content: center; }
+.lucd20-loot-app .ll-award .label { font-weight: 700; }
+.lucd20-loot-app .ll-contest-note { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px; border-top: 1px solid var(--ll-border); background: var(--ll-bg-header); color: var(--ll-text-muted); }
+
+/* Coin splits */
+.lucd20-loot-app .ll-split { overflow-y: auto; }
+.lucd20-loot-app .ll-picks { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; }
+.lucd20-loot-app .ll-pick { display: inline-flex; align-items: center; gap: 5px; margin: 0; padding: 2px 10px 2px 6px; border: 1px solid var(--ll-border); border-radius: 15px; background: var(--ll-bg-raised); cursor: pointer; }
+.lucd20-loot-app .ll-tabs { display: flex; gap: 8px; padding: 0 10px 8px; }
+.lucd20-loot-app button.ll-tab { display: flex; flex: 1; flex-direction: column; align-items: flex-start; gap: 2px; width: auto; height: auto; margin: 0; padding: 8px 10px; border: 1px solid var(--ll-border); border-radius: var(--ll-radius); background: var(--ll-bg-raised); color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.lucd20-loot-app button.ll-tab.is-on { border-color: var(--ll-accent); background: rgba(238, 155, 58, 0.1); }
+.lucd20-loot-app button.ll-tab span { color: var(--ll-text-muted); font-size: 12px; }
+.lucd20-loot-app .ll-preview { margin: 0 10px 10px; border: 1px solid var(--ll-border); border-radius: var(--ll-radius); background: var(--ll-bg-sunken); }
+.lucd20-loot-app .ll-share { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-bottom: 1px solid var(--ll-border); }
+.lucd20-loot-app .ll-share:last-child { border-bottom: none; }
+.lucd20-loot-app .ll-share .who { flex: none; width: 110px; overflow: hidden; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.lucd20-loot-app .ll-share .ll-coin-list { justify-content: flex-end; }
+.lucd20-loot-app .ll-share.is-stash { background: var(--ll-bg-raised); color: var(--ll-text-muted); }
+.lucd20-loot-app .ll-share.is-stash > .ll-i { width: 24px; text-align: center; }
+.lucd20-loot-app .ll-convert { display: flex; flex: none; align-items: center; gap: 8px; margin: 0; padding: 8px 10px; border-bottom: 1px solid var(--ll-border); background: var(--ll-bg-header); cursor: pointer; }
+.lucd20-loot-app .ll-convert span { color: var(--ll-text-muted); font-size: 12px; }
+.lucd20-loot-app .ll-split-table { width: calc(100% - 20px); margin: 8px 10px; border: none; border-collapse: collapse; background: none; }
+.lucd20-loot-app .ll-split-table th { width: 64px; padding: 4px; border: none; border-bottom: 2px solid var(--ll-border-strong); background: none; color: inherit; font-size: 13px; text-shadow: none; }
+.lucd20-loot-app .ll-split-table th:first-child { width: auto; border: none; }
+.lucd20-loot-app .ll-split-table tr { background: none; }
+.lucd20-loot-app .ll-split-table td { padding: 4px; border: none; border-bottom: 1px solid var(--ll-border); font-variant-numeric: tabular-nums; text-align: center; }
+.lucd20-loot-app .ll-split-table td:first-child { text-align: left; }
+.lucd20-loot-app .ll-split-table td.who { display: flex; align-items: center; gap: 8px; }
+.lucd20-loot-app .ll-left td { background: var(--ll-bg-sunken); color: var(--ll-text-muted); }
+.lucd20-loot-app .ll-left td.is-some { color: var(--ll-accent-text); font-size: 15px; font-weight: 700; }
+.lucd20-loot-app .ll-left td.is-over { color: var(--ll-danger-text); font-weight: 700; }
+.lucd20-loot-app .ll-split-table input { width: 54px; height: 26px; margin: 0; padding: 0 2px; border: 1px solid var(--ll-border-strong); border-radius: 3px; background: var(--ll-bg-sunken); color: inherit; text-align: center; }
+.lucd20-loot-app .ll-split-table tfoot td { border-bottom: none; color: var(--ll-text-muted); }
+
 /* Narrow windows: drop the word "Party". Wide windows: one footer row. */
 @container (max-width: 399px) {
   .lucd20-loot-app .ll-wide { display: none; }
+}
+
+/* Narrower than the default: the buttons give up their fixed widths. */
+@container (max-width: 559px) {
+  .lucd20-loot-app .ll-row button.ll-btn-a,
+  .lucd20-loot-app .ll-row button.ll-btn-b,
+  .lucd20-loot-app .ll-row button.ll-btn-wide { width: auto; max-width: 180px; }
+  .lucd20-loot-app .ll-requests { min-width: 0; }
 }
 
 @container (min-width: 540px) {

@@ -1405,3 +1405,60 @@ as the standing default), in Tokens.
   scene) and tokens of player-owned actors are not touched. Content the owner
   ships (lucd20-personal) sets the same mode in its own data.
 - Code: `scripts/features/npc-health-bars.js`. Test: `test32.js`.
+
+---
+
+## 12. Loot Pile: claims and coins (phase 33) — `lootPile`
+
+*Changes the Loot Pile window (§ Loot Pile above stays true for "Loot the
+fallen" and how a pile is made).* PF2e first; D&D 4e coins and its Party
+Stash come in a later pass (Q89, Q90: 4e coins are numbers on the actor, the
+owner wants them as items there). Mockup: `docs/mockups/loot-claims.html`
+(third version approved). Decisions Q88–Q103.
+
+- **Players ask, the GM hands out.** A player's row has **Claim** (for the
+  character in "Claiming for"; a stack asks how many, Shift = all) and
+  **Party Stash**. Their own request shows on the button ("Claimed,
+  waiting…", "Stash, waiting…"); clicking it again takes it back. Nothing
+  moves and nothing is said in chat until the GM confirms.
+- **Everyone sees who asked**, on the one row: the claimers' tokens (name on
+  hover, your own ringed) and a stash icon with the number of stash requests
+  (names on hover). Row colour: plain = nobody, orange = goes to the
+  claimer(s), red = contested, blue = only stash requests.
+- **Rule (owner):** one claim wins over any number of stash requests. Two or
+  more claims are a contest, unless a stack has enough for all of them (one
+  potion each of two).
+- **GM's row:** nobody asked → **Give to…** (pick a character) and **Party
+  Stash**, at once. Asked → one wide button (**Give to Ezren**, **Send to
+  Stash**, or **Who gets it?**) and ✗ to refuse (clears the requests).
+  **Approve all (n)** does every row that is not contested.
+- **Who gets it?** opens when the GM clicks it, for the GM and the claimers
+  only: the item (its description, never for a player while it is
+  unidentified; a button opens the item), the claimers, and for the GM
+  "Give to: A | B | Party Stash". The GM closing it leaves the claims.
+- **A player's "Send all to Party Stash"** only adds stash requests; the GM's
+  does it.
+- **Coins** are one row at the top (totals), not item rows. GM only:
+  **Split evenly** (tick the characters; *Normal split* = each kind of coin
+  as it is, *Convert coins* = same value for everyone in the fewest coins;
+  the preview shows each character's coins and what is left) and **Custom
+  split** (a number per character and coin, "Left to give" on top, *Convert
+  coins* counts by value). Whatever is left goes to the Party Stash.
+  Setting **Highest coin when converting** (system's highest / pp / gp).
+  Characters: PF2e = the active party's members; otherwise every
+  player-owned character.
+- Chat (if "announce"): "Ezren took Dogslicer.", "Ring went to The Party.",
+  "Coins split: Amiri and Ezren each get 1 gp 5 sp. 2 cp went to the Party
+  Stash."
+- Data: requests are an array on the pile (flag `claims`: itemId, userId,
+  kind, actorUuid, quantity), written by the GM's client on a player's
+  request (`lootPile.request`, `lootPile.requestAll`); flag `deciding` names
+  the item "Who gets it?" is open for. Every transfer is the GM's own click.
+- Coin arithmetic: `scripts/core/coins.js`. A system's adapter gives
+  `denominations`, `coinsOf`, `addCoins`, `removeCoins`, `characters`
+  (`scripts/systems/pf2e/loot-pile.js` uses `actor.inventory.addCoins` /
+  `removeCoins(…, { byValue: false })`). No denominations = no coins row.
+- Test: `test11.js` (phases 10 and 33).
+- (verify) in Foundry: PF2e 8.7 adds/removes coins as expected on
+  characters, the party and the pile; the item description in "Who gets it?";
+  a player's window updating when another player claims.

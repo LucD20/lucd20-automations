@@ -15,8 +15,9 @@ import { appElement } from "../core/dom.js";
  *   one, or drag, to pick any shape; Done; then say what is wrong) and
  *   "Scene Audit" (the list).
  * - Marks are kept on the scene (flag `audit`) and drawn for the GM only.
- * - Export: one JSON file, for this scene or for every scene with marks.
- *   Positions are in squares counted from the top-left of the map image.
+ * - Export scenes: tick the scenes, and the report appears as text to copy
+ *   (or download). Positions are in squares counted from the top-left of the
+ *   map image.
  */
 
 const FLAG = "audit";
@@ -280,9 +281,9 @@ export function sceneReport(scene) {
     image: level?.background?.src ?? scene.background?.src ?? null,
     grid: { size, type: scene.grid?.type ?? null, distance: scene.grid?.distance ?? null, units: scene.grid?.units ?? null },
     size: { squaresWide: round((scene.width ?? 0) / size), squaresHigh: round((scene.height ?? 0) / size), width: scene.width, height: scene.height, padding: scene.padding, sceneX: x, sceneY: y },
-    marks: marksOf(scene).map((m, i) => ({ n: i + 1, kind: m.kind, note: m.note, squares: squaresOf(m), bounds: bounds(squaresOf(m)) })),
-    walls: list(scene.walls).map(w => ({ c: [gx(w.c[0]), gy(w.c[1]), gx(w.c[2]), gy(w.c[3])], door: w.door, ds: w.ds, move: w.move, sight: w.sight, dir: w.dir })),
-    tokens: list(scene.tokens).map(t => ({ name: t.name, actorId: t.actorId ?? t.actor?.id ?? null, col: gx(t.x), row: gy(t.y), width: t.width, height: t.height, hidden: !!t.hidden })),
+    marks: marksOf(scene).map((m, i) => ({ n: i + 1, kind: m.kind, note: m.note, squares: squaresOf(m) })),
+    walls: list(scene.walls).map(w => [gx(w.c[0]), gy(w.c[1]), gx(w.c[2]), gy(w.c[3]), w.door, w.ds, w.move, w.sight, w.light, w.sound, w.dir]),
+    tokens: list(scene.tokens).map(t => [t.name, gx(t.x), gy(t.y), t.width, t.height, t.hidden ? 1 : 0, t.actorId ?? t.actor?.id ?? null]),
     notes: list(scene.notes).map(n => ({ col: gx(n.x), row: gy(n.y), text: n.text, entryId: n.entryId, pageId: n.pageId })),
     lights: list(scene.lights).map(l => ({ col: gx(l.x), row: gy(l.y), dim: l.config?.dim, bright: l.config?.bright }))
   };
@@ -291,17 +292,17 @@ export function sceneReport(scene) {
 export function auditReport(scenes) {
   return {
     format: "lucd20-scene-audit",
-    version: 1,
+    version: 2,
     exported: new Date().toISOString(),
     foundry: game.version ?? game.release?.version ?? null,
     system: game.system?.id ?? null,
-    about: "Positions are in squares from the top-left corner of the map image (col, row; walls as [x1, y1, x2, y2]). A mark lists its squares as [col, row]; bounds is the rectangle around them.",
+    about: "Positions are in squares from the top-left corner of the map image (col, row). A mark lists its squares as [col, row]. Wall: [x1, y1, x2, y2, door, ds, move, sight, light, sound, dir]. Token: [name, col, row, width, height, hidden, actorId].",
     scenes: scenes.map(sceneReport)
   };
 }
 
-function download(name, data) {
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+function download(name, text) {
+  const blob = new Blob([text], { type: "application/json" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
   link.download = name;
@@ -311,12 +312,116 @@ function download(name, data) {
   setTimeout(() => URL.revokeObjectURL(link.href), 5000);
 }
 
-const slug = text => String(text).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "scene";
+/** The report as text: one line per scene, short enough to paste into a message. */
+export function reportText(scenes) {
+  const { scenes: list, ...head } = auditReport(scenes);
+  return `${JSON.stringify(head).slice(0, -1)},"scenes":[\n${list.map(s => JSON.stringify(s)).join(",\n")}\n]}`;
+}
 
-function exportScenes(scenes, name) {
-  if (!scenes.length) return ui.notifications?.warn(L("NothingToExport"));
-  download(`scene-audit-${name}.json`, auditReport(scenes));
-  ui.notifications?.info(L("Exported", { count: scenes.length }));
+async function copyText(text) {
+  try {
+    if (game.clipboard?.copyPlainText) await game.clipboard.copyPlainText(text);
+    else await navigator.clipboard.writeText(text);
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
+/* -------------------------------------------- */
+/*  Export window                               */
+/* -------------------------------------------- */
+
+/** Tick scenes, then get the report as text to copy (or as a file). */
+class ExportWindow extends ApplicationV2 {
+  static DEFAULT_OPTIONS = {
+    id: "lucd20-scene-audit-export",
+    classes: ["lucd20-loot-app", "lucd20-audit-window", "lucd20-audit-export"],
+    window: { title: "LUCD20.SceneAudit.Export", icon: "fa-solid fa-file-export", resizable: true },
+    position: { width: 480, height: 520 },
+    actions: {
+      make: ExportWindow.#onMake,
+      back: ExportWindow.#onBack,
+      copy: ExportWindow.#onCopy,
+      file: ExportWindow.#onFile,
+      all: ExportWindow.#onAll
+    }
+  };
+
+  /** The report text once made; null while picking scenes. */
+  text = null;
+  count = 0;
+
+  static get instance() {
+    return foundry.applications.instances?.get(this.DEFAULT_OPTIONS.id) ?? null;
+  }
+
+  static open() {
+    const app = this.instance ?? new this();
+    app.text = null;
+    return app.render({ force: true });
+  }
+
+  async _renderHTML() {
+    if (this.text !== null) {
+      return `<div class="lucd20-audit-body">
+        <p class="lucd20-audit-scene"><strong>${L("ExportReady", { count: this.count })}</strong><span>${L("ExportReadyHint")}</span></p>
+        <textarea class="lucd20-audit-text" readonly spellcheck="false">${esc(this.text)}</textarea>
+        <footer class="lucd20-loot-footer">
+          <button type="button" class="ll-btn ll-btn-footer ll-btn-take" data-action="copy"><i class="fa-solid fa-copy ll-i"></i> ${L("Copy")}</button>
+          <button type="button" class="ll-btn ll-btn-footer" data-action="file"><i class="fa-solid fa-download ll-i"></i> ${L("Download")}</button>
+          <button type="button" class="ll-btn ll-btn-footer" data-action="back"><i class="fa-solid fa-arrow-left ll-i"></i> ${L("Back")}</button>
+        </footer>
+      </div>`;
+    }
+    const scenes = [...(game.scenes ?? [])].map(scene => ({ scene, marks: marksOf(scene).length }))
+      .sort((a, b) => (b.marks > 0) - (a.marks > 0) || a.scene.name.localeCompare(b.scene.name, undefined, { numeric: true }));
+    const rows = scenes.map(({ scene, marks }) => `<li class="lucd20-audit-row"><label>
+        <input type="checkbox" name="scene" value="${esc(scene.id)}" ${marks || scene === canvas.scene ? "checked" : ""}>
+        <span class="name">${esc(scene.name)}</span>
+        <span class="sub">${marks ? L("Count", { count: marks }) : ""}${scene === canvas.scene ? ` ${L("Open")}` : ""}</span>
+      </label></li>`).join("");
+    return `<div class="lucd20-audit-body">
+        <p class="lucd20-audit-scene"><strong>${L("ExportPick")}</strong><span><a data-action="all">${L("All")}</a> · <a data-action="all" data-none="1">${L("None")}</a></span></p>
+        <div class="lucd20-audit-scroll">${rows ? `<ol class="lucd20-audit-list">${rows}</ol>` : `<div class="lucd20-loot-empty"><p class="title">${L("NothingToExport")}</p></div>`}</div>
+        <footer class="lucd20-loot-footer">
+          <button type="button" class="ll-btn ll-btn-footer ll-btn-take" data-action="make" data-tooltip="${esc(L("ExportHint"))}"><i class="fa-solid fa-file-export ll-i"></i> ${L("Export")}</button>
+        </footer>
+      </div>`;
+  }
+
+  _replaceHTML(result, content) {
+    content.innerHTML = result;
+  }
+
+  static #onAll(event, target) {
+    for (const box of this.element.querySelectorAll('input[name="scene"]')) box.checked = !target.dataset.none;
+  }
+
+  static #onMake() {
+    const ids = [...this.element.querySelectorAll('input[name="scene"]:checked')].map(box => box.value);
+    const scenes = [...(game.scenes ?? [])].filter(scene => ids.includes(scene.id));
+    if (!scenes.length) return ui.notifications?.warn(L("NothingToExport"));
+    this.text = reportText(scenes);
+    this.count = scenes.length;
+    this.render();
+  }
+
+  static #onBack() {
+    this.text = null;
+    this.render();
+  }
+
+  static async #onCopy() {
+    const area = this.element.querySelector(".lucd20-audit-text");
+    area?.select();
+    if (await copyText(this.text)) ui.notifications?.info(L("Copied", { count: this.count }));
+    else ui.notifications?.warn(L("CopyFailed"));
+  }
+
+  static #onFile() {
+    download("scene-audit.json", this.text);
+  }
 }
 
 /* -------------------------------------------- */
@@ -334,8 +439,7 @@ class AuditWindow extends ApplicationV2 {
       edit: AuditWindow.#onEdit,
       remove: AuditWindow.#onRemove,
       pan: AuditWindow.#onPan,
-      exportScene: () => exportScenes(canvas.scene ? [canvas.scene] : [], slug(canvas.scene?.name)),
-      exportAll: () => exportScenes([...game.scenes].filter(s => marksOf(s).length), "all"),
+      export: () => ExportWindow.open(),
       clear: AuditWindow.#onClear
     }
   };
@@ -372,8 +476,7 @@ class AuditWindow extends ApplicationV2 {
           : `<div class="lucd20-loot-empty"><i class="fa-solid fa-flag ll-empty-art"></i><p class="title">${L("Empty")}</p><p class="sub">${L("EmptyHint")}</p></div>`}</div>
         <footer class="lucd20-loot-footer">
           <button type="button" class="ll-btn ll-btn-footer ll-btn-take" data-action="mark" ${scene ? "" : "disabled"}><i class="fa-solid fa-flag ll-i"></i> ${L("Mark")}</button>
-          <button type="button" class="ll-btn ll-btn-footer" data-action="exportScene" ${scene ? "" : "disabled"} data-tooltip="${esc(L("ExportHint"))}"><i class="fa-solid fa-file-export ll-i"></i> ${L("ExportScene")}</button>
-          <button type="button" class="ll-btn ll-btn-footer" data-action="exportAll" ${marks.length || others ? "" : "disabled"}><i class="fa-solid fa-file-export ll-i"></i> ${L("ExportAll")}</button>
+          <button type="button" class="ll-btn ll-btn-footer" data-action="export" data-tooltip="${esc(L("ExportHint"))}"><i class="fa-solid fa-file-export ll-i"></i> ${L("Export")}</button>
           <button type="button" class="ll-btn ll-btn-footer ll-btn-danger" data-action="clear" ${marks.length ? "" : "disabled"}><i class="fa-solid fa-trash ll-i"></i> ${L("Clear")}</button>
         </footer>
       </div>`;
@@ -481,6 +584,7 @@ defineFeature({
       state.layer?.destroy({ children: true });
       state.layer = null;
       AuditWindow.instance?.close();
+      ExportWindow.instance?.close();
       state.feature = null;
       refreshControls();
     });
@@ -488,4 +592,4 @@ defineFeature({
 });
 
 /** For the harness. */
-export const _test = { AuditWindow, Placer, addMark, marksOf, squaresOf, state };
+export const _test = { AuditWindow, ExportWindow, Placer, addMark, marksOf, squaresOf, state };

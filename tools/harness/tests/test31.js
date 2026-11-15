@@ -76,19 +76,37 @@ const out = __dirname;
   assert.ok(rows[0].startsWith("1 Missing wall 3 squares between 2, 4 and 3, 5 wall along the north side") && rows[1].startsWith("2 Token square 0, 0"));
   await page.screenshot({ path: `${out}/p31-audit.png` });
 
-  // Export this scene: one JSON file.
-  const [dl] = await Promise.all([page.waitForEvent("download"), page.click('.lucd20-audit-window [data-action="exportScene"]')]);
-  assert.strictEqual(dl.suggestedFilename(), "scene-audit-test-cellar.json");
-  const report = JSON.parse(fs.readFileSync(await dl.path(), "utf8"));
-  const s = report.scenes[0];
-  assert.deepStrictEqual([report.format, report.version, report.scenes.length, s.name, s.image], ["lucd20-scene-audit", 1, 1, "Test Cellar", "maps/cellar.webp"]);
-  assert.deepStrictEqual(s.marks, [{ n: 1, kind: "wallMissing", note: "wall along the north side", squares: [[2, 4], [2, 5], [3, 5]], bounds: { c0: 2, r0: 4, c1: 3, r1: 5 } }, { n: 2, kind: "token", note: "", squares: [[0, 0]], bounds: { c0: 0, r0: 0, c1: 0, r1: 0 } }]);
-  assert.deepStrictEqual(s.walls, [{ c: [0, 0, 3, 0], door: 0, ds: 0, move: 20, sight: 20, dir: 0 }, { c: [3, 0, 3, 1], door: 1, ds: 2, move: 20, sight: 20, dir: 0 }], "walls in squares from the image corner");
-  assert.deepStrictEqual(s.tokens, [{ name: "Goblin", actorId: "a1", col: 2.5, row: 4, width: 1, height: 1, hidden: true }]);
+  // Export scenes: tick scenes, the report appears as text to copy.
+  await page.click('.lucd20-audit-window [data-action="export"]');
+  await page.waitForSelector('.lucd20-audit-export input[name="scene"]');
+  const picks = await page.$$eval('.lucd20-audit-export .lucd20-audit-row', els => els.map(e => [e.innerText.replace(/\s+/g, " ").trim(), e.querySelector("input").checked]));
+  console.log(picks);
+  assert.ok(picks[0][0].startsWith("Test Cellar 2 marks") && picks[0][1] === true, "marked scenes first and ticked");
+  await page.screenshot({ path: `${out}/p31-export-pick.png` });
+  await page.click('.lucd20-audit-export [data-action="make"]');
+  await page.waitForSelector(".lucd20-audit-text", { timeout: 3000 }).catch(e => { console.log(errors); throw e; });
+  const text = await page.$eval(".lucd20-audit-text", el => el.value);
+  const report = JSON.parse(text);
+  assert.strictEqual(text.split("\n").length, report.scenes.length + 2, "one line per scene");
+  const s = report.scenes.find(x => x.name === "Test Cellar");
+  assert.deepStrictEqual([report.format, report.version, s.image], ["lucd20-scene-audit", 2, "maps/cellar.webp"]);
+  assert.deepStrictEqual(s.marks, [{ n: 1, kind: "wallMissing", note: "wall along the north side", squares: [[2, 4], [2, 5], [3, 5]] }, { n: 2, kind: "token", note: "", squares: [[0, 0]] }]);
+  assert.deepStrictEqual(s.walls.map(w => w.slice(0, 8)), [[0, 0, 3, 0, 0, 0, 20, 20], [3, 0, 3, 1, 1, 2, 20, 20]], "walls in squares from the image corner");
+  assert.deepStrictEqual(s.tokens, [["Goblin", 2.5, 4, 1, 1, 1, "a1"]]);
   assert.deepStrictEqual([s.notes[0].col, s.notes[0].row, s.notes[0].entryId, s.size.squaresWide, s.size.sceneX], [0.5, 0.5, "j1", 10, 200]);
-  // Export all: only scenes that have marks.
-  const [dl2] = await Promise.all([page.waitForEvent("download"), page.click('.lucd20-audit-window [data-action="exportAll"]')]);
-  assert.deepStrictEqual(JSON.parse(fs.readFileSync(await dl2.path(), "utf8")).scenes.map(x => x.name), ["Test Cellar"]);
+  await page.evaluate(() => { window.__copied = null; game.clipboard = { copyPlainText: async t => { window.__copied = t; } }; });
+  await page.click('.lucd20-audit-export [data-action="copy"]');
+  await page.waitForFunction(() => window.__copied);
+  assert.strictEqual(await page.evaluate(() => window.__copied), text, "Copy puts the whole text on the clipboard");
+  await page.screenshot({ path: `${out}/p31-export-text.png` });
+  const [dl] = await Promise.all([page.waitForEvent("download"), page.click('.lucd20-audit-export [data-action="file"]')]);
+  assert.strictEqual(fs.readFileSync(await dl.path(), "utf8"), text);
+  // Back, untick everything: nothing to export.
+  await page.click('.lucd20-audit-export [data-action="back"]');
+  await page.click('.lucd20-audit-export [data-none="1"]');
+  await page.click('.lucd20-audit-export [data-action="make"]');
+  assert.strictEqual(await page.locator(".lucd20-audit-text").count(), 0);
+  await page.evaluate(() => window.__audit._test.ExportWindow.instance.close());
 
   // Remove one, then switch the feature off: marks stay on the scene, the drawing and window go.
   await page.click('.lucd20-audit-row:nth-child(2) [data-action="remove"]');
@@ -99,6 +117,7 @@ const out = __dirname;
     await new Promise(r => setTimeout(r, 50));
     const controls = { tokens: { tools: {} } };
     Hooks.callAll("getSceneControlButtons", controls);
+    await new Promise(r => setTimeout(r, 300));
     return { drawn: canvas.interface.children.length, win: document.querySelectorAll(".lucd20-audit-window").length, tools: Object.keys(controls.tokens.tools).length, kept: window.__audit._test.marksOf(game.scenes[0]).length };
   });
   assert.deepStrictEqual(off, { drawn: 0, win: 0, tools: 0, kept: 1 }, "switched off without a reload");

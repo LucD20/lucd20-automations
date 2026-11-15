@@ -1376,14 +1376,17 @@ describing positions in words (Q81–Q87, all as recommended).
   Cancel (Enter / Esc). Then a small dialog asks the kind (missing wall, wrong wall, door,
   token, grid / alignment, other) and a note.
 - **Scene Audit** (clipboard tool): the list for the open scene, with show on
-  map, edit, remove; Export this scene, Export all marked scenes, Clear all.
+  map, edit, remove; Export scenes, Clear all.
 - Marks are kept on the scene (flag `audit`) and drawn for the GM only:
   numbered magenta boxes on `canvas.interface`.
-- **Export**: one JSON file (`format: "lucd20-scene-audit"`), for one scene or
-  for all scenes that have marks. Per scene: name, image, grid, the marks,
-  and the scene's walls, doors, tokens, notes and lights as they are now, so
+- **Export scenes** (v0.33.2, the owner's choice): a window lists every scene
+  with a tick box (scenes with marks and the open scene start ticked); Export
+  shows the report as text with Copy and Download file. Text on purpose: the
+  owner pastes it into a message. `format: "lucd20-scene-audit"`, version 2,
+  one line per scene. Per scene: name, image, grid, the marks, and the
+  scene's walls, doors, tokens, notes and lights as they are now, so
   hand-made corrections in Foundry can be copied back into a scene's source.
+  Walls and tokens are short arrays (the `about` field names the columns).
   Positions are in squares from the top-left corner of the map image
-  (padding is taken out). One file on purpose: the owner can attach at most
-  five files to a message.
+  (padding is taken out).
 - Code: `scripts/features/scene-audit.js`. Test: `test31.js`.

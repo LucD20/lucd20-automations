@@ -256,28 +256,6 @@ async function deletePile(pile) {
   await pile.delete();
 }
 
-/** Send every item in the pile to the Party Stash (one chat line). GM only. */
-async function stashAll({ pileUuid }, senderId) {
-  const sender = game.users.get(senderId) ?? game.user;
-  const pile = fromUuidSync(pileUuid);
-  if (!isPile(pile)) throw new Error("Not a loot pile.");
-  const items = lootItems(pile);
-  if (!items.length) return true;
-  const announce = state.feature?.get("announce");
-  await saveClaims(pile, [], null);
-  const stash = await stashActor(true);
-  await handOut(pile, items.map(item => ({ itemId: item.id, target: "stash" })), { quiet: true });
-  if (announce) {
-    await ChatMessage.create({
-      content: `<p class="lucd20-loot-announce"><i class="fa-solid fa-sack-dollar"></i> ${localize("LUCD20.LootPile.AnnounceStashAll", {
-        user: esc(sender.name), count: items.length, actor: esc(stash?.name ?? "")
-      })}</p>`,
-      speaker: { alias: pile.name }
-    });
-  }
-  return true;
-}
-
 /** Move one item (or part of a stack) from the pile to a character or the Party Stash. */
 function transfer({ pileUuid, itemId, target, quantity }, options) {
   const pile = fromUuidSync(pileUuid);
@@ -451,12 +429,13 @@ async function approve(pile, itemId) {
  * GM: every row that is not contested, in one go (one chat message), and the pile opens:
  * from then on players take what is left themselves.
  */
-async function approveAll(pile) {
+async function approveAll(pile, { restToStash = false } = {}) {
   const claims = claimsOf(pile);
   const done = [];
   const moves = [];
   for (const item of lootItems(pile)) {
-    const own = movesFor(item, claims);
+    // restToStash ("Approve (Party Stash)"): what nobody claimed goes to the Party Stash too.
+    const own = movesFor(item, claims) ?? (restToStash && requestsFor(item, claims).state === "none" ? [{ itemId: item.id, target: "stash" }] : null);
     if (!own) continue;
     done.push(item.id);
     moves.push(...own);
@@ -604,8 +583,9 @@ function sourceDisplay(source) {
 }
 
 function portraitHTML(img, extra = "", tooltip = "", scale = 1) {
-  const pop = scale > 1 ? ` style="transform: scale(${Math.round(scale * 100) / 100})"` : "";
-  return `<span class="lucd20-loot-portrait ${extra} ${pop ? "is-pop" : ""}" ${tooltip ? `data-tooltip="${esc(tooltip)}" aria-label="${esc(tooltip)}"` : ""}><img src="${esc(img)}" alt=""${pop}></span>`;
+  // --pop: the token's scale. The picture grows by it and the circle keeps room around itself for it.
+  const pop = scale > 1 ? ` style="--pop: ${Math.round(scale * 100) / 100}"` : "";
+  return `<span class="lucd20-loot-portrait ${extra} ${pop ? "is-pop" : ""}"${pop} ${tooltip ? `data-tooltip="${esc(tooltip)}" aria-label="${esc(tooltip)}"` : ""}><img src="${esc(img)}" alt=""></span>`;
 }
 
 function actorPortrait(actor, extra = "small", tooltip = actor?.name ?? "") {
@@ -649,6 +629,7 @@ class LootPileWindow extends ApplicationV2 {
       approveAll: LootPileWindow.#onApproveAll,
       splitEven: LootPileWindow.#onSplitEven,
       splitCustom: LootPileWindow.#onSplitCustom,
+      coinsToStash: LootPileWindow.#onCoinsToStash,
       openSheet: LootPileWindow.#onOpenSheet,
       deletePile: LootPileWindow.#onDelete,
       stashAll: LootPileWindow.#onStashAll
@@ -698,6 +679,7 @@ class LootPileWindow extends ApplicationV2 {
       ? `<span class="ll-coin-actions">
           <button type="button" class="ll-btn ll-btn-take" data-action="splitEven">${icon("fa-scale-balanced")}<span>${localize("LUCD20.LootPile.SplitEven")}</span></button>
           <button type="button" class="ll-btn" data-action="splitCustom">${icon("fa-sliders")}<span>${localize("LUCD20.LootPile.SplitCustom")}</span></button>
+          <button type="button" class="ll-btn" data-action="coinsToStash" data-tooltip="${esc(localize("LUCD20.LootPile.CoinsToStashHint"))}">${icon("fa-box-archive")}<span>${localize("LUCD20.LootPile.Stash")}</span></button>
         </span>`
       : `<span class="ll-coins-note">${localize("LUCD20.LootPile.CoinsNote")}</span>`;
     return `<div class="lucd20-loot-coins"><span class="ll-coins-title">${icon("fa-coins")}${localize("LUCD20.LootPile.Coins")}</span>${coinChipsHTML(purse)}${actions}</div>`;
@@ -794,8 +776,8 @@ class LootPileWindow extends ApplicationV2 {
     const footer = `
       <footer class="lucd20-loot-footer ${gm ? "is-gm" : ""}">
         ${gm ? approve : open ? `<span class="ll-open-note">${icon("fa-lock-open")}<span>${localize("LUCD20.LootPile.OpenNotePlayer")}</span></span>` : ""}
-        <button type="button" class="ll-btn ll-btn-footer ll-btn-all" data-action="stashAll" ${sorted.length ? "" : "disabled"}>
-          ${icon("fa-box-archive")}<span>${localize("LUCD20.LootPile.StashAll")}</span></button>
+        <button type="button" class="ll-btn ll-btn-footer ll-btn-all" data-action="stashAll" ${sorted.length ? "" : "disabled"} ${gm ? `data-tooltip="${esc(localize("LUCD20.LootPile.ApproveStashHint"))}"` : ""}>
+          ${icon("fa-box-archive")}<span>${localize(gm ? "LUCD20.LootPile.ApproveStash" : "LUCD20.LootPile.StashAll")}</span></button>
         ${gm ? `
         <button type="button" class="ll-btn ll-btn-footer" data-action="openSheet">${icon("fa-arrow-up-right-from-square")}<span>${localize("LUCD20.LootPile.OpenSheet")}</span></button>
         <button type="button" class="ll-btn ll-btn-footer ll-btn-danger" data-action="deletePile">${icon("fa-trash")}<span>${localize("LUCD20.LootPile.Delete")}</span></button>` : ""}
@@ -913,14 +895,15 @@ class LootPileWindow extends ApplicationV2 {
     CustomSplitWindow.open(this.pile);
   }
 
+  /** GM: every coin in the pile to the Party Stash. */
+  static #onCoinsToStash(event, button) {
+    return this.#run(button, () => splitCoins(this.pile, [], pileCoins(this.pile)));
+  }
+
+  /** Player: ask for the Party Stash on everything. GM: approve the claims, the rest to the Party Stash. */
   static async #onStashAll(event, button) {
     if (!game.user.isGM) return this.#run(button, () => executeAsGM("lootPile.requestAll", { pileUuid: this.pile.uuid }));
-    const confirmed = await DialogV2.confirm({
-      window: { title: localize("LUCD20.LootPile.StashAll") },
-      content: `<p>${localize("LUCD20.LootPile.StashAllContent", { count: lootItems(this.pile).length })}</p>`
-    });
-    if (!confirmed) return;
-    return this.#run(button, () => stashAll({ pileUuid: this.pile.uuid }, game.user.id));
+    return this.#run(button, () => approveAll(this.pile, { restToStash: true }));
   }
 
   static #onOpenSheet() {
@@ -1014,8 +997,8 @@ class ContestWindow extends ApplicationV2 {
     const people = claimers.map(c => {
       const actor = fromUuidSync(c.actorUuid);
       const many = stackSize(item) > 1 ? `<span class="qty">×${c.quantity}</span>` : "";
-      return `<div class="ll-contender">${actorPortrait(actor, "large", "")}<strong>${esc(actor?.name ?? unknownName())}</strong>
-          <span class="sub">${esc(game.users.get(c.userId)?.name ?? "")}</span>${many}</div>`;
+      return `<div class="ll-contender"><strong>${esc(actor?.name ?? unknownName())}</strong>
+          <span class="sub">${esc(game.users.get(c.userId)?.name ?? "")}</span>${many}${actorPortrait(actor, "large", "")}</div>`;
     }).join(`<span class="ll-versus">${localize("LUCD20.LootPile.Versus")}</span>`);
     const buttons = gm
       ? `<footer class="lucd20-loot-footer ll-award"><span class="label">${localize("LUCD20.LootPile.GiveToLabel")}</span>

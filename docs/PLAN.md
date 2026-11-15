@@ -1480,3 +1480,10 @@ owner wants them as items there). Mockup: `docs/mockups/loot-claims.html`
   ring's subject texture if there is one, at the token's scale (texture scale
   × ring subject scale, capped), standing out of the circle.
 - Riding: the Rideable button is in the Token HUD's left column.
+
+**v0.36.1:** "Who gets it?" has the names above the pictures, and a scaled-up
+token keeps the room it needs. The GM's footer button is **Approve (Party
+Stash)**: what was claimed goes to the claimers, everything nobody claimed to
+the Party Stash, contested rows wait (it replaces the GM's "Send all to Party
+Stash"; a player's still only asks). The Coins row has **Party Stash** (all
+coins there). Take's tooltip is just "Shift+click: the whole stack".

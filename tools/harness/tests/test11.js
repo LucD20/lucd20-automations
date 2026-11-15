@@ -173,7 +173,7 @@ async function setup(page, userId) {
   assert.deepStrictEqual(await page.$$eval(".lucd20-loot-window .npc", e => e.map(x => x.textContent)), ["Goblin Boss", "Goblin Warrior"], "GM sees the real name");
   assert.strictEqual(await page.$$eval(".lucd20-loot-window .lucd20-loot-taker", e => e.length), 0, "the GM claims for nobody: no character bar");
   assert.deepStrictEqual(await page.$$eval(".lucd20-loot-window .lucd20-loot-item .name", e => e.map(x => x.textContent)), ["Healing Potion (Minor)", "Ring of Climbing", "Dogslicer"], "coins are not item rows");
-  assert.strictEqual(await page.$eval(".lucd20-loot-window .lucd20-loot-coins", e => e.textContent.replace(/\s+/g, " ").trim()), "Coins3 gp Split evenly Custom split", "coins are one row at the top, with the GM's split buttons");
+  assert.strictEqual(await page.$eval(".lucd20-loot-window .lucd20-loot-coins", e => e.textContent.replace(/\s+/g, " ").trim()), "Coins3 gp Split evenly Custom split Party Stash", "coins are one row at the top, with the GM's split buttons");
   assert.deepStrictEqual(await page.$$eval(".lucd20-loot-window .ll-row", e => [...e[0].querySelectorAll(".actions button")].map(b => b.dataset.action)), ["give", "stash"], "unasked items: Give to… and Party Stash");
   await page.evaluate(() => { const w = document.querySelector(".lucd20-loot-window"); w.style.left = "20px"; w.style.top = "20px"; });
   await page.screenshot({ path: `${out}/p11-gm-window.png` });
@@ -254,7 +254,7 @@ async function setup(page, userId) {
   });
   await page.waitForTimeout(150);
   // Ezren's token: the ring's subject picture, at the token's scale (1.5 × 1.2), standing out of its circle.
-  assert.deepStrictEqual(await page.$eval(`${row("Dogslicer")} .ll-tokens .lucd20-loot-portrait:nth-child(2)`, t => [t.classList.contains("is-pop"), t.querySelector("img").getAttribute("src"), t.querySelector("img").style.transform]), [true, "ezren-subject.webp", "scale(1.8)"]);
+  assert.deepStrictEqual(await page.$eval(`${row("Dogslicer")} .ll-tokens .lucd20-loot-portrait:nth-child(2)`, t => [t.classList.contains("is-pop"), t.querySelector("img").getAttribute("src"), t.style.getPropertyValue("--pop").trim()]), [true, "ezren-subject.webp", "1.8"]);
   assert.deepStrictEqual(await rowState("Dogslicer"), { cls: "is-contested", buttons: ["Claimed, waiting…", "Party Stash"], tokens: ["Amiri (me)", "Ezren"], stash: "1", stashTip: "Party Stash: Cara" }, "everyone sees who asked");
   assert.deepStrictEqual((await rowState("Healing Potion")), { cls: "is-claimed", buttons: ["Claimed, waiting…", "Party Stash"], tokens: ["Amiri (me)", "Ezren"], stash: null, stashTip: null }, "one potion each: no contest");
   assert.deepStrictEqual((await rowState("Ring of Climbing")).stashTip, "Party Stash: Cara, Bruno");
@@ -275,6 +275,7 @@ async function setup(page, userId) {
   const C = ".lucd20-loot-contest";
   await page.evaluate(c => Object.assign(document.querySelector(c).style, { left: "680px", top: "20px" }), C);
   assert.deepStrictEqual(await page.$$eval(`${C} .ll-contender strong`, e => e.map(x => x.textContent)), ["Amiri", "Ezren"]);
+  assert.ok(await page.$$eval(`${C} .ll-contender`, e => e.every(c => c.lastElementChild.classList.contains("lucd20-loot-portrait")) && (() => { const [name, pic] = [e[1].querySelector("strong").getBoundingClientRect(), e[1].querySelector("img").getBoundingClientRect()]; return pic.top >= name.bottom; })()), "names above the pictures; a scaled-up token does not cover them");
   assert.deepStrictEqual(await page.$$eval(`${C} [data-action="award"]`, e => e.map(x => x.textContent.trim())), ["Amiri", "Ezren", "Party Stash"]);
   await page.screenshot({ path: `${out}/p11-who-gets-it.png` });
   await page.click(`${C} [data-action="sheet"]`);
@@ -416,28 +417,35 @@ async function setup(page, userId) {
   assert.deepStrictEqual(taken, { amiri: ["Dogslicer"], party: ["Ring of Climbing"], pile: ["Healing Potion (Minor)"], chat: ["Amiri took Dogslicer.", "Ring of Climbing went to The Party."], other: "You don't own that character." });
   await page.evaluate(async () => { await __pile.delete(); });
 
-  // A player's "Send all to Party Stash" only asks; the GM's does it.
+  // A player's "Send all to Party Stash" only asks. The GM's "Approve (Party Stash)" gives what was claimed and stashes the rest.
   await page.evaluate(async st => {
+    const coin = (name, quantity) => ({ name, type: "treasure", system: { quantity, stackGroup: "coins" } });
     const p = await Actor.create({ name: "Loot Pile 3", type: "loot", flags: { "lucd20-automations": { lootPile: true } } });
-    p.items.length = 0; await p.createEmbeddedDocuments("Item", st.items.filter(i => i.type !== "treasure")); window.__pile = p; window.__chat.length = 0;
-    __A.party.items.length = 0;
-    foundry.applications.api.DialogV2.confirm = async () => true;
+    p.items.length = 0; await p.createEmbeddedDocuments("Item", [...st.items.filter(i => i.type !== "treasure"), coin("Gold Pieces", 4)]); window.__pile = p; window.__chat.length = 0;
+    __A.party.items.length = 0; __A.amiri.items.length = 0;
     who("p1");
     new CONFIG.Token.objectClass()._onClickLeft2.call({ actor: p }, {});
   }, pileState);
   await page.waitForTimeout(200);
+  await page.click(`${row("Dogslicer")} [data-action="claim"]`);
+  await page.waitForTimeout(150);
+  assert.strictEqual(await page.$eval(`${W} [data-action="stashAll"]`, b => b.textContent.trim()), "Send all to Party Stash");
   await page.click(`${W} [data-action="stashAll"]`);
   await page.waitForTimeout(200);
-  assert.deepStrictEqual(await page.evaluate(() => [__pile.items.length, __loot._test.claimsOf(__pile).map(c => c.kind).join(), __A.party.items.length]), [3, "stash,stash,stash", 0]);
+  assert.deepStrictEqual(await page.evaluate(() => [__pile.items.length, __loot._test.claimsOf(__pile).map(c => c.kind).join(), __A.party.items.length]), [4, "claim,stash,stash", 0]);
   await page.evaluate(() => who("u1"));
   await page.waitForTimeout(150);
+  assert.strictEqual(await page.$eval(`${W} [data-action="stashAll"]`, b => b.textContent.trim()), "Approve (Party Stash)");
   await page.click(`${W} [data-action="stashAll"]`);
   await page.waitForTimeout(300);
-  const all = await page.evaluate(() => ({ party: __A.party.items.map(i => i.name).sort(), exists: game.actors.includes(__pile), chat: [...__chat] }));
-  console.log("stash all:", JSON.stringify(all));
-  assert.strictEqual(all.party.length, 3);
-  assert.ok(!all.exists, "emptied pile removed");
-  assert.deepStrictEqual(all.chat, ["Gamemaster sent everything (3 items) to The Party."], "one chat line");
+  const all = await page.evaluate(() => ({ amiri: __A.amiri.items.map(i => i.name), party: __A.party.items.map(i => i.name).sort(), pile: __pile.items.map(i => i.name), chat: [...__chat] }));
+  console.log("approve + stash:", JSON.stringify(all));
+  assert.deepStrictEqual(all, { amiri: ["Dogslicer"], party: ["Healing Potion (Minor)", "Ring of Climbing"], pile: ["Gold Pieces"], chat: ["Loot handed out: Amiri: Dogslicer The Party: 2× Healing Potion (Minor), Ring of Climbing"] });
+  // Coins: Send to Party Stash.
+  await page.click(`${W} [data-action="coinsToStash"]`);
+  await page.waitForTimeout(300);
+  assert.deepStrictEqual(await page.evaluate(() => [__A.party.items.filter(i => i.system.stackGroup === "coins").map(i => `${i.system.quantity} ${i.name}`), game.actors.includes(__pile), __chat.at(-1)]),
+    [["4 Gold Pieces"], false, "4 gp went to the Party Stash."]);
 
   // ================= 4e (no loot type): flagged npc actor + module Party Stash =================
   page = await open("gm=1&system=dnd4e", "u1");

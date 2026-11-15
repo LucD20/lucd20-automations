@@ -85,7 +85,7 @@ async function setup(page) {
     canvas.hud = { token: { document: __horse, element: hud } };
   });
   await tick();
-  assert.ok(await page.isVisible("#token-hud .col.right .lucd20-rideable"), "horse button drawn without the render hook");
+  assert.ok(await page.isVisible("#token-hud .col.left .lucd20-rideable"), "horse button drawn without the render hook");
   // Foundry re-draws the HUD → the button comes back
   await page.evaluate(() => { document.querySelector("#token-hud").innerHTML = '<div class="col left"></div><div class="col right"></div>'; });
   await tick();

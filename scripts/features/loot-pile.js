@@ -998,7 +998,7 @@ class ContestWindow extends ApplicationV2 {
       const actor = fromUuidSync(c.actorUuid);
       const many = stackSize(item) > 1 ? `<span class="qty">×${c.quantity}</span>` : "";
       return `<div class="ll-contender"><strong>${esc(actor?.name ?? unknownName())}</strong>
-          <span class="sub">${esc(game.users.get(c.userId)?.name ?? "")}</span>${many}${actorPortrait(actor, "large", "")}</div>`;
+          <span class="sub">${esc(game.users.get(c.userId)?.name ?? "")}</span>${many}<span class="ll-contender-art">${actorPortrait(actor, "large", "")}</span></div>`;
     }).join(`<span class="ll-versus">${localize("LUCD20.LootPile.Versus")}</span>`);
     const buttons = gm
       ? `<footer class="lucd20-loot-footer ll-award"><span class="label">${localize("LUCD20.LootPile.GiveToLabel")}</span>

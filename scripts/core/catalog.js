@@ -43,6 +43,7 @@ export const FEATURE_ORDER = [
   { id: "flyingTokens", category: "tokens", phase: 22 },
   { id: "tokenTooltip", category: "tokens", phase: 23 },
   { id: "pathfinding", category: "tokens", phase: 25 },
+  { id: "npcHealthBars", category: "tokens", phase: 32 },
   { id: "doorIconSize", category: "doors", phase: 19 },
   { id: "secretDoorHighlight", category: "doors", phase: 19 },
   { id: "lockedDoorAlert", category: "doors", phase: 19 },

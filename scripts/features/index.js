@@ -16,6 +16,7 @@ import "./turn-markers.js";
 import "./multi-token-edit.js";
 import "./folder-drop.js";
 import "./pause-notifier.js";
+import "./npc-health-bars.js";
 import "./riding.js";
 import "./token-scatter.js";
 import "./flying-tokens.js";

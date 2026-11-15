@@ -400,6 +400,10 @@
         "Name": "Paused Movement Notice",
         "Hint": "When a player tries to move a token while the game is paused, \"Game's Paused\" floats up from the token instead of Foundry's notification. Everyone who can see the token sees it."
       },
+      "npcHealthBars": {
+        "Name": "NPC Health Bars",
+        "Hint": "A token placed for a creature no player owns shows its bars \"Always for Owner\": you always see enemy hit points, players never do. Tokens already on a scene are not changed."
+      },
       "statusHighlight": {
         "Name": "Active Effect Highlight",
         "Hint": "Active effects get a colored border and glow in the Token HUD's status effects palette.",

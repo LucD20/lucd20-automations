@@ -1390,3 +1390,18 @@ describing positions in words (Q81–Q87, all as recommended).
   Positions are in squares from the top-left corner of the map image
   (padding is taken out).
 - Code: `scripts/features/scene-audit.js`. Test: `test31.js`.
+
+---
+
+## 11. NPC Health Bars — `npcHealthBars`
+
+*New, generic (any system).* GM only, **on by default** (the owner wants this
+as the standing default), in Tokens.
+
+- A token placed for an actor no player owns gets `displayBars` "Always for
+  Owner" (`preCreateToken`), whatever its prototype token says. The GM always
+  sees enemy hit points; players never do, since they do not own the token.
+- Tokens already on a scene (including those that arrive inside an imported
+  scene) and tokens of player-owned actors are not touched. Content the owner
+  ships (lucd20-personal) sets the same mode in its own data.
+- Code: `scripts/features/npc-health-bars.js`. Test: `test32.js`.

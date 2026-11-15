@@ -1,7 +1,7 @@
 import { MODULE_ID, error, localize } from "../core/constants.js";
 import { defineFeature } from "../core/registry.js";
 import { findFreeSpot, snapTopLeft } from "../core/placement.js";
-import { executeAsGM, onGMRequest } from "../core/socket.js";
+import { broadcast, executeAsGM, onBroadcast, onGMRequest } from "../core/socket.js";
 import { AnswerWindow } from "../core/answer-window.js";
 import { addPurses, cleanPurse, emptyPurse, isEmptyPurse, purseFromValue, purseValue, splitAsIs, splitByValue } from "../core/coins.js";
 
@@ -23,6 +23,10 @@ import { addPurses, cleanPurse, emptyPurse, isEmptyPurse, purseFromValue, purseV
  * - Coins are one row at the top (systems whose adapter knows coins). Only the
  *   GM hands them out: "Split evenly" (as they are, or by value) and "Custom
  *   split"; what is left goes to the Party Stash.
+ * - While the GM reviews the loot the game is paused and everyone else sees
+ *   "Looting the fallen…"; the new pile's window then opens for all players.
+ * - Once the GM has approved (or opened) the pile it is open: players take
+ *   what is left themselves, no confirmation.
  * - Requests live on the pile (flag `claims`), written by the GM's client;
  *   every transfer runs there too (players don't own the pile).
  * - PF2e: native loot actor + the party's inventory as Party Stash
@@ -34,6 +38,7 @@ const STASH_KEY = "lootPile_stashId";
 const FLAG_PILE = "lootPile";
 const FLAG_CLAIMS = "claims";
 const FLAG_DECIDING = "deciding";
+const FLAG_OPEN = "open";
 const esc = value => Handlebars.escapeExpression(String(value ?? ""));
 const { ApplicationV2, DialogV2 } = foundry.applications.api;
 
@@ -116,21 +121,50 @@ function lootGroups(combat) {
   return groups.sort((x, y) => (y.level - x.level) || x.name.localeCompare(y.name));
 }
 
+/** "Looting the fallen…" on screen while the GM picks what goes in the pile. Not shown to that GM. */
+function showLooting(on) {
+  document.querySelector(".lucd20-looting-banner")?.remove();
+  if (!on) return;
+  const banner = document.createElement("div");
+  banner.className = "lucd20-looting-banner";
+  banner.innerHTML = `<i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>${esc(localize("LUCD20.LootPile.Looting"))}</span>`;
+  document.body.append(banner);
+}
+
+/** Open a pile's window on this client; the pile may arrive a moment after the message. */
+function openWhenHere(pileUuid, tries = 10) {
+  const pile = fromUuidSync(pileUuid);
+  if (isPile(pile)) return void LootPileWindow.open(pile);
+  if (tries > 0) setTimeout(() => openWhenHere(pileUuid, tries - 1), 300);
+}
+
 async function reviewLoot(combat) {
   const groups = lootGroups(combat);
   if (!groups.length) return;
 
-  const selected = await LootReviewWindow.wait(groups);
-  if (!Array.isArray(selected) || !selected.length) return;
-
-  const chosen = groups.map((g, gi) => ({ ...g, items: g.items.filter(item => selected.includes(`${gi}:${item.id}`)) }))
-    .filter(g => g.items.length);
+  // The game waits while the GM chooses: paused here only if it was running, and resumed after.
+  const pausedHere = !game.paused;
+  if (pausedHere) game.togglePause?.(true, { broadcast: true });
+  broadcast("lootPile.looting", { on: true });
+  let pile = null;
   try {
-    await createPile(chosen, combat.scene ?? canvas.scene);
+    const selected = await LootReviewWindow.wait(groups);
+    if (Array.isArray(selected) && selected.length) {
+      const chosen = groups.map((g, gi) => ({ ...g, items: g.items.filter(item => selected.includes(`${gi}:${item.id}`)) }))
+        .filter(g => g.items.length);
+      pile = await createPile(chosen, combat.scene ?? canvas.scene);
+    }
   } catch (err) {
     error("Could not create the loot pile.", err);
     ui.notifications.error(localize("LUCD20.LootPile.Failed"));
+  } finally {
+    broadcast("lootPile.looting", { on: false });
+    if (pausedHere && game.paused) game.togglePause?.(false, { broadcast: true });
   }
+  if (!pile) return;
+  // Everyone gets the window; the pile stays on the map for whoever closes it.
+  broadcast("lootPile.open", { pileUuid: pile.uuid });
+  LootPileWindow.open(pile);
 }
 
 async function lootFolder() {
@@ -231,9 +265,9 @@ async function stashAll({ pileUuid }, senderId) {
   if (!items.length) return true;
   const announce = state.feature?.get("announce");
   await saveClaims(pile, [], null);
-  for (const item of items) await transfer({ pileUuid, itemId: item.id, target: "stash" }, { quiet: true });
+  const stash = await stashActor(true);
+  await handOut(pile, items.map(item => ({ itemId: item.id, target: "stash" })), { quiet: true });
   if (announce) {
-    const stash = await stashActor(true);
     await ChatMessage.create({
       content: `<p class="lucd20-loot-announce"><i class="fa-solid fa-sack-dollar"></i> ${localize("LUCD20.LootPile.AnnounceStashAll", {
         user: esc(sender.name), count: items.length, actor: esc(stash?.name ?? "")
@@ -244,40 +278,77 @@ async function stashAll({ pileUuid }, senderId) {
   return true;
 }
 
-/** Move an item (or part of a stack) from the pile to a character or the Party Stash. */
-async function transfer({ pileUuid, itemId, target, quantity }, { quiet = false } = {}) {
+/** Move one item (or part of a stack) from the pile to a character or the Party Stash. */
+function transfer({ pileUuid, itemId, target, quantity }, options) {
   const pile = fromUuidSync(pileUuid);
   if (!isPile(pile)) throw new Error("Not a loot pile.");
-  const item = pile.items.get(itemId);
-  if (!item) throw new Error("That item is already gone.");
+  if (!pile.items.get(itemId)) throw new Error("That item is already gone.");
+  return handOut(pile, [{ itemId, target, quantity }], options);
+}
 
-  const destination = target === "stash" ? await stashActor(true) : fromUuidSync(target);
-  if (!destination) throw new Error("No destination.");
+/**
+ * Move items out of the pile: moves = [{ itemId, target: actor uuid | "stash", quantity }].
+ * One database write per kind and actor, however many items, and one chat message.
+ */
+async function handOut(pile, moves, { quiet = false } = {}) {
+  const stash = moves.some(m => m.target === "stash") ? await stashActor(true) : null;
+  const left = new Map(); // item id → what is still in the pile
+  const given = new Map(); // destination actor → [{ item, n }]
+  for (const move of moves) {
+    const item = pile.items.get(move.itemId);
+    const destination = move.target === "stash" ? stash : fromUuidSync(move.target);
+    if (!item || !destination) continue;
+    const hasQty = typeof item.system?.quantity === "number";
+    const available = left.get(item.id) ?? stackSize(item);
+    if (available <= 0) continue;
+    const n = hasQty ? Math.min(Math.max(Number(move.quantity) || available, 1), available) : 1;
+    left.set(item.id, available - n);
+    if (!given.has(destination)) given.set(destination, []);
+    given.get(destination).push({ item, n, hasQty });
+  }
+  if (!given.size) return true;
 
-  const hasQty = typeof item.system?.quantity === "number";
-  const total = hasQty ? item.system.quantity : 1;
-  const n = hasQty ? Math.min(Math.max(Number(quantity) || total, 1), total) : 1;
-  const data = item.toObject();
-  delete data._id;
-  if (data.flags?.[MODULE_ID]) delete data.flags[MODULE_ID];
-  if (data.system && "containerId" in data.system) data.system.containerId = null;
-  if (hasQty) data.system.quantity = n;
-
-  const same = hasQty && destination.items.find(i => i.type === item.type && i.name === item.name && typeof i.system?.quantity === "number");
-  if (same) await same.update({ "system.quantity": same.system.quantity + n });
-  else await destination.createEmbeddedDocuments("Item", [data]);
-
-  if (hasQty && n < total) await item.update({ "system.quantity": total - n });
-  else await item.delete();
+  for (const [destination, entries] of given) {
+    const creates = new Map(); // "type|name" → item data being made in this batch
+    const updates = new Map(); // existing item id → new quantity
+    for (const { item, n, hasQty } of entries) {
+      const key = `${item.type}|${item.name}`;
+      const same = hasQty && destination.items.find(i => i.type === item.type && i.name === item.name && typeof i.system?.quantity === "number");
+      if (same) updates.set(same.id, (updates.get(same.id) ?? same.system.quantity) + n);
+      else if (hasQty && creates.has(key)) creates.get(key).system.quantity += n;
+      else {
+        const data = item.toObject();
+        delete data._id;
+        if (data.flags?.[MODULE_ID]) delete data.flags[MODULE_ID];
+        if (data.system && "containerId" in data.system) data.system.containerId = null;
+        if (hasQty) data.system.quantity = n;
+        creates.set(hasQty ? key : `${key}|${creates.size}`, data);
+      }
+    }
+    if (creates.size) await destination.createEmbeddedDocuments("Item", [...creates.values()]);
+    if (updates.size) await destination.updateEmbeddedDocuments("Item", [...updates].map(([_id, quantity]) => ({ _id, "system.quantity": quantity })));
+  }
+  const shrink = [...left].filter(([, n]) => n > 0).map(([_id, n]) => ({ _id, "system.quantity": n }));
+  const gone = [...left].filter(([, n]) => n <= 0).map(([id]) => id);
+  if (shrink.length) await pile.updateEmbeddedDocuments("Item", shrink);
+  if (gone.length) await pile.deleteEmbeddedDocuments("Item", gone);
 
   if (state.feature?.get("announce") && !quiet) {
-    const key = target === "stash" ? "LUCD20.LootPile.AnnounceStash" : "LUCD20.LootPile.AnnounceTake";
-    await ChatMessage.create({
-      content: `<p class="lucd20-loot-announce"><i class="fa-solid fa-sack-dollar"></i> ${localize(key, {
-        item: esc(item.name), count: hasQty && n > 1 ? `${n}× ` : "", actor: esc(destination.name)
-      })}</p>`,
-      speaker: { alias: pile.name }
-    });
+    const label = ({ item, n, hasQty }) => `${hasQty && n > 1 ? `${n}× ` : ""}${esc(item.name)}`;
+    const all = [...given].flatMap(([destination, entries]) => entries.map(e => ({ destination, ...e })));
+    let content;
+    if (all.length === 1) {
+      const key = all[0].destination === stash ? "LUCD20.LootPile.AnnounceStash" : "LUCD20.LootPile.AnnounceTake";
+      content = `<p class="lucd20-loot-announce"><i class="fa-solid fa-sack-dollar"></i> ${localize(key, {
+        item: esc(all[0].item.name), count: all[0].hasQty && all[0].n > 1 ? `${all[0].n}× ` : "", actor: esc(all[0].destination.name)
+      })}</p>`;
+    } else {
+      // Characters first (by name), the Party Stash last: one message for the whole hand-out.
+      const order = [...given].sort(([a], [b]) => (a === stash) - (b === stash) || a.name.localeCompare(b.name));
+      content = `<div class="lucd20-loot-announce"><p><i class="fa-solid fa-sack-dollar"></i> ${localize("LUCD20.LootPile.AnnounceBatch")}</p><ul>${order.map(([destination, entries]) =>
+        `<li><strong>${esc(destination.name)}</strong>: ${entries.map(label).join(", ")}</li>`).join("")}</ul></div>`;
+    }
+    await ChatMessage.create({ content, speaker: { alias: pile.name } });
   }
 
   await removeIfEmpty(pile);
@@ -357,24 +428,56 @@ async function requestAll({ pileUuid }, senderId) {
   return true;
 }
 
+/** The moves a row's requests ask for, or null when it has none or is contested. */
+function movesFor(item, claims) {
+  const { claimers, state: status } = requestsFor(item, claims);
+  if (status === "stash") return [{ itemId: item.id, target: "stash" }];
+  if (status === "claimed") return claimers.map(c => ({ itemId: item.id, target: c.actorUuid, quantity: c.quantity }));
+  return null;
+}
+
 /** GM: do what a row asks. One claim (or claims that fit the stack) go to the claimers; else the stash. */
 async function approve(pile, itemId) {
   const item = pile.items.get(itemId);
-  if (!item) return false;
-  const { claimers, state: status } = requestsFor(item, claimsOf(pile));
-  if (status === "none" || status === "contested") return false;
+  const moves = item ? movesFor(item, claimsOf(pile)) : null;
+  if (!moves) return false;
   const deciding = pile.getFlag(MODULE_ID, FLAG_DECIDING) === itemId ? null : undefined;
   await saveClaims(pile, claimsOf(pile).filter(c => c.itemId !== itemId), deciding);
-  if (status === "stash") await transfer({ pileUuid: pile.uuid, itemId, target: "stash" });
-  else for (const c of claimers) await transfer({ pileUuid: pile.uuid, itemId, target: c.actorUuid, quantity: c.quantity });
+  await handOut(pile, moves);
   return true;
 }
 
+/**
+ * GM: every row that is not contested, in one go (one chat message), and the pile opens:
+ * from then on players take what is left themselves.
+ */
 async function approveAll(pile) {
+  const claims = claimsOf(pile);
+  const done = [];
+  const moves = [];
   for (const item of lootItems(pile)) {
-    if (!game.actors.get(pile.id)) break;
-    await approve(pile, item.id);
+    const own = movesFor(item, claims);
+    if (!own) continue;
+    done.push(item.id);
+    moves.push(...own);
   }
+  await pile.update({ [`flags.${MODULE_ID}.${FLAG_CLAIMS}`]: claims.filter(c => !done.includes(c.itemId)), [`flags.${MODULE_ID}.${FLAG_OPEN}`]: true });
+  if (moves.length) await handOut(pile, moves);
+}
+
+/** A player takes from an open pile, for a character they own or for the Party Stash. */
+async function take({ pileUuid, itemId, target, quantity }, senderId) {
+  const sender = game.users.get(senderId) ?? game.user;
+  const pile = fromUuidSync(pileUuid);
+  if (!isPile(pile)) throw new Error("Not a loot pile.");
+  const item = pile.items.get(itemId);
+  if (!item) throw new Error("That item is already gone.");
+  if (!sender.isGM) {
+    if (!pile.getFlag(MODULE_ID, FLAG_OPEN) || requestsFor(item, claimsOf(pile)).state !== "none") throw new Error(localize("LUCD20.LootPile.NotOpen"));
+    if (adapter().denominations && adapter().isCoins(item)) throw new Error(localize("LUCD20.LootPile.CoinsNote"));
+    if (target !== "stash" && !fromUuidSync(target)?.testUserPermission(sender, "OWNER")) throw new Error("You don't own that character.");
+  }
+  return transfer({ pileUuid, itemId, target, quantity });
 }
 
 /** GM: give an item directly (also the answer of "Who gets it?"). Clears what was asked of it. */
@@ -472,6 +575,18 @@ function tokenImage(token, actor) {
 }
 
 /**
+ * A token's picture as the token shows it: the ring's subject when it has one, and the token's own
+ * scale, so art drawn to stand out of its frame does so here too instead of shrinking into the circle.
+ */
+function tokenArt(token, actor) {
+  const ring = token?.ring?.enabled ? token.ring : null;
+  const subject = ring?.subject?.texture;
+  const src = subject && !/\.(webm|mp4|m4v|ogv)$/i.test(subject) ? subject : tokenImage(token, actor);
+  const scale = Math.abs(Number(token?.texture?.scaleX) || 1) * (ring ? Number(ring.subject?.scale) || 1 : 1);
+  return { src, scale: Math.min(Math.max(scale, 1), 2.5) };
+}
+
+/**
  * Name and portrait of the NPC an item came from. Hidden names were decided on
  * the GM's side when the pile was made: the item then stores no name or art at
  * all, so players get "Unknown creature" and a neutral portrait, and only the
@@ -488,11 +603,15 @@ function sourceDisplay(source) {
   return { name: source.name ?? unknownName(), img: source.img ?? PLACEHOLDER_PORTRAIT };
 }
 
-function portraitHTML(img, extra = "", tooltip = "") {
-  return `<span class="lucd20-loot-portrait ${extra}" ${tooltip ? `data-tooltip="${esc(tooltip)}" aria-label="${esc(tooltip)}"` : ""}><img src="${esc(img)}" alt=""></span>`;
+function portraitHTML(img, extra = "", tooltip = "", scale = 1) {
+  const pop = scale > 1 ? ` style="transform: scale(${Math.round(scale * 100) / 100})"` : "";
+  return `<span class="lucd20-loot-portrait ${extra} ${pop ? "is-pop" : ""}" ${tooltip ? `data-tooltip="${esc(tooltip)}" aria-label="${esc(tooltip)}"` : ""}><img src="${esc(img)}" alt=""${pop}></span>`;
 }
 
-const actorPortrait = (actor, extra = "small", tooltip = actor?.name ?? "") => portraitHTML(tokenImage(actor?.prototypeToken, actor), extra, tooltip);
+function actorPortrait(actor, extra = "small", tooltip = actor?.name ?? "") {
+  const { src, scale } = tokenArt(actor?.prototypeToken, actor);
+  return portraitHTML(src, extra, tooltip, scale);
+}
 
 function coinChipsHTML(purse, { zeros = false } = {}) {
   const chips = denominations().filter(d => zeros || purse[d.id] > 0)
@@ -521,6 +640,7 @@ class LootPileWindow extends ApplicationV2 {
     position: { width: 640, height: 560 },
     actions: {
       claim: LootPileWindow.#onClaim,
+      take: LootPileWindow.#onTake,
       stash: LootPileWindow.#onStash,
       give: LootPileWindow.#onGive,
       approve: LootPileWindow.#onApprove,
@@ -554,7 +674,7 @@ class LootPileWindow extends ApplicationV2 {
 
   /** Players only: the character they claim for. */
   #takerHTML(options) {
-    const label = localize("LUCD20.LootPile.ClaimingFor");
+    const label = localize(this.pile.getFlag(MODULE_ID, FLAG_OPEN) ? "LUCD20.LootPile.TakingFor" : "LUCD20.LootPile.ClaimingFor");
     if (!options.length) {
       return `<p class="lucd20-loot-taker lucd20-loot-hint">${icon("fa-circle-info")}<span>${localize("LUCD20.LootPile.NoCharacter")}</span></p>`;
     }
@@ -612,6 +732,11 @@ class LootPileWindow extends ApplicationV2 {
           : ["approve", "fa-check", L("SendToStash")];
       actions = `<button type="button" class="ll-btn ll-btn-take ll-btn-wide" data-action="${action}">${icon(glyph)}<span>${label}</span></button>
         <button type="button" class="ll-btn ll-btn-square" data-action="refuse" data-tooltip="${esc(L("Refuse"))}" aria-label="${esc(L("Refuse"))}">${icon("fa-xmark")}</button>`;
+    } else if (this.pile.getFlag(MODULE_ID, FLAG_OPEN) && requests.state === "none") {
+      // Open pile: players take what is left themselves.
+      const noCharacter = this.taker ? `data-tooltip="${esc(L("TakeHint"))}"` : `disabled data-tooltip="${esc(L("ClaimDisabled"))}"`;
+      actions = `<button type="button" class="ll-btn ll-btn-a ll-btn-take" data-action="take" data-target="taker" ${noCharacter}>${icon("fa-download")}<span>${L("Take")}</span></button>
+        <button type="button" class="ll-btn ll-btn-b" data-action="take" data-target="stash" data-tooltip="${esc(L("StashHint"))}">${icon("fa-box-archive")}<span>${L("Stash")}</span></button>`;
     } else {
       const claimed = mine?.kind === "claim";
       const stashed = mine?.kind === "stash";
@@ -660,10 +785,15 @@ class LootPileWindow extends ApplicationV2 {
         </div>`;
 
     const ready = items.filter(item => ["claimed", "stash"].includes(requestsFor(item, claims).state)).length;
+    const open = !!pile.getFlag(MODULE_ID, FLAG_OPEN);
+    // Approving hands out what was asked and opens the pile; with nothing asked it only opens it.
+    const approve = open && !ready
+      ? `<span class="ll-open-note">${icon("fa-lock-open")}<span>${localize("LUCD20.LootPile.OpenNote")}</span></span>`
+      : `<button type="button" class="ll-btn ll-btn-footer ll-btn-take" data-action="approveAll" data-tooltip="${esc(localize("LUCD20.LootPile.ApproveHint"))}">
+          ${icon(ready ? "fa-check-double" : "fa-lock-open")}<span>${ready ? localize("LUCD20.LootPile.ApproveAll", { count: ready }) : localize("LUCD20.LootPile.OpenToAll")}</span></button>`;
     const footer = `
       <footer class="lucd20-loot-footer ${gm ? "is-gm" : ""}">
-        ${gm ? `<button type="button" class="ll-btn ll-btn-footer ll-btn-take" data-action="approveAll" ${ready ? "" : "disabled"}>
-          ${icon("fa-check-double")}<span>${localize("LUCD20.LootPile.ApproveAll", { count: ready })}</span></button>` : ""}
+        ${gm ? approve : open ? `<span class="ll-open-note">${icon("fa-lock-open")}<span>${localize("LUCD20.LootPile.OpenNotePlayer")}</span></span>` : ""}
         <button type="button" class="ll-btn ll-btn-footer ll-btn-all" data-action="stashAll" ${sorted.length ? "" : "disabled"}>
           ${icon("fa-box-archive")}<span>${localize("LUCD20.LootPile.StashAll")}</span></button>
         ${gm ? `
@@ -721,12 +851,22 @@ class LootPileWindow extends ApplicationV2 {
     return this.#request(button, { itemId: item.id, kind: "claim", actorUuid: this.taker, quantity });
   }
 
+  /** Player, open pile: take it now, for the character above or for the Party Stash. */
+  static async #onTake(event, button) {
+    const item = this.#item(button);
+    const target = button.dataset.target === "stash" ? "stash" : this.taker;
+    if (!item || !target) return;
+    const quantity = await this.#quantity(item, event, { name: target === "stash" ? null : fromUuidSync(target)?.name });
+    if (!quantity) return;
+    return this.#run(button, () => executeAsGM("lootPile.take", { pileUuid: this.pile.uuid, itemId: item.id, target, quantity }));
+  }
+
   /** Player: ask for the Party Stash (or take that back). GM: send it there now. */
   static async #onStash(event, button) {
     const item = this.#item(button);
     if (!item) return;
     if (game.user.isGM) {
-      const quantity = await this.#quantity(item, event);
+      const quantity = await this.#quantity(item, event, { verb: "Give" });
       if (!quantity) return;
       return this.#run(button, () => give(this.pile, item.id, "stash", quantity));
     }
@@ -740,7 +880,7 @@ class LootPileWindow extends ApplicationV2 {
     if (!item) return;
     const target = await GiveWindow.wait(item);
     if (!target) return;
-    const quantity = await this.#quantity(item, event, { name: fromUuidSync(target)?.name });
+    const quantity = await this.#quantity(item, event, { name: fromUuidSync(target)?.name, verb: "Give" });
     if (!quantity) return;
     return this.#run(button, () => give(this.pile, item.id, target, quantity));
   }
@@ -1354,6 +1494,14 @@ defineFeature({
       if (!feature.active) throw new Error(localize("LUCD20.LootPile.Disabled"));
       return request(payload, senderId);
     });
+    onGMRequest("lootPile.take", (payload, senderId) => {
+      if (!feature.active) throw new Error(localize("LUCD20.LootPile.Disabled"));
+      return take(payload, senderId);
+    });
+    onBroadcast("lootPile.looting", ({ on }) => showLooting(on && feature.active));
+    onBroadcast("lootPile.open", ({ pileUuid }) => {
+      if (feature.active) openWhenHere(pileUuid);
+    });
     onGMRequest("lootPile.requestAll", (payload, senderId) => {
       if (!feature.active) throw new Error(localize("LUCD20.LootPile.Disabled"));
       return requestAll(payload, senderId);
@@ -1377,6 +1525,7 @@ defineFeature({
     feature.on("deleteActor", closePileWindows);
 
     feature.onCleanup(() => {
+      showLooting(false);
       for (const app of foundry.applications.instances?.values() ?? []) {
         if ([LootPileWindow, ContestWindow, SplitWindow, CustomSplitWindow, GiveWindow].some(c => app instanceof c)) app.close();
       }
@@ -1386,4 +1535,4 @@ defineFeature({
 });
 
 export { LootPileWindow, reviewLoot };
-export const _test = { approve, approveAll, claimsOf, give, refuse, requestsFor, splitCoins, ContestWindow, SplitWindow, CustomSplitWindow };
+export const _test = { showLooting, take, approve, approveAll, claimsOf, give, refuse, requestsFor, splitCoins, ContestWindow, SplitWindow, CustomSplitWindow };

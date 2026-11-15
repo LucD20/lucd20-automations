@@ -240,7 +240,7 @@ function drawHudButton() {
   const existing = root.querySelector(".lucd20-rideable");
   if (existing?.dataset.tokenId === doc.id && existing.classList.contains("active") === on) return;
   existing?.remove();
-  const column = root.querySelector(".col.right") ?? root.querySelector(".col.left") ?? root;
+  const column = root.querySelector(".col.left") ?? root.querySelector(".col.right") ?? root;
   const button = document.createElement("button");
   button.type = "button";
   button.className = "control-icon lucd20-rideable";

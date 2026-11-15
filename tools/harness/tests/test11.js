@@ -39,8 +39,9 @@ async function setup(page, userId) {
       async update(d) { for (const [k, v] of Object.entries(d)) foundry.utils.setProperty(this, k, v); Hooks.callAll("updateActor", this, d); }
       get isOwner() { return game.user.isGM || this.owners.includes(game.user.id); }
       testUserPermission(u, lvl) { return u.isGM || this.owners.includes(u.id); }
-      async createEmbeddedDocuments(type, data) { const made = data.map(d => new MockItem(d, this)); this.items.push(...made); made.forEach(i => Hooks.callAll("createItem", i)); return made; }
-      async deleteEmbeddedDocuments(type, ids) { for (const id of ids) { const i = this.items.get(id); this.items.splice(this.items.indexOf(i), 1); } }
+      async createEmbeddedDocuments(type, data) { window.__writes = (window.__writes ?? 0) + 1; const made = data.map(d => new MockItem(d, this)); this.items.push(...made); made.forEach(i => Hooks.callAll("createItem", i)); return made; }
+      async deleteEmbeddedDocuments(type, ids) { window.__writes = (window.__writes ?? 0) + 1; for (const id of ids) { const i = this.items.get(id); this.items.splice(this.items.indexOf(i), 1); Hooks.callAll("deleteItem", i); } }
+      async updateEmbeddedDocuments(type, updates) { window.__writes = (window.__writes ?? 0) + 1; for (const { _id, ...d } of updates) { const i = this.items.get(_id); for (const [k, v] of Object.entries(d)) foundry.utils.setProperty(i, k, v); Hooks.callAll("updateItem", i, d); } }
       async getTokenDocument(o) { return { toObject: () => ({ actorId: this.id, name: this.name, ...o }) }; }
       async delete() { game.actors.splice(game.actors.indexOf(this), 1); Hooks.callAll("deleteActor", this); }
     }
@@ -60,10 +61,16 @@ async function setup(page, userId) {
       { get(id) { return this.find(u => u.id === id); } });
     game.users.activeGM = { query: (name, data) => CONFIG.queries[name](data) };
     window.__chat = [];
-    window.ChatMessage = { create: async d => window.__chat.push(d.content.replace(/<[^>]+>/g, "").trim()) };
+    window.ChatMessage = { create: async d => window.__chat.push(d.content.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").replace(/ ([:.,])/g, "$1").trim()) };
+    window.__sent = [];
+    game.socket.emit = (name, msg) => window.__sent.push(msg);
+    game.paused = false;
+    window.__pauses = [];
+    game.togglePause = (on, opts) => { game.paused = on; window.__pauses.push([on, opts?.broadcast]); };
 
     const amiri = new MockActor({ id: "amiri", name: "Amiri", type: "character", owners: ["p1"], items: [{ name: "Gold Pieces", type: "treasure", system: { quantity: 5, stackGroup: "coins" } }] });
-    const ezren = new MockActor({ id: "ezren", name: "Ezren", type: "character", owners: ["p2"] });
+    const ezren = new MockActor({ id: "ezren", name: "Ezren", type: "character", owners: ["p2"],
+      prototypeToken: { texture: { src: "ezren-token.webp", scaleX: 1.5, scaleY: 1.5 }, ring: { enabled: true, subject: { texture: "ezren-subject.webp", scale: 1.2 } } } });
     const party = new MockActor({ id: "party", name: "The Party", type: "party" });
     const goblin = new MockActor({ id: "goblin", name: "Goblin Warrior", level: -1, items: [
       { name: "Dogslicer", type: "weapon" }, { name: "Leather Armor", type: "armor" }, { name: "Dogslicer Strike", type: "melee" },
@@ -112,6 +119,10 @@ async function setup(page, userId) {
   await set(page, "lootPile_enabled", true);
   await page.evaluate(() => Hooks.callAll("deleteCombat", __combat));
   await page.waitForTimeout(300);
+  // While the GM chooses: the game is paused and the other clients are told to show "Looting the fallen…".
+  assert.deepStrictEqual(await page.evaluate(() => [__pauses, __sent.map(m => [m.type, m.payload.on])]), [[[true, true]], [["lootPile.looting", true]]]);
+  assert.strictEqual(await page.evaluate(async () => { const m = await import("/modules/lucd20-automations/scripts/features/loot-pile.js"); m._test.showLooting(true);
+    const t = document.querySelector(".lucd20-looting-banner")?.textContent; m._test.showLooting(false); return [t, document.querySelectorAll(".lucd20-looting-banner").length].join("|"); }), "Looting the fallen…|0");
   const R = ".lucd20-loot-review-dialog";
   await page.evaluate(r => { const w = document.querySelector(r); Object.assign(w.style, { left: "20px", top: "20px" }); }, R);
   const order = await page.$$eval(`${R} .npc`, e => e.map(x => x.textContent));
@@ -139,6 +150,9 @@ async function setup(page, userId) {
   await page.evaluate(r => [...document.querySelectorAll(`${r} .lucd20-loot-check`)].find(l => l.textContent.includes("Leather")).querySelector("input").click(), R);
   await page.click(`${R} [data-action="create"]`);
   await page.waitForTimeout(300);
+  // Done: the banner goes, the game resumes, every player's client is told to open the pile, and the GM's opens.
+  assert.deepStrictEqual(await page.evaluate(() => [__pauses, __sent.slice(1).map(m => m.type), game.paused, document.querySelectorAll(".lucd20-loot-window").length]),
+    [[[true, true], [false, true]], ["lootPile.looting", "lootPile.open"], false, 1]);
   // hidden NPC name decided on the GM side: no name/art stored on its items
   const src = await page.evaluate(() => game.actors.find(a => a.getFlag("lucd20-automations", "lootPile")).items.find(i => i.name === "Dogslicer").flags["lucd20-automations"].source);
   console.log("hidden source:", JSON.stringify(src));
@@ -239,6 +253,8 @@ async function setup(page, userId) {
     await ask("p2", { itemId: itemId("Ring"), kind: "stash" });
   });
   await page.waitForTimeout(150);
+  // Ezren's token: the ring's subject picture, at the token's scale (1.5 × 1.2), standing out of its circle.
+  assert.deepStrictEqual(await page.$eval(`${row("Dogslicer")} .ll-tokens .lucd20-loot-portrait:nth-child(2)`, t => [t.classList.contains("is-pop"), t.querySelector("img").getAttribute("src"), t.querySelector("img").style.transform]), [true, "ezren-subject.webp", "scale(1.8)"]);
   assert.deepStrictEqual(await rowState("Dogslicer"), { cls: "is-contested", buttons: ["Claimed, waiting…", "Party Stash"], tokens: ["Amiri (me)", "Ezren"], stash: "1", stashTip: "Party Stash: Cara" }, "everyone sees who asked");
   assert.deepStrictEqual((await rowState("Healing Potion")), { cls: "is-claimed", buttons: ["Claimed, waiting…", "Party Stash"], tokens: ["Amiri (me)", "Ezren"], stash: null, stashTip: null }, "one potion each: no contest");
   assert.deepStrictEqual((await rowState("Ring of Climbing")).stashTip, "Party Stash: Cara, Bruno");
@@ -251,6 +267,7 @@ async function setup(page, userId) {
   assert.deepStrictEqual((await rowState("Dogslicer")).buttons, ["Who gets it?", ""]);
   assert.deepStrictEqual((await rowState("Ring of Climbing")).buttons, ["Send to Stash", ""]);
   assert.strictEqual(await page.$eval(`${W} [data-action="approveAll"]`, b => b.textContent.trim()), "Approve all (2)");
+  assert.strictEqual(await page.$$eval(`${W} .ll-open-note`, e => e.length), 0);
   await page.screenshot({ path: `${out}/p11-gm-claims.png` });
   // "Who gets it?": for the GM and the claimers, not for Cara.
   await page.click(`${row("Dogslicer")} [data-action="decide"]`);
@@ -271,8 +288,11 @@ async function setup(page, userId) {
   await page.waitForTimeout(250);
   assert.strictEqual(await page.$$eval(C, e => e.length), 0, "decided: the window closes");
   // Approve all: the potions to their claimers, the ring to the stash (only stash requests).
+  await page.evaluate(() => { window.__writes = 0; });
   await page.click(`${W} [data-action="approveAll"]`);
   await page.waitForTimeout(300);
+  assert.ok(await page.evaluate(() => __writes) <= 6, "approve all: a few batched writes, not one per item");
+  assert.strictEqual(await page.$eval(`${W} .ll-open-note`, e => e.textContent.trim()), "Open: players take freely", "approved: the pile is now open");
   const after = await page.evaluate(() => ({
     amiri: __A.amiri.items.map(i => `${i.name}${typeof i.system.quantity === "number" ? "×" + i.system.quantity : ""}`).sort(),
     ezren: __A.ezren.items.map(i => `${i.name}${typeof i.system.quantity === "number" ? "×" + i.system.quantity : ""}`).sort(),
@@ -287,7 +307,7 @@ async function setup(page, userId) {
   assert.deepStrictEqual(after.party, ["Ring of Climbing"], "PF2e party inventory is the stash");
   assert.deepStrictEqual(after.pile, ["Gold Pieces×3"], "only the coins are left; the pile stays for them");
   assert.strictEqual(after.claims, 0);
-  assert.deepStrictEqual(after.chat, ["Ezren took Dogslicer.", "Amiri took Healing Potion (Minor).", "Ezren took Healing Potion (Minor).", "Ring of Climbing went to The Party."]);
+  assert.deepStrictEqual(after.chat, ["Ezren took Dogslicer.", "Loot handed out: Amiri: Healing Potion (Minor) Ezren: Healing Potion (Minor) The Party: Ring of Climbing"], "approve all: one chat message");
 
   // ================= Coins: Split evenly =================
   await page.evaluate(() => { __chat.length = 0; });
@@ -368,6 +388,33 @@ async function setup(page, userId) {
   await page.click('.lucd20-loot-give-dialog .ll-give-row[data-uuid="Actor.ezren"]');
   await page.waitForTimeout(300);
   assert.ok(await page.evaluate(() => __A.ezren.items.some(i => i.name === "Rope") && !game.actors.includes(__pile)), "given at once; the empty pile is removed");
+
+  // ================= An open pile: players take without asking =================
+  await page.evaluate(async st => {
+    const p = await Actor.create({ name: "Loot Pile 4", type: "loot", flags: { "lucd20-automations": { lootPile: true } } });
+    p.items.length = 0; await p.createEmbeddedDocuments("Item", st.items.filter(i => i.type !== "treasure")); window.__pile = p; window.__chat.length = 0;
+    __A.amiri.items.length = 0; __A.party.items.length = 0;
+    who("p1");
+    new CONFIG.Token.objectClass()._onClickLeft2.call({ actor: p }, {});
+  }, pileState);
+  await page.waitForTimeout(200);
+  const refused = await page.evaluate(async () => { try { await CONFIG.queries["lucd20-automations.gm"]({ type: "lootPile.take", payload: { pileUuid: __pile.uuid, itemId: itemId("Dogslicer"), target: "Actor.amiri" }, senderId: "p1" }); return null; } catch (e) { return e.message; } });
+  assert.strictEqual(refused, "The GM has not opened this pile yet.", "a pile the GM has not approved cannot be taken from");
+  await page.evaluate(async () => { who("u1"); await new Promise(r => setTimeout(r, 100)); });
+  assert.strictEqual(await page.$eval(`${W} [data-action="approveAll"]`, b => b.textContent.trim()), "Open to everyone", "nothing asked: the button only opens the pile");
+  await page.click(`${W} [data-action="approveAll"]`);
+  await page.waitForTimeout(150);
+  await page.evaluate(() => who("p1"));
+  await page.waitForTimeout(150);
+  assert.deepStrictEqual((await rowState("Dogslicer")).buttons, ["Take", "Party Stash"]);
+  assert.strictEqual(await page.$eval(`${W} .lucd20-loot-taker .label`, e => e.textContent), "Taking for");
+  await page.click(`${row("Dogslicer")} [data-action="take"][data-target="taker"]`);
+  await page.click(`${row("Ring")} [data-action="take"][data-target="stash"]`);
+  await page.waitForTimeout(250);
+  const taken = await page.evaluate(async () => { let other = null; try { await CONFIG.queries["lucd20-automations.gm"]({ type: "lootPile.take", payload: { pileUuid: __pile.uuid, itemId: itemId("Healing"), target: "Actor.ezren" }, senderId: "p1" }); } catch (e) { other = e.message; }
+    return { amiri: __A.amiri.items.map(i => i.name), party: __A.party.items.map(i => i.name), pile: __pile.items.map(i => i.name), chat: [...__chat], other }; });
+  assert.deepStrictEqual(taken, { amiri: ["Dogslicer"], party: ["Ring of Climbing"], pile: ["Healing Potion (Minor)"], chat: ["Amiri took Dogslicer.", "Ring of Climbing went to The Party."], other: "You don't own that character." });
+  await page.evaluate(async () => { await __pile.delete(); });
 
   // A player's "Send all to Party Stash" only asks; the GM's does it.
   await page.evaluate(async st => {

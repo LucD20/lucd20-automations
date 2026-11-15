@@ -1462,3 +1462,21 @@ owner wants them as items there). Mockup: `docs/mockups/loot-claims.html`
 - (verify) in Foundry: PF2e 8.7 adds/removes coins as expected on
   characters, the party and the pile; the item description in "Who gets it?";
   a player's window updating when another player claims.
+
+**v0.36.0 (owner's feedback after testing 0.35.0):**
+
+- **Combat ends:** the game is paused while the GM reviews "Loot the fallen"
+  (only if it was running; resumed after), and every other client shows
+  "Looting the fallen…" (`lootPile.looting` broadcast). When the pile is made
+  its window opens for everyone (`lootPile.open`); the pile stays on the map.
+- **Approve all** is one batch (`handOut`: one write per kind and actor) and
+  one chat message ("Loot handed out:" and a line per character). With
+  nothing asked the button reads **Open to everyone**.
+- **Open pile:** approving (or opening) sets flag `open`. From then on a
+  player's row has **Take** and **Party Stash** that act at once
+  (`lootPile.take`), no GM step. Rows that still have requests (a contest)
+  keep waiting for the GM. Coins are still the GM's to split.
+- **Claimer tokens** use the token's picture as the token shows it: the
+  ring's subject texture if there is one, at the token's scale (texture scale
+  × ring subject scale, capped), standing out of the circle.
+- Riding: the Rideable button is in the Token HUD's left column.

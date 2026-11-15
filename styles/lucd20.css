@@ -1635,6 +1635,11 @@ button.lucd20-lock.mode-lock {
 .lucd20-loot-app .ll-coin-actions { display: flex; gap: 6px; }
 .lucd20-loot-app .ll-coins-note { color: var(--ll-text-muted); font-size: 12px; }
 
+/* A token whose art is scaled up stands out of its circle, as on the map. */
+.lucd20-loot-app .lucd20-loot-portrait.is-pop { overflow: visible; }
+.lucd20-loot-app .lucd20-loot-portrait.is-pop img { object-fit: contain; }
+.lucd20-loot-app .ll-open-note { display: inline-flex; align-items: center; gap: 6px; padding: 0 6px; color: var(--ll-text-muted); font-size: 13px; }
+
 /* "Give to…" */
 .lucd20-loot-app .ll-give { gap: 4px; padding: 10px; }
 .lucd20-loot-app .ll-what { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
@@ -2368,3 +2373,7 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-audit-bar > i { color: #ff3df2; }
 .lucd20-audit-bar button { display: inline-flex; align-items: center; gap: 5px; width: auto; height: 28px; margin: 0; padding: 0 10px; border: 1px solid #5c596a; border-radius: 4px; background: #26252e; color: inherit; font: inherit; font-size: 13px; cursor: pointer; }
 .lucd20-audit-bar button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* "Looting the fallen…": shown to everyone but the GM who is choosing. */
+.lucd20-looting-banner { position: fixed; top: 22%; left: 50%; z-index: 90; display: flex; align-items: center; gap: 14px; padding: 14px 28px; border: 1px solid #a8702f; border-radius: 6px; background: rgba(18, 17, 23, 0.92); color: #efe6d8; font-family: Signika, "Segoe UI", sans-serif; font-size: 26px; font-weight: 700; letter-spacing: 0.02em; pointer-events: none; transform: translateX(-50%); box-shadow: 0 4px 22px rgba(0, 0, 0, 0.7); }
+.lucd20-looting-banner i { color: #ee9b3a; }

@@ -1,0 +1,150 @@
+<!doctype html><html><head><meta charset="utf-8"><title>D&amp;D 4e HUD across the bottom (mockup)</title>
+<link rel="stylesheet" href="/node_modules/@fortawesome/fontawesome-free/css/all.min.css">
+<style>
+body { margin: 0; padding: 24px; background: #2a2a30; color: #ddd; font: 13px "Signika", "Trebuchet MS", sans-serif; }
+h1.page { margin: 0 0 4px; font: 700 20px sans-serif; } p.lead { margin: 0 0 18px; color: #aaa; max-width: 1240px; }
+figure { margin: 0 0 30px; } figcaption { margin-bottom: 8px; color: #f3b469; font: 600 15px sans-serif; } figcaption small { display: block; color: #aaa; font-weight: 400; font-size: 12.5px; margin-top: 3px; max-width: 1240px; }
+.tag { font: 600 11px sans-serif; color: #aaa; margin: 10px 0 4px; text-transform: uppercase; letter-spacing: .05em; }
+button { font: inherit; cursor: pointer; }
+/* Foundry V14 stand-in, laid out like the owner's screenshot (1615 × 991, shown at 1240 × 760) */
+.screen { position: relative; width: 1240px; height: 760px; border: 1px solid #555; border-radius: 6px; overflow: hidden; background: #3b3a22; }
+.map { position: absolute; left: 256px; top: 0; right: 30px; bottom: 0; background: radial-gradient(circle at 30% 20%, #4f6a2c 0 60px, transparent 61px), radial-gradient(circle at 70% 60%, #3d5522 0 80px, transparent 81px), radial-gradient(circle at 50% 40%, #66803a, #36481e); }
+.tok { position: absolute; width: 38px; height: 38px; border-radius: 50%; border: 2px solid #b33; background: #7a5b3a; } .tok.pc { border-color: #3a3; }
+.ctl { position: absolute; left: 10px; top: 4px; display: grid; grid-template-columns: 26px 26px; gap: 5px 8px; } .ctl i { width: 26px; height: 26px; display: grid; place-items: center; background: rgba(20,20,20,.75); border-radius: 3px; color: #ccc; font-size: 12px; }
+.nav { position: absolute; left: 80px; top: 6px; width: 128px; padding: 4px 6px; background: rgba(20,20,20,.75); border-radius: 3px; font-size: 10px; color: #bbb; }
+.sidebar { position: absolute; right: 0; top: 0; bottom: 0; width: 30px; display: grid; align-content: start; gap: 14px; padding-top: 8px; justify-items: center; color: #bbb; font-size: 13px; background: rgba(10,10,10,.35); }
+.players { position: absolute; left: 4px; top: 512px; width: 192px; background: rgba(20,20,20,.88); border: 1px solid #444; border-radius: 4px; padding: 6px 8px; font-size: 10.5px; color: #ccc; outline: 2px dashed #f3b469; outline-offset: 3px; }
+.players .who { display: flex; align-items: center; gap: 5px; color: #d9c08a; } .players .who::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #c9a227; }
+.players .btn { margin-top: 4px; padding: 3px; text-align: center; background: rgba(255,255,255,.06); border-radius: 2px; } .players .perf { margin-top: 4px; color: #999; }
+.mv { position: absolute; left: 206px; top: 512px; font: 600 10.5px sans-serif; color: #111; background: #f3b469; border-radius: 3px; padding: 1px 5px; }
+
+/* ---------- the HUD: 4e book look, dark and light ---------- */
+.hud { --atwill: #619759; --enc: #961334; --daily: #4d4d4f; --basic: #6b5d45; --plate: #3a4a2a;
+  position: absolute; left: 0; bottom: 0; width: 906px; font: 12px "Signika", "Trebuchet MS", sans-serif; color: var(--ink); }
+.hud.dark { --bg: #1b1a18; --bg2: #23211e; --ink: #ece3cf; --mute: #a39a88; --line: #4a453c; --gold: #d9b26a; --btn: #2c2a26; --edge: #000; }
+.hud.light { --bg: #f4eee0; --bg2: #e9e0ca; --ink: #2a251c; --mute: #6c6250; --line: #c2b393; --gold: #8c6418; --btn: #fbf7ec; --edge: #6f6248; }
+.hud .bar { position: absolute; left: 0; right: 0; bottom: 0; display: flex; background: var(--bg); border-top: 2px solid var(--plate); border-right: 1px solid var(--edge); }
+.hud .sec { border-left: 1px solid var(--line); display: flex; flex-direction: column; min-width: 0; } .hud .sec:first-child { border-left: 0; }
+.hud .plate { background: var(--plate); color: #fff; padding: 3px 8px; display: flex; align-items: baseline; gap: 6px; font: 700 14px "DragonHead", Georgia, serif; white-space: nowrap; }
+.hud .plate small { font: 400 10.5px "Signika", sans-serif; opacity: .9; margin-left: auto; }
+.hud .ln { display: flex; align-items: center; gap: 8px; padding: 3px 8px; border-top: 1px solid var(--line); white-space: nowrap; } .hud .ln:nth-of-type(even) { background: var(--bg2); }
+.hud .ln b { font-weight: 700; } .hud .mute { color: var(--mute); font-size: 10.5px; }
+.hud .hp { position: relative; height: 16px; flex: 1; border: 1px solid #000; background: #3a1010; min-width: 90px; }
+.hud .hp .f { position: absolute; inset: 0 auto 0 0; background: linear-gradient(#b52a2a, #7c1717); } .hud .hp .t { position: absolute; top: 0; left: 0; height: 4px; background: #5aa0ff; }
+.hud .hp .bl { position: absolute; top: -2px; bottom: -2px; width: 2px; background: #000; } .hud .hp span { position: relative; display: block; text-align: center; font: 700 11px/16px sans-serif; color: #fff; text-shadow: 0 1px 2px #000; }
+.hud .por { width: 100%; height: 100%; background: radial-gradient(circle at 50% 35%, #a7845c, #4b3624); display: grid; place-items: center; font-size: 34px; color: #e9d3b1; }
+.hud .sbtn { border: 1px solid var(--gold); background: var(--btn); color: var(--gold); padding: 0 6px; font-size: 11px; font-weight: 700; line-height: 16px; }
+.hud .sbtn.done { border-color: var(--line); color: var(--mute); text-decoration: line-through; font-weight: 400; }
+.hud .defs { display: grid; } .hud .defs div { display: flex; justify-content: space-between; gap: 8px; padding: 2px 8px; border-top: 1px solid var(--line); } .hud .defs div:first-child { border-top: 0; }
+.hud .defs b { font: 700 15px Georgia, serif; } .hud .defs .up b { color: #3f9a3f; } .hud .defs .dn b { color: #c0392b; }
+.hud .defrow { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line); } .hud .defrow div { text-align: center; border-left: 1px solid var(--line); padding: 1px 0; } .hud .defrow div:first-child { border-left: 0; }
+.hud .defrow b { display: block; font: 700 15px/1.1 Georgia, serif; } .hud .defrow small { font-size: 9.5px; color: var(--mute); } .hud .defrow .up b { color: #3f9a3f; }
+/* the dock */
+.hud .dock { display: grid; grid-template-columns: repeat(5, 1fr); } .hud .dock span { display: grid; justify-items: center; padding: 3px 0 2px; border-left: 1px solid var(--line); font-size: 8.5px; overflow: hidden; color: var(--ink); }
+.hud .dock span:first-child { border-left: 0; } .hud .dock i { font-size: 14px; }
+.hud .dock .on { background: var(--plate); color: #fff; } .hud .dock .spent { color: var(--mute); text-decoration: line-through; } .hud .dock .spent i { opacity: .4; } .hud .dock .off { color: var(--mute); }
+/* tabs */
+.hud .tabs { display: flex; border-bottom: 1px solid var(--line); } .hud .tabs button { flex: 1; padding: 3px 4px; background: transparent; color: var(--ink); border: 0; border-left: 1px solid var(--line); font-size: 11px; white-space: nowrap; }
+.hud .tabs button:first-child { border-left: 0; } .hud .tabs button.act { background: var(--plate); color: #fff; } .hud .tabs .n { opacity: .65; font-size: 9.5px; margin-left: 2px; }
+/* 4e power cards */
+.pw { border: 1px solid var(--edge); background: var(--bg); display: flex; flex-direction: column; min-width: 0; }
+.pw .h { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; padding: 2px 6px; color: #fff; font-weight: 700; font-size: 11.5px; white-space: nowrap; overflow: hidden; }
+.pw .h small { font-weight: 400; font-size: 9.5px; opacity: .9; }
+.pw.atwill .h { background: var(--atwill); } .pw.enc .h { background: var(--enc); } .pw.daily .h { background: var(--daily); } .pw.basic .h { background: var(--basic); }
+.pw .k { padding: 1px 6px; font-size: 10px; color: var(--mute); border-bottom: 1px solid var(--line); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pw .b { padding: 2px 6px 3px; font-size: 10.5px; color: var(--ink); line-height: 1.3; } .pw .b b { font-weight: 700; }
+.pw .uses { display: inline-flex; gap: 2px; margin-left: 4px; } .pw .uses i { width: 7px; height: 7px; border: 1px solid #fff; border-radius: 50%; } .pw .uses i.full { background: #fff; }
+.pw.used { opacity: .5; } .pw.used .h { background: #777; } .pw.used .h span { text-decoration: line-through; }
+/* the hotbar inside the HUD */
+.hud .hot { display: grid; grid-template-columns: repeat(5, 30px); gap: 2px; padding: 4px; justify-content: center; } .hud .hot i { width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid var(--line); background: var(--bg2); color: var(--mute); font: normal 10px sans-serif; position: relative; }
+.hud .hot i em { position: absolute; left: 2px; top: 0; font: 700 8px sans-serif; color: var(--mute); font-style: normal; } .hud .hot i.m { color: var(--gold); font-size: 13px; }
+.hud .panel { position: absolute; bottom: 100%; border: 1px solid var(--edge); border-bottom: 0; background: var(--bg); padding: 5px; display: grid; gap: 5px; }
+.hud .panel .ph { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; font-weight: 700; padding: 0 2px 3px; border-bottom: 1px solid var(--line); }
+.hud .col h5 { margin: 0; padding: 2px 6px; font: 700 10.5px sans-serif; color: #fff; } .hud .col { display: grid; align-content: start; gap: 3px; }
+</style></head><body>
+<h1 class="page">D&amp;D 4e HUD across the bottom: three layouts (mockup)</h1>
+<p class="lead">Placed as in the owner's screenshot: the HUD fills the bottom band from the left edge to past the hotbar (yellow), Foundry's players list moves up into the free corner above it (red, dashed outline), the hotbar lives inside the HUD. Each layout is shown dark (Aegustarion, the elf ranger) and light (Linkedin, the elf bard), with powers from their sheets; HP, defences and other numbers are made up. Power names drop the compendium prefix ("Ranger 01-Twin Strike" → Twin Strike).</p>
+<div id="out"></div>
+<script>
+const CH = {
+  dark: { name: "Aegustarion", sub: "Elf Ranger 1", icon: "fa-person-rifle", hp: [21, 26], temp: 0, surges: "9/9", sv: 6, sw: true, ap: 1, speed: 7, init: "+4", pp: 19, pi: 12,
+    defs: [["AC", 17, "up"], ["Fort", 13], ["Ref", 15], ["Will", 12]], weapon: "Longbow +6 · 1d10+4",
+    dock: { standard: "spent", move: "on", minor: "on", immediate: "off", opportunity: "off" },
+    tabs: { standard: [
+      ["Twin Strike", "atwill", "Standard", "Martial, Weapon · Melee or Ranged weapon", "<b>+6 vs AC</b>, two attacks · 1[W] each"],
+      ["Nimble Strike", "atwill", "Standard", "Martial, Weapon · Ranged weapon", "<b>+6 vs AC</b> · 1[W]+4; shift 1 before or after"],
+      ["Split the Tree", "daily", "Standard", "Martial, Weapon · Ranged weapon", "<b>+6 vs AC</b>, two creatures · 2[W]+4"],
+      ["Ranged Basic Attack", "basic", "Standard", "Weapon · Longbow 20/40", "<b>+6 vs AC</b> · 1d10+4"],
+      ["Melee Basic Attack", "basic", "Standard", "Weapon · Longsword", "<b>+3 vs AC</b> · 1d8"]],
+      move: [["Walk", "basic", "Move", "Speed 7", "Wild Step: ignore difficult terrain when you shift"], ["Shift", "basic", "Move", "1 square", ""], ["Run", "basic", "Move", "Speed +2", "−5 to attacks; grants combat advantage"], ["Stand Up", "basic", "Move", "", ""]],
+      minor: [["Hunter's Quarry", "atwill", "Minor", "Nearest enemy you can see", "+1d6 damage once per round"]],
+      free: [["Elven Accuracy", "enc", "Free", "Personal · Trigger: you dislike an attack roll", "Reroll the attack roll", false, [1, 1]]],
+      triggered: [["Fox's Cunning", "enc", "Imm. Reaction", "Martial, Weapon · Melee or Ranged", "Trigger: an enemy makes a melee attack against you", false, [1, 1]], ["Opportunity Attack", "basic", "Opportunity", "Melee basic attack", "<b>+3 vs AC</b> · 1d8"]] } },
+  light: { name: "Linkedin", sub: "Elf Bard 1", icon: "fa-guitar", hp: [12, 25], temp: 4, surges: "6/9", sv: 6, sw: false, ap: 1, speed: 6, init: "+2", pp: 16, pi: 16,
+    defs: [["AC", 17], ["Fort", 11], ["Ref", 13], ["Will", 14, "up"]], weapon: "Longsword +4 · 1d8",
+    dock: { standard: "on", move: "spent", minor: "on", immediate: "off", opportunity: "off" },
+    tabs: { standard: [
+      ["Vicious Mockery", "atwill", "Standard", "Arcane, Charm, Implement, Psychic · Ranged 10", "<b>+5 vs Will</b> · 1d6+3 psychic; −2 to attacks"],
+      ["Misdirected Mark", "atwill", "Standard", "Arcane, Implement · Ranged 10", "<b>+5 vs Ref</b> · 1d6+3; an ally marks it"],
+      ["Blunder", "enc", "Standard", "Arcane, Charm, Implement · Ranged 5", "<b>+5 vs Will</b> · 1d8+3; you slide it", true, [0, 1]],
+      ["Stirring Shout", "daily", "Standard", "Arcane, Healing, Implement · Ranged 10", "<b>+5 vs Will</b> · 2d6+3 psychic", false, [1, 1]],
+      ["Melee Basic Attack", "basic", "Standard", "Weapon · Longsword", "<b>+4 vs AC</b> · 1d8"]],
+      move: [["Walk", "basic", "Move", "Speed 6", ""], ["Shift", "basic", "Move", "1 square", ""], ["Run", "basic", "Move", "Speed +2", ""], ["Stand Up", "basic", "Move", "", ""]],
+      minor: [["Majestic Word", "enc", "Minor", "Arcane, Healing · Close burst 5", "Ally spends a surge +3 HP; slide 1", false, [1, 2]], ["Words of Friendship", "enc", "Minor", "Arcane, Charm · Personal", "+5 to the next Diplomacy check", false, [1, 1]]],
+      free: [["Elven Accuracy", "enc", "Free", "Personal", "Reroll the attack roll", true, [0, 1]]],
+      triggered: [["Opportunity Attack", "basic", "Opportunity", "Melee basic attack", "<b>+4 vs AC</b> · 1d8"]] } },
+};
+const TABS = [["standard", "Standard", "fa-hand-fist"], ["move", "Move", "fa-person-walking"], ["minor", "Minor", "fa-hand"], ["free", "Free", "fa-feather"], ["triggered", "Triggered", "fa-bolt-lightning"]];
+const USAGE = { atwill: "At-Will", enc: "Encounter", daily: "Daily", basic: "Basic" };
+const DOCK = [["standard", "Standard", "fa-hand-fist"], ["move", "Move", "fa-person-walking"], ["minor", "Minor", "fa-hand"], ["immediate", "Immed.", "fa-bolt-lightning"], ["opportunity", "Opport.", "fa-eye"]];
+const uses = u => u ? `<span class="uses">${Array.from({ length: u[1] }, (_, i) => `<i class="${i < u[0] ? "full" : ""}"></i>`).join("")}</span>` : "";
+const card = ([n, u, act, k, b, used, us], full = true, compact = false) => compact ? `<div class="pw ${u}${used ? " used" : ""}"><div class="h" style="white-space:normal;display:block;line-height:1.15;padding:3px 6px">${n}${uses(us)}</div><div class="k">${USAGE[u]} · ${(k || "").split(" · ").pop()}</div>${full && b ? `<div class="b">${b}</div>` : ""}</div>` : `<div class="pw ${u}${used ? " used" : ""}"><div class="h"><span>${n}${uses(us)}</span><small>${USAGE[u]} ✦ ${act}</small></div>${k ? `<div class="k">${k}</div>` : ""}${full && b ? `<div class="b">${b}</div>` : ""}</div>`;
+const hp = c => `<div class="hp"><div class="f" style="width:${100 * c.hp[0] / c.hp[1]}%"></div>${c.temp ? `<div class="t" style="width:${100 * c.temp / c.hp[1]}%"></div>` : ""}<div class="bl" style="left:50%"></div><span>${c.hp[0]} / ${c.hp[1]}${c.temp ? ` · +${c.temp} temp` : ""}${c.hp[0] <= c.hp[1] / 2 ? " · bloodied" : ""}</span></div>`;
+const dock = c => `<div class="dock">${DOCK.map(([k, l, i]) => `<span class="${c.dock[k]}"><i class="fa-solid ${i}"></i>${l}</span>`).join("")}</div>`;
+const tabs = (c, cur) => `<div class="tabs">${TABS.map(([k, l, i]) => `<button class="${k === cur ? "act" : ""}"><i class="fa-solid ${i}"></i> ${l}<span class="n">${c.tabs[k].length}</span></button>`).join("")}</div>`;
+const HOT = ["fa-sun", "", "", "", "", "fa-dice", "fa-dice", "fa-dice", "", "fa-bell"];
+const hot = (cols = 5) => `<div class="hot" style="grid-template-columns:repeat(${cols},30px)">${HOT.map((i, n) => `<i class="${i ? "m" : ""}"><em>${(n + 1) % 10}</em>${i ? `<span class="fa-solid ${i}"></span>` : ""}</i>`).join("")}</div>`;
+const defsCol = c => `<div class="defs">${c.defs.map(([l, v, m]) => `<div class="${m ?? ""}"><span>${l}</span><b>${v}</b></div>`).join("")}</div>`;
+const defsRow = c => `<div class="defrow">${c.defs.map(([l, v, m]) => `<div class="${m ?? ""}"><b>${v}</b><small>${l}</small></div>`).join("")}</div>`;
+const swBtn = c => `<button class="sbtn${c.sw ? "" : " done"}">Second Wind</button>`;
+
+const LAYOUTS = [
+ { title: "1 · Everything in view", text: "One band, nothing to open: the stat block (HP, surges with Second Wind, AP with Spend, speed, initiative), the four defences as ruled lines, the open tab's powers as a row of 4e power cards, then the dock over the hotbar. The tab row switches the cards. The tallest band at rest (about 165 px), and the one that needs no clicks to read.",
+   draw: c => `<div class="bar" style="height:166px">
+     <div class="sec" style="width:248px"><div class="plate">${c.name}<small>${c.sub}</small></div>
+       <div class="ln"><span>HP</span>${hp(c)}</div>
+       <div class="ln"><span><b>Surges</b> ${c.surges} <span class="mute">(${c.sv})</span></span>${swBtn(c)}</div>
+       <div class="ln"><span><b>AP</b> ${c.ap}</span><button class="sbtn">Spend</button><span style="margin-left:auto"><b>Speed</b> ${c.speed}</span><span><b>Init</b> ${c.init}</span></div>
+       <div class="ln"><span class="mute">${c.weapon}</span><span class="mute" style="margin-left:auto">Passive ${c.pp} / ${c.pi}</span></div></div>
+     <div class="sec" style="width:78px">${defsCol(c)}</div>
+     <div class="sec" style="flex:1">${tabs(c, "standard")}<div style="display:grid;grid-template-columns:repeat(${c.tabs.standard.length},1fr);gap:4px;padding:4px">${c.tabs.standard.map(p => card(p, true, true)).join("")}</div></div>
+     <div class="sec" style="width:182px">${dock(c)}<div style="border-top:1px solid var(--line)">${hot()}</div></div></div>` },
+ { title: "2 · A low band; the tab opens upward", text: "The lowest band (about 90 px): portrait, the stat lines, the defences in a row, the dock, five tab buttons and the hotbar as one row. Clicking a tab opens its power cards above the band, at full length (attack, hit, trigger), and closes again on a second click or a click on the map. Shown with Minor open for the bard and Standard for the ranger.",
+   draw: (c, t) => { const cur = t === "dark" ? "standard" : "minor"; const list = c.tabs[cur];
+     return `<div class="panel" style="bottom:92px;left:330px;width:${list.length > 2 ? 560 : 470}px;grid-template-columns:repeat(${list.length > 2 ? 3 : 2},1fr)"><div class="ph"><span><i class="fa-solid ${TABS.find(x => x[0] === cur)[2]}"></i> ${TABS.find(x => x[0] === cur)[1]} actions</span><i class="fa-solid fa-xmark"></i></div>${list.map(p => card(p)).join("")}</div>
+     <div class="bar" style="height:92px">
+     <div class="sec" style="width:84px"><div class="por"><i class="fa-solid ${c.icon}"></i></div></div>
+     <div class="sec" style="width:262px"><div class="plate">${c.name}<small>${c.sub}</small></div><div class="ln"><span>HP</span>${hp(c)}</div>
+       <div class="ln"><span><b>Surges</b> ${c.surges}</span>${swBtn(c)}<span style="margin-left:auto"><b>AP</b> ${c.ap}</span><button class="sbtn">Spend</button></div></div>
+     <div class="sec" style="width:176px">${defsRow(c)}<div class="ln" style="justify-content:space-between"><span><b>Speed</b> ${c.speed}</span><span><b>Init</b> ${c.init}</span><span class="mute">Perc ${c.pp}</span></div></div>
+     <div class="sec" style="width:200px">${dock(c)}<div style="display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);flex:1">${TABS.map(([k, l, i]) => `<button style="border:0;border-left:1px solid var(--line);background:${k === cur ? "var(--plate)" : "transparent"};color:${k === cur ? "#fff" : "var(--ink)"};font-size:9.5px;display:grid;justify-items:center;padding:2px 0"><i class="fa-solid ${i}" style="font-size:13px"></i>${l}</button>`).join("")}</div></div>
+     <div class="sec" style="flex:1;justify-content:center">${hot(5)}</div></div>`; } },
+ { title: "3 · The sheet's header, powers by usage", text: "The left reads like the top of a 4e character sheet: portrait, name plate, HP, surges, AP, speed and the defences under it. The open action tab is laid out in columns, At-Will, Encounter, Daily and Basic, the way players think about what is left. Dock and hotbar on the right, as in 1. Medium height (about 155 px).",
+   draw: c => { const list = c.tabs.standard; const col = (u, l) => `<div class="col"><h5 style="background:var(--${u})">${l}</h5>${list.filter(p => p[1] === u).map(p => card(p, false, true)).join("") || `<span class="mute" style="padding:2px 6px">none</span>`}</div>`;
+     return `<div class="bar" style="height:156px">
+     <div class="sec" style="width:96px"><div class="por"><i class="fa-solid ${c.icon}"></i></div></div>
+     <div class="sec" style="width:240px"><div class="plate">${c.name}<small>${c.sub}</small></div><div class="ln"><span>HP</span>${hp(c)}</div>
+       <div class="ln"><span><b>Surges</b> ${c.surges} <span class="mute">(${c.sv})</span></span>${swBtn(c)}</div>
+       <div class="ln"><span><b>AP</b> ${c.ap}</span><button class="sbtn">Spend</button><span style="margin-left:auto"><b>Speed</b> ${c.speed}</span><span><b>Init</b> ${c.init}</span></div>${defsRow(c)}</div>
+     <div class="sec" style="flex:1">${tabs(c, "standard")}<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:4px">${col("atwill", "At-Will")}${col("enc", "Encounter")}${col("daily", "Daily")}${col("basic", "Basic")}</div></div>
+     <div class="sec" style="width:182px">${dock(c)}<div style="border-top:1px solid var(--line)">${hot()}</div></div></div>`; } },
+];
+const screen = (l, t) => `<div class="screen"><div class="map"></div>
+  ${[[560, 270], [690, 270], [520, 320], [740, 320], [690, 455]].map(([x, y]) => `<div class="tok" style="left:${x}px;top:${y}px"></div>`).join("")}${[[620, 490], [700, 495], [790, 495], [400, 560]].map(([x, y]) => `<div class="tok pc" style="left:${x}px;top:${y}px"></div>`).join("")}
+  <div class="ctl">${["fa-user", "fa-expand", "fa-circle-nodes", "fa-bullseye", "fa-pencil", "fa-ruler", "fa-table-cells", "fa-ghost", "fa-spider", "fa-mug-hot", "fa-music", "fa-pen", "fa-dice", "fa-droplet", "fa-bookmark", "fa-ban", "fa-wand-magic-sparkles", "fa-bug", "fa-list", "fa-shoe-prints"].map(i => `<i class="fa-solid ${i}"></i>`).join("")}</div>
+  <div class="nav">Vandellen Forest</div>
+  <div class="sidebar">${["fa-comments", "fa-khanda", "fa-map", "fa-puzzle-piece", "fa-user", "fa-suitcase", "fa-book", "fa-table-list", "fa-code", "fa-music", "fa-id-card", "fa-dice-d20", "fa-gears"].map(i => `<i class="fa-solid ${i}"></i>`).join("")}</div>
+  <div class="players"><div class="who">Lucas [GM]</div><div class="btn"><i class="fa-solid fa-handshake"></i> Request Trade</div><div class="btn"><i class="fa-solid fa-mug-saucer"></i> Breaktime</div><div class="perf">Latency 69ms · FPS 59</div></div><span class="mv">players list: moved up</span>
+  <div class="hud ${t}">${l.draw(CH[t], t)}</div></div>`;
+document.getElementById("out").innerHTML = LAYOUTS.map(l => `<figure><figcaption>${l.title}<small>${l.text}</small></figcaption>${["dark", "light"].map(t => `<div class="tag">${t} · ${CH[t].name}</div>${screen(l, t)}`).join("")}</figure>`).join("");
+</script></body></html>

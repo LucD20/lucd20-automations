@@ -1691,3 +1691,15 @@ what is really drawn in the bottom band (`#sidebar`, `#sidebar-tabs`,
 ResizeObserver on the sidebar and controls; move `#players` and `#hotbar` by
 re-parenting the elements (a reload puts them back exactly when switched
 off). (verify) the V14 build 368 DOM with the owner's HTML before building.
+
+**Third mockup** (`docs/mockups/hud-4e-bottom.html` + `.png`): the owner's
+screenshot set the place: the HUD fills the **bottom band from the left edge to
+past the hotbar** (the hotbar lives inside it), and the **players list moves up**
+into the free corner above its left end. Built from the owner's four level-1
+sheets (ranger, warlock, bard, barbarian): power names drop the compendium
+prefix ("Ranger 01-Twin Strike" -> Twin Strike), encounter powers with several
+uses show pips (Majestic Word 2), the sheets' action types include `reaction`
+(Fox's Cunning), Second Wind is `details.secondWind`. Three layouts, each dark
+(ranger) and light (bard): 1 everything in view, power cards in a row;
+2 a low band with the tab opening upward; 3 the sheet's header, powers in
+At-Will / Encounter / Daily / Basic columns.

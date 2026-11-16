@@ -42,6 +42,45 @@ function movedForward(prior, current) {
   return (current.turn ?? 0) > (prior.turn ?? 0);
 }
 
+/**
+ * Turns ending and starting, worked out from the encounter's own updates (v0.41.1: the
+ * `combatTurnChange` hook did not arrive in the owner's world, so nothing here depends on it).
+ * The last known position of every encounter is remembered; when its round or turn changes and it
+ * moved forward, the listeners hear which combatant's turn ended and whose began.
+ * onTurns(feature, { end(combatant), start(combatant) }): active GM's client only.
+ */
+const positions = new Map(); // combat id → { round, turn, combatantId }
+const positionOf = combat => ({ round: combat.round ?? 0, turn: combat.turn ?? 0, combatantId: combat.combatant?.id ?? null });
+
+function onTurns(feature, { end, start }) {
+  for (const combat of game.combats ?? []) if (!positions.has(combat.id)) positions.set(combat.id, positionOf(combat));
+  const key = `turns-${feature.id}`;
+  const seen = new Map(); // combat id → last position this feature acted on
+  feature.on("updateCombat", (combat, change) => {
+    if (!("turn" in (change ?? {})) && !("round" in (change ?? {}))) return;
+    const current = positionOf(combat);
+    const prior = seen.get(combat.id) ?? positions.get(combat.id) ?? combat.previous ?? null;
+    seen.set(combat.id, current);
+    // The shared memory moves on after every listener of this update has read it.
+    queueMicrotask(() => positions.set(combat.id, current));
+    // CONFIG.debug.lucd20Rules = true in the console logs what each encounter update is taken to be.
+    if (CONFIG.debug?.lucd20Rules) console.log(`${MODULE_ID} | ${key}`, { change, prior, current, activeGM: game.user.isActiveGM, started: combat.started });
+    if (!game.user.isActiveGM || !combat.started) return;
+    const first = !prior || (prior.round ?? 0) < 1; // the encounter has just begun: a turn starts, none ends
+    if (!first && !movedForward(prior, current)) return;
+    const run = (handler, id, what) => {
+      const combatant = id ? combat.combatants.get(id) : null;
+      if (handler && combatant?.actor) Promise.resolve(handler(combatant)).catch(err => error(`${key}: ${what} failed.`, err));
+    };
+    if (!first && prior.combatantId !== current.combatantId) run(end, prior.combatantId, "turn end");
+    run(start, current.combatantId, "turn start");
+  });
+  feature.on("deleteCombat", combat => {
+    positions.delete(combat.id);
+    seen.delete(combat.id);
+  });
+}
+
 defineFeature({
   id: "pf2eFrightened",
   category: "pf2e",
@@ -51,14 +90,9 @@ defineFeature({
   defaultEnabled: true,
 
   enable(feature) {
-    feature.on("combatTurnChange", async (combat, prior, current) => {
-      if (!game.user.isActiveGM || !movedForward(prior, current)) return;
-      const actor = combat.combatants.get(prior.combatantId)?.actor;
-      if (!actor?.hasCondition?.("frightened")) return;
-      try {
-        await actor.decreaseCondition("frightened");
-      } catch (err) {
-        error("Could not reduce Frightened.", err);
+    onTurns(feature, {
+      async end(combatant) {
+        if (combatant.actor.hasCondition?.("frightened")) await combatant.actor.decreaseCondition("frightened");
       }
     });
   }
@@ -156,11 +190,7 @@ defineFeature({
 
   enable(feature) {
     feature.on("createItem", onConditionCreated);
-    feature.on("combatTurnChange", (combat, prior, current) => {
-      if (!game.user.isActiveGM || !movedForward(prior, current)) return;
-      const combatant = combat.combatants.get(current.combatantId);
-      if (combatant?.actor) remindRetch(combatant.actor, combatant.token).catch(err => error("Retch reminder failed.", err));
-    });
+    onTurns(feature, { start: combatant => remindRetch(combatant.actor, combatant.token) });
     feature.on("renderChatMessageHTML", (message, html) => {
       for (const button of html.querySelectorAll?.("[data-lucd20-retch]") ?? []) {
         button.addEventListener("click", event => {
@@ -245,7 +275,13 @@ async function onShoveMessage(message) {
   const squares = shoveSquares(message);
   if (!squares.length) return void ui.notifications.info(L("ShoveNowhere"));
   const target = tokenOf(contextOf(message).target.token);
-  const choice = await pickSquare(squares, { hint: L(outcome === "criticalSuccess" ? "ShoveHintCritical" : "ShoveHint", { name: target?.name ?? "" }) });
+  const size = target.parent?.grid?.size ?? canvas.grid.size;
+  const choice = await pickSquare(squares, {
+    hint: L(outcome === "criticalSuccess" ? "ShoveHintCritical" : "ShoveHint", { name: target?.name ?? "" }),
+    cancel: L("Cancel"),
+    // Hovering a square shows the push: an arrow from where the target stands.
+    from: { x: target.x + (target.width * size) / 2, y: target.y + (target.height * size) / 2 }
+  });
   if (!choice) return;
   try {
     await executeAsGM("pf2eRules.shove", { messageId: message.id, x: choice.x, y: choice.y });

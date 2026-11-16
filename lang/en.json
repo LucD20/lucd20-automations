@@ -722,7 +722,7 @@
       },
       "pf2eShove": {
         "Name": "Shove",
-        "Hint": "When a Shove succeeds, the one who rolled chooses on the map where the target goes: green squares 5 feet away, and on a critical success also blue squares 10 feet away, always away from the shover. Right-click to cancel."
+        "Hint": "When a Shove succeeds, the one who rolled chooses on the map where the target goes: green squares 5 feet away, and on a critical success also blue squares 10 feet away, always away from the shover. Hovering a square shows the push; Cancel or Escape calls it off."
       },
       "pf2eTrip": {
         "Name": "Trip",
@@ -1614,13 +1614,14 @@
       "RetchButton": "Fortitude DC {dc}",
       "NotYours": "That is not your character.",
       "NotSickened": "{name} is no longer sickened.",
-      "ShoveHint": "Shove: click a green square to push {name}. Right-click to cancel.",
-      "ShoveHintCritical": "Shove: click a green or blue square to push {name}. Right-click to cancel.",
+      "ShoveHint": "Shove: click a green square to push {name}.",
+      "ShoveHintCritical": "Shove: click a green or blue square to push {name}.",
       "ShoveNowhere": "Shove: there is nowhere to push the target.",
       "ShoveStale": "That Shove can no longer be resolved.",
       "ShoveDone": "That Shove was already resolved.",
       "Off": "That automation is switched off.",
-      "TripDamage": "Trip (critical success): damage to {name}"
+      "TripDamage": "Trip (critical success): damage to {name}",
+      "Cancel": "Cancel"
     }
   },
   "DND4EAUTO": {

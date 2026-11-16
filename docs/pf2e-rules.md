@@ -32,6 +32,11 @@ Standing decisions:
 - At the end of a creature's turn, its Frightened value goes down by 1.
 - Built: the owner checked that PF2e 8.7 does not do this by itself. Only when
   the encounter moves forward (not when the GM steps a turn back).
+- v0.41.1: the first build listened to Foundry's `combatTurnChange` hook and
+  nothing happened in the owner's world (the Sickened reminder used it too).
+  Turn ends and starts are now worked out from the encounter's own updates
+  (`updateCombat`), remembering each encounter's last position.
+  `CONFIG.debug.lucd20Rules = true` logs every update as it is read.
 
 ## 2. Sickened
 
@@ -76,6 +81,9 @@ Standing decisions:
   under another creature are not offered. The GM's client checks the choice
   and moves the target, once per Shove. Following the target with a Stride is
   not automated.
+- v0.41.1 (owner): a right click no longer cancels (it drags the map); the
+  bar sits near the bottom, above the macro bar, with a Cancel button; Escape
+  cancels; hovering a square draws an arrow from the target to it.
 
 ## 4. Trip
 

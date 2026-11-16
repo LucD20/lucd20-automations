@@ -39,12 +39,15 @@ const assert = require("assert");
     Object.defineProperty(game.messages, "contents", { get() { return this; } });
     const post = (id, pf2e, extra = {}) => { const m = { id, author: { id: extra.author ?? "u1" }, timestamp: Date.now(), rolls: [{}], flags: { pf2e }, getFlag(ns, k) { return this.flags[ns]?.[k]; }, async setFlag(ns, k, v) { (this.flags[ns] ??= {})[k] = v; } }; game.messages.push(m); return m; };
     // --- encounter ---
-    const combat = { combatants: { get: id => ({ amiri: { actor: amiri, token: null }, ogre: { actor: ogre, token: null } })[id] } };
-    const turn = (from, to) => Hooks.callAll("combatTurnChange", combat, from, to);
+    // The encounter as Foundry updates it: the module works turns out from these updates alone.
+    const combat = { id: "c1", started: true, round: 0, turn: 0, combatant: null, combatants: { get: id => ({ amiri: { id: "amiri", actor: amiri, token: null }, ogre: { id: "ogre", actor: ogre, token: null } })[id] } };
+    const turn = (from, to) => { const change = {}; if (to.round !== combat.round) change.round = to.round; change.turn = to.turn; Object.assign(combat, { round: to.round, turn: to.turn, combatant: { id: to.combatantId } }); Hooks.callAll("updateCombat", combat, change, {}, "u1"); };
     const settle = () => new Promise(res => setTimeout(res, 30));
     const out = {};
 
-    // 1. Frightened: down by 1 at the end of the creature's own turn; not when the GM steps back.
+    // 1. Frightened: down by 1 at the end of the creature's own turn; not when the encounter begins or the GM steps back.
+    turn(null, { round: 1, turn: 0, combatantId: "amiri" }); await settle();   // the encounter begins: Amiri's turn starts, nothing ends
+    out.frightenedAtStart = amiri.cond.frightened;
     turn({ round: 1, turn: 0, combatantId: "amiri" }, { round: 1, turn: 1, combatantId: "ogre" }); await settle();
     out.frightened = [amiri.cond.frightened];
     turn({ round: 1, turn: 1, combatantId: "ogre" }, { round: 1, turn: 0, combatantId: "amiri" }); await settle();   // back: nothing ends
@@ -70,7 +73,10 @@ const assert = require("assert");
     out.levelDCs = [mod.levelDC(-1), mod.levelDC(0), mod.levelDC(1), mod.levelDC(5), mod.levelDC(20), mod.levelDC(25)];
     // Start of the sickened creature's turn: the line and its button.
     (ogre.items.sickened.flags[M] ??= {}).retch = { dc: 21 };
-    turn({ round: 2, turn: 0, combatantId: "amiri" }, { round: 2, turn: 1, combatantId: "ogre" }); await settle();
+    __chat.length = 0;
+    turn(null, { round: 3, turn: 0, combatantId: "amiri" }); await settle();   // Amiri is not sickened: no line
+    out.noLineForOthers = __chat.length;
+    turn(null, { round: 3, turn: 1, combatantId: "ogre" }); await settle();
     const card = __chat.at(-1);
     out.reminder = [card.content.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim(), card.speaker.alias, card.whisper ?? "public"];
     const host = document.createElement("div"); host.innerHTML = card.content; document.body.append(host);
@@ -114,7 +120,18 @@ const assert = require("assert");
     out.cheat = await CONFIG.queries[`${M}.gm`]({ type: "pf2eRules.shove", payload: { messageId: "shove3", x: 500, y: 300 }, senderId: "u1" }).then(() => "moved", e => e.message); // 10 ft on a plain success
     Hooks.callAll("createChatMessage", cheat); await settle();
     window.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true })); await settle();
+    out.rightClick = !!document.querySelector(".lucd20-pick-bar");   // a right click is for dragging the map: still choosing
+    const arrow = () => canvas.interface.children[0].children.at(-1).geometry.graphicsData.length;
+    window.dispatchEvent(new MouseEvent("pointermove", { clientX: 550, clientY: 450, bubbles: true }));   // over the square straight away
+    out.hoverArrow = [arrow() > 0];
+    window.dispatchEvent(new MouseEvent("pointermove", { clientX: 950, clientY: 950, bubbles: true }));   // off the squares
+    out.hoverArrow.push(arrow() > 0);
+    out.barButton = document.querySelector(".lucd20-pick-bar button").textContent.trim();
+    document.querySelector(".lucd20-pick-bar button").click(); await settle();
     out.cancelled = [!!document.querySelector(".lucd20-pick-bar"), cheat.flags[M]?.shoved ?? false];
+    Hooks.callAll("createChatMessage", post("shove4", { context: { type: "skill-check", options: ["action:shove"], outcome: "success", origin: { token: "Scene.s.Token.amiri" }, target: { token: "Scene.s.Token.ogre" } } })); await settle();
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true })); await settle();
+    out.escape = !!document.querySelector(".lucd20-pick-bar");
 
     // 4. Trip.
     const rolls = [];
@@ -130,13 +147,15 @@ const assert = require("assert");
     // Off without a reload.
     for (const f of ["pf2eFrightened", "pf2eSickened", "pf2eShove", "pf2eTrip"]) await game.settings.set(M, `${f}_enabled`, false);
     amiri.cond.frightened = 2; delete ogre.cond.prone; ogre.log.length = 0; __chat.length = 0;
-    turn({ round: 3, turn: 0, combatantId: "amiri" }, { round: 3, turn: 1, combatantId: "ogre" });
+    turn(null, { round: 4, turn: 0, combatantId: "amiri" }); turn(null, { round: 4, turn: 1, combatantId: "ogre" });
     Hooks.callAll("createChatMessage", post("trip-off", { context: { type: "skill-check", options: ["action:trip"], outcome: "success", origin: { token: "Scene.s.Token.amiri" }, target: { token: "Scene.s.Token.ogre" } } })); await settle();
     out.off = [amiri.cond.frightened, ogre.log.join(), __chat.length];
     return out;
   });
   console.log(JSON.stringify(r, null, 1));
+  assert.strictEqual(r.frightenedAtStart, 2, "1. nothing ends when the encounter begins");
   assert.deepStrictEqual(r.frightened, [1, 1, 0], "1. Frightened: −1 at the end of the creature's own turn only");
+  assert.strictEqual(r.noLineForOthers, 0, "2. no retch line for a creature that is not sickened");
   assert.deepStrictEqual(r.fromSave, [{ dc: 21, source: "save" }, "Rules text. Retch: Fortitude DC 21 (the DC of the save)"], "2. the DC of the save the creature just rolled, noted on the condition");
   assert.deepStrictEqual([r.fromSpell, r.fromLevel, r.fromNothing], [{ dc: 23, source: "spell" }, { dc: 20, source: "level" }, { dc: 18, source: "own" }], "2. spell DC, else level-based DC of the source, else of the creature");
   assert.deepStrictEqual(r.levelDCs, [13, 14, 15, 20, 40, 50]);
@@ -147,9 +166,10 @@ const assert = require("assert");
   assert.deepStrictEqual(r.shoveDiagonal, ["-1,-1:1", "-1,0:1", "0,-1:1"], "3. diagonal: the far corner");
   assert.deepStrictEqual(r.shoveDiagonalCrit, ["-1,-2:2", "-2,-1:2", "-2,0:2", "0,-2:2"], "3. diagonal, critical: two above and two to the side, not the corner");
   assert.deepStrictEqual(r.offered, ["3,4*", "4,3*", "5,3*", "5,4"].sort(), "3. on the map: no square behind the wall (column 6 and 7) or under the bystander (4,4)");
-  assert.deepStrictEqual([r.bar, r.highlights, r.stillChoosing], ["Shove: click a green or blue square to push ogre. Right-click to cancel.", 4, true]);
+  assert.deepStrictEqual([r.bar, r.highlights, r.stillChoosing], ["Shove: click a green or blue square to push ogre. Cancel", 5, true]);
   assert.deepStrictEqual(r.moved, [["ogre", 5, 3], false, 0, true], "3. the click moves the target; the highlights go");
-  assert.deepStrictEqual([r.twice, r.failure, r.cheat, r.cancelled], ["That Shove was already resolved.", false, "That Shove can no longer be resolved.", [false, false]], "3. once per Shove; nothing on a failure; a square that was not offered is refused; right-click cancels");
+  assert.deepStrictEqual([r.twice, r.failure, r.cheat, r.cancelled], ["That Shove was already resolved.", false, "That Shove can no longer be resolved.", [false, false]], "3. once per Shove; nothing on a failure; a square that was not offered is refused; the Cancel button calls it off");
+  assert.deepStrictEqual([r.rightClick, r.hoverArrow, r.barButton, r.escape], [true, [true, false], "Cancel", false], "3. a right click does not cancel; hovering a square draws the push; Escape cancels");
   assert.deepStrictEqual(r.trip, { success: ["", "+prone", ""], criticalSuccess: ["", "+prone", "1d6[bludgeoning] | Trip (critical success): damage to Ogre | Amiri"], failure: ["", "", ""], criticalFailure: ["+prone", "", ""] }, "4. Trip by degree of success");
   assert.strictEqual(r.alreadyProne, "", "4. a creature that is already Prone is left as it is");
   assert.deepStrictEqual(r.off, [2, "", 0], "switched off without a reload");

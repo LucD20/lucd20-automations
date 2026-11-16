@@ -254,7 +254,7 @@ async function setup(page, userId) {
   });
   await page.waitForTimeout(150);
   // Ezren's token: the ring's subject picture, at the token's scale (1.5), standing out of its circle.
-  assert.deepStrictEqual(await page.$eval(`${row("Dogslicer")} .ll-tokens .lucd20-loot-portrait:nth-child(2)`, t => [t.classList.contains("is-pop"), t.querySelector("img").getAttribute("src"), t.style.getPropertyValue("--pop").trim()]), [true, "ezren-subject.webp", "1.5"]);
+  assert.deepStrictEqual(await page.$eval(`${row("Dogslicer")} .ll-tokens .lucd20-loot-portrait:nth-child(2)`, t => [t.classList.contains("is-pop"), t.querySelector("img").getAttribute("src"), t.style.getPropertyValue("--pop").trim()]), [true, "ezren-subject.webp", "1.73"]);
   assert.deepStrictEqual(await rowState("Dogslicer"), { cls: "is-contested", buttons: ["Claimed, waiting…", "Party Stash"], tokens: ["Amiri (me)", "Ezren"], stash: "1", stashTip: "Party Stash: Cara" }, "everyone sees who asked");
   assert.deepStrictEqual((await rowState("Healing Potion")), { cls: "is-claimed", buttons: ["Claimed, waiting…", "Party Stash"], tokens: ["Amiri (me)", "Ezren"], stash: null, stashTip: null }, "one potion each: no contest");
   assert.deepStrictEqual((await rowState("Ring of Climbing")).stashTip, "Party Stash: Cara, Bruno");
@@ -277,7 +277,7 @@ async function setup(page, userId) {
   assert.deepStrictEqual(await page.$$eval(`${C} .ll-contender strong`, e => e.map(x => x.textContent)), ["Amiri", "Ezren"]);
   assert.ok(await page.$$eval(`${C} .ll-contender`, e => (() => { const [name, pic] = [e[1].querySelector("strong").getBoundingClientRect(), e[1].querySelector("img").getBoundingClientRect()]; const mid = c => { const r = c.querySelector(".lucd20-loot-portrait").getBoundingClientRect(); return Math.round(r.top + r.height / 2); };
     const frame = e[1].querySelector(".lucd20-loot-portrait").getBoundingClientRect();
-    return pic.top >= name.bottom && mid(e[0]) === mid(e[1]) && Math.round(frame.width) === 64 && Math.round(pic.width) === Math.round((frame.width - 4) * 1.5); })()), "names above the pictures; a scaled-up token does not cover them, the circles line up and stay one size, and the art is drawn at the token's scale (1.5; the ring subject's 1.2 is not multiplied in)");
+    return pic.top >= name.bottom && mid(e[0]) === mid(e[1]) && Math.round(frame.width) === 64 && Math.abs(pic.width - (frame.width - 4) * 1.5 * 1.15) < 1.5; })()), "names above the pictures; a scaled-up token does not cover them, the circles line up and stay one size, and the art is drawn at the token's scale (1.5; the ring subject's 1.2 is not multiplied in)");
   assert.deepStrictEqual(await page.$$eval(`${C} [data-action="award"]`, e => e.map(x => x.textContent.trim())), ["Amiri", "Ezren", "Party Stash"]);
   await page.screenshot({ path: `${out}/p11-who-gets-it.png` });
   await page.click(`${C} [data-action="sheet"]`);

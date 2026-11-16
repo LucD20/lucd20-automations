@@ -557,6 +557,8 @@ function tokenImage(token, actor) {
  * A token's picture as the token shows it: the ring's subject when it has one, and the token's own
  * scale, so art drawn to stand out of its frame does so here too instead of shrinking into the circle.
  */
+const RING_FIT = 1.15;
+
 function tokenArt(token, actor) {
   const ring = token?.ring?.enabled ? token.ring : null;
   const subject = ring?.subject?.texture;
@@ -564,8 +566,10 @@ function tokenArt(token, actor) {
   // With a ring, the token's scale and the ring subject's scale are one setting kept in step (PF2e
   // writes the same number to both: Amiri has 2 and 2), so they are not multiplied. The frame keeps
   // its size and only the art grows, standing out past the frame.
+  // RING_FIT: Foundry draws a ring's subject a little larger than the token square. Measured on the
+  // owner's map (PF2e iconics at scale 1 and 2, art size against the ring): about 1.15.
   const own = Math.abs(Number(token?.texture?.scaleX) || 1);
-  const scale = ring ? Math.max(own, Number(ring.subject?.scale) || 1) : own;
+  const scale = ring ? Math.max(own, Number(ring.subject?.scale) || 1) * RING_FIT : own;
   return { src, scale: Math.min(Math.max(scale, 1), 2.5) };
 }
 

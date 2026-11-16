@@ -561,11 +561,12 @@ function tokenArt(token, actor) {
   const ring = token?.ring?.enabled ? token.ring : null;
   const subject = ring?.subject?.texture;
   const src = subject && !/\.(webm|mp4|m4v|ogv)$/i.test(subject) ? subject : tokenImage(token, actor);
-  // As Foundry draws a token: its scale sizes the whole token, frame included; the ring's subject scale
-  // then sizes the art inside that frame (above 1 it stands out past the frame).
-  const frame = Math.min(Math.max(Math.abs(Number(token?.texture?.scaleX) || 1), 0.5), 1.75);
-  const art = Math.min(Math.max(ring ? Number(ring.subject?.scale) || 1 : 1, 1), 2.2 / frame);
-  return { src, scale: Math.min(Math.max(frame * art, 1), 2), frame, subject: art };
+  // With a ring, the token's scale and the ring subject's scale are one setting kept in step (PF2e
+  // writes the same number to both: Amiri has 2 and 2), so they are not multiplied. The frame keeps
+  // its size and only the art grows, standing out past the frame.
+  const own = Math.abs(Number(token?.texture?.scaleX) || 1);
+  const scale = ring ? Math.max(own, Number(ring.subject?.scale) || 1) : own;
+  return { src, scale: Math.min(Math.max(scale, 1), 2.5) };
 }
 
 /**
@@ -594,10 +595,7 @@ function portraitHTML(img, extra = "", tooltip = "", scale = 1, frame = 1) {
 }
 
 function actorPortrait(actor, extra = "small", tooltip = actor?.name ?? "") {
-  const { src, scale, frame, subject } = tokenArt(actor?.prototypeToken, actor);
-  // Small pictures keep one size (rows stay aligned) and only the art grows. Big ones show the token
-  // as it is on the map: a bigger token has a bigger frame, and its art stands out of it.
-  if (extra.includes("large")) return portraitHTML(src, extra, tooltip, subject, frame);
+  const { src, scale } = tokenArt(actor?.prototypeToken, actor);
   return portraitHTML(src, extra, tooltip, scale);
 }
 

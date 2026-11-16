@@ -1752,3 +1752,10 @@ module's basic actions appear in the Basic row of their tab while in combat.
   players list in its corner, the HUD under windows and above the canvas, the
   right edge against the collapsed and the open sidebar, `getAttackBonus()`
   numbers matching the sheet, `rollDeathSave` and `actionPoint` from the HUD.
+
+**v0.43.1:** in the owner's world the HUD did not draw: a power's `keyWords`
+was not a list (`.filter(...).join is not a function`), which stopped the
+whole HUD, leaving only the hotbar and players list in the corner. Keywords
+are now read from a list, Set, string or object of flags (plus
+`keywordsCustom`), and a power whose data cannot be read is skipped (warning in
+the console) instead of stopping the HUD.

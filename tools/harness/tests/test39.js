@@ -25,6 +25,8 @@ const assert = require("assert");
     out.ranges = [{ rangeType: "weapon", weaponType: "meleeRanged" }, { rangeType: "range", rangePower: "10" }, { rangeType: "closeBurst", area: "5" },
       { rangeType: "areaBurst", area: "1", rangePower: "10" }, { rangeType: "personal" }].map(data.rangeInfo).map(x => `${x.icon}:${x.text}`);
     out.tabs = ["standard", "reaction", "interrupt", "opportunity", "none", "free"].map(data.tabFor);
+    // keyWords as the owner's world has them: not always a list (v0.43.1).
+    out.keywords = [{ keyWords: ["Martial", "Weapon", ""] }, { keyWords: "Arcane, Fire" }, { keyWords: new Set(["Primal"]) }, { keyWords: { fire: true, cold: false } }, { keyWords: null, keywordsCustom: "Charm" }, {}].map(data.keywordsOf);
 
     // ---- Foundry's own elements the HUD moves ----
     document.body.insertAdjacentHTML("beforeend", `
@@ -35,6 +37,9 @@ const assert = require("assert");
     // ---- the ranger, from the owner's sheet ----
     const power = (id, name, sys, bonus = null) => ({ id, name, type: "power", system: { prepared: true, uses: { value: null, max: "" }, attack: { isAttack: false }, keyWords: [], ...sys },
       getAttackBonus: async () => bonus, sheet: { render() { out.itemSheet = name; } } });
+    // A power with broken data: skipped, the HUD still draws (v0.43.1).
+    const odd = power("px", "Odd Power", { actionType: "standard", useType: "atwill" });
+    Object.defineProperty(odd.system, "trigger", { get() { throw new Error("broken data"); } });
     const items = [
       power("p1", "Ranger 01-Twin Strike", { actionType: "standard", useType: "atwill", powerType: "class", rangeType: "weapon", weaponType: "meleeRanged", attack: { isAttack: true, def: "ac" } }, 6),
       power("p2", "Ranger 01-Nimble Strike", { actionType: "standard", useType: "atwill", powerType: "class", rangeType: "weapon", weaponType: "ranged", attack: { isAttack: true, def: "ac" } }, 6),
@@ -44,6 +49,7 @@ const assert = require("assert");
       power("p6", "Ranger-Hunter's Quarry", { actionType: "minor", useType: "atwill", powerType: "class", rangeType: "special" }),
       power("p7", "Elf Power-Elven Accuracy", { actionType: "free", useType: "encounter", powerType: "race", rangeType: "personal", uses: { value: 0, max: "1", per: "enc" } }),
       power("p8", "Ranger 01-Fox's Cunning", { actionType: "reaction", useType: "encounter", powerType: "class", rangeType: "weapon", weaponType: "meleeRanged", uses: { value: 1, max: "1", per: "enc" }, trigger: "An enemy makes a melee attack against you" }),
+      odd,
       power("p9", "Bard-Majestic Word", { actionType: "minor", useType: "encounter", powerType: "class", rangeType: "closeBurst", area: "5", uses: { value: 1, max: "2", per: "enc" } }),
       { id: "w1", name: "Longbow", type: "weapon", system: {} }
     ];
@@ -164,6 +170,7 @@ const assert = require("assert");
   console.log(JSON.stringify({ ...r, ...r3 }, null, 1));
   assert.deepStrictEqual(r.names, ["Twin Strike", "Hunter's Quarry", "Elven Accuracy", "Furious Assault", "Fate of the Void", "Majestic Word", "Warlock's Curse", "Ranged Basic Attack Heavy Thrown", "Wolf-Pack Tactics", "Precisão Élfica"], "names lose the compendium prefix, and only that");
   assert.deepStrictEqual(r.ranges, ["meleeRanged:W", "ranged:10", "close:burst 5", "area:burst 1 in 10", "personal:"]);
+  assert.deepStrictEqual(r.keywords, ["Martial, Weapon", "Arcane, Fire", "Primal", "fire", "Charm", ""], "keywords from any shape");
   assert.deepStrictEqual(r.tabs, ["standard", "triggered", "triggered", "triggered", "free", "free"]);
   assert.deepStrictEqual(r.mounted, [true, true, true, true], "mounted, dark, hotbar and players list moved in");
   assert.strictEqual(r.plate, "Aegustarion Eng Elf Ranger 1");

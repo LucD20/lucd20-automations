@@ -107,6 +107,20 @@ export function conditionsOf(actor) {
 	return out;
 }
 
+/**
+ * A power's keywords as text. dnd4e keeps them as a list on most powers, but as a Set, a string
+ * or an object of flags on others (owner's world, v0.43.1).
+ */
+export function keywordsOf(p = {}) {
+	const k = p.keyWords;
+	let list = [];
+	if (typeof k === "string") list = k.split(/[,;]/);
+	else if (k && typeof k[Symbol.iterator] === "function") list = [...k];
+	else if (k && typeof k === "object") list = Object.entries(k).filter(([, v]) => v === true).map(([key]) => key).concat(Object.values(k).filter((v) => typeof v === "string"));
+	const custom = typeof p.keywordsCustom === "string" ? p.keywordsCustom.split(/[,;]/) : [];
+	return [...list, ...custom].map((v) => String(v ?? "").trim()).filter(Boolean).join(", ");
+}
+
 /** The HUD's data for one actor. `bonusOf(item)` gives an attack bonus (or null). */
 export async function buildModel(actor, { bonusOf = async () => null, defenceMods = null } = {}) {
 	const s = actor.system ?? {};
@@ -117,18 +131,23 @@ export async function buildModel(actor, { bonusOf = async () => null, defenceMod
 	const powers = [];
 	for (const item of actor.items ?? []) {
 		if (item.type !== "power") continue;
-		const p = item.system ?? {};
-		if (p.prepared === false) continue;
-		const uses = usesOf(p);
-		let bonus = null;
-		if (p.attack?.isAttack) {
-			try { bonus = await bonusOf(item); } catch (err) { bonus = null; }
+		// One odd power must not stop the HUD (v0.43.1: keyWords was not a list on the owner's sheets).
+		try {
+			const p = item.system ?? {};
+			if (p.prepared === false) continue;
+			const uses = usesOf(p);
+			let bonus = null;
+			if (p.attack?.isAttack) {
+				try { bonus = await bonusOf(item); } catch (err) { bonus = null; }
+			}
+			powers.push({
+				id: item.id, name: cleanName(String(item.name ?? "")), fullName: String(item.name ?? ""), tab: tabFor(p.actionType), row: rowFor(p),
+				range: rangeInfo(p), attack: attackText(p, bonus), uses, used: !!uses && uses.left < 1,
+				trigger: typeof p.trigger === "string" ? p.trigger : "", keywords: keywordsOf(p),
+			});
+		} catch (err) {
+			console.warn("lucd20-automations | 4e HUD: power skipped", item.name, err);
 		}
-		powers.push({
-			id: item.id, name: cleanName(item.name), fullName: item.name, tab: tabFor(p.actionType), row: rowFor(p),
-			range: rangeInfo(p), attack: attackText(p, bonus), uses, used: !!uses && uses.left < 1,
-			trigger: p.trigger || "", keywords: (p.keyWords ?? []).filter(Boolean).join(", "),
-		});
 	}
 	powers.sort((a, b) => a.name.localeCompare(b.name));
 	return {

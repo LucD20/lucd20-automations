@@ -180,7 +180,9 @@ export async function draw() {
 		root.querySelector(".h4-dock").innerHTML = "";
 		return placeAll();
 	}
-	const model = await buildModel(actor, { bonusOf: (item) => item.getAttackBonus?.() ?? null, defenceMods: defenceModifiers(actor) });
+	let mods = null;
+	try { mods = defenceModifiers(actor); } catch (err) { mods = null; }
+	const model = await buildModel(actor, { bonusOf: (item) => item.getAttackBonus?.() ?? null, defenceMods: mods });
 	if (seq !== st.seq || !st.root) return;
 	st.actor = actor;
 	st.model = model;

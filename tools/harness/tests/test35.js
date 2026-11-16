@@ -108,7 +108,8 @@ const M = "lucd20-automations";
   await page.waitForSelector(".lucd20-loot-split .ll-share");
   assert.deepStrictEqual(await page.$$eval(".lucd20-loot-split .ll-share", e => e.map(x => `${x.querySelector(".who").textContent} ${[...x.querySelectorAll(".ll-coin")].map(c => c.textContent).join(" ")}`)), ["Dorn 15 gp 3 sp 4 cp", "Kara 15 gp 3 sp 4 cp", "Party Stash 1 gp 1 sp 1 cp"]);
   await page.click('.lucd20-loot-split [data-action="split"]');
-  await page.waitForFunction(() => __chat.length >= 4);
+  await page.waitForFunction(() => __chat.length >= 1 && __A.kara.flags["lucd20-automations"]?.ledger?.length);
+  await page.waitForTimeout(150);
   const split = await page.evaluate(() => { const stash = game.actors.find(a => a.getFlag("lucd20-automations", "partyStash")); window.__stash = stash;
     return { kara: __A.kara.system.currency, dorn: __A.dorn.system.currency, stash: stash.system.currency, stashType: stash.type, pile: __pile.system.currency, chat: __chat.map(c => `${c.text} → ${c.whisper.join(",") || "all"}`),
       karaLog: __A.kara.flags["lucd20-automations"].ledger.map(e => [e.kind, e.delta, e.total.gp, e.reason, e.user]) }; });
@@ -116,14 +117,12 @@ const M = "lucd20-automations";
   assert.deepStrictEqual([split.kara, split.dorn, split.stash, split.pile], [{ ad: 0, pp: 0, gp: 25, sp: 3, cp: 4 }, { ad: 0, pp: 0, gp: 20, sp: 7, cp: 4 }, { ad: 0, pp: 0, gp: 1, sp: 1, cp: 1 }, { ad: 0, pp: 0, gp: 0, sp: 0, cp: 0 }]);
   assert.strictEqual(split.stashType, "NPC");
   assert.deepStrictEqual(split.karaLog, [["coins", { gp: 15, sp: 3, cp: 4 }, 25, "split", "u1"]]);
-  assert.ok(split.chat.includes("Dorn: +15 gp, +3 sp, +4 cp (now 20 gp 7 sp 4 cp) coin split · Gamemaster → u1,p2"), "a character's coins: whispered to the GM and the owner");
-  assert.ok(split.chat.includes("Party Stash: +1 gp, +1 sp, +1 cp (now 1 gp 1 sp 1 cp) coin split · Gamemaster → all"), "the stash's coins: to everyone");
-  assert.ok(split.chat.some(c => c.startsWith("Coins split: Dorn and Kara each get 15 gp 3 sp 4 cp. 1 gp 1 sp 1 cp went to the Party Stash.")));
+  assert.deepStrictEqual(split.chat, ["Coins split: Dorn and Kara each get 15 gp 3 sp 4 cp. 1 gp 1 sp 1 cp went to the Party Stash. → all"], "a split is one chat line; the ledgers still record every change");
 
   // ---- A change typed on the sheet by the player is tracked the same way ----
   await page.evaluate(async () => { __chat.length = 0; window.__actingUser = "p1"; await __A.kara.update({ "system.currency.gp": 13, "system.currency.sp": 5 }); window.__actingUser = null; await __A.orc.update({ "system.currency.gp": 99 }); });
   await page.waitForFunction(() => __chat.length >= 1);
-  assert.deepStrictEqual(await page.evaluate(() => [__chat.map(c => `${c.text} → ${c.whisper.join(",")}`), __A.kara.flags["lucd20-automations"].ledger.length]), [["Kara: −12 gp, +2 sp (now 13 gp 5 sp 4 cp) Alice → u1,p1"], 2], "who did it is named; NPCs are not tracked");
+  assert.deepStrictEqual(await page.evaluate(() => [__chat.map(c => `${c.text} → ${c.whisper.join(",")}`), __A.kara.flags["lucd20-automations"].ledger.length]), [["Kara: −12 gp, +2 sp (now 13 gp 5 sp 4 cp) Alice → u1,p1"], 2], "any other change: whispered to the GM and the owner, naming who did it; NPCs are not tracked");
 
   // ---- Items to the stash, then the Party Stash window ----
   await page.evaluate(async () => { __chat.length = 0; await __stash.createEmbeddedDocuments("Item", [{ name: "Sunrod", type: "loot", system: { quantity: 4 } }, { name: "Amulet of Protection +1", type: "equipment", system: { quantity: 1, level: 1 } }]); });
@@ -238,11 +237,12 @@ const M = "lucd20-automations";
   await page.click(`${S} [data-action="splitEven"]`);
   await page.waitForSelector(".lucd20-loot-split .ll-share");
   await page.click('.lucd20-loot-split [data-action="split"]');
-  await page.waitForFunction(() => __chat.length >= 4);
+  await page.waitForFunction(() => __A.kara.system.currency.gp === 23);
+  await page.waitForTimeout(150);
   const own = await page.evaluate(() => ({ stash: __stash.system.currency, kara: __A.kara.system.currency.gp, lines: __stash.flags["lucd20-automations"].ledger.length - __before, exists: game.actors.includes(__stash), chat: __chat.map(c => c.text) }));
   console.log(JSON.stringify(own));
   assert.deepStrictEqual([own.stash, own.kara, own.lines, own.exists], [{ ad: 0, pp: 0, gp: 1, sp: 1, cp: 1 }, 23, 1, true], "the odd coins stay in the stash (never deleted), in one ledger line");
-  assert.ok(own.chat.includes("Coins split: Dorn and Kara each get 10 gp.") && own.chat.includes("Party Stash: −20 gp (now 1 gp 1 sp 1 cp) coin split · Gamemaster"));
+  assert.deepStrictEqual(own.chat.filter(c => !c.startsWith("Party Stash: +20 gp")), ["Coins split: Dorn and Kara each get 10 gp."], "again one line (the +20 gp before it was the GM setting up the stash)");
 
   // ---- Off without a reload ----
   await set("dnd4ePartyStash_enabled", false); await set("dnd4eCoinLog_enabled", false);

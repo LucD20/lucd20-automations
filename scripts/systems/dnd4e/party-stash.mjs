@@ -22,7 +22,7 @@ import { lootApi, registerLootAdapter } from "../../features/loot-pile.js";
  *   itself is hidden from the Actors list.
  * - Coin tracking (feature dnd4eCoinLog): every change to a player character's coins or the stash's,
  *   however it was made, goes to that actor's ledger and to chat (whispered to the GM and the
- *   character's owners; the stash's to everyone). A "Coin log" button sits in each character sheet's
+ *   character's owners; the stash's to everyone). A coin split is one chat line for the whole split. A "Coin log" button sits in each character sheet's
  *   title bar.
  *
  * Ledgers are an array on the actor (flag `ledger`, newest last, 200 entries): { t, kind: "coins" |
@@ -193,6 +193,9 @@ async function onActorUpdate(actor, change, options, userId) {
 	if (!Object.keys(delta).length) return;
 	const reason = options?.[REASON] ?? null;
 	await addEntries(actor, [{ kind: "coins", delta, total: now, reason }], userId);
+	// A coin split already says who got what in one line of its own ("Coins split: …"): the ledgers
+	// still record each change, but chat does not repeat it per character.
+	if (reason === "split" && lootApi.announce) return;
 
 	const who = game.users.get(userId)?.name ?? "";
 	const why = reasonText(reason);

@@ -1629,3 +1629,8 @@ Code: `scripts/systems/dnd4e/party-stash.mjs`; test `test35.js`.
   routes (setting **Go around enemy tokens**, on: PF2e and D&D 4e do not let
   you walk through enemies); a diagonal step between two enemies is still
   allowed; the destination itself is never closed.
+
+**v0.40.1:** a coin split in D&D 4e is one chat line ("Coins split: …" or
+"Coins handed out: …"); the Coin Log no longer whispers a line per character
+for it (the ledgers still record each change). If the Loot Pile's "Announce in
+chat" is off there is no split line, so the per-character whispers stay.

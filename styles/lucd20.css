@@ -1639,8 +1639,7 @@ button.lucd20-lock.mode-lock {
 .lucd20-loot-app .lucd20-loot-portrait.is-pop { overflow: visible; }
 .lucd20-loot-app .lucd20-loot-portrait.is-pop img { object-fit: contain; transform: scale(var(--pop, 1)); }
 /* "Who gets it?": every picture sits centred in the same box, whatever its scale, so the circles line up. */
-.lucd20-loot-app .ll-contender-art { display: grid; place-items: center; width: 120px; height: 120px; }
-.lucd20-loot-app .ll-contender-art .lucd20-loot-portrait.is-pop img { transform: scale(min(var(--pop, 1), 1.8)); }
+.lucd20-loot-app .ll-contender-art { display: grid; place-items: center; width: 128px; height: 128px; }
 .lucd20-loot-app .ll-open-note { display: inline-flex; align-items: center; gap: 6px; padding: 0 6px; color: var(--ll-text-muted); font-size: 13px; }
 
 /* "Give to…" */
@@ -1659,7 +1658,7 @@ button.lucd20-lock.mode-lock {
 .lucd20-loot-app .ll-contenders { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 22px; padding: 4px 10px 14px; }
 .lucd20-loot-app .ll-contender { display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .lucd20-loot-app .ll-contenders { align-items: flex-end; }
-.lucd20-loot-app .ll-versus { align-self: flex-end; height: 120px; line-height: 120px; }
+.lucd20-loot-app .ll-versus { align-self: flex-end; height: 128px; line-height: 128px; }
 .lucd20-loot-app .ll-contender .sub { color: var(--ll-text-muted); font-size: 12px; }
 .lucd20-loot-app .lucd20-loot-portrait.large { width: 64px; height: 64px; border: 2px solid var(--ll-accent-border); }
 .lucd20-loot-app .ll-versus { color: var(--ll-text-muted); font-style: italic; }

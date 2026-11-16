@@ -562,7 +562,7 @@ function tokenArt(token, actor) {
   const subject = ring?.subject?.texture;
   const src = subject && !/\.(webm|mp4|m4v|ogv)$/i.test(subject) ? subject : tokenImage(token, actor);
   const scale = Math.abs(Number(token?.texture?.scaleX) || 1) * (ring ? Number(ring.subject?.scale) || 1 : 1);
-  return { src, scale: Math.min(Math.max(scale, 1), 2.5) };
+  return { src, scale: Math.min(Math.max(scale, 1), 2) };
 }
 
 /**

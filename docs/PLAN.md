@@ -1487,3 +1487,49 @@ Stash)**: what was claimed goes to the claimers, everything nobody claimed to
 the Party Stash, contested rows wait (it replaces the GM's "Send all to Party
 Stash"; a player's still only asks). The Coins row has **Party Stash** (all
 coins there). Take's tooltip is just "Shift+click: the whole stack".
+
+---
+
+## 13. Setting Presets — `settingPresets` (phase 34)
+
+*New, generic (any system).* GM only, on by default, in a new category
+**World Setup**. Asked for in the spirit of Forien's Copy Environment and
+BBMM: no setting things up by hand in every new world. Q104–Q114, all as
+recommended.
+
+- **Button** "Setting Presets" in the Settings sidebar, after Configure
+  Settings (DOM watcher).
+- **A preset holds** every stored world setting (core, system, every module,
+  registered here or not), the GM's own client settings (this browser's
+  storage, keybindings included; only keys of core, the system or an
+  installed module), the GM's per-user settings, and the active modules
+  (id, title, version). `format: "lucd20-setting-preset"`.
+- **Kept as a file** `lucd20-presets/<id>.json` in the Foundry user data, so
+  every world on the server lists it. If the server refuses the upload it is
+  kept in this world (setting `settingPresets_local`) and says so. Foundry
+  cannot delete files: a deleted preset's file is overwritten with a
+  `deleted` marker. **Export** (a download; by default without settings whose
+  name looks like a secret: key, token, secret, password…) and **Import**
+  (always as a new preset).
+- **View / Apply**: grouped by module (core, the system, then by title); a
+  loaded module's setting shows its real name with the raw key beside it;
+  value; "different" (with the value here on hover) / "same"; search; "only
+  differences"; tick boxes per setting and per module, starting with every
+  difference ticked.
+- **Never applied** (shown greyed): things that belong to their world
+  (`core.time`, `core.compendiumConfiguration`, stored ids and logs of this
+  module, `pf2e.activeParty`, anything named like a migration or schema
+  version), another game system's own settings, and per-user settings of a
+  module that is not running.
+- **Applying**: registered world and per-user settings go through
+  `game.settings.set`; world settings of modules that are not running are
+  written as Setting documents, ready for when the module starts; client
+  settings are written to this browser only. **Modules**: the preset's are
+  switched on; others are left on unless "also switch off modules that are
+  not in the preset" (never this module). Missing modules are listed. Ends
+  with "Reload now for everyone?".
+- Code: `scripts/features/setting-presets.js`. Test: `test34.js`.
+- (verify) in Foundry V14: that the GM can upload into `lucd20-presets/` on
+  the owner's server (Molten); how per-user settings are stored (read here as
+  Setting documents carrying a `user`); the button's place in the sidebar;
+  writing a Setting document for a module that is off.

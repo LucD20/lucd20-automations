@@ -2381,3 +2381,55 @@ li:has(> .lucd20-scene-nav) {
 /* "Looting the fallen…": shown to everyone but the GM who is choosing. */
 .lucd20-looting-banner { position: fixed; top: 22%; left: 50%; z-index: 90; display: flex; align-items: center; gap: 14px; padding: 14px 28px; border: 1px solid #a8702f; border-radius: 6px; background: rgba(18, 17, 23, 0.92); color: #efe6d8; font-family: Signika, "Segoe UI", sans-serif; font-size: 26px; font-weight: 700; letter-spacing: 0.02em; pointer-events: none; transform: translateX(-50%); box-shadow: 0 4px 22px rgba(0, 0, 0, 0.7); }
 .lucd20-looting-banner i { color: #ee9b3a; }
+
+/* Setting Presets --------------------------------------------------------- */
+/* Uses the Loot Pile tokens and buttons (the window carries .lucd20-loot-app). */
+.lucd20-loot-app .lp-body { min-height: 0; }
+.lucd20-loot-app .lp-new { display: flex; flex: none; gap: 8px; margin: 0; padding: 10px; border-bottom: 1px solid var(--ll-border); background: var(--ll-bg-header); }
+.lucd20-loot-app .lp-new input,
+.lucd20-loot-app .lp-tools input[type="search"] { flex: 1; min-width: 0; height: 32px; margin: 0; padding: 0 8px; border: 1px solid var(--ll-border-strong); border-radius: var(--ll-radius); background: var(--ll-bg-sunken); color: inherit; }
+.lucd20-loot-app .lp-scroll { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--ll-border-strong) transparent; }
+.lucd20-loot-app .lp-list,
+.lucd20-loot-app .lp-group ol { margin: 0; padding: 0; list-style: none; }
+.lucd20-loot-app .lp-preset { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-bottom: 1px solid var(--ll-border); }
+.lucd20-loot-app .lp-preset .who,
+.lucd20-loot-app .lp-head .who { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.lucd20-loot-app .lp-preset .who strong,
+.lucd20-loot-app .lp-head .who strong { font-size: 15px; overflow-wrap: anywhere; }
+.lucd20-loot-app .lp-body .sub { color: var(--ll-text-muted); font-size: 12px; }
+.lucd20-loot-app .lp-preset .actions { display: flex; flex: none; gap: 4px; }
+.lucd20-loot-app .lp-option { display: inline-flex; flex: none; align-items: center; gap: 6px; margin: 0; color: var(--ll-text-muted); font-size: 13px; cursor: pointer; }
+.lucd20-loot-app .lp-head { display: flex; flex: none; align-items: center; gap: 10px; padding: 8px 10px; border-bottom: 1px solid var(--ll-border); background: var(--ll-bg-header); }
+.lucd20-loot-app .lp-tools { display: flex; flex: none; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 8px 10px; border-bottom: 1px solid var(--ll-border); }
+.lucd20-loot-app .lp-links { color: var(--ll-text-muted); font-size: 13px; }
+.lucd20-loot-app .lp-links a { color: var(--ll-accent-text); cursor: pointer; }
+.lucd20-loot-app .lp-group { border-bottom: 1px solid var(--ll-border); }
+.lucd20-loot-app .lp-group > summary { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: var(--ll-bg-raised); cursor: pointer; list-style: none; }
+.lucd20-loot-app .lp-group > summary::-webkit-details-marker { display: none; }
+.lucd20-loot-app .lp-group > summary::before { width: 10px; color: var(--ll-text-muted); content: "▸"; }
+.lucd20-loot-app .lp-group[open] > summary::before { content: "▾"; }
+.lucd20-loot-app .lp-group > summary .count { margin-left: auto; color: var(--ll-text-muted); font-size: 12px; white-space: nowrap; }
+.lucd20-loot-app .lp-body code { padding: 0 4px; border: none; border-radius: 3px; background: var(--ll-bg-sunken); color: var(--ll-text-muted); font-size: 11px; overflow-wrap: anywhere; }
+.lucd20-loot-app .lp-row { display: flex; align-items: center; gap: 8px; min-height: 30px; padding: 3px 10px 3px 28px; border-top: 1px solid rgba(255, 255, 255, 0.04); }
+.lucd20-loot-app .lp-row[hidden],
+.lucd20-loot-app .lp-group[hidden] { display: none; }
+.lucd20-loot-app .lp-row.is-differs { background: rgba(238, 155, 58, 0.09); box-shadow: inset 3px 0 0 var(--ll-accent); }
+.lucd20-loot-app .lp-row.is-skip { opacity: 0.55; }
+.lucd20-loot-app .lp-scope { flex: none; width: 14px; color: var(--ll-text-muted); font-size: 11px; text-align: center; }
+.lucd20-loot-app .lp-row .who { display: flex; flex: 1 1 45%; flex-wrap: wrap; align-items: baseline; gap: 0 6px; min-width: 0; }
+.lucd20-loot-app .lp-row .name { font-weight: 600; overflow-wrap: anywhere; }
+.lucd20-loot-app .lp-value { flex: 1 1 35%; min-width: 0; overflow: hidden; font-family: monospace; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.lucd20-loot-app .lp-differs,
+.lucd20-loot-app .lp-same,
+.lucd20-loot-app .lp-skip { flex: none; width: 76px; font-size: 12px; text-align: right; }
+.lucd20-loot-app .lp-differs { color: var(--ll-accent-text); font-weight: 700; }
+.lucd20-loot-app .lp-same,
+.lucd20-loot-app .lp-skip { color: var(--ll-text-muted); }
+.lucd20-loot-app .lp-switch-off { padding: 6px 10px 2px 28px; }
+.lucd20-loot-app .lp-mods { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 2px 12px; padding: 6px 10px 8px 28px !important; }
+.lucd20-loot-app .lp-mod { display: flex; align-items: baseline; gap: 6px; min-width: 0; font-size: 13px; }
+.lucd20-loot-app .lp-mod.is-off { color: var(--ll-accent-text); }
+.lucd20-loot-app .lp-mod.is-missing { color: var(--ll-danger-text); }
+.lucd20-loot-app .lp-mod .sub { margin-left: auto; white-space: nowrap; }
+.lucd20-loot-app .lp-note { align-self: center; color: var(--ll-text-muted); font-size: 12px; }
+.lucd20-presets-open { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin-top: 4px; }

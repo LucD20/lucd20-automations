@@ -70,6 +70,7 @@ sets `game.system.id`.
 | `test30.js` | Skill Challenges: players' window and rolls, hidden skills, group checks, routes, stages, thresholds, editor (30) |
 | `test31.js` | Scene Audit: marking squares, the list, the exported report (31) |
 | `test32.js` | NPC Health Bars: bars Always for Owner on tokens no player owns (32) |
+| `test34.js` | Setting Presets: save, the server folder, differences, apply, export, import (34) |
 
 For a new feature, copy the closest test, keep its mock setup and replace the
 checks.

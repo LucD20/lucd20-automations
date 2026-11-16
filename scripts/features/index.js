@@ -17,6 +17,7 @@ import "./multi-token-edit.js";
 import "./folder-drop.js";
 import "./pause-notifier.js";
 import "./npc-health-bars.js";
+import "./setting-presets.js";
 import "./riding.js";
 import "./token-scatter.js";
 import "./flying-tokens.js";

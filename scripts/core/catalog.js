@@ -17,6 +17,7 @@ export const CATEGORIES = [
   { id: "doors", icon: "fa-solid fa-door-closed" },
   { id: "scenes", icon: "fa-solid fa-clapperboard" },
   { id: "playerSettings", icon: "fa-solid fa-user-lock" },
+  { id: "setup", icon: "fa-solid fa-floppy-disk" },
   { id: "exploration", icon: "fa-solid fa-magnifying-glass", systems: ["pf2e"] },
   { id: "dnd4e", icon: "fa-solid fa-dragon", systems: ["dnd4e"] }
 ];
@@ -57,6 +58,7 @@ export const FEATURE_ORDER = [
   { id: "sceneAudit", category: "scenes", phase: 31 },
   { id: "diceStats", category: "statistics", phase: 8 },
   { id: "forceSettings", category: "playerSettings", phase: 2 },
+  { id: "settingPresets", category: "setup", phase: 34 },
   { id: "searchAutomation", category: "exploration", phase: 11, systems: ["pf2e"] },
   { id: "hazardDetection", category: "exploration", phase: 11, systems: ["pf2e"] },
   { id: "dnd4eClassFeatures", category: "dnd4e", phase: 26, systems: ["dnd4e"] },

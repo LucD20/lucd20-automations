@@ -78,6 +78,10 @@
       "dnd4e": {
         "Label": "D&D 4e",
         "Hint": "D&D 4e combat automation (merged from D&D 4e Combat Automation)."
+      },
+      "setup": {
+        "Label": "World Setup",
+        "Hint": "Saving how a world is set up and applying it to another."
       }
     },
     "Feature": {
@@ -673,6 +677,10 @@
       "sceneAudit": {
         "Name": "Scene Audit",
         "Hint": "For checking imported maps. Pick the squares where something is wrong, one click each, in any shape (a missing wall, a misplaced token …), then export one file that says where each mark is and lists the scene's walls, doors, tokens and notes as they are now. Tools: the flag and the clipboard in the Token controls. Only the GM sees the marks."
+      },
+      "settingPresets": {
+        "Name": "Setting Presets",
+        "Hint": "Save every world setting, your own client settings and the list of active modules under a name, and apply them in another world. The button is in the Settings sidebar, next to Configure Settings."
       }
     },
     "ForceSettings": {
@@ -1430,6 +1438,69 @@
       "ClearConfirm": "Remove every mark on <strong>{name}</strong>?",
       "Picked": "{count} squares picked",
       "Done": "Done"
+    },
+    "SettingPresets": {
+      "Title": "Setting Presets",
+      "Core": "Foundry (core)",
+      "Name": "Preset name",
+      "NamePlaceholder": "Name for a new preset (for example: My PF2e setup)",
+      "Save": "Save this world's settings",
+      "Saved": "Preset \"{name}\" saved.",
+      "SavedInWorld": "The server did not accept the file, so the preset is kept in this world only. Use Export to take it elsewhere.",
+      "OnlyThisWorld": "in this world only",
+      "Empty": "No presets yet.",
+      "EmptyHint": "Type a name above and save: every world on this server will list it.",
+      "CountSettings": "{count} settings",
+      "CountModules": "{count} modules",
+      "ViewApply": "View / Apply",
+      "UpdateHint": "Update from this world",
+      "UpdateConfirm": "Replace what <strong>{name}</strong> holds with this world's settings as they are now?",
+      "Export": "Export to a file",
+      "Import": "Import a file",
+      "Delete": "Delete",
+      "DeleteConfirm": "Delete the preset <strong>{name}</strong>?",
+      "NotAPreset": "That file is not a setting preset.",
+      "LeaveOutSecrets": "Export without settings that look like secrets",
+      "SecretsHint": "Settings whose name contains key, token, secret, password and the like are left out of the exported file. Presets kept on the server always hold everything.",
+      "Back": "Back to the list",
+      "Search": "Search settings",
+      "OnlyDifferences": "Only differences",
+      "TickAll": "All",
+      "TickDiffers": "Differences",
+      "TickNone": "None",
+      "GroupCount": "{count} settings, {differs} different",
+      "Differs": "different",
+      "Same": "same",
+      "NowIs": "Here now: {value}",
+      "Scope": {
+        "world": "World setting",
+        "user": "Your per-user setting",
+        "client": "Client setting (this browser)"
+      },
+      "Skip": {
+        "worldData": "not applied",
+        "worldDataHint": "Belongs to the world it came from (stored ids, logs, clocks, migration marks).",
+        "otherSystem": "other system",
+        "otherSystemHint": "A setting of the game system the preset was saved in; this world uses another.",
+        "notLoaded": "module off",
+        "notLoadedHint": "A per-user setting of a module that is not running here: apply again after the module is on."
+      },
+      "Modules": "Active modules",
+      "ModulesCount": "{count} in the preset, {on} to switch on, {missing} not installed",
+      "SwitchOffOthers": "Also switch off modules that are not in the preset",
+      "Module": {
+        "on": "active",
+        "off": "will be switched on",
+        "missing": "not installed"
+      },
+      "Apply": "Apply {count} settings",
+      "ApplyNote": "Client settings change this browser only. Ends with a reload.",
+      "AppliedTitle": "Preset applied",
+      "Applied": "{count} settings applied.",
+      "AppliedModules": "Modules: {on} switched on, {off} switched off.",
+      "AppliedMissing": "Not installed, skipped: {list}.",
+      "AppliedFailed": "Could not be applied (see the console, F12): {list}.",
+      "ReloadAsk": "Reload now for everyone? Module changes and many settings need it."
     }
   },
   "DND4EAUTO": {

@@ -19,6 +19,8 @@ import { defineFeature } from "../core/registry.js";
  *   costs extra, so a route around them wins when there is one (v0.39.0, the
  *   owner: dodging is the exception, so it is the one that needs the key;
  *   before, Q switched it off). The destination itself is never penalised.
+ * - squares an enemy stands on are closed (PF2e and D&D 4e do not let you walk through enemies);
+ *   passing diagonally between two enemies stays possible;
  * - Players only route through explored or currently visible areas (Q28),
  *   so a route can't reveal unexplored corridors. The GM routes anywhere.
  *
@@ -43,7 +45,33 @@ const keyDown = code => !!game.keyboard?.downKeys?.has?.(code);
 /** Tell other features which path a token is about to take (hook `lucd20MovementPath`: token, search). */
 function announce(token, search) {
   Hooks.callAll("lucd20MovementPath", token, search);
+  showHint();
   return search;
+}
+
+/**
+ * "Hold Q to go around enemies", just above the macro bar while a token is being dragged. Shown by
+ * each path search of a drag and taken away when the drag ends (or a few seconds after the last one).
+ */
+function showHint() {
+  if (!isActive() || !state.feature.get("avoidThreats") || !state.feature.get("dragHint")) return hideHint();
+  let hint = document.querySelector(".lucd20-drag-hint");
+  if (!hint) {
+    hint = document.createElement("div");
+    hint.className = "lucd20-drag-hint";
+    hint.innerHTML = `<kbd>Q</kbd><span>${localize("LUCD20.Pathfinding.HintQ")}</span>`;
+    document.body.append(hint);
+  }
+  const bar = document.getElementById("hotbar")?.getBoundingClientRect();
+  hint.style.bottom = `${bar?.height ? Math.max(8, window.innerHeight - bar.top + 8) : 90}px`;
+  hint.classList.toggle("is-on", keyDown("KeyQ"));
+  clearTimeout(state.hintTimer);
+  state.hintTimer = setTimeout(hideHint, 6000);
+}
+
+function hideHint() {
+  clearTimeout(state.hintTimer);
+  document.querySelector(".lucd20-drag-hint")?.remove();
 }
 
 function isActive() {
@@ -213,8 +241,11 @@ function isDown(token) {
   return !!(statuses?.has?.("dead") || statuses?.has?.("unconscious") || token.combatant?.isDefeated);
 }
 
-/** Squares next to visible enemies (only tokens this user can see: nothing leaks). */
-function threatGrid(mover, size) {
+/**
+ * Squares of visible enemies, grown by `margin` squares (only tokens this user can see: nothing
+ * leaks). margin 1 = the squares next to them (threatened); margin 0 = the squares they stand on.
+ */
+function enemyGrid(mover, size, margin) {
   const set = new Set();
   const D = CONST.TOKEN_DISPOSITIONS ?? { FRIENDLY: 1, HOSTILE: -1 };
   const mine = mover.document.disposition;
@@ -225,10 +256,14 @@ function threatGrid(mover, size) {
     const o = gridOrigin();
     const i0 = Math.round((t.document.x - o.x) / size);
     const j0 = Math.round((t.document.y - o.y) / size);
-    for (let i = i0 - 1; i <= i0 + t.document.width; i++) for (let j = j0 - 1; j <= j0 + t.document.height; j++) set.add(`${i},${j}`);
+    const w = Math.max(1, Math.round(t.document.width));
+    const h = Math.max(1, Math.round(t.document.height));
+    for (let i = i0 - margin; i < i0 + w + margin; i++) for (let j = j0 - margin; j < j0 + h + margin; j++) set.add(`${i},${j}`);
   }
   return set;
 }
+
+const threatGrid = (mover, size) => enemyGrid(mover, size, 1);
 
 /** Players: is this point explored (fog) or visible right now? */
 function exploredTester() {
@@ -303,6 +338,9 @@ function context(token, { ignoreCost = false } = {}) {
     wallHits: new Map(),
     terrain: feature.get("avoidTerrain") && !keyDown("KeyT") && !ignoreCost ? terrainGrid(token.document, size) : new Map(),
     threats: feature.get("avoidThreats") && keyDown("KeyQ") ? threatGrid(token, size) : new Set(),
+    // Squares enemies stand on cannot be walked through (PF2e, D&D 4e). Slipping diagonally between
+    // two of them stays possible: only the squares themselves are closed.
+    enemies: feature.get("aroundEnemies") ? enemyGrid(token, size, 0) : new Set(),
     explored: exploredTester(),
     rect: canvas.dimensions.sceneRect,
     origin: gridOrigin()
@@ -358,6 +396,8 @@ function route(ctx, from, to, w, h, startOdd) {
   };
   spread(ctx.terrain, (k, v) => (footMult[k] = Math.max(footMult[k], v)));
   spread(ctx.threats, k => (footThreat[k] = 1));
+  const footEnemy = new Uint8Array(cellCount);
+  spread(ctx.enemies ?? new Set(), k => (footEnemy[k] = 1));
 
   const explored = new Uint8Array(cellCount); // 0 unknown, 1 yes, 2 no
   const isExplored = (i, j) => {
@@ -415,6 +455,7 @@ function route(ctx, from, to, w, h, startOdd) {
       }
       if (wallCache[wc] === 2) continue;
       const isGoal = i === to.i && j === to.j;
+      if (!isGoal && footEnemy[idx(i, j)]) continue; // an enemy stands there
       if (!isGoal && !isExplored(i, j)) continue;
       const n = idx(i, j);
       const isDiag = di !== 0 && dj !== 0;
@@ -512,6 +553,8 @@ defineFeature({
   settings: {
     avoidTerrain: { kind: "boolean", default: true },
     avoidThreats: { kind: "boolean", default: true },
+    aroundEnemies: { kind: "boolean", default: true },
+    dragHint: { kind: "boolean", default: true, scope: "client" },
     exploredOnly: { kind: "boolean", default: true }
   },
 
@@ -587,7 +630,16 @@ defineFeature({
       feature.on(hook, bump);
     }
     ui.controls?.render?.();
+    const onKey = event => { if (event.key === "Escape") hideHint(); };
+    window.addEventListener("pointerup", hideHint, true);
+    window.addEventListener("contextmenu", hideHint, true);
+    window.addEventListener("keydown", onKey, true);
+    feature.on("moveToken", hideHint);
     feature.onCleanup(() => {
+      window.removeEventListener("pointerup", hideHint, true);
+      window.removeEventListener("contextmenu", hideHint, true);
+      window.removeEventListener("keydown", onKey, true);
+      hideHint();
       state.context = null;
       ui.controls?.render?.();
     });

@@ -478,7 +478,7 @@
       },
       "pathfinding": {
         "Name": "Pathfinding",
-        "Hint": "Dragging a token routes it around walls along the cheapest path, avoiding difficult terrain when there's a better way. Hold Q while dragging to also keep away from squares next to enemies, T to ignore terrain. Toggle it in the Token controls.",
+        "Hint": "Dragging a token routes it around walls and enemy tokens along the cheapest path, avoiding difficult terrain when there's a better way. Hold Q while dragging to also keep away from squares next to enemies, T to ignore terrain. Toggle it in the Token controls.",
         "Setting": {
           "avoidTerrain": {
             "Name": "Avoid difficult terrain",
@@ -491,6 +491,14 @@
           "exploredOnly": {
             "Name": "Players: explored areas only",
             "Hint": "Players' routes only go through explored or visible areas, so they can't reveal the map."
+          },
+          "aroundEnemies": {
+            "Name": "Go around enemy tokens",
+            "Hint": "A route never passes through a square a visible enemy stands on (you cannot walk through enemies in PF2e or D&D 4e). Slipping diagonally between two enemies is still possible."
+          },
+          "dragHint": {
+            "Name": "Show the Q hint while dragging",
+            "Hint": "\"Hold Q to go around enemies\" above the macro bar while you drag a token."
           }
         }
       },
@@ -692,7 +700,13 @@
       },
       "dnd4eOpportunityWarning": {
         "Name": "Opportunity Attack Warning",
-        "Hint": "While you drag a token in combat, every enemy the move would provoke an opportunity attack from is marked, with an arrow to the square you would leave. Enemies that already used their opportunity action, or cannot take one, are not marked. Shifting and teleporting never provoke."
+        "Hint": "While you drag a token in combat, every enemy the move would provoke an opportunity attack from is marked, with an arrow to the square you would leave. Enemies that already used their opportunity action, or cannot take one, are not marked. Shifting and teleporting never provoke.",
+        "Setting": {
+          "sound": {
+            "Name": "Sound",
+            "Hint": "A short metallic sound when the move you are planning starts to provoke another enemy. Follows Foundry's interface volume."
+          }
+        }
       }
     },
     "ForceSettings": {
@@ -1192,7 +1206,8 @@
       }
     },
     "Pathfinding": {
-      "Tool": "Pathfinding (route around walls)"
+      "Tool": "Pathfinding (route around walls)",
+      "HintQ": "Hold Q to go around enemies"
     },
     "DnD4e": {
       "Migrated": "D&D 4e Combat Automation's data moved into LucD20 Automations: {texts} monster texts, {levels} power marks, {switches} switches, {docs} actors / effects / tokens / combatants / messages. You can disable the old module.",

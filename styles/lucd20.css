@@ -2434,3 +2434,9 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-loot-app .lp-note { align-self: center; color: var(--ll-text-muted); font-size: 12px; }
 .lucd20-presets-open { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin-top: 4px; }
 .lucd20-loot-app .ll-coin-icon { display: grid; place-content: center; color: var(--ll-accent-text); }
+
+/* Pathfinding: the Q hint above the macro bar while a token is dragged. */
+.lucd20-drag-hint { position: fixed; left: 50%; z-index: 80; display: flex; align-items: center; gap: 8px; padding: 5px 12px; border: 1px solid #5c596a; border-radius: 4px; background: rgba(18, 17, 23, 0.88); color: #efe6d8; font-family: Signika, "Segoe UI", sans-serif; font-size: 13px; pointer-events: none; transform: translateX(-50%); }
+.lucd20-drag-hint kbd { min-width: 20px; padding: 1px 6px; border: 1px solid #8b8799; border-radius: 3px; background: #26252e; color: inherit; font: 700 12px monospace; text-align: center; }
+.lucd20-drag-hint.is-on { border-color: #ee9b3a; }
+.lucd20-drag-hint.is-on kbd { border-color: #ee9b3a; background: #ee9b3a; color: #1b1a21; }

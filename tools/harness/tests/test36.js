@@ -36,8 +36,14 @@ const assert = require("assert");
     const marks = () => (canvas.interface.children[0]?.children.length ?? 0) / 3; // an arrow, a badge and its "!" per enemy
     const plan = async (path) => { await mod._test.onPath(hero, { result: path.map(([c, r, action = "walk"]) => ({ x: c * 100, y: r * 100, action })) }); return marks(); };
     const out = {};
+    game.settings.register("core", "globalInterfaceVolume", { scope: "client", config: false, type: Number, default: 0.5 });
     out.away = await plan([[2, 2], [2, 1], [2, 0]]);                 // leaves the Orc's side: 1 mark (not the spent, dazed or unseen ones)
+    // The sound: once when an enemy becomes a threat, not again while the same ones stay marked; above the tokens.
+    const heard = () => mod._test.state.shings ?? 0;
+    out.sound = [heard()]; await plan([[2, 2], [2, 1], [2, 0]]); out.sound.push(heard());
+    out.zIndex = canvas.interface.children[0].zIndex;
     out.pastFar = await plan([[2, 2], [2, 1], [5, 1], [5, 3], [7, 3]]); // also walks past the Far Orc and on: 2 marks
+    out.sound.push(heard());
     out.shift = await plan([[2, 2], [2, 1, "shift"]]);               // shifting never provokes
     out.stay = await plan([[2, 2]]);
     out.asGM = (game.user.isGM = true, await plan([[2, 2], [2, 1], [2, 0]])); // the GM also sees the unseen enemy's mark
@@ -58,7 +64,7 @@ const assert = require("assert");
     return out;
   });
   console.log(result, errors);
-  assert.deepStrictEqual(result, { away: 1, pastFar: 2, shift: 0, stay: 0, asGM: 2, noCombat: 0, before: 1, afterDrop: 0, fromHook: 1, off: [0, 0] });
+  assert.deepStrictEqual(result, { away: 1, sound: [1, 1, 2], zIndex: 10000, pastFar: 2, shift: 0, stay: 0, asGM: 2, noCombat: 0, before: 1, afterDrop: 0, fromHook: 1, off: [0, 0] });
   assert.deepStrictEqual(errors, []);
   console.log("PHASE 36 CHECKS PASSED");
   await browser.close();

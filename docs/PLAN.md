@@ -1616,3 +1616,16 @@ Code: `scripts/systems/dnd4e/party-stash.mjs`; test `test35.js`.
   `test36.js`.
 - (verify) in Foundry: that the marks follow the ruler while dragging and go
   when the token is dropped or the drag is cancelled.
+
+**v0.40.0 (owner's feedback on 0.39.0):**
+
+- **Opportunity Attack Warning:** the marks are drawn above the tokens (on
+  the controls layer, high z-index); a short metallic "shing" (made with Web
+  Audio, no sound file) plays when another enemy becomes a threat; per-player
+  setting **Sound**, follows Foundry's interface volume.
+- **Pathfinding:** a hint "Hold Q to go around enemies" sits just above the
+  macro bar while a token is dragged (per-player setting, on by default; lit
+  while Q is held). Squares a visible **enemy stands on are closed** to
+  routes (setting **Go around enemy tokens**, on: PF2e and D&D 4e do not let
+  you walk through enemies); a diagonal step between two enemies is still
+  allowed; the destination itself is never closed.

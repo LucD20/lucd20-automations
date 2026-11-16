@@ -12,16 +12,18 @@ import { provokedAlong } from "./opportunity.mjs";
  *
  * The planned path comes from Token#findMovementPath: Pathfinding announces every search it answers
  * (hook lucd20MovementPath), and this feature wraps the method too for when Pathfinding is off.
- * The marks are drawn on this client only and cleared when the drag ends.
+ * The marks are drawn on this client only, above the tokens, and cleared when the drag ends. A short
+ * "shing" plays when another enemy becomes a threat (per-player setting).
  */
 
 const COLOR = 0xff5a3d;
-const state = { layer: null, serial: 0 };
+const state = { layer: null, serial: 0, marked: new Set(), feature: null, audio: null };
 
 function clear() {
 	state.serial++;
 	state.layer?.destroy({ children: true });
 	state.layer = null;
+	state.marked = new Set();
 }
 
 function centre(x, y, width, height) {
@@ -32,6 +34,10 @@ function centre(x, y, width, height) {
 function draw(mover, provoked) {
 	state.layer?.destroy({ children: true });
 	state.layer = null;
+	// The sound marks the moment an enemy becomes a threat, not every redraw of the same ones.
+	const before = state.marked ?? new Set();
+	state.marked = new Set(provoked.keys());
+	if (state.feature?.get("sound") && [...state.marked].some(t => !before.has(t))) shing();
 	if (!provoked.size) return;
 	const size = canvas.grid.size;
 	const layer = new PIXI.Container();
@@ -62,8 +68,63 @@ function draw(mover, provoked) {
 		mark.position.set(corner.x, corner.y);
 		layer.addChild(badge, mark);
 	}
-	(canvas.interface ?? canvas.controls ?? canvas.stage).addChild(layer);
+	// Above the tokens (and the one being dragged): the controls layer is drawn over them.
+	const parent = canvas.controls ?? canvas.interface ?? canvas.stage;
+	layer.zIndex = 10000;
+	parent.addChild(layer);
+	if (parent.sortableChildren) parent.sortChildren?.();
 	state.layer = layer;
+}
+
+/** A short metallic "shing", made here (no sound file): played when another enemy becomes a threat. */
+function shing() {
+	try {
+		const Ctx = window.AudioContext ?? window.webkitAudioContext;
+		if (!Ctx) return;
+		const ctx = (state.audio ??= new Ctx());
+		if (ctx.state === "suspended") ctx.resume();
+		const volume = Math.min(1, Math.max(0, Number(game.settings.get("core", "globalInterfaceVolume") ?? 0.5)));
+		if (!volume) return;
+		const now = ctx.currentTime;
+		const out = ctx.createGain();
+		out.gain.value = volume * 0.5;
+		out.connect(ctx.destination);
+		// The scrape: filtered noise sweeping upward.
+		const length = Math.floor(ctx.sampleRate * 0.28);
+		const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
+		const data = buffer.getChannelData(0);
+		for (let i = 0; i < length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / length);
+		const noise = ctx.createBufferSource();
+		noise.buffer = buffer;
+		const band = ctx.createBiquadFilter();
+		band.type = "bandpass";
+		band.Q.value = 2.5;
+		band.frequency.setValueAtTime(2200, now);
+		band.frequency.exponentialRampToValueAtTime(9000, now + 0.22);
+		const noiseGain = ctx.createGain();
+		noiseGain.gain.setValueAtTime(0.0001, now);
+		noiseGain.gain.exponentialRampToValueAtTime(0.9, now + 0.03);
+		noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+		noise.connect(band).connect(noiseGain).connect(out);
+		noise.start(now);
+		// The ring: two high partials that fade.
+		for (const [frequency, level] of [[3520, 0.22], [5280, 0.14]]) {
+			const osc = ctx.createOscillator();
+			osc.type = "sine";
+			osc.frequency.setValueAtTime(frequency * 0.97, now);
+			osc.frequency.exponentialRampToValueAtTime(frequency, now + 0.08);
+			const gain = ctx.createGain();
+			gain.gain.setValueAtTime(0.0001, now + 0.02);
+			gain.gain.exponentialRampToValueAtTime(level, now + 0.06);
+			gain.gain.exponentialRampToValueAtTime(0.0005, now + 0.55);
+			osc.connect(gain).connect(out);
+			osc.start(now + 0.02);
+			osc.stop(now + 0.6);
+		}
+		state.shings = (state.shings ?? 0) + 1;
+	} catch (err) {
+		// No sound is not worth an error.
+	}
 }
 
 /** A path search was answered for a token: mark who it would provoke. */
@@ -89,8 +150,12 @@ defineFeature({
 	systems: ["dnd4e"],
 	scope: "world",
 	defaultEnabled: true,
+	settings: {
+		sound: { kind: "boolean", default: true, scope: "client" }
+	},
 
 	enable(feature) {
+		state.feature = feature;
 		feature.on("lucd20MovementPath", onPath);
 		const TokenClass = CONFIG.Token?.objectClass;
 		if (typeof TokenClass?.prototype?.findMovementPath === "function") {
@@ -111,6 +176,7 @@ defineFeature({
 			window.removeEventListener("contextmenu", clear, true);
 			window.removeEventListener("keydown", onKey, true);
 			clear();
+			state.feature = null;
 		});
 	}
 });

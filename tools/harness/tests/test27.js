@@ -36,7 +36,7 @@ const out = __dirname;
         grid: { size, type: 1, isGridless: false, isSquare: true, diagonals: 4 },
         walls: { get placeables() { return __walls; } },
         regions: { get placeables() { return __regions; } },
-        tokens: { get placeables() { return [__mover, __enemy]; } }
+        tokens: { get placeables() { return [__mover, __enemy, ...(window.__more ?? [])]; } }
       });
       CONFIG.Token.objectClass.prototype.findMovementPath = function (waypoints) { return { result: waypoints.map(w => ({ ...w, foundry: true })), promise: Promise.resolve(), cancel() {} }; };
     });
@@ -90,6 +90,43 @@ const out = __dirname;
   const withQ = await route(page, [4, 3]);
   console.log("without Q:", JSON.stringify(withQ));
   assert.deepStrictEqual(withQ.map(p => p.slice(0, 2)), [[1, 3], [4, 3]], "without Q threats are ignored: straight line");
+  // The Q hint sits above the macro bar while dragging, lights up with Q, and goes when the drag ends.
+  const hint = await page.evaluate(async () => {
+    const bar = document.createElement("div"); bar.id = "hotbar"; Object.assign(bar.style, { position: "fixed", left: "0", right: "0", bottom: "0", height: "60px" }); document.body.append(bar);
+    const mod = await import("/modules/lucd20-automations/scripts/features/pathfinding.js");
+    const drag = () => new CONFIG.Token.objectClass().findMovementPath.call(__mover, [{ x: 100, y: 300 }, { x: 400, y: 300 }], {});
+    drag();
+    const el = () => document.querySelector(".lucd20-drag-hint");
+    const out = { text: el()?.textContent, above: el() && el().getBoundingClientRect().bottom <= bar.getBoundingClientRect().top, on: el()?.classList.contains("is-on") };
+    game.keyboard.downKeys.add("KeyQ"); drag(); out.onWithQ = el()?.classList.contains("is-on"); game.keyboard.downKeys.delete("KeyQ");
+    window.dispatchEvent(new Event("pointerup")); out.afterDrop = !!el();
+    await game.settings.set("lucd20-automations", "pathfinding_dragHint", false); drag(); out.switchedOff = !!el();
+    await game.settings.set("lucd20-automations", "pathfinding_dragHint", true);
+    return out;
+  });
+  console.log("hint:", JSON.stringify(hint));
+  assert.deepStrictEqual(hint, { text: "QHold Q to go around enemies", above: true, on: false, onWithQ: true, afterDrop: false, switchedOff: false });
+
+  // An enemy standing on the line: its square is closed, so the route goes around the token itself (no Q needed).
+  await page.evaluate(() => { __enemy.document.x = 300; __enemy.document.y = 300; Hooks.callAll("updateToken", __enemy.document, {}, {}); });
+  const around = await route(page, [4, 3]);
+  console.log("around the enemy token:", JSON.stringify(around));
+  const walked = [];
+  for (let k = 1; k < around.length; k++) { let [x, y] = around[k - 1]; const [tx, ty] = around[k]; while (x !== tx || y !== ty) { x += Math.sign(tx - x); y += Math.sign(ty - y); walked.push(`${x},${y}`); } }
+  assert.ok(!walked.includes("3,3") && walked.at(-1) === "4,3" && around.length > 2, "never through the enemy's square");
+  // Two enemies corner to corner: slipping diagonally between them is still allowed.
+  await page.evaluate(() => {
+    const clone = { ...__enemy, document: { ...__enemy.document, id: "orc2", x: 200, y: 200 } };
+    __enemy.document.x = 100; __enemy.document.y = 300; window.__more = [clone];
+    __mover.document.x = 100; __mover.document.y = 200; Hooks.callAll("updateToken", __enemy.document, {}, {});
+  });
+  const squeeze = await page.evaluate(() => new CONFIG.Token.objectClass().findMovementPath.call(__mover, [{ x: 100, y: 200 }, { x: 200, y: 300 }], {}).result.map(w => [w.x / 100, w.y / 100]));
+  console.log("between two enemies:", JSON.stringify(squeeze));
+  assert.deepStrictEqual(squeeze, [[1, 2], [2, 3]], "one diagonal step between the two enemies");
+  // Switched off: straight through again.
+  await page.evaluate(async () => { window.__more = []; __mover.document.x = 100; __mover.document.y = 300; __enemy.document.x = 300; __enemy.document.y = 300; await game.settings.set("lucd20-automations", "pathfinding_aroundEnemies", false); Hooks.callAll("updateToken", __enemy.document, {}, {}); });
+  assert.deepStrictEqual((await route(page, [4, 3])).map(p => p.slice(0, 2)), [[1, 3], [4, 3]], "the option off: enemy tokens do not close squares");
+  await page.evaluate(async () => { await game.settings.set("lucd20-automations", "pathfinding_aroundEnemies", true); __enemy.document.x = 300; __enemy.document.y = 200; Hooks.callAll("updateToken", __enemy.document, {}, {}); });
 
   // Difficult terrain: a region on squares x 2..3, y 3..4 (cost ×2), enemy moved away
   await page.evaluate(() => {

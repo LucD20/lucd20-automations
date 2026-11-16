@@ -458,8 +458,8 @@ async function setup(page, userId) {
   await page.click(`.lucd20-loot-review-dialog [data-action="create"]`);
   await page.waitForTimeout(300);
   const p4 = await page.evaluate(() => { const p = game.actors.find(a => a.getFlag("lucd20-automations", "lootPile")); window.__pile = p; return { type: p.type, items: p.items.length }; });
-  assert.deepStrictEqual(p4, { type: "npc", items: 5 });
-  assert.strictEqual(await page.evaluate(() => { new CONFIG.Token.objectClass()._onClickLeft2.call({ actor: __pile }, {}); return new Promise(r => setTimeout(() => r(document.querySelectorAll(".lucd20-loot-coins").length), 150)); }), 0, "no coins row where the system's coins are not known yet");
+  assert.deepStrictEqual(p4, { type: "NPC", items: 3 }, "4e: an NPC-type actor; only 4e's own item types are loot");
+  assert.strictEqual(await page.evaluate(() => { new CONFIG.Token.objectClass()._onClickLeft2.call({ actor: __pile }, {}); return new Promise(r => setTimeout(() => r(document.querySelectorAll(".lucd20-loot-coins").length), 150)); }), 0, "no coins row: these NPCs carry no 4e coins (test35 covers 4e coins)");
   await page.evaluate(() => new CONFIG.Token.objectClass()._onClickLeft2.call({ actor: __pile }, {}));
   await page.waitForTimeout(150);
   await page.evaluate(() => [...document.querySelectorAll(".lucd20-loot-item")].find(li => li.textContent.includes("Ring")).querySelector('[data-action="stash"]').click());

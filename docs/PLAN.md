@@ -1533,3 +1533,53 @@ recommended.
   the owner's server (Molten); how per-user settings are stored (read here as
   Setting documents carrying a `user`); the button's place in the sidebar;
   writing a Setting document for a module that is off.
+
+---
+
+## 14. D&D 4e: loot, Party Stash, coin tracking (phase 35)
+
+Q115–Q124. Mockup: `docs/mockups/party-stash-4e.html` (style C chosen).
+Code: `scripts/systems/dnd4e/party-stash.mjs`; test `test35.js`.
+
+- **Loot adapter.** 4e has no loot or party actor and keeps coins as five
+  numbers on the actor (ad, pp, gp, sp, cp), on characters and NPCs alike. So
+  a pile and the stash are **NPC-type** actors flagged by the module (a pile
+  used to come out as a "Player Character"), loot is weapons, equipment,
+  consumables, tools, loot items and backpacks (never powers, features,
+  rituals), and coins are **not items** (Q115: an item would not count on the
+  sheet). "Loot the fallen" offers each NPC's coins as a line of its own
+  (follows "Include coins"); they move to the pile's own coin numbers and
+  show as the usual Coins row. A split adds to each character's coin numbers.
+  10 cp = 1 sp, 10 sp = 1 gp, 100 gp = 1 pp, 100 pp = 1 ad. Characters of a
+  split: every player-owned Player Character. Ritual components are left out.
+- **Party Stash** — `dnd4ePartyStash`, on by default. One module-made stash
+  actor (made the first time the GM opens the window or something is sent to
+  it). Button "Party Stash" at the bottom of the Actors tab, for everyone.
+  The window is laid out like a character sheet in the colours and type of
+  the 4e books and Fox's 4e Styling (his fonts when his module is active;
+  none are shipped), with a **dark variant** under Foundry's dark theme:
+  coins in boxes, the GM's Split evenly / Custom split / Open sheet and the
+  ledger on the left; tabs (All, Weapons & Armor, Magic Items, Consumables,
+  Gear) and item rows on the right (amber edge = has a level, i.e. magic).
+  Players **Take** at once for their character; the GM **Gives**. Splitting
+  the stash's own coins leaves the rest in it. Putting items in from a
+  character sheet is not part of this pass (the GM drops them on the stash's
+  own sheet; the Loot Pile sends items and leftover coins here).
+- **Coin Log** — `dnd4eCoinLog`, on by default. Every change to a player
+  character's coins or the stash's, however made (sheet, split, macro), is
+  added to that actor's ledger and posted to chat: a character's whispered
+  to the GM and its owners, the stash's to everyone, with who did it and, for
+  the module's own changes, why (coin split, loot). A coins button in each
+  owned character sheet's title bar opens the log. NPCs and piles are not
+  tracked. Detection: the active GM's client keeps the last known purse of
+  each tracked actor and compares on `updateActor`.
+- **Ledgers**: flag `ledger` on the actor, last 200 entries (`coins`, `take`,
+  `add`), written by the active GM's client. The stash's also records items
+  put in by a pile and taken by characters.
+- Shared loot code gained: `coinsOnActor`, `setCoins`, `onHandOut` in the
+  adapter; a pile is only removed when its coins are gone too; the stash is
+  never removed.
+- (verify) in Foundry: the coins button in the 4e sheet's title bar; the
+  stash's NPC sheet accepting dropped items; that the pile and stash, as NPC
+  actors, are not picked up by anything that lists NPCs; the look with and
+  without Fox's module, light and dark.

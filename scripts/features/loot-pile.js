@@ -54,7 +54,10 @@ const adapters = [];
  * { system, pileType, isLoot(item), isCoins(item), level(actor), stash() → Actor|null,
  *   pileData(base) → actor creation data,
  *   coins (optional): denominations [{ id, value }] highest first, coinsOf(actor) → purse,
- *   addCoins(actor, purse), removeCoins(actor, purse), characters() → Actor[] a split is between }
+ *   addCoins(actor, purse, reason), removeCoins(actor, purse, reason), characters() → Actor[] a split
+ *   is between; coinsOnActor: true when coins are numbers on the actor, not items (D&D 4e): the
+ *   fallen's coins are then offered in "Loot the fallen";
+ *   onHandOut({ source, stash, given }) (optional): told after items moved (a system's stash ledger) }
  */
 export function registerLootAdapter(adapter) {
   adapters.push(adapter);
@@ -72,7 +75,9 @@ const genericAdapter = {
   stash: () => null,
   pileData: base => base,
   denominations: null,
-  characters: null
+  characters: null,
+  coinsOnActor: false,
+  onHandOut: null
 };
 
 function adapter() {
@@ -105,7 +110,10 @@ function lootGroups(combat) {
     const items = actor.items
       .filter(item => a.isLoot(item) && (includeCoins || !a.isCoins(item)))
       .sort((x, y) => x.name.localeCompare(y.name));
-    if (!items.length) continue;
+    // Coins kept as numbers on the actor (not items): offered as one line of their own.
+    const coins = a.coinsOnActor && includeCoins ? cleanPurse(a.coinsOf(actor), a.denominations) : null;
+    const hasCoins = !!coins && !isEmptyPurse(coins);
+    if (!items.length && !hasCoins) continue;
     const token = combatant.token;
     groups.push({
       actor,
@@ -115,7 +123,8 @@ function lootGroups(combat) {
       nameHidden: token?.playersCanSeeName === false,
       level: a.level(actor),
       img: token?.texture?.src && !/\.(webm|mp4)$/i.test(token.texture.src) ? token.texture.src : actor.img,
-      items
+      items,
+      coins: hasCoins ? coins : null
     });
   }
   return groups.sort((x, y) => (y.level - x.level) || x.name.localeCompare(y.name));
@@ -150,8 +159,8 @@ async function reviewLoot(combat) {
   try {
     const selected = await LootReviewWindow.wait(groups);
     if (Array.isArray(selected) && selected.length) {
-      const chosen = groups.map((g, gi) => ({ ...g, items: g.items.filter(item => selected.includes(`${gi}:${item.id}`)) }))
-        .filter(g => g.items.length);
+      const chosen = groups.map((g, gi) => ({ ...g, items: g.items.filter(item => selected.includes(`${gi}:${item.id}`)), coins: selected.includes(`${gi}:coins`) ? g.coins : null }))
+        .filter(g => g.items.length || g.coins);
       pile = await createPile(chosen, combat.scene ?? canvas.scene);
     }
   } catch (err) {
@@ -202,8 +211,17 @@ async function createPile(groups, scene) {
       items.push(data);
     }
   }
-  await pile.createEmbeddedDocuments("Item", items);
-  for (const g of groups) await g.actor.deleteEmbeddedDocuments("Item", g.items.map(i => i.id));
+  if (items.length) await pile.createEmbeddedDocuments("Item", items);
+  for (const g of groups) if (g.items.length) await g.actor.deleteEmbeddedDocuments("Item", g.items.map(i => i.id));
+  // The fallen's own coins (systems that keep them on the actor) move into the pile's.
+  const a = adapter();
+  let purse = null;
+  for (const g of groups) {
+    if (!g.coins) continue;
+    await a.removeCoins(g.actor, g.coins, "loot");
+    purse = addPurses(purse ?? {}, g.coins, a.denominations);
+  }
+  if (purse) await a.addCoins(pile, purse, "loot");
 
   // Centre of the dead NPCs' tokens, then the nearest free square: never under
   // or on top of another token (the hidden bodies included).
@@ -311,6 +329,8 @@ async function handOut(pile, moves, { quiet = false } = {}) {
   if (shrink.length) await pile.updateEmbeddedDocuments("Item", shrink);
   if (gone.length) await pile.deleteEmbeddedDocuments("Item", gone);
 
+  adapter().onHandOut?.({ source: pile, stash, given });
+
   if (state.feature?.get("announce") && !quiet) {
     const label = ({ item, n, hasQty }) => `${hasQty && n > 1 ? `${n}× ` : ""}${esc(item.name)}`;
     const all = [...given].flatMap(([destination, entries]) => entries.map(e => ({ destination, ...e })));
@@ -333,8 +353,12 @@ async function handOut(pile, moves, { quiet = false } = {}) {
   return true;
 }
 
+/** A pile with nothing left in it (items or coins) is removed. Never the Party Stash. */
 async function removeIfEmpty(pile) {
-  if (!pile.items.size && state.feature?.get("deleteWhenEmpty") && game.actors.get(pile.id)) await deletePile(pile);
+  if (!isPile(pile) || pile.items.size || !state.feature?.get("deleteWhenEmpty") || !game.actors.get(pile.id)) return;
+  const coins = pileCoins(pile);
+  if (coins && !isEmptyPurse(coins)) return;
+  await deletePile(pile);
 }
 
 /* -------------------------------------------- */
@@ -501,9 +525,13 @@ async function splitCoins(pile, shares, rest, { even = false } = {}) {
   const total = pileCoins(pile);
   const out = shares.reduce((sum, s) => sum + purseValue(s.purse, denoms), purseValue(rest, denoms));
   if (out !== purseValue(total, denoms)) throw new Error("The coins do not add up.");
-  await a.removeCoins(pile, total);
-  for (const s of shares) if (!isEmptyPurse(s.purse)) await a.addCoins(s.actor, s.purse);
-  if (!isEmptyPurse(rest)) await a.addCoins(await stashActor(true), rest);
+  // Splitting the Party Stash's own coins: what is left simply stays there.
+  const fromStash = pile === await stashActor();
+  // One write where the system can set a purse outright (one ledger line for the stash, not two).
+  if (fromStash && a.setCoins) await a.setCoins(pile, rest, "split");
+  else await a.removeCoins(pile, total, "split");
+  for (const s of shares) if (!isEmptyPurse(s.purse)) await a.addCoins(s.actor, s.purse, "split");
+  if (!isEmptyPurse(rest) && !(fromStash && a.setCoins)) await a.addCoins(fromStash ? pile : await stashActor(true), rest, "split");
 
   if (state.feature?.get("announce")) {
     const given = shares.filter(s => !isEmptyPurse(s.purse));
@@ -512,7 +540,7 @@ async function splitCoins(pile, shares, rest, { even = false } = {}) {
     let text = even && given.length
       ? localize(given.length > 1 ? "LUCD20.LootPile.AnnounceSplitEven" : "LUCD20.LootPile.AnnounceSplitOne", { names: list, coins: purseText(given[0].purse) })
       : given.length ? localize("LUCD20.LootPile.AnnounceSplitCustom", { list: given.map(s => `${esc(s.actor.name)} ${purseText(s.purse)}`).join("; ") }) : "";
-    if (!isEmptyPurse(rest)) text += ` ${localize("LUCD20.LootPile.AnnounceSplitRest", { coins: purseText(rest) })}`;
+    if (!isEmptyPurse(rest) && !fromStash) text += ` ${localize("LUCD20.LootPile.AnnounceSplitRest", { coins: purseText(rest) })}`;
     if (text.trim()) {
       await ChatMessage.create({ content: `<p class="lucd20-loot-announce"><i class="fa-solid fa-coins"></i> ${text.trim()}</p>`, speaker: { alias: pile.name } });
     }
@@ -1387,9 +1415,16 @@ class LootReviewWindow extends AnswerWindow {
           <span class="name">${esc(item.name)}</span>
           ${qtyPill(item)}
         </label></li>`).join("");
+      const coins = g.coins ? `
+        <li><label class="lucd20-loot-check">
+          <input type="checkbox" class="ll-check" data-item name="${gi}:coins" checked>
+          <span class="lucd20-loot-icon ll-coin-icon">${icon("fa-coins")}</span>
+          <span class="name">${localize("LUCD20.LootPile.Coins")}</span>
+          ${coinChipsHTML(g.coins)}
+        </label></li>` : "";
       return `<section class="lucd20-loot-group" data-group>
           ${groupHeaderHTML(g, toggle, `<span class="count" data-group-count></span>`)}
-          <ol>${items}</ol>
+          <ol>${coins}${items}</ol>
         </section>`;
     }).join("");
     return `
@@ -1528,4 +1563,10 @@ defineFeature({
 });
 
 export { LootPileWindow, reviewLoot };
+/** For a system's own Party Stash window (D&D 4e): the shared pieces of the Loot Pile. */
+export const lootApi = {
+  adapter, stashActor, handOut, splitCoins, pileCoins, denominations, takers, tokenArt, isCharacter,
+  get announce() { return !!state.feature?.get("announce"); },
+  GiveWindow: () => GiveWindow, QuantityWindow: () => LootQuantityWindow, SplitWindow: () => SplitWindow, CustomSplitWindow: () => CustomSplitWindow
+};
 export const _test = { showLooting, take, approve, approveAll, claimsOf, give, refuse, requestsFor, splitCoins, ContestWindow, SplitWindow, CustomSplitWindow };

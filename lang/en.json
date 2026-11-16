@@ -681,6 +681,14 @@
       "settingPresets": {
         "Name": "Setting Presets",
         "Hint": "Save every world setting, your own client settings and the list of active modules under a name, and apply them in another world. The button is in the Settings sidebar, next to Configure Settings."
+      },
+      "dnd4ePartyStash": {
+        "Name": "Party Stash",
+        "Hint": "The party's shared stash as a window in the style of the 4e books: coins, items by kind and a ledger of what went in and out. Anyone takes from it; the GM gives and splits its coins. Open it from the Party Stash button at the bottom of the Actors tab. The Loot Pile sends items and leftover coins here."
+      },
+      "dnd4eCoinLog": {
+        "Name": "Coin Log",
+        "Hint": "Every change to a player character's coins, however it was made, is written to that character's coin log and whispered to the GM and the character's owners. Changes to the Party Stash's coins go to everyone. The coins button in a character sheet's title bar opens the log."
       }
     },
     "ForceSettings": {
@@ -1501,6 +1509,50 @@
       "AppliedMissing": "Not installed, skipped: {list}.",
       "AppliedFailed": "Could not be applied (see the console, F12): {list}.",
       "ReloadAsk": "Reload now for everyone? Module changes and many settings need it."
+    },
+    "PartyStash": {
+      "Title": "Party Stash",
+      "TitleBreak": "Party<br>Stash",
+      "Coins": "Coins",
+      "CoinsSpeaker": "Coins",
+      "Now": "now {coins}",
+      "Ledger": "Ledger",
+      "OpenLedger": "Open the ledger",
+      "LedgerTitle": "Ledger: {name}",
+      "CoinLogTitle": "Coin log: {name}",
+      "CoinLog": "Coin log",
+      "LedgerEmpty": "Nothing yet.",
+      "EntryTook": "took {item}",
+      "EntryAdded": "put in {item}",
+      "JustNow": "just now",
+      "MinutesAgo": "{n} min ago",
+      "HoursAgo": "{n} h ago",
+      "Reason": {
+        "split": "coin split",
+        "loot": "loot"
+      },
+      "Tab": {
+        "all": "All",
+        "arms": "Weapons & Armor",
+        "magic": "Magic Items",
+        "consumables": "Consumables",
+        "gear": "Gear"
+      },
+      "Level": "Level {level}",
+      "Take": "Take",
+      "Give": "Give",
+      "TakingFor": "Taking for",
+      "NoCharacter": "You need a character to take items",
+      "SplitEven": "Split evenly",
+      "SplitCustom": "Custom split",
+      "Sheet": "Open sheet",
+      "SheetHint": "The stash's own sheet: drop items on it to put them in, or edit its coins",
+      "Empty": "The stash is empty.",
+      "TabEmpty": "Nothing of this kind.",
+      "NoStash": "There is no Party Stash yet. It is made the first time the GM opens this window or something is sent to it.",
+      "Gone": "That item is already gone.",
+      "NotYours": "You don't own that character.",
+      "Disabled": "The Party Stash is switched off."
     }
   },
   "DND4EAUTO": {

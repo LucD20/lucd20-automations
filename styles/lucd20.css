@@ -2433,3 +2433,4 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-loot-app .lp-mod .sub { margin-left: auto; white-space: nowrap; }
 .lucd20-loot-app .lp-note { align-self: center; color: var(--ll-text-muted); font-size: 12px; }
 .lucd20-presets-open { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin-top: 4px; }
+.lucd20-loot-app .ll-coin-icon { display: grid; place-content: center; color: var(--ll-accent-text); }

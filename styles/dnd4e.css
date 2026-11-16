@@ -466,3 +466,74 @@ button .d4ea-btn-gold { color: #e0b000; }
 .lucd20-loot-app .lucd20-sc-editor .item .tools { display: inline-flex; gap: 4px; }
 @container (max-width: 480px) { .lucd20-loot-app .lucd20-sc-editor .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .lucd20-loot-app .lucd20-sc-editor textarea { padding: 4px 6px; border: 1px solid var(--ll-border-strong); border-radius: var(--ll-radius); background: var(--ll-bg-sunken); color: var(--ll-text); }
+
+/* Party Stash, ledgers and the coin log ---------------------------------- */
+/*
+ * Laid out like a character sheet, in the colours and type of the 4e books and of Fox's 4e Styling
+ * (mockup: docs/mockups/party-stash-4e.html, style C). The Dragon fonts are Fox's module's: used when
+ * it is active, ordinary fonts otherwise. Dark variant: .is-dark (Foundry's dark theme).
+ */
+.lucd20-stash .window-content { padding: 0; overflow: hidden; }
+.lucd20-stash .ls-page {
+	--ls-page: #ffffff; --ls-side: #e8e6d4; --ls-ink: #2d2f25; --ls-muted: #5f6148; --ls-rule: #4e5c2e; --ls-band: #d3d1ba; --ls-line: #c9c7b0;
+	--ls-box: #ffffff; --ls-head: #2d2f25; --ls-head-ink: #ffffff; --ls-magic: #d7941d; --ls-magic-row: #f7e8d3; --ls-mundane: #70774f; --ls-mundane-row: #e8e6d4;
+	--ls-take: #961334; --ls-take-ink: #ffffff; --ls-btn: #ffffff;
+	display: flex; flex-direction: column; height: 100%; min-height: 0; background: var(--ls-page); color: var(--ls-ink);
+	font-family: "DragonBodySans", "Asul", "Gill Sans", "Trebuchet MS", sans-serif; font-size: 14px; line-height: 1.3;
+}
+.lucd20-stash .ls-page.is-dark {
+	--ls-page: #1d1e19; --ls-side: #26281f; --ls-ink: #e9e6d6; --ls-muted: #a9aa94; --ls-rule: #8fa05a; --ls-band: #33362a; --ls-line: #3d4033;
+	--ls-box: #15160f; --ls-head: #8fa05a; --ls-head-ink: #15160f; --ls-magic: #d7941d; --ls-magic-row: #3a2e18; --ls-mundane: #70774f; --ls-mundane-row: #2a2d22;
+	--ls-take: #b3203f; --ls-take-ink: #ffffff; --ls-btn: #15160f;
+}
+.lucd20-stash .ls-page * { box-sizing: border-box; }
+.lucd20-stash .ls-page h1 { margin: 0 0 14px; border: none; color: var(--ls-ink); font-family: "DragonTitle", "DragonHead", Georgia, serif; font-size: 30px; font-weight: 400; letter-spacing: 0.02em; line-height: 0.95; }
+.lucd20-stash .ls-page h2 { margin: 0 0 4px; padding: 2px 6px; border: none; background: var(--ls-head); color: var(--ls-head-ink); font-family: "DragonHead", Georgia, serif; font-size: 12px; font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase; }
+.lucd20-stash .ls-stash { display: grid; grid-template-columns: 196px minmax(0, 1fr); flex-direction: initial; }
+.lucd20-stash .ls-stash > aside { min-height: 0; padding: 16px 14px; overflow-y: auto; border-right: 3px solid var(--ls-rule); background: var(--ls-side); }
+.lucd20-stash .ls-boxes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.lucd20-stash .ls-box { padding: 4px 0 2px; border: 2px solid var(--ls-ink); background: var(--ls-box); text-align: center; }
+.lucd20-stash .ls-box:first-child { grid-column: span 2; }
+.lucd20-stash .ls-box b { display: block; font-size: 22px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.lucd20-stash .ls-box span { color: var(--ls-muted); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; }
+.lucd20-stash .ls-gm { display: grid; gap: 4px; margin: 10px 0 0; }
+.lucd20-stash .ls-page h2 { margin-top: 16px; }
+.lucd20-stash button.ls-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: auto; height: 26px; margin: 0; padding: 0 8px; border: 1px solid var(--ls-rule); border-radius: 2px; background: var(--ls-btn); color: var(--ls-ink); font: inherit; font-size: 12px; line-height: 1; cursor: pointer; }
+.lucd20-stash button.ls-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.lucd20-stash button.ls-take { flex: none; padding: 0 10px; border-color: var(--ls-take); background: var(--ls-take); color: var(--ls-take-ink); letter-spacing: 0.04em; text-transform: uppercase; }
+.lucd20-stash .ls-ledger,
+.lucd20-stash .ls-items,
+.lucd20-stash .ls-ledger-full { margin: 0; padding: 0; list-style: none; }
+.lucd20-stash .ls-ledger li { padding: 4px 2px; border-bottom: 1px solid var(--ls-line); font-size: 12px; line-height: 1.25; overflow-wrap: anywhere; }
+.lucd20-stash .ls-ledger li span { display: block; color: var(--ls-muted); font-size: 11px; }
+.lucd20-stash .ls-more { display: inline-block; margin-top: 6px; color: var(--ls-ink); font-size: 12px; text-decoration: underline; cursor: pointer; }
+.lucd20-stash .ls-none,
+.lucd20-stash .ls-empty { padding: 8px 2px; color: var(--ls-muted); font-size: 13px; font-style: italic; }
+.lucd20-stash .ls-empty { padding: 24px; text-align: center; }
+.lucd20-stash .ls-stash > main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.lucd20-stash .ls-stash nav { display: flex; flex: none; flex-wrap: wrap; gap: 2px; padding: 10px 10px 0; border-bottom: 3px solid var(--ls-rule); }
+.lucd20-stash .ls-stash nav a { padding: 4px 8px; background: var(--ls-band); color: var(--ls-ink); font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; }
+.lucd20-stash .ls-stash nav a span { margin-left: 5px; opacity: 0.7; }
+.lucd20-stash .ls-stash nav a.is-on { background: var(--ls-rule); color: var(--ls-page); }
+.lucd20-stash .ls-taker { flex: none; padding: 6px 12px 0; color: var(--ls-muted); font-size: 12px; }
+.lucd20-stash .ls-taker select { width: auto; height: 24px; margin-left: 4px; }
+.lucd20-stash .ls-items { flex: 1; min-height: 0; padding: 8px 10px; overflow-y: auto; }
+.lucd20-stash .ls-item { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; padding: 5px 8px; border-left: 6px solid var(--ls-mundane); background: linear-gradient(90deg, var(--ls-mundane-row), var(--ls-page)); }
+.lucd20-stash .ls-item.is-magic { border-left-color: var(--ls-magic); background: linear-gradient(90deg, var(--ls-magic-row), var(--ls-page)); }
+.lucd20-stash .ls-item img { flex: none; width: 28px; height: 28px; border: 1px solid var(--ls-line); object-fit: contain; }
+.lucd20-stash .ls-item .n { flex: 1; min-width: 0; }
+.lucd20-stash .ls-item .n b { display: block; overflow-wrap: anywhere; }
+.lucd20-stash .ls-item .n span { color: var(--ls-muted); font-size: 12px; }
+.lucd20-stash .ls-item .q { flex: none; font-weight: 700; }
+.lucd20-stash-ledger .ls-page { padding: 16px 18px; overflow-y: auto; }
+.lucd20-stash-ledger .ls-page h1 { padding-bottom: 6px; border-bottom: 3px solid var(--ls-rule); font-size: 24px; line-height: 1.1; }
+.lucd20-stash .ls-ledger-full li { display: flex; align-items: baseline; gap: 10px; padding: 5px 4px; }
+.lucd20-stash .ls-ledger-full li:nth-child(odd) { background: var(--ls-band); }
+.lucd20-stash .ls-ledger-full .when { flex: none; width: 76px; color: var(--ls-muted); font-size: 12px; }
+.lucd20-stash .ls-ledger-full .what { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.lucd20-stash .ls-ledger-full .total { display: block; color: var(--ls-muted); font-size: 12px; }
+.lucd20-stash .ls-ledger-full .by { flex: none; color: var(--ls-muted); font-size: 12px; }
+.lucd20-coin-change { margin: 0; }
+.lucd20-coin-change .now { opacity: 0.8; }
+.lucd20-coin-change .by { display: block; opacity: 0.65; font-size: 12px; }
+.lucd20-party-stash-open { display: flex; align-items: center; justify-content: center; gap: 6px; }

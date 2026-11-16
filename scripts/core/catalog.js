@@ -74,7 +74,9 @@ export const FEATURE_ORDER = [
   { id: "dnd4eTokenBadges", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
   { id: "dnd4eMonsterTexts", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
   { id: "dnd4eGameLanguage", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
-  { id: "dnd4eSkillChallenge", category: "dnd4e", phase: 29, systems: ["dnd4e"] }
+  { id: "dnd4eSkillChallenge", category: "dnd4e", phase: 29, systems: ["dnd4e"] },
+  { id: "dnd4ePartyStash", category: "dnd4e", phase: 35, systems: ["dnd4e"] },
+  { id: "dnd4eCoinLog", category: "dnd4e", phase: 35, systems: ["dnd4e"] }
 ];
 
 /** Whether a category / feature entry applies to the active game system. */

@@ -17,11 +17,15 @@ const M = "lucd20-automations";
     document.getElementById("core-config").style.display = "none";
     const registry = {};
     window.fromUuidSync = uuid => registry[uuid];
+    // Items by uuid too ("Actor.kara.Item.<id>"), for drops.
+    window.fromUuid = async uuid => registry[uuid] ?? (() => { const m = /^Actor\.([^.]+)\.Item\.(.+)$/.exec(uuid); return m ? registry[`Actor.${m[1]}`]?.items.get(m[2]) : (window.__worldItems ?? {})[uuid]; })() ?? null;
     const coll = arr => { arr.get = function (id) { return this.find(x => x.id === id); }; Object.defineProperty(arr, "size", { get() { return this.length; } }); return arr; };
     const expand = flat => { const o = {}; for (const [k, v] of Object.entries(flat)) foundry.utils.setProperty(o, k, v); return o; };
     class MockItem {
       constructor(data, parent) { Object.assign(this, foundry.utils.deepClone(data)); this.id ??= Math.random().toString(36).slice(2, 10); this.flags ??= {}; this.system ??= {}; this.img ??= "icons/svg/item-bag.svg"; this.parent = parent; }
       getFlag(ns, k) { return this.flags?.[ns]?.[k]; }
+      get uuid() { return `${this.parent?.uuid}.Item.${this.id}`; }
+      get sheet() { return { render: () => { window.__itemSheet = this.name; } }; }
       toObject() { const { parent, ...rest } = this; return foundry.utils.deepClone({ ...rest, _id: this.id }); }
       async update(d) { for (const [k, v] of Object.entries(d)) foundry.utils.setProperty(this, k, v); Hooks.callAll("updateItem", this, d); }
       async delete() { const list = this.parent.items; list.splice(list.indexOf(this), 1); Hooks.callAll("deleteItem", this); }
@@ -77,7 +81,7 @@ const M = "lucd20-automations";
     game.users.activeGM.query = async (name, data) => { const me = game.user.id; who("u1"); try { return await CONFIG.queries[name](data); } finally { who(me); await foundry.applications.instances.get("lucd20-party-stash")?.render(); } };
     foundry.applications.api.DialogV2.confirm = async () => true;
     window.__dialogMode = undefined;
-    const side = document.createElement("section"); side.id = "actors"; Object.assign(side.style, { position: "fixed", right: "0", bottom: "0", width: "220px", background: "#222" }); document.body.append(side); ui.actors = { element: side };
+    const side = document.createElement("section"); side.id = "actors"; window.__side = side; Object.assign(side.style, { position: "fixed", right: "0", bottom: "0", width: "220px", background: "#222" }); document.body.append(side); ui.actors = { element: side };
   });
   const set = (k, v) => page.evaluate(([k, v]) => game.settings.set("lucd20-automations", k, v), [k, v]);
   await set("lootPile_enabled", true);
@@ -130,7 +134,7 @@ const M = "lucd20-automations";
   const S = ".lucd20-stash:not(.lucd20-stash-ledger)";
   await page.waitForSelector(`${S} .ls-item`);
   await page.evaluate(s => Object.assign(document.querySelector(s).style, { left: "10px", top: "10px" }), S);
-  const gmView = await page.evaluate(s => ({ boxes: [...document.querySelectorAll(`${s} .ls-box`)].map(b => b.textContent.replace(/\s+/g, "")).join(" "),
+  const gmView = await page.evaluate(s => ({ boxes: [...document.querySelectorAll(`${s} .ls-box`)].map(b => (b.querySelector("input")?.value ?? b.querySelector("b").textContent) + b.querySelector("span").textContent).join(" "),
     tabs: [...document.querySelectorAll(`${s} nav a`)].map(a => a.textContent.replace(/\s+/g, " ").trim()), items: [...document.querySelectorAll(`${s} .ls-item`)].map(li => `${li.classList.contains("is-magic") ? "✦" : "·"} ${li.querySelector(".n b").textContent} ${li.querySelector(".n > span").textContent} ${li.querySelector(".q").textContent} [${li.querySelector("button").textContent.trim()}]`),
     ledger: [...document.querySelectorAll(`${s} .ls-ledger li`)].map(li => li.textContent.replace(/\s+/g, " ").trim().replace(/(just now|\d+ min ago)$/, "").trim()), gm: [...document.querySelectorAll(`${s} .ls-gm button`)].map(b => b.textContent.trim()) }), S);
   console.log(JSON.stringify(gmView, null, 1));
@@ -140,6 +144,28 @@ const M = "lucd20-automations";
   assert.deepStrictEqual(gmView.ledger.slice(0, 3).sort(), ["Coins +1 gp, +1 sp, +1 cp · coin split", "Loot Pile put in Battleaxe", "Loot Pile put in Potion of Healing ×2"].sort(), "the ledger records what came in from the pile and the coins");
   assert.deepStrictEqual(gmView.gm, ["Split evenly", "Custom split", "Open sheet"]);
   await page.screenshot({ path: `${out}/p35-stash-gm.png` });
+  // The GM types a new amount in a coin box: saved, logged and said in chat like any other change.
+  assert.strictEqual(await page.$$eval(`${S} .ls-box input[data-coin]`, e => e.length), 5);
+  await page.evaluate(() => { __chat.length = 0; });
+  await page.fill(`${S} input[data-coin="gp"]`, "41");
+  await page.press(`${S} input[data-coin="gp"]`, "Tab");
+  await page.waitForFunction(() => __chat.length === 1);
+  assert.deepStrictEqual(await page.evaluate(() => [__stash.system.currency.gp, __chat[0].text]), [41, "Party Stash: +40 gp (now 41 gp 1 sp 1 cp) Gamemaster"]);
+  await page.fill(`${S} input[data-coin="gp"]`, "1");
+  await page.press(`${S} input[data-coin="gp"]`, "Tab");
+  await page.waitForFunction(() => __stash.system.currency.gp === 1);
+  // Clicking an item opens its sheet.
+  await page.click(`${S} .ls-item:has-text("Battleaxe") .n a`);
+  assert.strictEqual(await page.evaluate(() => window.__itemSheet), "Battleaxe");
+  // The stash actor is not listed in the Actors tab (it is reached with P or the button).
+  await page.evaluate(() => { const li = document.createElement("li"); li.dataset.entryId = __stash.id; li.textContent = "Party Stash"; __side.prepend(li); const other = document.createElement("li"); other.dataset.entryId = "kara"; other.textContent = "Kara"; __side.prepend(other); });
+  await page.waitForFunction(() => document.querySelector(`#actors [data-entry-id="${__stash.id}"]`).hidden);
+  assert.strictEqual(await page.evaluate(() => document.querySelector('#actors [data-entry-id="kara"]').hidden), false);
+  // P closes and opens the window.
+  const key = await page.evaluate(async () => { const k = __keybindings["lucd20-automations.dnd4ePartyStash"]; const out = [k.editable[0].key, k.onDown()]; await new Promise(r => setTimeout(r, 100)); out.push(document.querySelectorAll(".lucd20-stash").length); k.onDown(); await new Promise(r => setTimeout(r, 200)); out.push(document.querySelectorAll(".lucd20-stash").length); return out; });
+  assert.deepStrictEqual(key, ["KeyP", true, 0, 1]);
+  await page.waitForSelector(`${S} .ls-item`);
+  await page.evaluate(s => Object.assign(document.querySelector(s).style, { left: "10px", top: "10px" }), S);
   await page.click(`${S} [data-tab="consumables"]`);
   assert.deepStrictEqual(await page.$$eval(`${S} .ls-item .n b`, e => e.map(x => x.textContent)), ["Potion of Healing"]);
   await page.click(`${S} [data-tab="all"]`);
@@ -163,10 +189,31 @@ const M = "lucd20-automations";
   assert.deepStrictEqual(taken, { kara: ["Sunrod×4", "Potion of Healing×1"], stash: ["Amulet of Protection +1×1", "Battleaxe×1", "Potion of Healing×1"], chat: ["Kara took 4× Sunrod.", "Kara took Potion of Healing."], other: "You don't own that character.",
     ledger: [["take", "Kara", "Sunrod", 4], ["take", "Kara", "Potion of Healing", 1]] });
 
+  // ---- Dropping an item on the window puts it in: a player's own item moves; someone else's is refused ----
+  const put = await page.evaluate(async () => {
+    __chat.length = 0;
+    await __A.dorn.createEmbeddedDocuments("Item", [{ name: "Rope", type: "loot", system: { quantity: 1 } }, { name: "Twin Strike", type: "power" }]);
+    const sunrod = __A.kara.items.find(i => i.name === "Sunrod");
+    const drop = uuid => { const e = new Event("drop", { bubbles: true, cancelable: true }); Object.defineProperty(e, "shiftKey", { value: true }); e.dataTransfer = { getData: () => JSON.stringify({ type: "Item", uuid }) }; document.querySelector(".lucd20-stash:not(.lucd20-stash-ledger)").dispatchEvent(e); };
+    const ask = (uuid, quantity) => CONFIG.queries["lucd20-automations.gm"]({ type: "partyStash.put", payload: { uuid, quantity }, senderId: "p1" }).then(() => null, e => e.message);
+    const out = { theirs: await ask(__A.dorn.items.find(i => i.name === "Rope").uuid), power: null };
+    drop(sunrod.uuid); // the whole stack
+    await new Promise(r => setTimeout(r, 400));
+    who("u1"); out.power = await CONFIG.queries["lucd20-automations.gm"]({ type: "partyStash.put", payload: { uuid: __A.dorn.items.find(i => i.name === "Twin Strike").uuid }, senderId: "u1" }).then(() => null, e => e.message); who("p1");
+    return { ...out, kara: __A.kara.items.map(i => i.name), stash: __stash.items.map(i => `${i.name}×${i.system.quantity}`).sort(), chat: __chat.map(c => c.text), last: __stash.flags["lucd20-automations"].ledger.at(-1) };
+  });
+  console.log(JSON.stringify(put));
+  assert.deepStrictEqual([put.theirs, put.power], ["You don't own that character.", "That kind of item cannot go in the stash."]);
+  assert.deepStrictEqual(put.kara, ["Potion of Healing"]);
+  assert.ok(put.stash.includes("Sunrod×4"));
+  assert.deepStrictEqual(put.chat, ["Kara put 4× Sunrod in the Party Stash."]);
+  assert.deepStrictEqual([put.last.kind, put.last.actor, put.last.item, put.last.n], ["add", "Kara", "Sunrod", 4]);
+  await page.evaluate(async () => { who("u1"); await __stash.items.find(i => i.name === "Sunrod").delete(); who("p1"); await foundry.applications.instances.get("lucd20-party-stash").render(); });
+
   // ---- The full ledger, the coin log button on a character sheet, dark mode ----
   await page.click(`${S} [data-action="ledger"]`);
   await page.waitForSelector(".lucd20-stash-ledger .ls-ledger-full li");
-  assert.ok((await page.$eval(".lucd20-stash-ledger .ls-ledger-full li", e => e.textContent.replace(/\s+/g, " ").trim())).includes("Kara took Potion of Healing"), "newest first");
+  assert.ok((await page.$eval(".lucd20-stash-ledger .ls-ledger-full li", e => e.textContent.replace(/\s+/g, " ").trim())).includes("Kara put in Sunrod ×4"), "newest first");
   await page.evaluate(() => {
     const sheet = document.createElement("div"); sheet.className = "application"; sheet.innerHTML = '<header class="window-header"><h1>Kara</h1><button data-action="close"></button></header>'; Object.assign(sheet.style, { left: "720px", top: "500px", width: "300px" }); document.body.append(sheet);
     foundry.applications.instances.set("kara-sheet", { id: "kara-sheet", element: sheet, document: __A.kara, rendered: true });

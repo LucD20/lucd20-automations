@@ -478,15 +478,15 @@
       },
       "pathfinding": {
         "Name": "Pathfinding",
-        "Hint": "Dragging a token routes it around walls along the cheapest path, avoiding difficult terrain and squares next to enemies when there's a better way. Hold Q while dragging to ignore enemies, T to ignore terrain. Toggle it in the Token controls.",
+        "Hint": "Dragging a token routes it around walls along the cheapest path, avoiding difficult terrain when there's a better way. Hold Q while dragging to also keep away from squares next to enemies, T to ignore terrain. Toggle it in the Token controls.",
         "Setting": {
           "avoidTerrain": {
             "Name": "Avoid difficult terrain",
             "Hint": "Regions with a movement cost count what they cost. Hold T while dragging to ignore."
           },
           "avoidThreats": {
-            "Name": "Avoid squares next to enemies",
-            "Hint": "Squares next to a visible enemy cost extra (no reach or reaction checks). Hold Q while dragging to ignore."
+            "Name": "Q: keep away from enemies",
+            "Hint": "While Q is held, squares next to a visible enemy cost extra, so the route goes around them when it can (no reach or reaction checks)."
           },
           "exploredOnly": {
             "Name": "Players: explored areas only",
@@ -689,6 +689,10 @@
       "dnd4eCoinLog": {
         "Name": "Coin Log",
         "Hint": "Every change to a player character's coins, however it was made, is written to that character's coin log and whispered to the GM and the character's owners. Changes to the Party Stash's coins go to everyone. The coins button in a character sheet's title bar opens the log."
+      },
+      "dnd4eOpportunityWarning": {
+        "Name": "Opportunity Attack Warning",
+        "Hint": "While you drag a token in combat, every enemy the move would provoke an opportunity attack from is marked, with an arrow to the square you would leave. Enemies that already used their opportunity action, or cannot take one, are not marked. Shifting and teleporting never provoke."
       }
     },
     "ForceSettings": {
@@ -963,7 +967,8 @@
       "SelectAll": "Select all / none",
       "SelectAllFrom": "Select all or none from {name}",
       "GroupCount": "{count} of {total}",
-      "Selected": "{count} of {total} items selected"
+      "Selected": "{count} of {total} items selected",
+      "PutN": "Put in {count}"
     },
     "Search": {
       "RollLabel": "Search: {name}",
@@ -1552,7 +1557,15 @@
       "NoStash": "There is no Party Stash yet. It is made the first time the GM opens this window or something is sent to it.",
       "Gone": "That item is already gone.",
       "NotYours": "You don't own that character.",
-      "Disabled": "The Party Stash is switched off."
+      "Disabled": "The Party Stash is switched off.",
+      "OpenItem": "Open the item",
+      "DropHint": "Drop items here to put them in the stash",
+      "EntryPut": "put in {item}",
+      "AnnouncePut": "{actor} put {count}{item} in the Party Stash.",
+      "NotLoot": "That kind of item cannot go in the stash.",
+      "Key": "Open the Party Stash",
+      "KeyHint": "Opens or closes the party's shared stash (D&D 4e).",
+      "CoinsEdit": "{coin}: type a new amount"
     }
   },
   "DND4EAUTO": {

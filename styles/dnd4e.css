@@ -537,3 +537,11 @@ button .d4ea-btn-gold { color: #e0b000; }
 .lucd20-coin-change .now { opacity: 0.8; }
 .lucd20-coin-change .by { display: block; opacity: 0.65; font-size: 12px; }
 .lucd20-party-stash-open { display: flex; align-items: center; justify-content: center; gap: 6px; }
+.lucd20-stash .ls-box input { display: block; width: 100%; height: 26px; margin: 0; padding: 0; border: none; background: transparent; color: inherit; font: inherit; font-size: 22px; font-weight: 700; line-height: 1.1; text-align: center; box-shadow: none; -moz-appearance: textfield; }
+.lucd20-stash .ls-box input::-webkit-outer-spin-button,
+.lucd20-stash .ls-box input::-webkit-inner-spin-button { margin: 0; -webkit-appearance: none; }
+.lucd20-stash .ls-box:focus-within { outline: 2px solid var(--ls-magic); outline-offset: 1px; }
+.lucd20-stash .ls-item .n a { color: inherit; cursor: pointer; }
+.lucd20-stash .ls-item .n a:hover { text-decoration: underline; }
+.lucd20-stash .ls-item img[data-action] { cursor: pointer; }
+.lucd20-stash .ls-drop { flex: none; margin: 0; padding: 6px 12px; border-top: 1px solid var(--ls-line); color: var(--ls-muted); font-size: 12px; text-align: center; }

@@ -73,8 +73,11 @@ const out = __dirname;
 
   // Threats: enemy right in the middle of a corridor-free straight line (1,3) → (5,3), enemy at (3,3) blocks the line itself
   await page.evaluate(() => { __enemy.document.x = 300; __enemy.document.y = 200; Hooks.callAll("updateToken", __enemy.document, {}, {}); });
+  // v0.39.0: keeping away from enemies is the exception, done while Q is held.
+  await page.evaluate(() => game.keyboard.downKeys.add("KeyQ"));
   r = await route(page, [4, 3]);
-  console.log("around the enemy:", JSON.stringify(r));
+  await page.evaluate(() => game.keyboard.downKeys.delete("KeyQ"));
+  console.log("around the enemy (Q held):", JSON.stringify(r));
   const cells = [];
   for (let k = 1; k < r.length; k++) {
     let [x, y] = r[k - 1];
@@ -83,12 +86,10 @@ const out = __dirname;
   }
   const threatened = ([x, y]) => Math.abs(x - 3) <= 1 && Math.abs(y - 2) <= 1;
   assert.ok(!cells.slice(0, -1).some(threatened), "goes around the squares next to the enemy");
-  // Hold Q → straight through
-  await page.evaluate(() => game.keyboard.downKeys.add("KeyQ"));
+  // Without Q → straight through
   const withQ = await route(page, [4, 3]);
-  console.log("holding Q:", JSON.stringify(withQ));
-  assert.deepStrictEqual(withQ.map(p => p.slice(0, 2)), [[1, 3], [4, 3]], "Q ignores threats: straight line");
-  await page.evaluate(() => game.keyboard.downKeys.delete("KeyQ"));
+  console.log("without Q:", JSON.stringify(withQ));
+  assert.deepStrictEqual(withQ.map(p => p.slice(0, 2)), [[1, 3], [4, 3]], "without Q threats are ignored: straight line");
 
   // Difficult terrain: a region on squares x 2..3, y 3..4 (cost ×2), enemy moved away
   await page.evaluate(() => {

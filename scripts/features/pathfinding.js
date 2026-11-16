@@ -15,9 +15,10 @@ import { defineFeature } from "../core/registry.js";
  *   costs, so a route around it wins when it's better — hold **T** while
  *   dragging to ignore terrain;
  * - squares next to a visible enemy count as threatened (no reach or
- *   reaction checks, on purpose): passing through them costs extra, so a
- *   route around them wins when there is one — hold **Q** to ignore threats.
- *   The destination itself is never penalised.
+ *   reaction checks, on purpose): while **Q** is held, passing through them
+ *   costs extra, so a route around them wins when there is one (v0.39.0, the
+ *   owner: dodging is the exception, so it is the one that needs the key;
+ *   before, Q switched it off). The destination itself is never penalised.
  * - Players only route through explored or currently visible areas (Q28),
  *   so a route can't reveal unexplored corridors. The GM routes anywhere.
  *
@@ -38,6 +39,12 @@ const state = { feature: null, versions: 0, context: null, logged: new Set() };
 /* -------------------------------------------- */
 
 const keyDown = code => !!game.keyboard?.downKeys?.has?.(code);
+
+/** Tell other features which path a token is about to take (hook `lucd20MovementPath`: token, search). */
+function announce(token, search) {
+  Hooks.callAll("lucd20MovementPath", token, search);
+  return search;
+}
 
 function isActive() {
   return state.feature?.active && game.settings.get(MODULE_ID, ACTIVE_KEY);
@@ -295,7 +302,7 @@ function context(token, { ignoreCost = false } = {}) {
     blocked: wallIndex(size),
     wallHits: new Map(),
     terrain: feature.get("avoidTerrain") && !keyDown("KeyT") && !ignoreCost ? terrainGrid(token.document, size) : new Map(),
-    threats: feature.get("avoidThreats") && !keyDown("KeyQ") ? threatGrid(token, size) : new Set(),
+    threats: feature.get("avoidThreats") && keyDown("KeyQ") ? threatGrid(token, size) : new Set(),
     explored: exploredTester(),
     rect: canvas.dimensions.sceneRect,
     origin: gridOrigin()
@@ -560,7 +567,7 @@ defineFeature({
           state.logged.add(skip);
           console.log(`${MODULE_ID} | Pathfinding skipped: ${skip}.`);
         }
-        return original(waypoints, options);
+        return announce(this, original(waypoints, options));
       }
       // v0.28.3: computed right away and returned as `result` (fast: ~50 ms on a big
       // maze). v0.28.2 only returned a promise and V14 kept its straight path.
@@ -571,8 +578,8 @@ defineFeature({
         console.error(`${MODULE_ID} | Pathfinding failed.`, err);
       }
       if (CONFIG.debug?.lucd20Pathfinding) console.log(`${MODULE_ID} | Pathfinding result`, path ? path.map(w => `${w.x},${w.y}`).join(" → ") : "no route (Foundry's own path used)");
-      if (!path) return original(waypoints, options); // no route found: Foundry's own
-      return { result: path, promise: Promise.resolve(path), cancel: () => {} };
+      if (!path) return announce(this, original(waypoints, options)); // no route found: Foundry's own
+      return announce(this, { result: path, promise: Promise.resolve(path), cancel: () => {} });
     });
     const bump = () => (state.versions++, (state.context = null));
     for (const hook of ["createWall", "updateWall", "deleteWall", "createRegion", "updateRegion", "deleteRegion",

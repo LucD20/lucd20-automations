@@ -17,7 +17,9 @@ import { lootApi, registerLootAdapter } from "../../features/loot-pile.js";
  * - Party Stash window (feature dnd4ePartyStash): laid out like a character sheet in the colours and
  *   type of the 4e books (and of Fox's 4e Styling, whose fonts it uses when that module is active),
  *   with a dark variant. Coins in boxes and the ledger on the left, items by tab on the right. Anyone
- *   takes from it; the GM gives and splits its coins. Opened from the Actors sidebar.
+ *   takes from it and puts items in by dropping them on the window; the GM gives, splits its coins and
+ *   types new coin amounts in the boxes. Opened with P or from the Actors sidebar; the stash actor
+ *   itself is hidden from the Actors list.
  * - Coin tracking (feature dnd4eCoinLog): every change to a player character's coins or the stash's,
  *   however it was made, goes to that actor's ledger and to chat (whispered to the GM and the
  *   character's owners; the stash's to everyone). A "Coin log" button sits in each character sheet's
@@ -283,6 +285,7 @@ class StashWindow extends ApplicationV2 {
 		position: { width: 680, height: 600 },
 		actions: {
 			tab: StashWindow.#onTab,
+			open: StashWindow.#onOpen,
 			take: StashWindow.#onTake,
 			give: StashWindow.#onGive,
 			splitEven: StashWindow.#onSplitEven,
@@ -314,7 +317,10 @@ class StashWindow extends ApplicationV2 {
 		const takers = gm ? [] : lootApi.takers();
 		if (!takers.some(a => a.uuid === this.taker)) this.taker = takers[0]?.uuid ?? null;
 		const purse = coinsOf(stash);
-		const boxes = DENOMINATIONS.map(d => `<div class="ls-box ls-coin-${d.id}"><b>${purse[d.id]}</b><span>${d.id}</span></div>`).join("");
+		// The GM types new amounts straight into the boxes.
+		const boxes = DENOMINATIONS.map(d => `<div class="ls-box ls-coin-${d.id}">${gm
+			? `<input type="number" min="0" step="1" inputmode="numeric" data-coin="${d.id}" value="${purse[d.id]}" aria-label="${esc(L("CoinsEdit", { coin: d.id }))}">`
+			: `<b>${purse[d.id]}</b>`}<span>${d.id}</span></div>`).join("");
 		const recent = [...entriesOf(stash)].reverse().slice(0, 6).map(entry => {
 			const { who, what } = entryText(entry);
 			return `<li><b>${esc(who)}</b> ${esc(what)}<span>${esc(ago(entry.t))}</span></li>`;
@@ -330,8 +336,8 @@ class StashWindow extends ApplicationV2 {
 				? `<button type="button" class="ls-btn ls-take" data-action="give">${icon("fa-user")} ${L("Give")}</button>`
 				: `<button type="button" class="ls-btn ls-take" data-action="take" ${takeDisabled}>${icon("fa-hand")} ${L("Take")}</button>`;
 			return `<li class="ls-item ${level > 0 ? "is-magic" : "is-mundane"}" data-item-id="${esc(item.id)}">
-				<img src="${esc(item.img)}" alt="">
-				<span class="n"><b>${esc(item.name)}</b><span>${esc(typeLabel(item))}${level > 0 ? ` · ${esc(L("Level", { level }))}` : ""}</span></span>
+				<img src="${esc(item.img)}" alt="" data-action="open">
+				<span class="n"><b><a data-action="open" data-tooltip="${esc(L("OpenItem"))}">${esc(item.name)}</a></b><span>${esc(typeLabel(item))}${level > 0 ? ` · ${esc(L("Level", { level }))}` : ""}</span></span>
 				<span class="q">${quantity > 1 ? `×${quantity}` : ""}</span>${action}</li>`;
 		}).join("");
 		const count = tab => (tab === "all" ? items.length : items.filter(item => category(item) === tab).length);
@@ -357,6 +363,7 @@ class StashWindow extends ApplicationV2 {
 				<nav>${tabs}</nav>
 				${takerHTML}
 				<ol class="ls-items">${rows || `<li class="ls-none">${L(items.length ? "TabEmpty" : "Empty")}</li>`}</ol>
+				<p class="ls-drop">${icon("fa-arrow-down")} ${L("DropHint")}</p>
 			</main>
 		</div>`;
 	}
@@ -367,6 +374,43 @@ class StashWindow extends ApplicationV2 {
 		const list = content.querySelector(".ls-items");
 		if (list) list.scrollTop = top;
 		content.querySelector("[data-taker]")?.addEventListener("change", event => { this.taker = event.target.value; });
+		for (const input of content.querySelectorAll("input[data-coin]")) {
+			input.addEventListener("change", () => {
+				const purse = coinsOf(this.stash);
+				purse[input.dataset.coin] = Math.max(0, Math.floor(Number(input.value) || 0));
+				writeCoins(this.stash, purse, null);
+			});
+		}
+	}
+
+	/** Items dropped anywhere on the window go into the stash. */
+	_onRender(context, options) {
+		super._onRender?.(context, options);
+		if (this._dropReady) return;
+		this._dropReady = true;
+		this.element.addEventListener("dragover", event => event.preventDefault());
+		this.element.addEventListener("drop", event => this.#onDrop(event));
+	}
+
+	async #onDrop(event) {
+		event.preventDefault();
+		let data = null;
+		try {
+			const editor = foundry.applications.ux?.TextEditor?.implementation ?? globalThis.TextEditor;
+			data = editor?.getDragEventData?.(event) ?? JSON.parse(event.dataTransfer.getData("text/plain"));
+		} catch (err) {
+			data = null;
+		}
+		if (data?.type !== "Item" || !data.uuid) return;
+		const item = await fromUuid(data.uuid);
+		if (!item || item.parent === this.stash) return;
+		const quantity = await this.#quantity(item, event, null, "Put");
+		if (!quantity) return;
+		try {
+			await executeAsGM("partyStash.put", { uuid: data.uuid, quantity });
+		} catch (err) {
+			ui.notifications.warn(err.message ?? String(err));
+		}
 	}
 
 	#item(target) {
@@ -378,6 +422,10 @@ class StashWindow extends ApplicationV2 {
 		const quantity = Number(item.system?.quantity) || 1;
 		if (quantity <= 1 || event?.shiftKey) return quantity;
 		return lootApi.QuantityWindow().wait(item, name, verb);
+	}
+
+	static #onOpen(event, target) {
+		this.#item(target)?.sheet?.render(true);
 	}
 
 	static #onTab(event, target) {
@@ -435,6 +483,57 @@ async function takeFromStash({ itemId, target, quantity }, senderId) {
 	return lootApi.handOut(stash, [{ itemId, target, quantity }]);
 }
 
+/**
+ * Someone drops an item on the stash (runs on the GM's client). From a character: the item moves, and
+ * the sender must own that character. From the Items sidebar or a compendium (GM only): a copy.
+ */
+async function putInStash({ uuid, quantity }, senderId) {
+	const sender = game.users.get(senderId) ?? game.user;
+	const item = await fromUuid(uuid);
+	if (!item) throw new Error(L("Gone"));
+	if (!LOOT_TYPES.has(item.type)) throw new Error(L("NotLoot"));
+	const source = item.parent?.documentName === "Actor" ? item.parent : null;
+	if (!sender.isGM && (!source || !source.testUserPermission(sender, "OWNER"))) throw new Error(L("NotYours"));
+	const stash = await lootApi.stashActor(true);
+	if (source === stash) return true;
+
+	const hasQty = typeof item.system?.quantity === "number";
+	const total = hasQty ? item.system.quantity : 1;
+	const n = hasQty ? Math.min(Math.max(Number(quantity) || total, 1), total) : 1;
+	const same = hasQty && stash.items.find(i => i.type === item.type && i.name === item.name && typeof i.system?.quantity === "number");
+	if (same) await same.update({ "system.quantity": same.system.quantity + n });
+	else {
+		const data = item.toObject();
+		delete data._id;
+		if (hasQty) data.system.quantity = n;
+		if (data.system && "equipped" in data.system) data.system.equipped = false;
+		await stash.createEmbeddedDocuments("Item", [data]);
+	}
+	if (source) {
+		if (hasQty && n < total) await item.update({ "system.quantity": total - n });
+		else await item.delete();
+	}
+	const who = source?.name ?? sender.name;
+	await addEntries(stash, [{ kind: "add", item: item.name, n, actor: who }], senderId);
+	if (lootApi.announce) {
+		await ChatMessage.create({
+			content: `<p class="lucd20-loot-announce"><i class="fa-solid fa-box-archive"></i> ${L("AnnouncePut", { actor: esc(who), item: esc(item.name), count: n > 1 ? `${n}× ` : "" })}</p>`,
+			speaker: { alias: L("Title") }
+		});
+	}
+	return true;
+}
+
+/** The stash actor is reached through its window, not the Actors list: hide its entry there. */
+function hideStashEntry() {
+	const id = game.settings.get(MODULE_ID, "lootPile_stashId");
+	const root = appElement(ui.actors) ?? document.getElementById("actors");
+	if (!id || !root) return;
+	for (const entry of root.querySelectorAll(`[data-entry-id="${id}"], [data-document-id="${id}"]`)) {
+		if (!entry.hidden) entry.hidden = true;
+	}
+}
+
 function refreshStash(document) {
 	const actor = document?.documentName === "Actor" ? document : document?.parent;
 	if (!isStash(actor)) return;
@@ -476,14 +575,35 @@ defineFeature({
 			if (!feature.active) throw new Error(L("Disabled"));
 			return takeFromStash(payload, senderId);
 		});
+		onGMRequest("partyStash.put", (payload, senderId) => {
+			if (!feature.active) throw new Error(L("Disabled"));
+			return putInStash(payload, senderId);
+		});
+		// P opens or closes the stash (the key can be changed in Configure Controls).
+		game.keybindings?.register(MODULE_ID, "dnd4ePartyStash", {
+			name: "LUCD20.PartyStash.Key",
+			hint: "LUCD20.PartyStash.KeyHint",
+			editable: [{ key: "KeyP" }],
+			onDown: () => {
+				if (!feature.active || game.system.id !== "dnd4e") return false;
+				if (StashWindow.instance?.rendered) StashWindow.instance.close();
+				else StashWindow.show();
+				return true;
+			}
+		});
 	},
 
 	enable(feature) {
 		state.stash = feature;
 		for (const hook of ["createItem", "updateItem", "deleteItem", "updateActor"]) feature.on(hook, refreshStash);
-		feature.onCleanup(watchDOM("dnd4e-party-stash-button", drawSidebarButton));
+		feature.onCleanup(watchDOM("dnd4e-party-stash-button", () => {
+			drawSidebarButton();
+			hideStashEntry();
+		}));
 		feature.onCleanup(() => {
 			document.querySelectorAll(".lucd20-party-stash-open, .lucd20-directory-footer:empty").forEach(el => el.remove());
+			const id = game.settings.get(MODULE_ID, "lootPile_stashId");
+			if (id) document.querySelectorAll(`#actors [data-entry-id="${id}"], #actors [data-document-id="${id}"]`).forEach(el => { el.hidden = false; });
 			StashWindow.instance?.close();
 			for (const app of foundry.applications.instances?.values() ?? []) if (app instanceof LedgerWindow && isStash(app.actor)) app.close();
 			state.stash = null;
@@ -491,4 +611,4 @@ defineFeature({
 	}
 });
 
-export const _test = { StashWindow, LedgerWindow, entriesOf, coinsOf, emptyPurse };
+export const _test = { putInStash, StashWindow, LedgerWindow, entriesOf, coinsOf, emptyPurse };

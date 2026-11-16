@@ -3,6 +3,7 @@ import { registerSettings } from "./settings.mjs";
 import "./cards.mjs";
 import "./skill-challenge.mjs";
 import "./party-stash.mjs";
+import "./reactions/opportunity-warning.mjs";
 import { registerMigration } from "./migration.mjs";
 import { registerSocket } from "./effects.mjs";
 import { actorFromSpeaker, log, waitForDice } from "./utils.mjs";

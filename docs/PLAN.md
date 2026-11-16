@@ -543,7 +543,8 @@ data browser, import. Code: `scripts/features/token-tooltip/`.
   **hold T** while dragging to ignore terrain; squares **next to a visible
   enemy** (opposite disposition, not defeated; no reach/reaction logic, on
   purpose) cost +4 squares to pass through, except the destination —
-  **hold Q** to ignore. Only tokens this user can see count, so nothing
+  only while **Q is held** (v0.39.0: swapped at the owner's request; before,
+  Q switched this off). Only tokens this user can see count, so nothing
   leaks. Note: T is also Foundry's target key.
 - **Players only route through explored or visible areas** (Q28):
   `canvas.fog.isPointExplored` if V14 has it, else the explored fog texture is
@@ -1583,3 +1584,35 @@ Code: `scripts/systems/dnd4e/party-stash.mjs`; test `test35.js`.
   stash's NPC sheet accepting dropped items; that the pile and stash, as NPC
   actors, are not picked up by anything that lists NPCs; the look with and
   without Fox's module, light and dark.
+
+**v0.39.0 (owner's feedback on 0.38.0):**
+
+- **Party Stash:** the item's name or picture opens its sheet; the GM types
+  new coin amounts straight into the coin boxes; items **dropped on the
+  window** go into the stash (`partyStash.put`: from a character the sender
+  owns the item moves, a stack asks how many; from the Items sidebar or a
+  compendium the GM gets a copy; only loot item types); the stash actor is
+  **hidden from the Actors list** (DOM), and **P** opens or closes the window
+  (keybinding `dnd4ePartyStash`, changeable), besides the sidebar button.
+- **Pathfinding:** keeping away from squares next to enemies now happens only
+  **while Q is held** (it was the default, with Q switching it off).
+
+## 15. Opportunity Attack Warning — `dnd4eOpportunityWarning` (phase 36)
+
+*New, D&D 4e.* On by default, for everyone. Asked for "like Draw Steel's".
+
+- While a token is dragged in combat, each enemy the planned move would
+  provoke an opportunity attack from gets a "!" badge and an arrow to the
+  square the mover would leave. Same rules as the opportunity cards
+  (`provokedAlong` in `reactions/opportunity.mjs`): leaving a square next to
+  an enemy that still has its opportunity action, can act and is not on its
+  own turn; shifting and teleporting never provoke. Players only get marks
+  for enemies they can see.
+- The planned path: Pathfinding announces every search it answers (hook
+  `lucd20MovementPath`); the feature also wraps `Token#findMovementPath` for
+  when Pathfinding is off. Marks are local, drawn on `canvas.interface`, and
+  cleared on pointer up, right click, Escape, `moveToken` and turn change.
+- Code: `scripts/systems/dnd4e/reactions/opportunity-warning.mjs`. Test:
+  `test36.js`.
+- (verify) in Foundry: that the marks follow the ruler while dragging and go
+  when the token is dropped or the drag is cancelled.

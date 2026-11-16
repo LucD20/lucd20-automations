@@ -81,27 +81,32 @@ function gridSteps(origin, waypoints) {
 	return steps;
 }
 
-/** Threatening tokens that the movement provoked from. */
-function provokedByMovement(moverDoc, movement) {
-	const mover = moverDoc.object;
-	if (!mover) return [];
-	const origin = movement.origin ?? movement.passed?.waypoints?.[0];
-	const waypoints = movement.passed?.waypoints ?? [];
-	if (!origin || !waypoints.length) return [];
-	const w = moverDoc.width, h = moverDoc.height;
-	const threats = canvas.tokens.placeables.filter((t) => t !== mover && areEnemies(mover, t) && canTakeOpportunity(t));
-	if (!threats.length) return [];
-
-	const provoked = new Set();
+/**
+ * Who a path provokes from, and where: Map(threat token → { x, y } of the square the mover leaves
+ * when it first provokes it). `visibleOnly` for a preview on a player's screen: enemies that player
+ * cannot see are left out, so the preview gives nothing away.
+ */
+export function provokedAlong(mover, origin, waypoints, { visibleOnly = false } = {}) {
+	const provoked = new Map();
+	if (!mover || !origin || !waypoints?.length) return provoked;
+	const w = mover.document.width, h = mover.document.height;
+	const threats = canvas.tokens.placeables.filter((t) => t !== mover && areEnemies(mover, t) && canTakeOpportunity(t) && (!visibleOnly || t.visible));
+	if (!threats.length) return provoked;
 	let from = origin;
 	for (const step of gridSteps(origin, waypoints)) {
 		if (!SAFE_ACTIONS.includes(step.action)) {
 			const fpFrom = footprintAt(from.x, from.y, w, h);
-			for (const t of threats) if (adjacent(fpFrom, tokenFootprint(t))) provoked.add(t);
+			for (const t of threats) if (!provoked.has(t) && adjacent(fpFrom, tokenFootprint(t))) provoked.set(t, { x: from.x, y: from.y });
 		}
 		from = step;
 	}
-	return [...provoked];
+	return provoked;
+}
+
+/** Threatening tokens that the movement provoked from. */
+function provokedByMovement(moverDoc, movement) {
+	const origin = movement.origin ?? movement.passed?.waypoints?.[0];
+	return [...provokedAlong(moverDoc.object, origin, movement.passed?.waypoints ?? []).keys()];
 }
 
 function whisperTargets(actor) {

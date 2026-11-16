@@ -82,6 +82,10 @@
       "setup": {
         "Label": "World Setup",
         "Hint": "Saving how a world is set up and applying it to another."
+      },
+      "pf2e": {
+        "Label": "Pathfinder 2e",
+        "Hint": "Rules of the game done for you: conditions, Shove, Trip. The full list is in docs/pf2e-rules.md."
       }
     },
     "Feature": {
@@ -707,6 +711,22 @@
             "Hint": "A short metallic sound when the move you are planning starts to provoke another enemy. Follows Foundry's interface volume."
           }
         }
+      },
+      "pf2eFrightened": {
+        "Name": "Frightened",
+        "Hint": "At the end of a creature's turn its Frightened value goes down by 1."
+      },
+      "pf2eSickened": {
+        "Name": "Sickened",
+        "Hint": "Sickened gets a DC to retch against when it is applied (the save it came from, else a spell's DC, else a level-based DC), noted on the condition. At the start of the creature's turn chat says what to roll, with a button: a success takes 1 off Sickened, a critical success 2."
+      },
+      "pf2eShove": {
+        "Name": "Shove",
+        "Hint": "When a Shove succeeds, the one who rolled chooses on the map where the target goes: green squares 5 feet away, and on a critical success also blue squares 10 feet away, always away from the shover. Right-click to cancel."
+      },
+      "pf2eTrip": {
+        "Name": "Trip",
+        "Hint": "A Trip's result is applied: the target is Prone on a success, Prone with a 1d6 bludgeoning roll on a critical success; the tripper is Prone on a critical failure."
       }
     },
     "ForceSettings": {
@@ -1581,6 +1601,26 @@
       "Key": "Open the Party Stash",
       "KeyHint": "Opens or closes the party's shared stash (D&D 4e).",
       "CoinsEdit": "{coin}: type a new amount"
+    },
+    "PF2eRules": {
+      "RetchLabel": "Retch: Fortitude DC {dc}",
+      "RetchSource": {
+        "save": "(the DC of the save)",
+        "spell": "(the caster's spell DC)",
+        "level": "(level-based DC of the source)",
+        "own": "(level-based DC)"
+      },
+      "RetchLine": "<strong>Sickened {value}</strong>: roll Fortitude DC {dc} to retch.",
+      "RetchButton": "Fortitude DC {dc}",
+      "NotYours": "That is not your character.",
+      "NotSickened": "{name} is no longer sickened.",
+      "ShoveHint": "Shove: click a green square to push {name}. Right-click to cancel.",
+      "ShoveHintCritical": "Shove: click a green or blue square to push {name}. Right-click to cancel.",
+      "ShoveNowhere": "Shove: there is nowhere to push the target.",
+      "ShoveStale": "That Shove can no longer be resolved.",
+      "ShoveDone": "That Shove was already resolved.",
+      "Off": "That automation is switched off.",
+      "TripDamage": "Trip (critical success): damage to {name}"
     }
   },
   "DND4EAUTO": {

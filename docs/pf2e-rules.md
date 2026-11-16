@@ -9,14 +9,29 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 
 | # | Rule | Status | Where |
 |---|------|--------|-------|
-| 1 | Frightened goes down by 1 at the end of the creature's turn | planned | |
-| 2 | Sickened gets a DC when applied; reminder to retch at the start of the turn | planned | |
-| 3 | Shove: choose where the target is pushed | planned | |
-| 4 | Trip: conditions and damage by degree of success | planned | |
+| 1 | Frightened goes down by 1 at the end of the creature's turn | built v0.41.0 | `pf2eFrightened` |
+| 2 | Sickened gets a DC when applied; reminder to retch at the start of the turn | built v0.41.0 | `pf2eSickened` |
+| 3 | Shove: choose where the target is pushed | built v0.41.0 | `pf2eShove` |
+| 4 | Trip: conditions and damage by degree of success | built v0.41.0 | `pf2eTrip` |
+| 5 | Temporal Distortion: d4 for the condition after the save | planned | |
+
+Code: `scripts/systems/pf2e/rules.js`; test `tools/harness/tests/test37.js`.
+Each rule has its own switch under **Pathfinder 2e** in the module's settings.
+
+Standing decisions:
+- **Always wait for Dice So Nice** before showing or applying what follows a
+  roll (owner).
+- What a roll was, against whom and how it went is read from the roll's chat
+  message (`flags.pf2e.context`: `options` such as `action:shove`, `outcome`,
+  `origin.token`, `target.token`, `dc.value`), as the owner's world showed.
+- Conditions and moves on creatures a player does not own are done by the
+  active GM's client.
 
 ## 1. Frightened
 
 - At the end of a creature's turn, its Frightened value goes down by 1.
+- Built: the owner checked that PF2e 8.7 does not do this by itself. Only when
+  the encounter moves forward (not when the GM steps a turn back).
 
 ## 2. Sickened
 
@@ -28,6 +43,15 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 - At the **start of the sickened creature's turn**, chat says
   "Sickened X: Roll Fortitude DC Y to retch." with a button to roll. The DC
   may be public.
+- Built, with one difference from the rule as given: a dragged (or
+  button-applied) Sickened carries **no origin** (owner's check), so the DC is
+  taken from the recent chat, newest first (15 messages, 3 minutes):
+  the creature's own **saving throw** → that save's DC (this covers spells and
+  abilities with a save); a **spell card** → the caster's spell DC; another
+  item's card → the level-based DC of its owner; nothing → the creature's own
+  level-based DC. The DC is stored on the condition and added to the end of
+  its description. The button rolls Fortitude; success −1, critical success
+  −2. The line is public and names the DC.
 
 ## 3. Shove
 
@@ -46,6 +70,12 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
   counting, and lies on the far side from the shover (its direction from the
   target is within about 65° of straight away). This gives exactly the
   squares in both pictures.
+- Built: after a successful Shove (and the dice), the one who rolled gets the
+  squares highlighted (green 5 ft; on a critical success blue 10 ft as well)
+  and clicks one; right-click or Escape cancels. Squares behind a wall or
+  under another creature are not offered. The GM's client checks the choice
+  and moves the target, once per Shove. Following the target with a Stride is
+  not automated.
 
 ## 4. Trip
 
@@ -53,3 +83,17 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 - **Critical success:** the target becomes Prone and takes 1d6 bludgeoning
   damage.
 - **Critical failure:** the one who tripped becomes Prone.
+- Built: applied automatically after the dice. The 1d6 bludgeoning is posted
+  as a normal damage roll, applied with PF2e's own buttons (so resistances and
+  weaknesses are the system's). A creature already Prone is left as it is.
+
+## 5. Temporal Distortion (planned)
+
+- After the spell is used and the NPC rolls its save: on anything but a
+  critical success, the PC's player (the GM if the player is not connected)
+  gets a "roll d4" for Clumsy 1, Enfeebled 1 or Stupefied 1. The d4 is rolled
+  in chat, the game waits for Dice So Nice, then the condition rolled is
+  applied; on a 4 a window lets the player choose the condition.
+- On a critical failure the condition's value is 3.
+- The duration is to be automated too (an Effect that grants the condition
+  for X rounds, or hard-coded: to be decided).

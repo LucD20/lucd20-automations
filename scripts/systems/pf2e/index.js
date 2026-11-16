@@ -8,3 +8,4 @@ import "./gm-vision.js";
 import "./loot-pile.js";
 import "./door-locks.js";
 import "./search.js";
+import "./rules.js";

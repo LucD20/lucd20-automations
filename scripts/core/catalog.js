@@ -19,6 +19,7 @@ export const CATEGORIES = [
   { id: "playerSettings", icon: "fa-solid fa-user-lock" },
   { id: "setup", icon: "fa-solid fa-floppy-disk" },
   { id: "exploration", icon: "fa-solid fa-magnifying-glass", systems: ["pf2e"] },
+  { id: "pf2e", icon: "fa-solid fa-dice-d20", systems: ["pf2e"] },
   { id: "dnd4e", icon: "fa-solid fa-dragon", systems: ["dnd4e"] }
 ];
 
@@ -61,6 +62,10 @@ export const FEATURE_ORDER = [
   { id: "settingPresets", category: "setup", phase: 34 },
   { id: "searchAutomation", category: "exploration", phase: 11, systems: ["pf2e"] },
   { id: "hazardDetection", category: "exploration", phase: 11, systems: ["pf2e"] },
+  { id: "pf2eFrightened", category: "pf2e", phase: 37, systems: ["pf2e"] },
+  { id: "pf2eSickened", category: "pf2e", phase: 37, systems: ["pf2e"] },
+  { id: "pf2eShove", category: "pf2e", phase: 37, systems: ["pf2e"] },
+  { id: "pf2eTrip", category: "pf2e", phase: 37, systems: ["pf2e"] },
   { id: "dnd4eClassFeatures", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
   { id: "dnd4eCover", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
   { id: "dnd4eActionTracker", category: "dnd4e", phase: 26, systems: ["dnd4e"] },

@@ -1634,3 +1634,14 @@ Code: `scripts/systems/dnd4e/party-stash.mjs`; test `test35.js`.
 "Coins handed out: …"); the Coin Log no longer whispers a line per character
 for it (the ledgers still record each change). If the Loot Pile's "Announce in
 chat" is off there is no split line, so the per-character whispers stay.
+
+---
+
+## 16. PF2e rules (phase 37 on)
+
+The owner is replacing PF2e automation modules with this one, rule by rule.
+**`docs/pf2e-rules.md` is the ledger**: every rule as given, its status and
+how it was built. New category **Pathfinder 2e** (`pf2e`), one feature per
+rule. v0.41.0: Frightened, Sickened, Shove, Trip (`scripts/systems/pf2e/
+rules.js`, `test37.js`), plus `core/dice.js` (wait for Dice So Nice by
+message) and `core/square-picker.js` (pick one of a few highlighted squares).

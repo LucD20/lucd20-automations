@@ -2440,3 +2440,8 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-drag-hint kbd { min-width: 20px; padding: 1px 6px; border: 1px solid #8b8799; border-radius: 3px; background: #26252e; color: inherit; font: 700 12px monospace; text-align: center; }
 .lucd20-drag-hint.is-on { border-color: #ee9b3a; }
 .lucd20-drag-hint.is-on kbd { border-color: #ee9b3a; background: #ee9b3a; color: #1b1a21; }
+
+/* PF2e rules: the bar while a square is picked, the retch card. */
+.lucd20-pick-bar { position: fixed; top: 12px; left: 50%; z-index: 10000; padding: 8px 14px; border: 1px solid #3fb950; border-radius: 4px; background: rgba(18, 17, 23, 0.92); color: #efe6d8; font-family: Signika, "Segoe UI", sans-serif; font-size: 14px; pointer-events: none; transform: translateX(-50%); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.6); }
+.lucd20-retch-card p { margin: 0 0 6px; }
+.lucd20-retch-card button { width: 100%; }

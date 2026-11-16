@@ -1759,3 +1759,11 @@ whole HUD, leaving only the hotbar and players list in the corner. Keywords
 are now read from a list, Set, string or object of flags (plus
 `keywordsCustom`), and a power whose data cannot be read is skipped (warning in
 the console) instead of stopping the HUD.
+
+**v0.43.2:** the owner's layout (V14, 1920 × 1009): `#interface` holds
+`#ui-left` (absolute, 960 wide, scene controls in `#ui-left-column-1`),
+`#ui-middle` (`#ui-top`, `#ui-bottom`) and `#ui-right` (absolute; `#sidebar`
+at x 1572 with `#sidebar-tabs` 48 wide and `#sidebar-content` 312 wide).
+The HUD drew at [0, 819, 1240 × 190]; `#players` sat in its corner at
+[4, 668, 200 × 145]; `#hotbar` (an `aside.flexrow`) is 210 × 62 inside it, wider
+than the 182 px column, so the column is now 224 px.

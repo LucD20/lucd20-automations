@@ -2509,7 +2509,7 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-hud4e .h4-pw.act .h4-h { font-weight: 600; }
 .lucd20-hud4e .h4-uses { display: inline-flex; gap: 2px; margin-left: 5px; vertical-align: 1px; } .lucd20-hud4e .h4-uses i { width: 7px; height: 7px; border: 1px solid #fff; border-radius: 50%; } .lucd20-hud4e .h4-uses i.full { background: #fff; }
 .lucd20-hud4e .h4-none { margin: 6px 8px; color: var(--mute); font-size: 11px; }
-.lucd20-hud4e .h4-right { width: 182px; flex: none; display: flex; flex-direction: column; border-left: 1px solid var(--line); background: var(--bg); }
+.lucd20-hud4e .h4-right { width: 224px; flex: none; display: flex; flex-direction: column; border-left: 1px solid var(--line); background: var(--bg); }
 .lucd20-hud4e .h4-tiles { display: grid; grid-template-columns: repeat(5, 1fr); border-bottom: 1px solid var(--line); }
 .lucd20-hud4e .h4-tiles span { position: relative; display: grid; justify-items: center; padding: 3px 0 2px; border-left: 1px solid var(--line); font-size: 8.5px; overflow: hidden; }
 .lucd20-hud4e .h4-tiles span:first-child { border-left: 0; } .lucd20-hud4e .h4-tiles i { font-size: 14px; } .lucd20-hud4e .h4-tiles [data-pip] { cursor: pointer; }

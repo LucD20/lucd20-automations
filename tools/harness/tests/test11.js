@@ -277,7 +277,7 @@ async function setup(page, userId) {
   assert.deepStrictEqual(await page.$$eval(`${C} .ll-contender strong`, e => e.map(x => x.textContent)), ["Amiri", "Ezren"]);
   assert.ok(await page.$$eval(`${C} .ll-contender`, e => (() => { const [name, pic] = [e[1].querySelector("strong").getBoundingClientRect(), e[1].querySelector("img").getBoundingClientRect()]; const mid = c => { const r = c.querySelector(".lucd20-loot-portrait").getBoundingClientRect(); return Math.round(r.top + r.height / 2); };
     const frame = e[1].querySelector(".lucd20-loot-portrait").getBoundingClientRect();
-    return pic.top >= name.bottom && mid(e[0]) === mid(e[1]) && Math.round(pic.width) === Math.round((frame.width - 4) * 1.8); })()), "names above the pictures; a scaled-up token does not cover them, and the circles line up");
+    return pic.top >= name.bottom && mid(e[0]) === mid(e[1]) && Math.round(frame.width) === 96 && Math.round(e[0].querySelector(".lucd20-loot-portrait").getBoundingClientRect().width) === 64 && Math.round(pic.width) === Math.round((frame.width - 4) * 1.2); })()), "names above the pictures; a scaled-up token does not cover them, the circles line up, a 1.5 token has a 1.5 frame and its art (ring subject 1.2) stands out of it");
   assert.deepStrictEqual(await page.$$eval(`${C} [data-action="award"]`, e => e.map(x => x.textContent.trim())), ["Amiri", "Ezren", "Party Stash"]);
   await page.screenshot({ path: `${out}/p11-who-gets-it.png` });
   await page.click(`${C} [data-action="sheet"]`);

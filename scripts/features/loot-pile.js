@@ -561,8 +561,11 @@ function tokenArt(token, actor) {
   const ring = token?.ring?.enabled ? token.ring : null;
   const subject = ring?.subject?.texture;
   const src = subject && !/\.(webm|mp4|m4v|ogv)$/i.test(subject) ? subject : tokenImage(token, actor);
-  const scale = Math.abs(Number(token?.texture?.scaleX) || 1) * (ring ? Number(ring.subject?.scale) || 1 : 1);
-  return { src, scale: Math.min(Math.max(scale, 1), 2) };
+  // As Foundry draws a token: its scale sizes the whole token, frame included; the ring's subject scale
+  // then sizes the art inside that frame (above 1 it stands out past the frame).
+  const frame = Math.min(Math.max(Math.abs(Number(token?.texture?.scaleX) || 1), 0.5), 1.75);
+  const art = Math.min(Math.max(ring ? Number(ring.subject?.scale) || 1 : 1, 1), 2.2 / frame);
+  return { src, scale: Math.min(Math.max(frame * art, 1), 2), frame, subject: art };
 }
 
 /**
@@ -582,14 +585,19 @@ function sourceDisplay(source) {
   return { name: source.name ?? unknownName(), img: source.img ?? PLACEHOLDER_PORTRAIT };
 }
 
-function portraitHTML(img, extra = "", tooltip = "", scale = 1) {
-  // --pop: the token's scale. The picture grows by it and the circle keeps room around itself for it.
-  const pop = scale > 1 ? ` style="--pop: ${Math.round(scale * 100) / 100}"` : "";
-  return `<span class="lucd20-loot-portrait ${extra} ${pop ? "is-pop" : ""}"${pop} ${tooltip ? `data-tooltip="${esc(tooltip)}" aria-label="${esc(tooltip)}"` : ""}><img src="${esc(img)}" alt=""></span>`;
+function portraitHTML(img, extra = "", tooltip = "", scale = 1, frame = 1) {
+  // --pop: how much the picture grows past its circle. --frame: how much the circle itself grows (big pictures only).
+  const round = n => Math.round(n * 100) / 100;
+  const vars = [scale > 1 ? `--pop: ${round(scale)}` : "", frame !== 1 ? `--frame: ${round(frame)}` : ""].filter(Boolean).join("; ");
+  const pop = vars ? ` style="${vars}"` : "";
+  return `<span class="lucd20-loot-portrait ${extra} ${scale > 1 ? "is-pop" : ""}"${pop} ${tooltip ? `data-tooltip="${esc(tooltip)}" aria-label="${esc(tooltip)}"` : ""}><img src="${esc(img)}" alt=""></span>`;
 }
 
 function actorPortrait(actor, extra = "small", tooltip = actor?.name ?? "") {
-  const { src, scale } = tokenArt(actor?.prototypeToken, actor);
+  const { src, scale, frame, subject } = tokenArt(actor?.prototypeToken, actor);
+  // Small pictures keep one size (rows stay aligned) and only the art grows. Big ones show the token
+  // as it is on the map: a bigger token has a bigger frame, and its art stands out of it.
+  if (extra.includes("large")) return portraitHTML(src, extra, tooltip, subject, frame);
   return portraitHTML(src, extra, tooltip, scale);
 }
 

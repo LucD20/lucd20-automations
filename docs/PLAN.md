@@ -1672,4 +1672,22 @@ Decisions (Q144–Q147, all as recommended):
 
 Mockup: `docs/mockups/hud-4e.html` (+ `.png`), three layouts: A one strip
 with a drawer, B portrait with side tab buttons, C power-card hotbar.
-Waiting for the owner's choice.
+
+Owner's choice: **B's layout in C's style**, close to the 4e books, with a
+**dark and a light** theme. The HUD sits at the **bottom right** (against the
+sidebar); Foundry's **players list moves up** and the **hotbar moves**
+somewhere else (as PF2e HUD and the owner's 2d12 system do).
+Second mockup: `docs/mockups/hud-4e-right.html` (+ `.png`), three layouts,
+each dark and light: 1 block with side tabs, hotbar where the players list
+was; 2 tabs on top and cards opening upward, hotbar inside the HUD; 3 wide,
+cards in two columns, hotbar as a column by the scene controls.
+
+Notes for building (learned from the owner's 2d12 HUD, to avoid trial and
+error): place the HUD on the screen itself (`#interface`), not inside
+Foundry's middle column, whose width Foundry sets; measure the right edge from
+what is really drawn in the bottom band (`#sidebar`, `#sidebar-tabs`,
+`#sidebar-content`, the chat input when it floats), not `#ui-right` or
+`#chat-notifications` (a wide empty area); re-measure on resize and with a
+ResizeObserver on the sidebar and controls; move `#players` and `#hotbar` by
+re-parenting the elements (a reload puts them back exactly when switched
+off). (verify) the V14 build 368 DOM with the owner's HTML before building.

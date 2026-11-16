@@ -1,0 +1,137 @@
+<!doctype html><html><head><meta charset="utf-8"><title>D&amp;D 4e HUD: three layouts (mockup)</title>
+<link rel="stylesheet" href="/node_modules/@fortawesome/fontawesome-free/css/all.min.css">
+<style>
+:root { --atwill: #619759; --enc: #961334; --daily: #4d4d4f; --gold: #f3b469; --ink: #efe6d8; --panel: rgba(18,17,23,.92); --line: #4a4550; }
+body { margin: 0; padding: 24px; background: #2a2a30; color: #ddd; font: 13px "Signika", "Trebuchet MS", sans-serif; }
+h1.page { margin: 0 0 4px; font: 700 20px sans-serif; } p.lead { margin: 0 0 20px; color: #aaa; max-width: 1240px; }
+figure { margin: 0 0 34px; } figcaption { margin-bottom: 8px; color: var(--gold); font: 600 15px sans-serif; } figcaption small { display: block; color: #aaa; font-weight: 400; font-size: 12.5px; margin-top: 3px; max-width: 1240px; }
+.screen { position: relative; width: 1240px; height: 430px; border: 1px solid #555; border-radius: 6px; overflow: hidden;
+  background: repeating-linear-gradient(0deg, transparent 0 49px, rgba(0,0,0,.25) 49px 50px), repeating-linear-gradient(90deg, transparent 0 49px, rgba(0,0,0,.25) 49px 50px), radial-gradient(circle at 40% 30%, #5d6b4c, #33392b); }
+.screen .tok { position: absolute; width: 50px; height: 50px; border-radius: 50%; border: 3px solid #f3b469; background: #8a6b4a; box-shadow: 0 0 0 2px #000; }
+.chip { display: inline-flex; align-items: center; gap: 5px; }
+button { font: inherit; cursor: pointer; }
+/* shared bits */
+.hp { position: relative; height: 18px; border-radius: 3px; background: #2b0d0d; overflow: hidden; border: 1px solid #000; }
+.hp .fill { position: absolute; inset: 0 auto 0 0; background: linear-gradient(#c33, #8a1c1c); }
+.hp .temp { position: absolute; top: 0; left: 0; height: 4px; background: #5aa0ff; box-shadow: 0 1px 0 #000; }
+.hp .bloody { position: absolute; top: 0; bottom: 0; width: 2px; background: #000; opacity: .7; }
+.hp span { position: relative; display: block; text-align: center; font: 700 12px/18px sans-serif; color: #fff; text-shadow: 0 1px 2px #000; }
+.def { display: flex; gap: 6px; } .def div { width: 44px; text-align: center; background: #26232b; border: 1px solid var(--line); border-radius: 4px; padding: 2px 0; }
+.def b { display: block; font-size: 16px; color: var(--ink); } .def small { font-size: 10px; letter-spacing: .05em; color: #aaa; text-transform: uppercase; }
+.def .mod b { color: #7fd17f; } .def .down b { color: #ff7a7a; }
+.pip { width: 34px; height: 34px; border-radius: 50%; display: inline-grid; place-items: center; border: 2px solid #777; background: #2c2a31; color: var(--ink); font-size: 15px; position: relative; }
+.pip.on { border-color: var(--gold); box-shadow: 0 0 8px rgba(243,180,105,.5); }
+.pip.spent { opacity: .35; } .pip.spent::after { content: ""; position: absolute; width: 38px; height: 2px; background: #e55; transform: rotate(-45deg); }
+.pip.off { opacity: .55; border-style: dashed; } .pip sup { position: absolute; top: -4px; right: -4px; background: var(--gold); color: #000; border-radius: 8px; font: 700 10px/14px sans-serif; padding: 0 4px; }
+.ap { border: 1px solid var(--gold); background: #3a2c14; color: var(--gold); border-radius: 4px; padding: 4px 8px; font-weight: 700; }
+.tabs { display: flex; gap: 2px; } .tabs button { background: #26232b; color: #bbb; border: 1px solid var(--line); border-bottom: none; padding: 5px 10px; border-radius: 5px 5px 0 0; }
+.tabs button.act { background: var(--panel); color: var(--ink); border-color: var(--gold); }
+.tabs button .n { font-size: 10px; opacity: .7; margin-left: 3px; }
+.power { display: flex; flex-direction: column; justify-content: space-between; border-radius: 4px; color: #fff; padding: 5px 7px; min-height: 44px; border: 1px solid #000; position: relative; }
+.power .nm { font-weight: 700; font-size: 12.5px; line-height: 1.15; } .power .sub { font-size: 10.5px; opacity: .85; }
+.power.atwill { background: linear-gradient(var(--atwill), #47703f); } .power.enc { background: linear-gradient(var(--enc), #6c0d25); } .power.daily { background: linear-gradient(#5c5c5f, #333335); }
+.power.used { filter: grayscale(1) brightness(.6); } .power.used .nm { text-decoration: line-through; }
+.power.basic { background: linear-gradient(#58534c, #3c3833); }
+.legend { display: flex; gap: 14px; margin-top: 8px; color: #aaa; font-size: 12px; } .legend i.sw { display: inline-block; width: 11px; height: 11px; border-radius: 2px; vertical-align: -1px; margin-right: 4px; }
+.note { position: absolute; background: #fff8d6; color: #333; border-radius: 4px; padding: 4px 7px; font-size: 11.5px; box-shadow: 0 2px 6px rgba(0,0,0,.4); max-width: 210px; }
+.macro { position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); display: flex; gap: 3px; opacity: .5; }
+.macro div { width: 40px; height: 40px; border: 1px solid #666; background: rgba(0,0,0,.5); border-radius: 3px; }
+
+/* A: one strip */
+.a { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); width: 1040px; }
+.a .body { display: grid; grid-template-columns: 84px 230px 1fr auto; gap: 12px; align-items: center; background: var(--panel); border: 1px solid var(--gold); border-bottom: none; border-radius: 0 8px 0 0; padding: 8px 12px; }
+.a .por { width: 84px; height: 84px; border-radius: 6px; background: #8a6b4a; border: 2px solid var(--gold); display: grid; place-items: center; font-size: 34px; color: #e9d3b1; }
+.a .name { font: 700 15px Georgia, serif; color: var(--ink); } .a .name small { font: 400 11px sans-serif; color: #aaa; margin-left: 4px; }
+.a .row { display: flex; gap: 10px; align-items: center; margin-top: 6px; color: #ccc; }
+.a .dock { display: flex; gap: 6px; align-items: center; padding-left: 12px; border-left: 1px solid var(--line); }
+.a .drawer { background: var(--panel); border: 1px solid var(--gold); border-bottom: none; border-radius: 0 8px 0 0; padding: 8px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+
+/* B: portrait with side buttons (PF2e HUD-like) */
+.b { position: absolute; left: 230px; bottom: 0; display: flex; align-items: flex-end; gap: 0; }
+.b .core { width: 330px; background: var(--panel); border: 1px solid var(--gold); border-bottom: none; border-radius: 8px 8px 0 0; padding: 8px 10px; }
+.b .top { display: flex; gap: 10px; } .b .por { width: 96px; height: 110px; border-radius: 6px; background: #8a6b4a; border: 2px solid var(--gold); display: grid; place-items: center; font-size: 40px; color: #e9d3b1; flex: none; }
+.b .stats { flex: 1; display: grid; gap: 6px; align-content: start; } .b .name { font: 700 15px Georgia, serif; color: var(--ink); }
+.b .mini { display: flex; justify-content: space-between; color: #ccc; }
+.b .def { margin-top: 8px; justify-content: space-between; } .b .def div { width: 70px; }
+.b .side { display: flex; flex-direction: column; gap: 3px; margin-left: 3px; }
+.b .side button { width: 38px; height: 38px; border-radius: 5px; background: #26232b; border: 1px solid var(--line); color: var(--ink); position: relative; }
+.b .side button.act { border-color: var(--gold); color: var(--gold); } .b .side button .n { position: absolute; right: 1px; bottom: 0; font-size: 9px; }
+.b .list { width: 300px; margin-left: 4px; background: var(--panel); border: 1px solid var(--gold); border-bottom: none; border-radius: 8px 8px 0 0; padding: 8px; display: grid; gap: 4px; }
+.b .list h4 { margin: 0 0 2px; color: var(--gold); font: 700 13px sans-serif; display: flex; justify-content: space-between; }
+.b .list .power { flex-direction: row; align-items: center; min-height: 0; padding: 5px 8px; } .b .list .power .sub { margin-left: auto; }
+.b .dockrow { position: absolute; bottom: 100%; left: 0; display: flex; gap: 5px; padding: 6px 8px; background: var(--panel); border: 1px solid var(--gold); border-bottom: none; border-radius: 8px 8px 0 0; }
+
+/* C: power cards as a hotbar */
+.c { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); width: 1160px; display: grid; grid-template-columns: 250px 1fr 236px; align-items: end; gap: 8px; }
+.c .card { background: #f2ecdf; color: #222; border-radius: 6px 6px 0 0; overflow: hidden; border: 1px solid #000; }
+.c .card .hd { background: #3b4f2f; color: #fff; padding: 5px 8px; font: 700 14px Georgia, serif; display: flex; justify-content: space-between; } .c .card .hd small { font: 400 11px sans-serif; opacity: .85; }
+.c .card .bd { padding: 6px 8px; display: grid; gap: 5px; }
+.c .card .def div { background: #e3d9c5; border-color: #b7a98d; } .c .card .def b { color: #222; } .c .card .def small { color: #555; } .c .card .def .mod b { color: #1f7a1f; }
+.c .card .kv { display: flex; justify-content: space-between; font-size: 12px; } .c .card .kv b { font-weight: 700; }
+.c .mid .tabs button { border-radius: 0; } .c .mid .tabs button.act { background: #f2ecdf; color: #222; border-color: #000; }
+.c .mid .strip { background: #f2ecdf; border: 1px solid #000; border-bottom: none; padding: 6px; display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+.c .dockcol { background: var(--panel); border: 1px solid var(--gold); border-bottom: none; border-radius: 8px 8px 0 0; padding: 8px; display: grid; gap: 8px; justify-items: center; }
+.c .dockcol .pips { display: flex; gap: 4px; } .c .dockcol .pip { width: 38px; height: 38px; } .c .dockcol h4 { margin: 0; color: var(--gold); font: 700 12px sans-serif; text-transform: uppercase; letter-spacing: .08em; }
+</style></head><body>
+<h1 class="page">D&amp;D 4e HUD: three layouts (mockup)</h1>
+<p class="lead">Bottom bar for your own character (the GM's shows the selected token). HP (black line = bloodied, thin blue line = temporary HP), healing surges, defences (green = raised by an effect, red = lowered), speed, Action Points (click to spend: +1 standard action), the action dock (the new Action Tracker: standard, move, minor, immediate, opportunity; dashed = not usable now, struck = spent) and powers in tabs by action type, coloured by usage, greyed when used. Clicking a power uses it as the sheet does. Example character and data are made up.</p>
+
+<figure><figcaption>A · One strip <small>Everything in one bar across the bottom; the tabs sit on top and open a drawer of power tiles upward (closed by clicking the tab again). Widest, least tall when closed.</small></figcaption>
+<div class="screen"><div class="tok" style="left:560px;top:120px"></div>
+ <div class="a"><div class="tabs" id="aTabs"></div><div class="drawer" id="aDrawer"></div>
+  <div class="body">
+   <div class="por"><i class="fa-solid fa-user-shield"></i></div>
+   <div><div class="name">Kyra <small>Warlord 3</small></div>
+    <div class="hp" style="margin-top:6px"><div class="fill" style="width:68%"></div><div class="temp" style="width:15%"></div><div class="bloody" style="left:50%"></div><span>23 / 34 &nbsp;+5 temp</span></div>
+    <div class="row"><span class="chip"><i class="fa-solid fa-heart-pulse"></i> Surges <b>6/9</b> <small>(8)</small></span><span class="chip"><i class="fa-solid fa-person-running"></i> <b>6</b></span></div></div>
+   <div class="def"><div class="mod"><b>20</b><small>AC</small></div><div><b>16</b><small>Fort</small></div><div><b>15</b><small>Ref</small></div><div class="down"><b>14</b><small>Will</small></div></div>
+   <div class="dock"><span class="pip spent"><i class="fa-solid fa-hand-fist"></i></span><span class="pip on"><i class="fa-solid fa-person-walking"></i></span><span class="pip on"><i class="fa-solid fa-hand"></i></span><span class="pip off"><i class="fa-solid fa-bolt-lightning"></i></span><span class="pip off"><i class="fa-solid fa-eye"></i></span>
+    <button class="ap" title="Spend 1 Action Point: +1 standard action"><i class="fa-solid fa-star"></i> AP 1</button></div>
+  </div></div>
+</div></figure>
+
+<figure><figcaption>B · Portrait with side buttons (like PF2e HUD) <small>A compact block: portrait, HP, surges, AP, speed and defences; the dock sits on top of it. Tab buttons run down the side and open one list beside it (names, range and used state readable at a glance). Narrowest; leaves the macro bar free.</small></figcaption>
+<div class="screen"><div class="tok" style="left:860px;top:110px"></div>
+ <div class="macro" style="left:auto;right:30px;transform:none"><div></div><div></div><div></div><div></div><div></div></div>
+ <div class="b"><div style="position:relative">
+   <div class="dockrow"><span class="pip spent"><i class="fa-solid fa-hand-fist"></i></span><span class="pip on"><i class="fa-solid fa-person-walking"></i></span><span class="pip on"><i class="fa-solid fa-hand"></i></span><span class="pip off"><i class="fa-solid fa-bolt-lightning"></i></span><span class="pip off"><i class="fa-solid fa-eye"></i></span></div>
+   <div class="core"><div class="top"><div class="por"><i class="fa-solid fa-user-shield"></i></div>
+    <div class="stats"><div class="name">Kyra</div>
+     <div class="hp"><div class="fill" style="width:68%"></div><div class="temp" style="width:15%"></div><div class="bloody" style="left:50%"></div><span>23 / 34 +5</span></div>
+     <div class="mini"><span><i class="fa-solid fa-heart-pulse"></i> <b>6/9</b> <small>(8)</small></span><span><i class="fa-solid fa-person-running"></i> <b>6</b></span></div>
+     <button class="ap"><i class="fa-solid fa-star"></i> AP 1 · spend</button></div></div>
+    <div class="def"><div class="mod"><b>20</b><small>AC</small></div><div><b>16</b><small>Fort</small></div><div><b>15</b><small>Ref</small></div><div class="down"><b>14</b><small>Will</small></div></div></div></div>
+  <div class="side" id="bSide"></div>
+  <div class="list" id="bList"></div></div>
+</div></figure>
+
+<figure><figcaption>C · Power-card hotbar <small>Looks like the 4e books: a stat card on the left, the current tab's powers always visible as a row of cards in the middle (in place of the macro bar), the dock and AP on the right. Tallest at rest, but no clicks needed to see your powers.</small></figcaption>
+<div class="screen"><div class="tok" style="left:600px;top:100px"></div>
+ <div class="c">
+  <div class="card"><div class="hd">Kyra <small>Warlord 3</small></div><div class="bd">
+   <div class="hp"><div class="fill" style="width:68%"></div><div class="temp" style="width:15%"></div><div class="bloody" style="left:50%"></div><span>23 / 34 &nbsp;+5 temp</span></div>
+   <div class="kv"><span><i class="fa-solid fa-heart-pulse"></i> Surges <b>6/9</b> (8)</span><span><i class="fa-solid fa-person-running"></i> Speed <b>6</b></span></div>
+   <div class="def" style="justify-content:space-between"><div class="mod"><b>20</b><small>AC</small></div><div><b>16</b><small>Fort</small></div><div><b>15</b><small>Ref</small></div><div class="down"><b>14</b><small>Will</small></div></div></div></div>
+  <div class="mid"><div class="tabs" id="cTabs"></div><div class="strip" id="cStrip"></div></div>
+  <div class="dockcol"><h4>Actions</h4><div class="pips"><span class="pip spent"><i class="fa-solid fa-hand-fist"></i></span><span class="pip on"><i class="fa-solid fa-person-walking"></i></span><span class="pip on"><i class="fa-solid fa-hand"></i></span><span class="pip off"><i class="fa-solid fa-bolt-lightning"></i></span><span class="pip off"><i class="fa-solid fa-eye"></i></span></div>
+   <button class="ap"><i class="fa-solid fa-star"></i> Action Points: 1 · spend</button></div>
+ </div>
+</div></figure>
+<div class="legend"><span><i class="sw" style="background:var(--atwill)"></i>At-will</span><span><i class="sw" style="background:var(--enc)"></i>Encounter</span><span><i class="sw" style="background:#555"></i>Daily</span><span><i class="sw" style="background:#58534c"></i>Basic action</span><span>Greyed: used</span></div>
+
+<script>
+const TABS = [["standard", "Standard", "fa-hand-fist"], ["move", "Move", "fa-person-walking"], ["minor", "Minor", "fa-hand"], ["free", "Free", "fa-feather"], ["triggered", "Triggered", "fa-bolt-lightning"]];
+const P = {
+  standard: [["Melee Basic Attack", "basic", "Melee 1 · vs AC"], ["Commander's Strike", "atwill", "Melee · ally attacks"], ["Wolf Pack Tactics", "atwill", "Melee 1 · vs AC"], ["Guarding Attack", "enc", "Melee 1 · vs AC", true], ["Hammer and Anvil", "enc", "Melee 1 · vs Ref"], ["Lead the Attack", "daily", "Melee 1 · vs AC"], ["Ranged Basic Attack", "basic", "Ranged 10 · vs AC"]],
+  move: [["Walk", "basic", "Speed 6"], ["Shift", "basic", "1 square"], ["Run", "basic", "Speed +2"], ["Stand Up", "basic", ""]],
+  minor: [["Inspiring Word", "enc", "Close burst 5 · heal", true], ["Inspiring Word", "enc", "2nd use"], ["Draw Weapon", "basic", ""], ["Knight's Move", "enc", "Ranged 10 · ally moves"]],
+  free: [["Drop Prone", "basic", ""], ["Spend Action Point", "basic", "+1 action"]],
+  triggered: [["Opportunity Attack", "basic", "Opportunity"], ["Shake It Off", "enc", "Immediate interrupt"]],
+};
+const tile = ([n, u, s, used]) => `<div class="power ${u}${used ? " used" : ""}"><div class="nm">${n}</div><div class="sub">${s}</div></div>`;
+const tabs = (cur, id) => document.getElementById(id).innerHTML = TABS.map(([k, l, i]) => `<button class="${k === cur ? "act" : ""}"><i class="fa-solid ${i}"></i> ${l}<span class="n">${P[k].length}</span></button>`).join("");
+tabs("standard", "aTabs"); document.getElementById("aDrawer").innerHTML = P.standard.map(tile).join("");
+tabs("standard", "cTabs"); document.getElementById("cStrip").innerHTML = P.standard.map(tile).join("");
+document.getElementById("bSide").innerHTML = TABS.map(([k, l, i]) => `<button class="${k === "minor" ? "act" : ""}" title="${l}"><i class="fa-solid ${i}"></i><span class="n">${P[k].length}</span></button>`).join("");
+document.getElementById("bList").innerHTML = `<h4><span><i class="fa-solid fa-hand"></i> Minor</span><i class="fa-solid fa-xmark" style="opacity:.6"></i></h4>` + P.minor.map(tile).join("");
+</script></body></html>

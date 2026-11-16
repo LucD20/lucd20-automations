@@ -1650,3 +1650,26 @@ message) and `core/square-picker.js` (pick one of a few highlighted squares).
 `test38.js`). Q134–Q136 answered by the owner (the spell's text, item slug,
 Will; durations 1 / 4 / 2 rounds); Q140 single target, nothing before the save
 is rolled; Q137–Q139 and Q141–Q143 as recommended. Details in the ledger.
+
+---
+
+## 17. D&D 4e HUD (phase 39, mockups)
+
+*New, D&D 4e.* A HUD in the spirit of PF2e HUD (reonZ/pf2e-hud): HP, healing
+surges, defences, speed, Action Points and an action dock (the new Action
+Tracker), with powers in tabs. Asked for mockups first.
+
+Decisions (Q144–Q147, all as recommended):
+- **Q144** A bottom bar, always on: the player's own character; the GM's
+  shows the selected token.
+- **Q145** Tabs by action type: Standard, Move, Minor, Free, Triggered
+  (immediate + opportunity). Powers are coloured by usage (at-will,
+  encounter, daily, basic) and greyed when used.
+- **Q146** The HUD's dock replaces the floating basic-actions panel. The pips
+  in the combat tracker and Combat Tracker Dock stay, as options.
+- **Q147** Action Points: the count, and a click spends 1 for an extra
+  standard action (with a warning if one was already spent this encounter).
+
+Mockup: `docs/mockups/hud-4e.html` (+ `.png`), three layouts: A one strip
+with a drawer, B portrait with side tab buttons, C power-card hotbar.
+Waiting for the owner's choice.

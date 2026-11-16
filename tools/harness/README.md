@@ -74,6 +74,7 @@ sets `game.system.id`.
 | `test35.js` | D&D 4e: coins of the fallen, the Party Stash window, ledgers, coin tracking (35) |
 | `test36.js` | D&D 4e: opportunity attack warning while a move is planned (36) |
 | `test37.js` | PF2e rules: Frightened, Sickened and retching, Shove squares, Trip (37) |
+| `test38.js` | PF2e rules: Temporal Distortion (38) |
 
 For a new feature, copy the closest test, keep its mock setup and replace the
 checks.

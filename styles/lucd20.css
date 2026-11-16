@@ -2446,3 +2446,7 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-pick-bar button { display: inline-flex; align-items: center; gap: 5px; width: auto; height: 28px; margin: 0; padding: 0 10px; border: 1px solid #5c596a; border-radius: 4px; background: #26252e; color: inherit; font: inherit; font-size: 13px; cursor: pointer; }
 .lucd20-retch-card p { margin: 0 0 6px; }
 .lucd20-retch-card button { width: 100%; }
+.lucd20-td-card p { margin: 0 0 6px; }
+.lucd20-td-card .lucd20-td-table { font-size: 0.9em; opacity: 0.8; }
+.lucd20-td-card button { width: 100%; }
+.lucd20-td-card .lucd20-td-done { margin: 0; font-style: italic; }

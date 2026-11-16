@@ -727,6 +727,10 @@
       "pf2eTrip": {
         "Name": "Trip",
         "Hint": "A Trip's result is applied: the target is Prone on a success, Prone with a 1d6 bludgeoning roll on a critical success; the tripper is Prone on a critical failure."
+      },
+      "pf2eTemporalDistortion": {
+        "Name": "Temporal Distortion",
+        "Hint": "After the target's save against Temporal Distortion (anything but a critical success), the caster's player (the GM if that player is not connected) gets a button to roll a d4: 1 Clumsy, 2 Enfeebled, 3 Stupefied, 4 the roller chooses. After the dice the condition is applied by an effect that ends by itself: value 1 for 1 round on a success, 1 for 4 rounds on a failure, 3 for 2 rounds on a critical failure."
       }
     },
     "ForceSettings": {
@@ -1624,7 +1628,35 @@
       "Cancel": "Cancel",
       "Speaker": "Conditions",
       "FrightenedDown": "{name}: Frightened {before} → {after} (end of turn).",
-      "FrightenedGone": "{name} is no longer Frightened (end of turn)."
+      "FrightenedGone": "{name} is no longer Frightened (end of turn).",
+      "TD": {
+        "Card": "<strong>Temporal Distortion</strong> on {name}: {who} rolls the d4.",
+        "Table": "1 Clumsy · 2 Enfeebled · 3 Stupefied · 4 you choose",
+        "Button": "Roll d4",
+        "GM": "the GM",
+        "Unnamed": "the target",
+        "RollFlavor": "Temporal Distortion: d4",
+        "ChooseTitle": "Temporal Distortion",
+        "Choose": "You rolled a 4: choose the condition.",
+        "Condition": {
+          "clumsy": "Clumsy",
+          "enfeebled": "Enfeebled",
+          "stupefied": "Stupefied"
+        },
+        "EffectName": "Temporal Distortion ({condition})",
+        "EffectText": "{condition} for {rounds} round(s), from Temporal Distortion.",
+        "Result": "{name} is {condition} for {rounds} (d4: {total}{chosen}).",
+        "ResultSecret": "{name} is {condition} (d4: {total}{chosen}).",
+        "Chosen": ", chosen",
+        "Round": "1 round",
+        "Rounds": "{n} rounds",
+        "CardDone": "Rolled: {total}.",
+        "Stale": "That Temporal Distortion can no longer be resolved.",
+        "Done": "That d4 was already rolled.",
+        "NotYours": "{who} rolls this d4.",
+        "NoCondition": "PF2e's {condition} condition was not found.",
+        "Replaced": "Replaced by a new save."
+      }
     }
   },
   "DND4EAUTO": {

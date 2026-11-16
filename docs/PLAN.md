@@ -1645,3 +1645,8 @@ how it was built. New category **Pathfinder 2e** (`pf2e`), one feature per
 rule. v0.41.0: Frightened, Sickened, Shove, Trip (`scripts/systems/pf2e/
 rules.js`, `test37.js`), plus `core/dice.js` (wait for Dice So Nice by
 message) and `core/square-picker.js` (pick one of a few highlighted squares).
+
+**v0.42.0 (phase 38): rule 5, Temporal Distortion** (`pf2eTemporalDistortion`,
+`test38.js`). Q134–Q136 answered by the owner (the spell's text, item slug,
+Will; durations 1 / 4 / 2 rounds); Q140 single target, nothing before the save
+is rolled; Q137–Q139 and Q141–Q143 as recommended. Details in the ledger.

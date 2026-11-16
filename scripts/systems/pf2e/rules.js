@@ -6,13 +6,15 @@ import { pickSquare } from "../../core/square-picker.js";
 
 /**
  * PF2e rules the owner wants automated, replacing several automation modules. Each rule is noted
- * in docs/pf2e-rules.md as the owner gave it; this file holds rules 1–4.
+ * in docs/pf2e-rules.md as the owner gave it; this file holds rules 1–5.
  *
  * 1. Frightened (pf2eFrightened): goes down by 1 at the end of the creature's turn.
  * 2. Sickened (pf2eSickened): gets a retch DC when it is applied, and a chat line with a Fortitude
  *    button at the start of the creature's turn.
  * 3. Shove (pf2eShove): on a success the roller chooses where the target is pushed.
  * 4. Trip (pf2eTrip): Prone (and damage) by degree of success.
+ * 5. Temporal Distortion (pf2eTemporalDistortion): after the target's Will save, the caster's
+ *    player rolls a d4 for Clumsy, Enfeebled or Stupefied; a PF2e effect grants it for its duration.
  *
  * What a roll is, and against whom, is read from the roll's chat message as PF2e 8.7 writes it
  * (checked by the owner): flags.pf2e.context = { type, options: ["action:shove", …], outcome,
@@ -408,4 +410,255 @@ defineFeature({
   }
 });
 
-export const _test = { shoveSquares, shoveMove, onShoveMessage, onTripMessage, onConditionCreated, remindRetch, onRetchClick, movedForward };
+
+
+/* -------------------------------------------- */
+/*  5. Temporal Distortion                      */
+/* -------------------------------------------- */
+
+/**
+ * Temporal Distortion (oracle focus spell, Dark Archive / Divine Mysteries; Will). Read from the
+ * target's saving throw message (owner's check: context.type "saving-throw", context.options has
+ * "item:slug:temporal-distortion", flags.pf2e.origin = { actor, uuid, castRank }).
+ * - Critical success: nothing. Otherwise a card asks the caster's player (the GM if that player is
+ *   not connected) to roll a d4: 1 Clumsy, 2 Enfeebled, 3 Stupefied, 4 the roller chooses.
+ * - Success: value 1 for 1 round; failure: 1 for 4 rounds; critical failure: 3 for 2 rounds.
+ * - Applied by the active GM's client as a PF2e effect that grants the condition (GrantItem with
+ *   the badge value) and lasts N rounds from the caster's turn, ending at the start of a turn. A
+ *   new Temporal Distortion on the same creature replaces the old effect. Expired effects are
+ *   removed at the start of each turn if PF2e has not removed them.
+ */
+const TD = "temporalDistortion";
+const TD_SLUG = "temporal-distortion";
+const TD_CONDITIONS = ["clumsy", "enfeebled", "stupefied"];
+const TD_RESULT = { success: { value: 1, rounds: 1 }, failure: { value: 1, rounds: 4 }, criticalFailure: { value: 3, rounds: 2 } };
+const gmIds = () => game.users.filter(u => u.isGM).map(u => u.id);
+const conditionLabel = slug => L(`TD.Condition.${slug}`);
+
+export function isTemporalDistortionSave(message) {
+  const context = contextOf(message);
+  if (context?.type !== "saving-throw") return false;
+  const options = Array.isArray(context.options) ? context.options : [];
+  const origin = message?.flags?.pf2e?.origin?.rollOptions ?? [];
+  return options.includes(`item:slug:${TD_SLUG}`) || origin.includes(`origin:item:slug:${TD_SLUG}`);
+}
+
+/** The caster's player: the connected player whose character it is, else a connected owner; null = the GMs. */
+function casterPlayer(caster) {
+  const players = game.users.filter(u => u.active && !u.isGM && caster?.testUserPermission?.(u, "OWNER"));
+  return players.find(u => u.character?.id === caster.id) ?? players[0] ?? null;
+}
+
+/** The save's creature and token: the message's speaker, else the context's actor id. */
+function saveTarget(message) {
+  const speaker = message.speaker ?? {};
+  const scene = speaker.scene ? game.scenes?.get(speaker.scene) : null;
+  const token = message.token ?? scene?.tokens?.get(speaker.token) ?? null;
+  const actor = token?.actor ?? message.actor ?? game.actors?.get(contextOf(message)?.actor) ?? null;
+  return { actor, token };
+}
+
+/** The target as players may name it (PF2e can hide an NPC's name). */
+const shownName = (actor, token) => (token?.playersCanSeeName === false ? L("TD.Unnamed") : (token?.name ?? actor?.name ?? ""));
+
+/** Active GM's client: after the save and its dice, the d4 card for the caster's player. */
+async function onTemporalSave(message) {
+  if (!game.user.isActiveGM || !isTemporalDistortionSave(message)) return;
+  const outcome = contextOf(message).outcome;
+  const origin = message.flags.pf2e.origin ?? {};
+  const caster = origin.actor ? fromUuidSync(origin.actor) : null;
+  const { actor, token } = saveTarget(message);
+  if (!caster || !actor) return;
+  // A new save (a reroll) replaces a card for the same creature that was not rolled yet.
+  for (const old of (game.messages?.contents ?? []).slice(-30)) {
+    const data = old.getFlag?.(MODULE_ID, TD);
+    if (!data || data.done || data.claimed || data.target !== actor.uuid) continue;
+    await old.update({ content: old.content.replace(/<button[\s\S]*?<\/button>/, `<p class="lucd20-td-done">${L("TD.Replaced")}</p>`), [`flags.${MODULE_ID}.${TD}.done`]: true });
+  }
+  if (!TD_RESULT[outcome]) return; // critical success: unaffected
+  await waitForDice(message.id);
+  const player = casterPlayer(caster);
+  // A save the players could not see, or a creature hidden from them, stays between the roller and the GMs.
+  const secret = !!message.blind || (message.whisper?.length ?? 0) > 0 || !!token?.hidden;
+  const whisper = secret ? [...new Set([...(player ? [player.id] : []), ...gmIds()])] : [];
+  const name = esc(shownName(actor, token));
+  const who = player ? esc(player.name) : esc(L("TD.GM"));
+  await ChatMessage.create({
+    content: `<div class="lucd20-td-card"><p><i class="fa-solid fa-hourglass-half"></i> ${L("TD.Card", { name, who })}</p>
+      <p class="lucd20-td-table">${L("TD.Table")}</p>
+      <button type="button" data-lucd20-td><i class="fa-solid fa-dice"></i> ${L("TD.Button")}</button></div>`,
+    speaker: ChatMessage.getSpeaker?.({ actor: caster }) ?? { alias: caster.name },
+    whisper,
+    flags: { [MODULE_ID]: { [TD]: { save: message.id, caster: caster.uuid, target: actor.uuid, token: token?.uuid ?? null, outcome, rank: Number(origin.castRank) || null, spell: origin.uuid ?? null, user: player?.id ?? null, secret, whisper } } }
+  });
+}
+
+/** The card's button, on the roller's client: claim it, roll the d4, wait for the dice, choose on a 4. */
+async function onTemporalClick(message, button) {
+  const data = message.getFlag(MODULE_ID, TD);
+  if (!data || data.done) return;
+  button.disabled = true;
+  try {
+    await executeAsGM("pf2eRules.tdClaim", { cardId: message.id });
+    const roll = await new Roll("1d4").evaluate();
+    const caster = fromUuidSync(data.caster);
+    const rollMessage = await roll.toMessage({
+      flavor: `<strong>${esc(L("TD.RollFlavor"))}</strong>`,
+      speaker: ChatMessage.getSpeaker?.({ actor: caster }) ?? { alias: caster?.name ?? "" },
+      flags: { [MODULE_ID]: { [`${TD}Roll`]: message.id } }
+    }, { rollMode: data.secret ? "gmroll" : "publicroll" });
+    await waitForDice(rollMessage?.id);
+    let choice = null;
+    if (Number(roll.total) === 4) {
+      while (!choice) choice = await chooseCondition(data);
+    }
+    await executeAsGM("pf2eRules.tdApply", { cardId: message.id, rollId: rollMessage.id, choice });
+  } catch (err) {
+    ui.notifications.warn(err.message ?? String(err));
+    button.disabled = false;
+  }
+}
+
+/** On a 4: the roller chooses the condition. */
+async function chooseCondition(data) {
+  const { value } = TD_RESULT[data.outcome];
+  return foundry.applications.api.DialogV2.wait({
+    window: { title: L("TD.ChooseTitle") },
+    classes: ["lucd20-td-choose"],
+    content: `<p>${L("TD.Choose")}</p>`,
+    buttons: TD_CONDITIONS.map(slug => ({ action: slug, label: `${conditionLabel(slug)} ${value}` })),
+    rejectClose: false
+  });
+}
+
+/** GM's client: one roll per card, by the one it is for (any GM may roll in that player's place). */
+async function tdClaim({ cardId }, senderId) {
+  const card = game.messages.get(cardId);
+  const data = card?.getFlag(MODULE_ID, TD);
+  if (!data) throw new Error(L("TD.Stale"));
+  if (data.done || data.claimed) throw new Error(L("TD.Done"));
+  const sender = game.users.get(senderId);
+  const designated = data.user ? game.users.get(data.user) : null;
+  if (!sender?.isGM && senderId !== data.user && designated?.active) throw new Error(L("TD.NotYours", { who: designated.name }));
+  if (!sender?.isGM && !designated && !fromUuidSync(data.caster)?.testUserPermission?.(sender, "OWNER")) throw new Error(L("NotYours"));
+  await card.setFlag(MODULE_ID, TD, { ...data, claimed: senderId });
+  return true;
+}
+
+/** A condition item of PF2e's compendium, by slug: its uuid for a GrantItem rule. */
+async function conditionUuid(slug) {
+  const pack = game.packs?.get("pf2e.conditionitems");
+  const index = pack ? await pack.getIndex() : [];
+  const entry = [...index].find(e => (e.system?.slug ?? String(e.name).toLowerCase()) === slug || String(e.name).toLowerCase() === slug);
+  if (entry) return entry.uuid ?? `Compendium.pf2e.conditionitems.Item.${entry._id}`;
+  const condition = game.pf2e?.ConditionManager?.getCondition?.(slug);
+  return condition?.sourceId ?? condition?._stats?.compendiumSource ?? null;
+}
+
+/** The effect's data: the condition, its value and its duration from the caster's turn. */
+export async function temporalEffect({ slug, value, rounds, caster, target, token, spell, rank }) {
+  const uuid = await conditionUuid(slug);
+  if (!uuid) throw new Error(L("TD.NoCondition", { condition: slug }));
+  const combatant = game.combat?.combatants?.find?.(c => c.actor === caster || c.actorId === caster?.id) ?? null;
+  const spellItem = spell ? fromUuidSync(spell) : null;
+  return {
+    type: "effect",
+    name: L("TD.EffectName", { condition: `${conditionLabel(slug)} ${value}` }),
+    img: spellItem?.img ?? "icons/svg/clockwork.svg",
+    system: {
+      slug: `${TD_SLUG}-${slug}`,
+      description: { value: `<p>${L("TD.EffectText", { condition: `${conditionLabel(slug)} ${value}`, rounds })}</p>` },
+      rules: [{ key: "GrantItem", uuid, alterations: [{ mode: "override", property: "badge-value", value }] }],
+      level: { value: rank ?? spellItem?.level ?? 1 },
+      duration: { value: rounds, unit: "rounds", expiry: "turn-start", sustained: false },
+      start: { value: game.time?.worldTime ?? 0, initiative: combatant?.initiative ?? null },
+      tokenIcon: { show: false },
+      context: { origin: { actor: caster?.uuid ?? null, token: null, item: spell ?? null, spellcasting: null, rollOptions: [] }, target: { actor: target.uuid, token: token ?? null }, roll: null }
+    },
+    flags: { [MODULE_ID]: { [TD]: true } }
+  };
+}
+
+/** GM's client: check the roll, then the effect (replacing an earlier one) and the chat line. */
+async function tdApply({ cardId, rollId, choice }, senderId) {
+  const card = game.messages.get(cardId);
+  const data = card?.getFlag(MODULE_ID, TD);
+  if (!data || data.done) throw new Error(L("TD.Done"));
+  if (data.claimed !== senderId) throw new Error(L("TD.Stale"));
+  const rollMessage = game.messages.get(rollId);
+  if (rollMessage?.getFlag(MODULE_ID, `${TD}Roll`) !== cardId || authorId(rollMessage) !== senderId) throw new Error(L("TD.Stale"));
+  const total = Number(rollMessage.rolls?.[0]?.total);
+  const slug = total === 4 ? (TD_CONDITIONS.includes(choice) ? choice : null) : TD_CONDITIONS[total - 1];
+  if (!slug) throw new Error(L("TD.Stale"));
+  const target = fromUuidSync(data.target);
+  const caster = fromUuidSync(data.caster);
+  if (!target) throw new Error(L("TD.Stale"));
+  const { value, rounds } = TD_RESULT[data.outcome];
+  await card.setFlag(MODULE_ID, TD, { ...data, done: true, total, slug });
+  const earlier = (target.itemTypes?.effect ?? []).filter(e => e.getFlag?.(MODULE_ID, TD));
+  if (earlier.length) await target.deleteEmbeddedDocuments("Item", earlier.map(e => e.id));
+  await target.createEmbeddedDocuments("Item", [await temporalEffect({ slug, value, rounds, caster, target, token: data.token, spell: data.spell, rank: data.rank })]);
+  const token = data.token ? fromUuidSync(data.token) : null;
+  const name = `<strong>${esc(shownName(target, token))}</strong>`;
+  const chosen = total === 4 ? L("TD.Chosen") : "";
+  const full = L("TD.Result", { name, condition: `${conditionLabel(slug)} ${value}`, rounds: L(rounds === 1 ? "TD.Round" : "TD.Rounds", { n: rounds }), total, chosen });
+  const line = text => `<p class="lucd20-rule-note"><i class="fa-solid fa-hourglass-half"></i> ${text}</p>`;
+  const speaker = { alias: L("Speaker") };
+  if (!data.secret) {
+    await ChatMessage.create({ content: line(full), speaker });
+  } else {
+    await ChatMessage.create({ content: line(full), speaker, whisper: gmIds() });
+    // The roller learns the condition, not the value (which would tell the save's result).
+    if (data.claimed && !game.users.get(data.claimed)?.isGM) await ChatMessage.create({ content: line(L("TD.ResultSecret", { name, condition: conditionLabel(slug), total, chosen })), speaker, whisper: [data.claimed] });
+  }
+  await card.update({ content: card.content.replace(/<button[\s\S]*?<\/button>/, `<p class="lucd20-td-done">${L("TD.CardDone", { total })}</p>`) });
+  return true;
+}
+
+/** Start of each turn: a Temporal Distortion effect PF2e marks as expired is removed with its condition. */
+async function removeExpired(combatant) {
+  await new Promise(resolve => setTimeout(resolve, 250)); // PF2e may remove it itself first
+  for (const c of combatant.combat?.combatants ?? []) {
+    const actor = c.actor;
+    const expired = (actor?.itemTypes?.effect ?? []).filter(e => e.getFlag?.(MODULE_ID, TD) && e.isExpired);
+    if (expired.length) await actor.deleteEmbeddedDocuments("Item", expired.map(e => e.id)).catch(err => error("Could not remove an expired Temporal Distortion.", err));
+  }
+}
+
+defineFeature({
+  id: "pf2eTemporalDistortion",
+  category: "pf2e",
+  systems: ["pf2e"],
+  scope: "world",
+  gmOnly: true,
+  defaultEnabled: true,
+
+  init(feature) {
+    onGMRequest("pf2eRules.tdClaim", (payload, senderId) => {
+      if (!feature.active) throw new Error(L("Off"));
+      return tdClaim(payload, senderId);
+    });
+    onGMRequest("pf2eRules.tdApply", (payload, senderId) => {
+      if (!feature.active) throw new Error(L("Off"));
+      return tdApply(payload, senderId);
+    });
+  },
+
+  enable(feature) {
+    feature.on("createChatMessage", message => {
+      onTemporalSave(message).catch(err => error("Temporal Distortion failed.", err));
+    });
+    onTurns(feature, { start: removeExpired });
+    feature.on("renderChatMessageHTML", (message, html) => {
+      for (const button of html.querySelectorAll?.("[data-lucd20-td]") ?? []) {
+        if (message.getFlag?.(MODULE_ID, TD)?.done) button.remove();
+        button.addEventListener("click", event => {
+          event.preventDefault();
+          if (feature.active) onTemporalClick(message, button);
+        });
+      }
+    });
+  }
+});
+
+export const _test = { shoveSquares, shoveMove, onShoveMessage, onTripMessage, onConditionCreated, remindRetch, onRetchClick, movedForward, onTemporalSave, onTemporalClick, tdClaim, tdApply, removeExpired };

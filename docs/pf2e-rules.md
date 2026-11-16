@@ -13,9 +13,9 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 | 2 | Sickened gets a DC when applied; reminder to retch at the start of the turn | built v0.41.0 | `pf2eSickened` |
 | 3 | Shove: choose where the target is pushed | built v0.41.0 | `pf2eShove` |
 | 4 | Trip: conditions and damage by degree of success | built v0.41.0 | `pf2eTrip` |
-| 5 | Temporal Distortion: d4 for the condition after the save | planned | |
+| 5 | Temporal Distortion: d4 for the condition after the save | built v0.42.0 | `pf2eTemporalDistortion` |
 
-Code: `scripts/systems/pf2e/rules.js`; test `tools/harness/tests/test37.js`.
+Code: `scripts/systems/pf2e/rules.js`; tests `tools/harness/tests/test37.js` (1–4), `test38.js` (5).
 Each rule has its own switch under **Pathfinder 2e** in the module's settings.
 
 Standing decisions:
@@ -101,7 +101,7 @@ Standing decisions:
   as a normal damage roll, applied with PF2e's own buttons (so resistances and
   weaknesses are the system's). A creature already Prone is left as it is.
 
-## 5. Temporal Distortion (planned)
+## 5. Temporal Distortion
 
 - After the spell is used and the NPC rolls its save: on anything but a
   critical success, the PC's player (the GM if the player is not connected)
@@ -109,5 +109,43 @@ Standing decisions:
   in chat, the game waits for Dice So Nice, then the condition rolled is
   applied; on a 4 a window lets the player choose the condition.
 - On a critical failure the condition's value is 3.
-- The duration is to be automated too (an Effect that grants the condition
-  for X rounds, or hard-coded: to be decided).
+- The duration is automated too.
+- The spell (owner, Q134–Q136): *Temporal Distortion*, oracle focus spell 1,
+  Dark Archive (Remastered) p. 189 / Divine Mysteries p. 287; PF2e item
+  `temporal-distortion` (`Compendium.pf2e.spells-srd.Item.UbHK19RYbxRXWgWX`);
+  1 action, range 30 feet, 1 creature, **Will**.
+  - Critical success: unaffected.
+  - Success: the condition (value 1) for **1 round**.
+  - Failure: the condition (value 1) for **4 rounds**.
+  - Critical failure: value **3** for **2 rounds**.
+  - d4: 1 Clumsy, 2 Enfeebled, 3 Stupefied, 4 the caster chooses.
+- Single target only. Nothing appears until the save has been rolled (the
+  owner may change who rolls it first).
+- Built (v0.42.0), the other questions (Q137–Q143) as recommended:
+  - Read from the target's saving-throw message: `context.type`
+    `saving-throw` with `item:slug:temporal-distortion` in `context.options`
+    (owner's console check); the caster is `flags.pf2e.origin.actor`.
+  - After the save's dice, the GM's client posts a card "Temporal Distortion
+    on X: Pat rolls the d4" with a **Roll d4** button. The roller is the
+    connected player whose character the caster is (else a connected owner,
+    else the GMs). Other players' clicks are refused; a GM may always roll.
+  - The d4 is a normal roll in chat; after its dice, a 4 opens a window with
+    the three conditions (it re-opens until one is chosen).
+  - A PF2e **effect** "Temporal Distortion (Clumsy 3)" grants the condition
+    (GrantItem with the badge value) and lasts the rounds above from the
+    caster's turn (`expiry: turn-start`, start initiative = the caster's).
+    A new one on the same creature replaces the old. At the start of each
+    turn, an expired one is removed with its condition if PF2e has not
+    removed it. The effect has no token icon of its own (the condition has).
+  - Chat: "Ogre is Enfeebled 1 for 4 rounds (d4: 2)." The card then says
+    "Rolled: 2."
+  - A secret save (whispered or blind) or a hidden token: the card and the
+    d4 go to the roller and the GMs only; the roller's result line leaves out
+    the value and duration (they would tell the save's result); the GMs get
+    the full line. A name PF2e hides from players shows as "the target".
+  - A new save against it on the same creature (a reroll) replaces a card
+    nobody has rolled yet.
+- (verify) in V14 / PF2e 8.7: that the effect's condition shows with the
+  right value, that the effect ends at the start of the caster's turn after
+  the rounds above (PF2e's own expiry, or ours at the turn start), and that
+  the condition goes with it.

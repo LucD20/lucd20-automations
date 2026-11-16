@@ -2450,3 +2450,74 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-td-card .lucd20-td-table { font-size: 0.9em; opacity: 0.8; }
 .lucd20-td-card button { width: 100%; }
 .lucd20-td-card .lucd20-td-done { margin: 0; font-style: italic; }
+
+/* ---------- D&D 4e HUD (phase 39): the band across the bottom ---------- */
+.lucd20-hud4e { --atwill: #619759; --enc: #961334; --daily: #4d4d4f; --basic: #6b5d45; --plate: #3a4a2a;
+  --bg: #1b1a18; --bg2: #23211e; --ink: #ece3cf; --mute: #a39a88; --line: #4a453c; --gold: #d9b26a; --btn: #2c2a26; --edge: #000;
+  position: fixed; left: 0; bottom: 0; z-index: 30; display: flex; align-items: stretch; height: 190px; box-sizing: border-box;
+  font: 12px "Signika", "Trebuchet MS", sans-serif; color: var(--ink); background: var(--bg); border-top: 2px solid var(--plate); border-right: 1px solid var(--edge); pointer-events: auto; }
+.lucd20-hud4e.light { --bg: #f4eee0; --bg2: #e9e0ca; --ink: #2a251c; --mute: #6c6250; --line: #c2b393; --gold: #8c6418; --btn: #fbf7ec; --edge: #6f6248; }
+.lucd20-hud4e.empty { height: auto; background: transparent; border: 0; }
+.lucd20-hud4e.empty .h4-main, .lucd20-hud4e.empty .h4-dock { display: none; }
+.lucd20-hud4e.empty:not(.with-hot) .h4-right { display: none; }
+.lucd20-hud4e .h4-main { flex: 1; min-width: 0; display: flex; }
+.lucd20-hud4e .h4-players { position: absolute; left: 4px; bottom: calc(100% + 8px); }
+.lucd20-hud4e .h4-players #players { position: static; inset: auto; margin: 0; }
+.lucd20-hud4e button { font: inherit; cursor: pointer; }
+.lucd20-hud4e .h4-por { width: 84px; flex: none; cursor: pointer; background: #000; } .lucd20-hud4e .h4-por img { width: 100%; height: 100%; object-fit: cover; border: 0; display: block; }
+.lucd20-hud4e .h4-stats { width: 248px; flex: none; display: flex; flex-direction: column; border-left: 1px solid var(--line); }
+.lucd20-hud4e .h4-plate { display: flex; align-items: baseline; gap: 6px; padding: 3px 8px; background: var(--plate); color: #fff; font: 700 14px "DragonHead", Georgia, serif; }
+.lucd20-hud4e .h4-plate .fit { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lucd20-hud4e .h4-plate small { font: 400 10.5px "Signika", sans-serif; opacity: .9; white-space: nowrap; }
+.lucd20-hud4e .h4-ln { display: flex; align-items: center; gap: 8px; padding: 3px 8px; border-top: 1px solid var(--line); white-space: nowrap; }
+.lucd20-hud4e .h4-ln:nth-of-type(even) { background: var(--bg2); } .lucd20-hud4e .h4-push { margin-left: auto; }
+.lucd20-hud4e .h4-mute { color: var(--mute); font-size: 10.5px; } .lucd20-hud4e .h4-red { color: #c0392b; }
+.lucd20-hud4e .h4-hp { position: relative; flex: 1; height: 16px; border: 1px solid #000; background: #3a1010; }
+.lucd20-hud4e .h4-hp .f { position: absolute; inset: 0 auto 0 0; background: linear-gradient(#b52a2a, #7c1717); }
+.lucd20-hud4e .h4-hp .t { position: absolute; top: 0; left: 0; height: 4px; background: #5aa0ff; }
+.lucd20-hud4e .h4-hp .bl { position: absolute; top: -2px; bottom: -2px; width: 2px; background: #000; }
+.lucd20-hud4e .h4-hp span { position: relative; display: block; text-align: center; font: 700 11px/16px sans-serif; color: #fff; text-shadow: 0 1px 2px #000; }
+.lucd20-hud4e .h4-conds { display: flex; flex-wrap: wrap; gap: 3px; padding: 3px 8px; border-top: 1px solid var(--line); max-height: 40px; overflow: hidden; }
+.lucd20-hud4e .h4-conds span { font-size: 10px; line-height: 15px; padding: 0 5px; border: 1px solid var(--line); background: var(--bg2); white-space: nowrap; }
+.lucd20-hud4e .h4-conds .bad { border-color: #a33; color: #c0392b; } .lucd20-hud4e.dark .h4-conds .bad { color: #ff8a7a; }
+.lucd20-hud4e .h4-btn { border: 1px solid var(--gold); background: var(--btn); color: var(--gold); padding: 0 6px; font-size: 11px; font-weight: 700; line-height: 16px; height: auto; width: auto; min-height: 0; flex: none; }
+.lucd20-hud4e .h4-btn.done { border-color: var(--line); color: var(--mute); text-decoration: line-through; font-weight: 400; }
+.lucd20-hud4e .h4-btn:disabled { opacity: .45; cursor: default; }
+.lucd20-hud4e .h4-death { display: flex; align-items: center; gap: 4px; } .lucd20-hud4e .h4-death i { width: 11px; height: 11px; border: 1px solid #a33; border-radius: 50%; } .lucd20-hud4e .h4-death i.x { background: #a33; }
+.lucd20-hud4e .h4-defs { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line); margin-top: auto; }
+.lucd20-hud4e .h4-defs div { text-align: center; border-left: 1px solid var(--line); padding: 1px 0; } .lucd20-hud4e .h4-defs div:first-child { border-left: 0; }
+.lucd20-hud4e .h4-defs b { display: block; font: 700 15px/1.1 Georgia, serif; } .lucd20-hud4e .h4-defs small { font-size: 9.5px; color: var(--mute); }
+.lucd20-hud4e .h4-defs .up b { color: #3f9a3f; } .lucd20-hud4e .h4-defs .dn b { color: #c0392b; }
+.lucd20-hud4e .h4-powers { flex: 1; min-width: 0; display: flex; flex-direction: column; border-left: 1px solid var(--line); }
+.lucd20-hud4e .h4-tabs { display: flex; border-bottom: 1px solid var(--line); flex: none; }
+.lucd20-hud4e .h4-tabs button { flex: 1; min-width: 0; padding: 3px 4px; margin: 0; height: auto; border: 0; border-left: 1px solid var(--line); border-radius: 0; background: transparent; color: var(--ink); font-size: 11px; white-space: nowrap; overflow: hidden; }
+.lucd20-hud4e .h4-tabs button:first-child { border-left: 0; } .lucd20-hud4e .h4-tabs button.act { background: var(--plate); color: #fff; }
+.lucd20-hud4e .h4-tabs .n { opacity: .65; font-size: 9.5px; margin-left: 3px; }
+.lucd20-hud4e .h4-rows { flex: 1; overflow-y: auto; }
+.lucd20-hud4e .h4-row { display: grid; grid-template-columns: 74px 1fr; border-bottom: 1px solid var(--line); }
+.lucd20-hud4e .h4-row > b { display: flex; align-items: center; padding: 0 6px; color: #fff; font-size: 10.5px; }
+.lucd20-hud4e .u-atwill { --u: var(--atwill); } .lucd20-hud4e .u-enc { --u: var(--enc); } .lucd20-hud4e .u-daily { --u: var(--daily); } .lucd20-hud4e .u-basic { --u: var(--basic); }
+.lucd20-hud4e .h4-row > b { background: var(--u); }
+.lucd20-hud4e .h4-chips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px; padding: 3px; }
+.lucd20-hud4e .h4-pw { border: 1px solid var(--edge); background: var(--bg); cursor: pointer; min-width: 0; }
+.lucd20-hud4e .h4-pw:hover { outline: 1px solid var(--gold); }
+.lucd20-hud4e .h4-pw .h4-h { padding: 2px 6px; background: var(--u); color: #fff; font-weight: 700; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lucd20-hud4e .h4-pw .h4-k { display: flex; gap: 6px; padding: 1px 6px; font-size: 10px; color: var(--mute); white-space: nowrap; }
+.lucd20-hud4e .h4-pw .h4-k .rg { min-width: 0; overflow: hidden; text-overflow: ellipsis; } .lucd20-hud4e .h4-pw .h4-k i { font-size: 9px; }
+.lucd20-hud4e .h4-pw .h4-k .at { margin-left: auto; flex: none; color: var(--ink); font-weight: 600; }
+.lucd20-hud4e .h4-pw.used { opacity: .5; } .lucd20-hud4e .h4-pw.used .h4-h { background: #777; text-decoration: line-through; }
+.lucd20-hud4e .h4-pw.act .h4-h { font-weight: 600; }
+.lucd20-hud4e .h4-uses { display: inline-flex; gap: 2px; margin-left: 5px; vertical-align: 1px; } .lucd20-hud4e .h4-uses i { width: 7px; height: 7px; border: 1px solid #fff; border-radius: 50%; } .lucd20-hud4e .h4-uses i.full { background: #fff; }
+.lucd20-hud4e .h4-none { margin: 6px 8px; color: var(--mute); font-size: 11px; }
+.lucd20-hud4e .h4-right { width: 182px; flex: none; display: flex; flex-direction: column; border-left: 1px solid var(--line); background: var(--bg); }
+.lucd20-hud4e .h4-tiles { display: grid; grid-template-columns: repeat(5, 1fr); border-bottom: 1px solid var(--line); }
+.lucd20-hud4e .h4-tiles span { position: relative; display: grid; justify-items: center; padding: 3px 0 2px; border-left: 1px solid var(--line); font-size: 8.5px; overflow: hidden; }
+.lucd20-hud4e .h4-tiles span:first-child { border-left: 0; } .lucd20-hud4e .h4-tiles i { font-size: 14px; } .lucd20-hud4e .h4-tiles [data-pip] { cursor: pointer; }
+.lucd20-hud4e .h4-tiles .on { background: var(--plate); color: #fff; } .lucd20-hud4e .h4-tiles .spent { color: var(--mute); text-decoration: line-through; } .lucd20-hud4e .h4-tiles .spent i { opacity: .4; }
+.lucd20-hud4e .h4-tiles .off { color: var(--mute); } .lucd20-hud4e .h4-tiles sup { position: absolute; top: 1px; right: 4px; font: 700 9px sans-serif; color: var(--gold); }
+.lucd20-hud4e .h4-hot { flex: 1; display: flex; align-items: center; justify-content: center; padding: 4px; }
+/* (verify) V14's hotbar markup: Foundry's own hotbar, held in place and laid out 5 × 2. */
+.lucd20-hud4e .h4-hot #hotbar { position: static; inset: auto; margin: 0; width: auto; height: auto; transform: none; display: flex; align-items: center; gap: 2px; }
+.lucd20-hud4e .h4-hot #hotbar #action-bar, .lucd20-hud4e .h4-hot #hotbar .action-bar, .lucd20-hud4e .h4-hot #hotbar ol.slots { display: grid; grid-template-columns: repeat(5, 30px); grid-auto-rows: 30px; gap: 2px; margin: 0; padding: 0; width: auto; height: auto; }
+.lucd20-hud4e .h4-hot #hotbar .slot { width: 30px; height: 30px; min-width: 0; flex: none; font-size: 10px; }
+.lucd20-hud4e .h4-hot #hotbar #hotbar-controls-left, .lucd20-hud4e .h4-hot #hotbar #hotbar-controls-right, .lucd20-hud4e .h4-hot #hotbar .bar-controls { display: flex; flex-direction: column; gap: 2px; }

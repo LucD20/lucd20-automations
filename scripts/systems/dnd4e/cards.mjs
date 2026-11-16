@@ -99,6 +99,21 @@ card({
   onSettingChange: () => refresh.dock()
 });
 
+// The 4e HUD (phase 39): a band across the bottom for the selected PC; per player.
+const hud = () => import("./hud/hud.mjs");
+card({
+  id: "dnd4eHud",
+  scope: "client",
+  settings: {
+    theme: { kind: "select", choices: { dark: "LUCD20.Dnd4eHud.Theme.dark", light: "LUCD20.Dnd4eHud.Theme.light" }, default: "dark", scope: "client" },
+    hotbar: { kind: "boolean", default: true, scope: "client" },
+    players: { kind: "boolean", default: true, scope: "client" }
+  },
+  enable: f => hud().then(m => m.mountHud(f)),
+  disable: () => hud().then(m => m.unmountHud()),
+  onSettingChange: f => hud().then(m => m.refreshHud(f))
+});
+
 card({ id: "dnd4eOpportunity", enable: noop });
 card({ id: "dnd4eTriggeredPowers", enable: noop });
 card({ id: "dnd4eDamageApply", enable: noop });

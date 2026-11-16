@@ -731,6 +731,24 @@
       "pf2eTemporalDistortion": {
         "Name": "Temporal Distortion",
         "Hint": "After the target's save against Temporal Distortion (anything but a critical success), the caster's player (the GM if that player is not connected) gets a button to roll a d4: 1 Clumsy, 2 Enfeebled, 3 Stupefied, 4 the roller chooses. After the dice the condition is applied by an effect that ends by itself: value 1 for 1 round on a success, 1 for 4 rounds on a failure, 3 for 2 rounds on a critical failure."
+      },
+      "dnd4eHud": {
+        "Name": "4e HUD",
+        "Hint": "A band across the bottom of the screen for the selected character (else your own): HP, conditions, healing surges and Second Wind (death saves at 0 HP), Action Points with Spend, speed, initiative and defences; powers in tabs by action type, in At-Will, Encounter, Daily and Basic rows (click to use, right-click to open); the action dock. Replaces the floating action panel. Only for you.",
+        "Setting": {
+          "theme": {
+            "Name": "Theme",
+            "Hint": "Dark, or light like a 4e book's page."
+          },
+          "hotbar": {
+            "Name": "Hotbar inside the HUD",
+            "Hint": "Foundry's macro hotbar moves into the HUD's right end. Off: it stays where Foundry puts it and the HUD sits above it."
+          },
+          "players": {
+            "Name": "Players list above the HUD",
+            "Hint": "Foundry's players list moves into the corner above the HUD's left end."
+          }
+        }
       }
     },
     "ForceSettings": {
@@ -1657,6 +1675,49 @@
         "NoCondition": "PF2e's {condition} condition was not found.",
         "Replaced": "Replaced by a new save."
       }
+    },
+    "Dnd4eHud": {
+      "Theme": {
+        "dark": "Dark",
+        "light": "Light"
+      },
+      "OpenSheet": "Open the character sheet",
+      "HP": "HP",
+      "Temp": "temp",
+      "Bloodied": "bloodied",
+      "Dying": "Dying",
+      "DeathSaves": "Death saves",
+      "Roll": "Roll",
+      "Surges": "Surges",
+      "SecondWind": "Second Wind",
+      "AP": "AP",
+      "Spend": "Spend",
+      "Speed": "Speed",
+      "Init": "Init",
+      "Trigger": "Trigger",
+      "Tab": {
+        "standard": "Standard",
+        "move": "Move",
+        "minor": "Minor",
+        "free": "Free",
+        "triggered": "Triggered"
+      },
+      "Row": {
+        "atwill": "At-Will",
+        "enc": "Encounter",
+        "daily": "Daily",
+        "basic": "Basic"
+      },
+      "Dock": {
+        "standard": "Standard",
+        "move": "Move",
+        "minor": "Minor",
+        "immediate": "Immed.",
+        "opportunity": "Opport."
+      },
+      "NoPowers": "No powers of this kind.",
+      "NotInCombat": "Actions are tracked in combat.",
+      "APUsed": "{name} already spent an Action Point this encounter."
     }
   },
   "DND4EAUTO": {

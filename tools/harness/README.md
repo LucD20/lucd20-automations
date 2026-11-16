@@ -75,6 +75,7 @@ sets `game.system.id`.
 | `test36.js` | D&D 4e: opportunity attack warning while a move is planned (36) |
 | `test37.js` | PF2e rules: Frightened, Sickened and retching, Shove squares, Trip (37) |
 | `test38.js` | PF2e rules: Temporal Distortion (38) |
+| `test39.js` | D&D 4e HUD: data from the owner's sheets, rows and tabs, dock, clicks, dying, players list and hotbar moved and put back (39) |
 
 For a new feature, copy the closest test, keep its mock setup and replace the
 checks.

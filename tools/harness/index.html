@@ -10,6 +10,8 @@
   body.light { background: #f0ece2; color: #222; }
   form.application { position: absolute; left: 20px; top: 20px; width: 900px; height: 680px; display: flex; flex-direction: column;
     border: 1px solid #555; border-radius: 6px; background: inherit; }
+  /* Foundry stacks its windows from z-index 100, above the interface layer. */
+  .application { z-index: 100; }
   div.application { position: absolute; display: flex; flex-direction: column; border: 1px solid #555; border-radius: 6px; overflow: hidden; background: #1b1a21; }
   div.application .window-header { flex: none; background: #121117; }
   div.application .window-content { display: flex; flex: 1; flex-direction: column; min-height: 0; }

@@ -1,4 +1,5 @@
 import { MODULE_ID } from "../constants.mjs";
+import { getFeature } from "../../../core/registry.js";
 import { L, F, setting, tokenForActor } from "../utils.mjs";
 import { getState, remaining, togglePip, isCombatantsTurn, canModify, combatantForActor, ACTIONS } from "./state.mjs";
 import { BASIC_ACTIONS, useBasicAction } from "./basic.mjs";
@@ -56,6 +57,8 @@ export class ActionPanel extends ApplicationV2 {
 
 	static autoOpen() {
 		if (!setting("actionTracker") || !setting("actionPanel")) return;
+		// Q153: the 4e HUD has the dock; the floating panel no longer opens by itself while it is on.
+		if (getFeature("dnd4eHud")?.isEnabled) return;
 		ActionPanel.open();
 	}
 

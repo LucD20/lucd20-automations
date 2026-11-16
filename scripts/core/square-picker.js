@@ -34,7 +34,7 @@ export function pickSquare(squares, { hint = "", cancel = "Cancel", from = null 
     button.innerHTML = '<i class="fa-solid fa-xmark"></i> ';
     button.append(cancel);
     bar.append(text, button);
-    const hotbar = document.getElementById("hotbar")?.getBoundingClientRect();
+    const hotbar = (document.getElementById("lucd20-hud4e") ?? document.getElementById("hotbar"))?.getBoundingClientRect();
     bar.style.bottom = `${hotbar?.height ? Math.max(8, window.innerHeight - hotbar.top + 12) : 100}px`;
     document.body.append(bar);
 

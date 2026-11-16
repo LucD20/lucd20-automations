@@ -437,7 +437,8 @@ function visibleRect(id) {
 export function layoutBar(bar) {
 	const vw = window.innerWidth, vh = window.innerHeight;
 	const gap = 10;
-	const hotbar = visibleRect("hotbar");
+	// Above the 4e HUD when it is shown (it holds the hotbar), else above the hotbar.
+	const hotbar = visibleRect("lucd20-hud4e") ?? visibleRect("hotbar");
 	let left = gap;
 	const uiLeft = visibleRect("ui-left");
 	if (uiLeft) left = Math.max(left, Math.min(uiLeft.right, vw * 0.35) + gap);

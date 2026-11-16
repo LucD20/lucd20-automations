@@ -1714,3 +1714,41 @@ A four usage columns, taller band, names shrink to fit (down to 9 px, then
 "..."), range as 4e power icons (melee / ranged / close, W = weapon) with the
 attack on the right; B tabs in a column, powers as one-line book entries in two
 columns (Dying + death saves shown); C usage rows of up to three cards.
+
+**Owner's choice: take C** (usage rows). Q151–Q154 as recommended: a click
+uses the power exactly as the sheet does (`actor.usePower`), right click opens
+it, hover shows its name, keywords and trigger; the HUD is the one selected PC
+the user owns, else (players) their assigned character, nothing for a GM with
+nothing selected (only the hotbar stays); on by default, per player, with a
+dark / light theme, hotbar inside and players list above as options; the
+floating action panel no longer opens by itself while the HUD is on; the
+module's basic actions appear in the Basic row of their tab while in combat.
+
+**Built v0.43.0 (phase 39)** — `dnd4eHud`, `scripts/systems/dnd4e/hud/`
+(`hud-data.mjs` reads the actor, `hud.mjs` draws), `test39.js`.
+- Stat block: name plate, HP (temp, bloodied / dying), conditions and
+  temporary effects (harmful ones red), surges + Second Wind, or Dying + death
+  saves (`deathsavefail` of `deathsaves`) with Roll (`actor.rollDeathSave`);
+  AP + Spend (warns if `actionpoints.encounteruse`), speed, initiative, the
+  four defences (green / red when temporary effects change them, the Sheet
+  Highlights reading).
+- Powers: tabs Standard / Move / Minor / Free / Triggered (reaction,
+  interrupt, opportunity; "none" goes to Free); rows At-Will (also `other`),
+  Encounter (also `recharge`), Daily (also `item`), Basic (`powerType`
+  inherent); unprepared powers hidden; uses as pips when more than one; no uses
+  left = greyed. Attack line from `item.getAttackBonus()` (the sheet's number)
+  + defence; range as icons (melee, ranged, close, area, personal; W = weapon).
+  Names lose the compendium prefix; long ones shrink to fit (9 px) then "…".
+- Dock: the Action Tracker's state for the combatant, click a tile to toggle
+  it (owner / GM); "Actions are tracked in combat." outside combat.
+- Placement: fixed at the bottom left, inside `#interface` under windows
+  (z-index 30), width up to the sidebar's left edge (max 1240 px), re-measured
+  on resize and sidebar changes; `#hotbar` and `#players` are moved in by
+  re-parenting and put back exactly when the HUD or the option is off. Bars
+  that sit above the hotbar (movement picker, square picker, Pathfinding's Q
+  hint) now sit above the HUD.
+- (verify) in V14 build 368 / dnd4e 0.9.3, with the owner's HTML snippet:
+  the hotbar's markup inside the HUD (5 × 2, page / lock controls), the
+  players list in its corner, the HUD under windows and above the canvas, the
+  right edge against the collapsed and the open sidebar, `getAttackBonus()`
+  numbers matching the sheet, `rollDeathSave` and `actionPoint` from the HUD.

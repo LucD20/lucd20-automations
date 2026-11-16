@@ -62,7 +62,7 @@ function showHint() {
     hint.innerHTML = `<kbd>Q</kbd><span>${localize("LUCD20.Pathfinding.HintQ")}</span>`;
     document.body.append(hint);
   }
-  const bar = document.getElementById("hotbar")?.getBoundingClientRect();
+  const bar = (document.getElementById("lucd20-hud4e") ?? document.getElementById("hotbar"))?.getBoundingClientRect();
   hint.style.bottom = `${bar?.height ? Math.max(8, window.innerHeight - bar.top + 8) : 90}px`;
   hint.classList.toggle("is-on", keyDown("KeyQ"));
   clearTimeout(state.hintTimer);

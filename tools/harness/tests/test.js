@@ -19,8 +19,19 @@ const out = __dirname;
   await page.screenshot({ path: `${out}/gm-combat.png` });
   const tabs = await page.$$eval(".lucd20-hub-tab .label", els => els.map(e => e.textContent));
   console.log("GM tabs:", tabs.join(" | "));
-  assert.deepStrictEqual(tabs, ["Combat", "Chat", "Tokens & Placement", "GM Vision", "Sheets & Windows", "Statistics", "Player Settings", "Exploration"]);
-  assert.strictEqual(await page.textContent('.lucd20-hub-tab[data-category="combat"] .count'), "1/5");
+  // The list of categories grows with the module, so it is checked against the catalog, not a fixed list:
+  // every category that has a feature for this system, in the catalog's order.
+  const expectTabs = system => page.evaluate(async system => {
+    const { CATEGORIES, FEATURE_ORDER } = await import("/modules/lucd20-automations/scripts/core/catalog.js");
+    const fits = x => !x.systems || x.systems.includes(system);
+    return CATEGORIES.filter(c => fits(c) && FEATURE_ORDER.some(f => f.category === c.id && fits(f))).map(c => game.i18n.localize(`LUCD20.Category.${c.id}.Label`));
+  }, system);
+  assert.deepStrictEqual(tabs, await expectTabs("pf2e"));
+  assert.ok(tabs[0] === "Combat" && tabs.includes("Exploration") && tabs.includes("World Setup") && !tabs.includes("D&D 4e"), "PF2e world: Exploration, no 4e category");
+  // "on/total" for the Combat category; the totals change as features are added, the arithmetic does not.
+  const count = async () => (await page.textContent('.lucd20-hub-tab[data-category="combat"] .count')).split("/").map(Number);
+  const [onAtStart, total] = await count();
+  assert.ok(onAtStart >= 1 && total >= onAtStart, `Combat count ${onAtStart}/${total}`);
   assert.deepStrictEqual(await page.evaluate(() => __log), ["enable"]);
 
   // PF2e group shown, dependent option hidden until its checkbox is on
@@ -42,7 +53,7 @@ const out = __dirname;
   await page.waitForTimeout(100);
   assert.ok(!(await page.isVisible("text=Marker image")));
   assert.deepStrictEqual(await page.evaluate(() => __log), ["disable"]);
-  assert.strictEqual(await page.textContent('.lucd20-hub-tab[data-category="combat"] .count'), "0/5");
+  assert.deepStrictEqual(await count(), [onAtStart - 1, total], "one fewer on, same total");
   await page.click('.lucd20-feature[data-feature="demoMarker"] .lucd20-switch');
   await page.waitForTimeout(100);
   assert.deepStrictEqual(await page.evaluate(() => __log), ["disable", "enable"]);
@@ -91,6 +102,7 @@ const out = __dirname;
   // --- GM view, 4e: no Exploration, no PF2e group ---
   page = await open("gm=1&system=dnd4e");
   const tabs4e = await page.$$eval(".lucd20-hub-tab .label", els => els.map(e => e.textContent));
+  assert.deepStrictEqual(tabs4e, await expectTabs("dnd4e"));
   assert.ok(!tabs4e.includes("Exploration"));
   assert.ok(!(await page.isVisible("text=Use PF2e disposition colors")));
   assert.strictEqual(await page.evaluate(() => __registered.has("lucd20-automations.demoMarker_pf2eExtra")), false);
@@ -100,7 +112,10 @@ const out = __dirname;
   await page.screenshot({ path: `${out}/player.png` });
   const ptabs = await page.$$eval(".lucd20-hub-tab .label", els => els.map(e => e.textContent));
   console.log("Player tabs:", ptabs.join(" | "));
-  assert.deepStrictEqual(ptabs, ["Combat", "Sheets & Windows"]);
+  // Players only get categories that hold something they may change: never the GM-only ones.
+  assert.ok(ptabs.includes("Combat") && ptabs.includes("Sheets & Windows"), "players keep their own options");
+  for (const gmOnly of ["GM Vision", "Player Settings", "World Setup"]) assert.ok(!ptabs.includes(gmOnly), `players do not see ${gmOnly}`);
+  assert.ok(ptabs.length < tabs.length);
   assert.ok(await page.isVisible("text=Show for me"));
   assert.ok(!(await page.isVisible("text=Marker image")));
   assert.ok(!(await page.isVisible('.lucd20-feature[data-feature="demoMarker"] .lucd20-switch')));

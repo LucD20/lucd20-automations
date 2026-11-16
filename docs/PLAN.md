@@ -1703,3 +1703,14 @@ uses show pips (Majestic Word 2), the sheets' action types include `reaction`
 (ranger) and light (bard): 1 everything in view, power cards in a row;
 2 a low band with the tab opening upward; 3 the sheet's header, powers in
 At-Will / Encounter / Daily / Basic columns.
+
+**Layout 3 chosen** (Q148, "needs a few improvements"). Q149: conditions and
+effects line under HP, death saves in place of surges at 0 HP; a Skills tab
+maybe later, after seeing it in play. Q150: a monster HUD after the PCs' one.
+Owner: powers were cut off; give the powers area more room (the HUD may take
+more height, not more width), no taller cards; long names fit some other way.
+Fourth mockup (`docs/mockups/hud-4e-sheet.html` + `.png`), three takes on 3:
+A four usage columns, taller band, names shrink to fit (down to 9 px, then
+"..."), range as 4e power icons (melee / ranged / close, W = weapon) with the
+attack on the right; B tabs in a column, powers as one-line book entries in two
+columns (Dying + death saves shown); C usage rows of up to three cards.

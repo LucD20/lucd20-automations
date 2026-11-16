@@ -50,11 +50,13 @@ const assert = require("assert");
     out.frightenedAtStart = amiri.cond.frightened;
     turn({ round: 1, turn: 0, combatantId: "amiri" }, { round: 1, turn: 1, combatantId: "ogre" }); await settle();
     out.frightened = [amiri.cond.frightened];
+    out.frightenedChat = [__chat.at(-1).content.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim(), __chat.at(-1).whisper ?? "public"];
     turn({ round: 1, turn: 1, combatantId: "ogre" }, { round: 1, turn: 0, combatantId: "amiri" }); await settle();   // back: nothing ends
     turn({ round: 1, turn: 1, combatantId: "ogre" }, { round: 2, turn: 0, combatantId: "amiri" }); await settle();   // the ogre's turn ends: not Amiri's
     out.frightened.push(amiri.cond.frightened);
     turn({ round: 2, turn: 0, combatantId: "amiri" }, { round: 2, turn: 1, combatantId: "ogre" }); await settle();
     out.frightened.push(amiri.cond.frightened ?? 0);
+    out.frightenedChat.push(__chat.at(-1).content.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim());
 
     // 2. Sickened: the DC comes from what just happened in chat.
     const sicken = async who => { who.cond.sickened = 2; delete who.items.sickened; const c = who.itemTypes.condition.find(x => x.slug === "sickened"); Hooks.callAll("createItem", c); await settle(); return [c.flags[M]?.retch, c.system.description.value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()]; };
@@ -76,8 +78,16 @@ const assert = require("assert");
     __chat.length = 0;
     turn(null, { round: 3, turn: 0, combatantId: "amiri" }); await settle();   // Amiri is not sickened: no line
     out.noLineForOthers = __chat.length;
+    // With the Turn Announcer on, the line waits for the "Ogre's turn" card and lands under it.
+    game.settings.settings.has(`${M}.turnAnnouncer_enabled`) || game.settings.register(M, "turnAnnouncer_enabled", { scope: "world", config: false, type: Boolean, default: false });
+    await game.settings.set(M, "turnAnnouncer_enabled", true);
     turn(null, { round: 3, turn: 1, combatantId: "ogre" }); await settle();
-    const card = __chat.at(-1);
+    const retchLines = () => __chat.filter(c => c.content.includes("data-lucd20-retch"));
+    out.waitsForTurnCard = retchLines().length;
+    game.messages.push({ id: "turncard", timestamp: Date.now(), flags: { [M]: { turnCard: true } } });
+    await new Promise(res => setTimeout(res, 250));
+    await game.settings.set(M, "turnAnnouncer_enabled", false);
+    const card = retchLines().at(-1);
     out.reminder = [card.content.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim(), card.speaker.alias, card.whisper ?? "public"];
     const host = document.createElement("div"); host.innerHTML = card.content; document.body.append(host);
     Hooks.callAll("renderChatMessageHTML", card, host);
@@ -156,6 +166,8 @@ const assert = require("assert");
   assert.strictEqual(r.frightenedAtStart, 2, "1. nothing ends when the encounter begins");
   assert.deepStrictEqual(r.frightened, [1, 1, 0], "1. Frightened: −1 at the end of the creature's own turn only");
   assert.strictEqual(r.noLineForOthers, 0, "2. no retch line for a creature that is not sickened");
+  assert.deepStrictEqual(r.frightenedChat, ["Amiri : Frightened 2 → 1 (end of turn).", "public", "Amiri is no longer Frightened (end of turn)."], "1. chat says what changed");
+  assert.strictEqual(r.waitsForTurnCard, 0, "2. the retch line waits for the turn card when the Turn Announcer is on");
   assert.deepStrictEqual(r.fromSave, [{ dc: 21, source: "save" }, "Rules text. Retch: Fortitude DC 21 (the DC of the save)"], "2. the DC of the save the creature just rolled, noted on the condition");
   assert.deepStrictEqual([r.fromSpell, r.fromLevel, r.fromNothing], [{ dc: 23, source: "spell" }, { dc: 20, source: "level" }, { dc: 18, source: "own" }], "2. spell DC, else level-based DC of the source, else of the creature");
   assert.deepStrictEqual(r.levelDCs, [13, 14, 15, 20, 40, 50]);

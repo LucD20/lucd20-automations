@@ -37,6 +37,9 @@ Standing decisions:
   Turn ends and starts are now worked out from the encounter's own updates
   (`updateCombat`), remembering each encounter's last position.
   `CONFIG.debug.lucd20Rules = true` logs every update as it is read.
+- v0.41.2 (owner): the change is said in chat ("Amiri: Frightened 2 → 1 (end
+  of turn)"), to the GMs only when the creature or its name is hidden from
+  players.
 
 ## 2. Sickened
 
@@ -57,6 +60,9 @@ Standing decisions:
   level-based DC. The DC is stored on the condition and added to the end of
   its description. The button rolls Fortitude; success −1, critical success
   −2. The line is public and names the DC.
+- v0.41.2 (owner): with the Turn Announcer on, the retch line waits for the
+  "X's turn" card and is posted under it, so it is not forgotten. To the GMs
+  only when the creature or its name is hidden from players.
 
 ## 3. Shove
 

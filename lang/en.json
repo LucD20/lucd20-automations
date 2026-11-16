@@ -714,7 +714,7 @@
       },
       "pf2eFrightened": {
         "Name": "Frightened",
-        "Hint": "At the end of a creature's turn its Frightened value goes down by 1."
+        "Hint": "At the end of a creature's turn its Frightened value goes down by 1, and chat says so."
       },
       "pf2eSickened": {
         "Name": "Sickened",
@@ -1621,7 +1621,10 @@
       "ShoveDone": "That Shove was already resolved.",
       "Off": "That automation is switched off.",
       "TripDamage": "Trip (critical success): damage to {name}",
-      "Cancel": "Cancel"
+      "Cancel": "Cancel",
+      "Speaker": "Conditions",
+      "FrightenedDown": "{name}: Frightened {before} → {after} (end of turn).",
+      "FrightenedGone": "{name} is no longer Frightened (end of turn)."
     }
   },
   "DND4EAUTO": {

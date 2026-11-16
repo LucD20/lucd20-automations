@@ -31,6 +31,31 @@ const isAction = (message, slug) => {
 };
 const tokenOf = uuid => (uuid ? fromUuidSync(uuid) : null);
 
+/**
+ * Who may read a line about this combatant: everyone, unless the creature or its name is hidden
+ * from the players; then only the GMs (a hidden creature's name must not reach them).
+ */
+function audience(combatant) {
+  const secret = combatant?.hidden || combatant?.token?.hidden || combatant?.token?.playersCanSeeName === false;
+  return secret ? { whisper: game.users.filter(u => u.isGM).map(u => u.id) } : {};
+}
+
+/** When the Turn Announcer is on, wait for its "X's turn" card so a line posted now lands under it. */
+async function afterTurnCard(since) {
+  let announcer = false;
+  try {
+    announcer = !!game.settings.get(MODULE_ID, "turnAnnouncer_enabled");
+  } catch (err) {
+    announcer = false;
+  }
+  if (!announcer) return;
+  for (let i = 0; i < 20; i++) {
+    const posted = (game.messages?.contents ?? []).slice(-6).some(m => m.flags?.[MODULE_ID]?.turnCard && (m.timestamp ?? 0) >= since - 100);
+    if (posted) return;
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+}
+
 /* -------------------------------------------- */
 /*  1. Frightened                               */
 /* -------------------------------------------- */
@@ -92,7 +117,18 @@ defineFeature({
   enable(feature) {
     onTurns(feature, {
       async end(combatant) {
-        if (combatant.actor.hasCondition?.("frightened")) await combatant.actor.decreaseCondition("frightened");
+        const actor = combatant.actor;
+        if (!actor.hasCondition?.("frightened")) return;
+        const before = conditionValue(actor.itemTypes?.condition?.find(c => c.slug === "frightened"));
+        await actor.decreaseCondition("frightened");
+        // Said in chat, so the change is not missed.
+        const after = before - 1;
+        const name = `<strong>${esc(combatant.name ?? actor.name)}</strong>`;
+        await ChatMessage.create({
+          content: `<p class="lucd20-rule-note"><i class="fa-solid fa-ghost"></i> ${after > 0 ? L("FrightenedDown", { name, before, after }) : L("FrightenedGone", { name })}</p>`,
+          speaker: { alias: L("Speaker") },
+          ...audience(combatant)
+        });
       }
     });
   }
@@ -146,15 +182,18 @@ async function onConditionCreated(item) {
 }
 
 /** Start of a sickened creature's turn: say what to roll, with a button. */
-async function remindRetch(actor, tokenDoc) {
+async function remindRetch(actor, tokenDoc, combatant = null) {
   const condition = sickenedOf(actor);
   if (!condition) return;
+  // Under the "X's turn" card, where it is seen when the turn is played.
+  await afterTurnCard(Date.now());
   const dc = Number(condition.getFlag(MODULE_ID, RETCH)?.dc) || retchDC(actor).dc;
   await ChatMessage.create({
     content: `<div class="lucd20-retch-card"><p><i class="fa-solid fa-face-dizzy"></i> ${L("RetchLine", { value: conditionValue(condition), dc })}</p>
       <button type="button" data-lucd20-retch data-actor="${esc(actor.uuid)}" data-dc="${dc}"><i class="fa-solid fa-dice-d20"></i> ${L("RetchButton", { dc })}</button></div>`,
     speaker: ChatMessage.getSpeaker?.({ actor, token: tokenDoc }) ?? { alias: actor.name },
-    flags: { [MODULE_ID]: { retch: { actor: actor.uuid, dc } } }
+    flags: { [MODULE_ID]: { retch: { actor: actor.uuid, dc } } },
+    ...audience(combatant)
   });
 }
 
@@ -190,7 +229,7 @@ defineFeature({
 
   enable(feature) {
     feature.on("createItem", onConditionCreated);
-    onTurns(feature, { start: combatant => remindRetch(combatant.actor, combatant.token) });
+    onTurns(feature, { start: combatant => remindRetch(combatant.actor, combatant.token, combatant) });
     feature.on("renderChatMessageHTML", (message, html) => {
       for (const button of html.querySelectorAll?.("[data-lucd20-retch]") ?? []) {
         button.addEventListener("click", event => {

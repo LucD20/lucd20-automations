@@ -145,7 +145,6 @@ Standing decisions:
     the full line. A name PF2e hides from players shows as "the target".
   - A new save against it on the same creature (a reroll) replaces a card
     nobody has rolled yet.
-- (verify) in V14 / PF2e 8.7: that the effect's condition shows with the
-  right value, that the effect ends at the start of the caster's turn after
-  the rounds above (PF2e's own expiry, or ours at the turn start), and that
-  the condition goes with it.
+- Checked by the owner in V14 / PF2e 8.7 (v0.42.0): it all works, including
+  the condition's value and the effect ending with its condition after the
+  rounds above.

@@ -28,7 +28,7 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 | 17 | Modifiers Matter, PF2e and 4e (replaces PF2e Modifiers Matter) | built v0.56.0 | `modifiersMatter` |
 | 18 | Damage Estimate, PF2e and 4e (replaces PF2e Damage Estimate) | built v0.57.0 | `damageEstimate` |
 | 19 | Cover for attack rolls and area saves; areas reach past wall ends | built v0.61.0 | `pf2eCover` |
-| 20 | Effect areas: targeting window, hover cover, exact reach | built v0.61.0 | `pf2eAreas` |
+| 20 | Effect areas: targeting window, hover cover, exact reach | built v0.61.1 | `pf2eAreas` |
 
 Commander (Battlecry!): research notes in `docs/pf2e-commander.md`; rules to
 automate come from the owner, one at a time.
@@ -739,3 +739,13 @@ one that leaves fewer squares next to enemies (see PLAN).
   `canvas.regions._highlights` as the overlay's parent; the sweep polygon's
   `intersectPolygon`; `canvas.tokens.setTargets`; the message update by the
   caster's player.
+- v0.61.1 (owner: "Make the window similar to the one on the left"
+  (Toolbelt's)): Enemies / Allies / Both as radio buttons, Include me /
+  Include neutral / Remove the area after beside them, Target and Cancel
+  below; all remembered. Owner: "Without the targeting helper, there is no
+  target button on the chat and no way to know if cover is applying [...]
+  You need to copy the target helper." Answer given: Toolbelt's Target Helper
+  has separate options; keep it enabled with "Add Targets to Messages" on and
+  only "Template Helper" off; our window then fills the message's targets and
+  Toolbelt shows its rows. A full copy of Target Helper only if the owner
+  still wants it.

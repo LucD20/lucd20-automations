@@ -42,6 +42,7 @@ export function tokensInArea(region) {
 /** Who the choice targets. */
 export function chooseTargets(region, { targets = "enemies", self = false, neutral = false } = {}) {
 	if (targets === "none") return [];
+	if (targets === "both") targets = "all";
 	let caster = null;
 	try { caster = region.flags.pf2e.origin?.actor ? fromUuidSync(region.flags.pf2e.origin.actor) : null; } catch { caster = null; }
 	const alliance = caster ? caster.alliance : game.user.isGM ? "opposition" : "party";
@@ -71,19 +72,33 @@ async function applyTargets(region, docs) {
 	if (message?.isOwner ?? message?.isAuthor) await message.update({ "flags.pf2e-toolbelt.targetHelper.targets": docs.map((d) => d.uuid) }).catch(() => {});
 }
 
-/** The window: Enemies / Allies / All / None, and three choices remembered per user. */
+/**
+ * The window (owner, v0.61.1: Toolbelt's layout): Enemies / Allies / Both on the left, Include me / Include
+ * neutral / Remove the area after on the right, Target and Cancel below. The choices are remembered.
+ */
 async function ask(region) {
 	const DialogV2 = foundry.applications?.api?.DialogV2;
-	const last = { self: false, neutral: false, dismiss: false, ...remembered() };
-	const box = (name) => `<label class="lucd20-area-check"><input type="checkbox" name="${name}" ${last[name] ? "checked" : ""}> ${esc(L(`Choice.${name}`))}</label>`;
-	const content = `<div class="lucd20-area-window">${box("self")}${box("neutral")}${box("dismiss")}</div>`;
-	const read = (dialog) => Object.fromEntries(["self", "neutral", "dismiss"].map((n) => [n, !!dialog.element?.querySelector(`[name="${n}"]`)?.checked]));
-	const buttons = ["enemies", "allies", "all", "none"].map((action, i) => ({
-		action, label: L(`Targets.${action}`), default: i === 0,
-		callback: (event, button, dialog) => ({ targets: action, ...read(dialog) })
-	}));
-	if (!DialogV2) return { targets: "enemies", ...last };
-	return DialogV2.wait({ window: { title: region.flags.pf2e.origin?.name ?? L("Title") }, content, buttons, rejectClose: false, classes: ["lucd20-area-dialog"] });
+	const last = { targets: "enemies", self: false, neutral: false, dismiss: false, ...remembered() };
+	if (last.targets === "all") last.targets = "both";
+	const radio = (v) => `<label><input type="radio" name="targets" value="${v}" ${last.targets === v ? "checked" : ""}> ${esc(L(`Targets.${v}`))}</label>`;
+	const box = (name) => `<label><input type="checkbox" name="${name}" ${last[name] ? "checked" : ""}> ${esc(L(`Choice.${name}`))}</label>`;
+	const content = `<div class="lucd20-area-window"><div class="lucd20-area-col">${["enemies", "allies", "both"].map(radio).join("")}</div><div class="lucd20-area-col">${["self", "neutral", "dismiss"].map(box).join("")}</div></div>`;
+	const read = (dialog) => {
+		const el = dialog.element;
+		return { targets: el?.querySelector("[name='targets']:checked")?.value ?? "enemies", ...Object.fromEntries(["self", "neutral", "dismiss"].map((n) => [n, !!el?.querySelector(`[name="${n}"]`)?.checked])) };
+	};
+	if (!DialogV2) return { ...last };
+	return DialogV2.wait({
+		window: { title: region.flags.pf2e.origin?.name ?? L("Title") },
+		position: { width: 300 },
+		content,
+		classes: ["lucd20-area-dialog"],
+		rejectClose: false,
+		buttons: [
+			{ action: "target", label: L("Target"), icon: "fa-solid fa-check", default: true, callback: (event, button, dialog) => read(dialog) },
+			{ action: "cancel", label: L("Cancel"), icon: "fa-solid fa-xmark", callback: (event, button, dialog) => ({ ...read(dialog), cancelled: true }) }
+		]
+	});
 }
 
 async function onCreateRegion(feature, region, options, userId) {
@@ -92,8 +107,9 @@ async function onCreateRegion(feature, region, options, userId) {
 	await new Promise((r) => setTimeout(r, 50)); // the region's coverage is ready once drawn
 	const choice = await ask(region);
 	if (!choice) return;
-	remember({ self: choice.self, neutral: choice.neutral, dismiss: choice.dismiss });
-	if (choice.targets !== "none") await applyTargets(region, chooseTargets(region, choice));
+	remember({ targets: choice.targets, self: choice.self, neutral: choice.neutral, dismiss: choice.dismiss });
+	if (choice.cancelled) return;
+	await applyTargets(region, chooseTargets(region, choice));
 	if (choice.dismiss) await region.delete().catch(() => {});
 }
 

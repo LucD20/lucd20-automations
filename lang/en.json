@@ -1847,7 +1847,9 @@
       },
       "Area": {
         "Title": "Area",
-        "Targets": { "enemies": "Enemies", "allies": "Allies", "all": "All", "none": "None" },
+        "Targets": { "enemies": "Enemies", "allies": "Allies", "both": "Both", "all": "All", "none": "None" },
+        "Target": "Target",
+        "Cancel": "Cancel",
         "Choice": { "self": "Include me", "neutral": "Include neutral", "dismiss": "Remove the area after" }
       },
       "Cover": {

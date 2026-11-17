@@ -2691,5 +2691,8 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-cover-note { font-size: .82em; margin: 2px 0; opacity: .9; }
 
 /* PF2e effect areas (v0.61.0) */
-.lucd20-area-window { display: flex; flex-direction: column; gap: 4px; padding: 4px 0; }
-.lucd20-area-check { display: flex; align-items: center; gap: 6px; }
+.lucd20-area-window { display: grid; grid-template-columns: auto 1fr; gap: 2px 16px; padding: 2px 0; }
+.lucd20-area-col { display: flex; flex-direction: column; gap: 3px; }
+.lucd20-area-col label { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.lucd20-area-col input { margin: 0; }
+.lucd20-area-dialog .form-footer button { height: 28px; }

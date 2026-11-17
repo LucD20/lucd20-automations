@@ -1,0 +1,86 @@
+<!doctype html><html><head><meta charset="utf-8"><title>D&amp;D 4e HUD for monsters (mockup)</title>
+<link rel="stylesheet" href="/node_modules/@fortawesome/fontawesome-free/css/all.min.css">
+<!-- The PC HUD's own stylesheet, so this mockup looks like the released HUD; only the monster parts below are new. -->
+<link rel="stylesheet" href="../../styles/lucd20.css">
+<style>
+body { margin: 0; padding: 24px; background: #2a2a30; color: #ddd; font: 13px "Signika", "Trebuchet MS", sans-serif; }
+h1.page { margin: 0 0 4px; font: 700 20px sans-serif; } p.lead { margin: 0 0 18px; color: #aaa; max-width: 1480px; }
+figure { margin: 0 0 30px; } figcaption { margin-bottom: 8px; color: #f3b469; font: 600 15px sans-serif; } figcaption small { display: block; color: #aaa; font-weight: 400; font-size: 12.5px; margin-top: 3px; max-width: 1480px; }
+.screen { position: relative; width: 1500px; height: 300px; overflow: hidden; border: 1px solid #555; border-radius: 6px;
+  background: radial-gradient(circle at 30% 20%, #4f6a2c 0 60px, transparent 61px), radial-gradient(circle at 70% 40%, #3d5522 0 90px, transparent 91px), radial-gradient(circle at 50% 40%, #66803a, #36481e); }
+.screen .lucd20-hud4e { position: absolute; width: 1480px; }
+.slots { display: grid; grid-template-columns: 24px repeat(5, 44px) 50px; grid-auto-rows: 44px; gap: 2px; align-items: center; }
+.slots i { width: 44px; height: 44px; background: #222; border: 1px solid #444; position: relative; font-style: normal; } .slots i em { position: absolute; left: 2px; top: 1px; font: 700 9px sans-serif; color: #ccc; background: rgba(0,0,0,.55); padding: 0 2px; font-style: normal; }
+.slots i.f { background: linear-gradient(#a85, #542); } .slots b { color: #bbb; text-align: center; font-size: 13px; }
+/* ---- new for monsters ---- */
+.lucd20-hud4e .h4-plate.role-brute { background: #7a2a1c; } .lucd20-hud4e .h4-plate.role-soldier { background: #2c4766; } .lucd20-hud4e .h4-plate.role-artillery { background: #6e521c; }
+.lucd20-hud4e .h4-plate.role-lurker { background: #4a3a5e; } .lucd20-hud4e .h4-plate.role-skirmisher { background: #2e5b39; } .lucd20-hud4e .h4-plate.role-controller { background: #5c2c52; }
+.lucd20-hud4e .h4-plate.elite { box-shadow: inset 0 -2px 0 #d9b26a; } .lucd20-hud4e .h4-plate.solo { box-shadow: inset 0 -3px 0 #f0c674, inset 0 2px 0 #f0c674; }
+.lucd20-hud4e .h4-stats .h4-ln { padding-top: 2px; padding-bottom: 2px; }
+.lucd20-hud4e .h4-role { padding: 1px 8px 1px; font-size: 10.5px; color: var(--mute); border-top: 1px solid var(--line); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lucd20-hud4e .h4-role b { color: var(--ink); }
+.lucd20-hud4e .h4-conds .res { border-color: #3d6b9a; color: #5a8fc4; } .lucd20-hud4e .h4-conds .vul { border-color: #b5651d; color: #d98a3d; }
+.lucd20-hud4e .h4-minion { flex: 1; text-align: center; font-weight: 700; letter-spacing: .04em; color: var(--mute); border: 1px dashed var(--line); line-height: 16px; }
+.lucd20-hud4e .h4-pw .rc { margin-left: 5px; font-weight: 400; font-size: 11px; letter-spacing: 1px; opacity: .95; }
+.lucd20-hud4e .h4-pw .h4-k .roll { margin-left: auto; flex: none; border: 1px solid var(--gold); color: var(--gold); background: var(--btn); font-size: 10px; padding: 0 5px; line-height: 13px; cursor: pointer; }
+.lucd20-hud4e .h4-pw.used .h4-k { opacity: 1; } .lucd20-hud4e .h4-pw.used.rech { opacity: .75; }
+.lucd20-hud4e .u-rech { --u: #8e5a12; } .lucd20-hud4e .u-trait { --u: #3f4f5f; }
+.lucd20-hud4e .h4-cols.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.lucd20-hud4e .h4-trait { border: 1px solid var(--edge); background: var(--bg); }
+.lucd20-hud4e .h4-trait .h4-h { padding: 2px 6px; background: var(--u); color: #fff; font-weight: 700; display: flex; justify-content: space-between; }
+.lucd20-hud4e .h4-trait .h4-h small { font-weight: 400; font-size: 10px; } .lucd20-hud4e .h4-trait p { margin: 0; padding: 2px 6px 3px; font-size: 10.5px; line-height: 1.3; }
+.lucd20-hud4e .h4-pc .h4-pc-name small b { color: var(--ink); font-weight: 600; } .lucd20-hud4e .h4-pc .h4-pc-name small { white-space: nowrap; }
+.lucd20-hud4e .h4-pc.minion .h4-hp { display: none; } .lucd20-hud4e .h4-pc.minion .h4-mtag { display: block; margin: 0 4px 4px; text-align: center; font-weight: 700; font-size: 10.5px; color: var(--mute); border: 1px dashed var(--line); }
+.lucd20-hud4e .h4-pc .h4-mtag { display: none; } .lucd20-hud4e .h4-pc .h4-pc-top .plate-dot { width: 6px; align-self: stretch; flex: none; }
+.lucd20-hud4e .h4-pc.sel { outline: 2px solid var(--gold); }
+.note { position: absolute; background: #fff8d6; color: #333; border-radius: 3px; padding: 2px 6px; font: 11px sans-serif; box-shadow: 0 2px 6px rgba(0,0,0,.4); }
+</style></head><body>
+<h1 class="page">D&amp;D 4e HUD for monsters (mockup)</h1>
+<p class="lead">The PC HUD as released (v0.43.6, its own stylesheet), changed for NPCs as agreed (Q155–Q158): the name plate in the role's colour (gold edge for elites and solos) with a line "Level 3 Elite Brute (Leader) · 300 XP"; HP with bloodied, minions say "Minion"; conditions plus resist / vulnerable / immune on one line; saving throws and AP with Spend; speed, initiative, Perception; the defences. Tabs Standard, Move, Minor, Triggered, Traits; columns At-Will, Recharge (with encounter powers), Basic. A used recharge power shows its dice and a Roll button. GM only. The monster is made up.</p>
+<div id="out"></div>
+<script>
+const HOT = `<div class="slots"><b><i class="fa-solid fa-volume-high" style="width:auto;height:auto;background:none;border:0"></i></b>${[1,2,3,4,5].map(n => `<i class="${n === 1 ? "f" : ""}"><em>${n}</em></i>`).join("")}<b>1</b><b><i class="fa-solid fa-bars" style="width:auto;height:auto;background:none;border:0"></i></b>${[6,7,8,9,0].map(n => `<i class="${n > 5 && n < 9 ? "f" : ""}"><em>${n}</em></i>`).join("")}<b><i class="fa-solid fa-lock-open" style="width:auto;height:auto;background:none;border:0"></i></b></div>`;
+const DIE = n => `<i class="fa-solid fa-dice-${["", "one", "two", "three", "four", "five", "six"][n]}"></i>`;
+const DICE = { 5: DIE(5) + DIE(6), 6: DIE(6), 4: DIE(4) + DIE(5) + DIE(6) };
+const pw = ({ n, u, rg, at, used, rc, cond }) => `<div class="h4-pw u-${u}${used ? " used" : ""}${rc || cond ? " rech" : ""}"><div class="h4-h">${n}${rc ? `<span class="rc">${DICE[rc]}</span>` : ""}${cond ? `<span class="rc" style="font-size:9.5px;letter-spacing:0">${cond}</span>` : ""}</div>
+  <div class="h4-k"><span class="rg">${rg}</span>${used && (rc || cond) ? (rc ? `<span class="roll">Roll ${DICE[rc]}</span>` : `<span class="at">${at}</span>`) : `<span class="at">${at}</span>`}</div></div>`;
+const R = { m1: `<i class="fa-solid fa-khanda"></i> 1`, m2: `<i class="fa-solid fa-khanda"></i> 2`, cb2: `<i class="fa-solid fa-burst"></i> blast 3`, cbu: `<i class="fa-solid fa-burst"></i> burst 2`, r10: `<i class="fa-solid fa-bullseye"></i> 10`, p: `<i class="fa-solid fa-user"></i>` };
+const STALKER = {
+  standard: { atwill: [], rech: [{ n: "Rending Pounce", u: "rech", rg: R.cb2, at: "+8 vs AC", used: true, rc: 5 }, { n: "Bloodied Howl", u: "rech", rg: R.cbu, at: "+6 vs Will", cond: "when first bloodied" }],
+    basic: [{ n: "Claw", u: "basic", rg: R.m2, at: "+8 vs AC" }, { n: "Thrown Spear", u: "basic", rg: R.r10, at: "+7 vs AC" }] },
+  traits: [["Stench of the Mire", "Aura 2", "Enemies in the aura take −2 to saving throws."], ["Threatening Reach", "Trait", "Can make opportunity attacks against enemies within 2 squares."], ["Swamp Stride", "Trait", "Ignores difficult terrain from mud and shallow water."]]
+};
+const stats = ({ theme, minion = false, bloodied = false }) => `<div class="h4-stats">
+  <div class="h4-plate role-brute ${minion ? "" : "elite"}"><span class="fit">${minion ? "Marsh Stalker Whelp" : "Marsh Stalker"}</span><small>${minion ? "Large beast" : "Large natural beast"}</small></div>
+  <div class="h4-role">${minion ? "<b>Level 2 Minion Skirmisher</b> · 31 XP" : "<b>Level 3 Elite Brute (Leader)</b> · 300 XP"}</div>
+  <div class="h4-ln"><span>HP</span>${minion ? `<span class="h4-minion">MINION</span>` : `<div class="h4-hp"><div class="f" style="width:${bloodied ? 44 : 81}%"></div><div class="bl" style="left:50%"></div><span>${bloodied ? "46" : "85"} / 104${bloodied ? " · bloodied" : ""}</span></div>`}</div>
+  <div class="h4-conds">${bloodied ? `<span class="bad">Dazed (save ends)</span>` : ""}<span class="res">Resist 5 poison</span><span class="vul">Vulnerable 5 fire</span></div>
+  <div class="h4-ln"><span><b>Saves</b> +2</span><span class="h4-push"><b>AP</b> 1</span><button type="button" class="h4-btn">Spend</button></div>
+  <div class="h4-ln"><span><b>Speed</b> 7</span><span><b>Init</b> +5</span><span class="h4-push"><b>Perception</b> +8</span></div>
+  <div class="h4-defs"><div><b>17</b><small>AC</small></div><div><b>16</b><small>Fort</small></div><div class="${bloodied ? "dn" : ""}"><b>${bloodied ? 13 : 15}</b><small>Ref</small></div><div><b>13</b><small>Will</small></div></div></div>`;
+const TABS = [["standard", "Standard", "fa-hand-fist", 4], ["move", "Move", "fa-person-walking", 1], ["minor", "Minor", "fa-hand", 0], ["triggered", "Triggered", "fa-bolt-lightning", 1], ["traits", "Traits", "fa-paw", 3]];
+const tabs = cur => `<div class="h4-tabs">${TABS.map(([k, l, i, n]) => `<button class="${k === cur ? "act" : ""}"><i class="fa-solid ${i}"></i><span class="lbl"> ${l}</span><span class="n">${n}</span></button>`).join("")}</div>`;
+const col = (label, cls, list) => `<div class="h4-col"><b class="${cls}">${label}</b><div class="h4-stack">${list.map(pw).join("") || `<span class="h4-dash">—</span>`}</div></div>`;
+const powersStd = () => `<div class="h4-powers">${tabs("standard")}<div class="h4-cols three">${col("At-Will", "u-atwill", STALKER.standard.atwill)}${col("Recharge", "u-rech", STALKER.standard.rech)}${col("Basic", "u-basic", STALKER.standard.basic)}</div></div>`;
+const powersTraits = () => `<div class="h4-powers">${tabs("traits")}<div class="h4-cols three">${STALKER.traits.map(([n, k, t]) => `<div class="h4-col"><div class="h4-trait u-trait"><div class="h4-h">${n}<small>${k}</small></div><p>${t}</p></div></div>`).join("")}</div></div>`;
+const dock = `<div class="h4-dock"><div class="h4-tiles"><span class="on"><i class="fa-solid fa-hand-fist"></i><span class="lbl">Standard</span></span><span class="on"><i class="fa-solid fa-person-walking"></i><span class="lbl">Move</span></span><span class="spent"><i class="fa-solid fa-hand"></i><span class="lbl">Minor</span></span><span class="off"><i class="fa-solid fa-bolt-lightning"></i><span class="lbl">Immed.</span></span><span class="off"><i class="fa-solid fa-eye"></i><span class="lbl">Opport.</span></span></div></div>`;
+const hud = (theme, main, empty = false) => `<section class="lucd20-hud4e ${theme}${empty ? " empty" : ""}" data-size="full" style="left:0;bottom:0"><div class="h4-players"></div><div class="h4-main">${main}</div><div class="h4-right">${empty ? `<div class="h4-dock"></div>` : dock}<div class="h4-hot">${HOT}</div></div></section>`;
+const por = `<div class="h4-por" style="background:radial-gradient(circle at 50% 35%, #6f7a4a, #2a301c);display:grid;place-items:center;font-size:40px;color:#c9d3a0"><i class="fa-solid fa-paw"></i></div>`;
+const card = (name, role, sub, hp, max, defs, { minion = false, sel = false, roleCls = "role-brute" } = {}) => `<div class="h4-pc${minion ? " minion" : ""}${sel ? " sel" : ""}"><div class="h4-pc-top"><span class="plate-dot ${roleCls}" style="background:var(--x)"></span><div style="width:40px;height:40px;display:grid;place-items:center;background:#2a301c;color:#c9d3a0;flex:none"><i class="fa-solid fa-paw"></i></div><div class="h4-pc-name"><b>${name}</b><small><b>${role}</b> ${sub}</small></div></div>
+  <div class="h4-pc-defs">${["AC", "Fort", "Ref", "Will"].map((l, i) => `<span><small>${l}</small>${defs[i]}</span>`).join("")}</div>
+  <div class="h4-pc-line"><span>Saves +${minion ? 0 : 2}</span><span>Speed 7</span><span>Init +5</span></div>
+  <div class="h4-hp"><div class="f" style="width:${(100 * hp) / max}%"></div><div class="bl" style="left:50%"></div><span>${hp} / ${max}</span></div><div class="h4-mtag">MINION</div></div>`;
+const ROLECOL = { "role-brute": "#7a2a1c", "role-soldier": "#2c4766", "role-artillery": "#6e521c", "role-skirmisher": "#2e5b39" };
+const cards = () => `<div class="h4-party">${[
+  card("Marsh Stalker", "L3 Elite Brute", "", 85, 104, [17, 16, 15, 13], { sel: true }),
+  card("Bog Archer", "L2 Artillery", "", 18, 32, [14, 13, 15, 13], { roleCls: "role-artillery" }),
+  card("Mire Guard", "L3 Soldier", "", 47, 47, [19, 16, 14, 14], { roleCls: "role-soldier" }),
+  card("Stalker Whelp", "L2 Minion", "", 1, 1, [16, 14, 15, 12], { minion: true, roleCls: "role-skirmisher" }),
+  card("Stalker Whelp", "L2 Minion", "", 1, 1, [16, 14, 15, 12], { minion: true, roleCls: "role-skirmisher" })].join("").replaceAll(/plate-dot (role-\w+)" style="background:var\(--x\)"/g, (m, r) => `plate-dot ${r}" style="background:${ROLECOL[r]}"`)}</div>`;
+const SHOTS = [
+  ["A · One monster, Standard tab (dark)", "An elite brute: role plate with a gold edge, the role line, resist and vulnerable beside the conditions, Saves / AP / Speed / Init / Perception, defences. Columns At-Will, Recharge, Basic: Rending Pounce was used, so it shows its dice (5–6) and a Roll button; Bloodied Howl recharges when first bloodied.", hud("dark", por + stats({ theme: "dark" }) + powersStd())],
+  ["B · The same monster, bloodied, Traits tab (light)", "Traits are auras and passive abilities: name, kind (Aura 2, Trait) and the text, readable at a glance. Bloodied shows on the HP bar; a lowered defence is red (Ref 13, dazed).", hud("light", por + stats({ theme: "light", bloodied: true }) + powersTraits())],
+  ["C · Several monsters selected (Q155)", "One card per selected NPC, with the role colour on its left edge: level and role, defences, saves, speed, initiative and HP; minions say MINION instead of a bar. Clicking a card shows that monster's full HUD (A); the highlighted card is the one shown last. The hotbar stays in its place.", hud("dark", cards(), true)],
+];
+document.getElementById("out").innerHTML = SHOTS.map(([t, s, h]) => `<figure><figcaption>${t}<small>${s}</small></figcaption><div class="screen">${h}</div></figure>`).join("");
+</script></body></html>

@@ -1814,3 +1814,30 @@ layout per width the HUD gets (`data-size`), tested at 1920, 1366, 1280, 1024
 - **tiny** (under 780; 1024 with the sidebar open gives 668): as narrow, the
   hotbar sits just above the HUD's right end and the dock is a slim column of
   five rows (icon + name).
+
+### 17.1 Monster HUD (mockup)
+
+The owner: "Now for NPCs. Mockup again, using the PC as the base." GM only.
+Decisions Q155–Q158, all as recommended:
+- **Q155** Several NPCs selected: one card per NPC (role colour on its edge,
+  level and role, defences, saves, speed, initiative, HP; minions say MINION);
+  clicking one shows that monster's full HUD. One NPC selected: its HUD.
+- **Q156** Recharge: the card shows its recharge (dice 5–6, or the condition,
+  "when first bloodied"); once used it gets a Roll button: a d6 in chat (GM
+  only), waits for Dice So Nice, available again on a success. Rolling by
+  itself at the start of the turn can come later.
+- **Q157** Tabs Standard, Move, Minor, Triggered, **Traits** (auras and
+  passive abilities, with their text); columns At-Will, **Recharge** (with
+  encounter powers), **Basic** (the basic-attack flag: every monster power is
+  `powerType: inherent`, so "inherent" cannot mean basic here).
+- **Q158** The monster block: name plate in the role's colour (brute,
+  soldier, artillery, lurker, skirmisher, controller; gold edge for elite,
+  double for solo), a line "Level 3 Elite Brute (Leader) · 300 XP"
+  (`details.role.{primary,secondary,leader}`, `details.level`, `details.exp`),
+  HP with bloodied (minions: MINION, no bar), conditions plus resist /
+  vulnerable / immune, Saves (`details.saves.value`) and AP with Spend, Speed,
+  Init, Perception, the defences.
+
+Mockup: `docs/mockups/hud-4e-npc.html` (+ `.png`), drawn with the released
+HUD's stylesheet: A one monster, Standard tab (dark); B bloodied, Traits tab
+(light); C several monsters selected.

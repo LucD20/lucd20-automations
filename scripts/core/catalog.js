@@ -101,7 +101,8 @@ export const FEATURE_ORDER = [
   { id: "dnd4ePartyStash", category: "dnd4e", phase: 35, systems: ["dnd4e"] },
   { id: "dnd4eCoinLog", category: "dnd4e", phase: 35, systems: ["dnd4e"] },
   { id: "dnd4eOpportunityWarning", category: "dnd4e", phase: 36, systems: ["dnd4e"] },
-  { id: "dnd4eHud", category: "dnd4e", phase: 39, systems: ["dnd4e"] }
+  { id: "dnd4eHud", category: "dnd4e", phase: 39, systems: ["dnd4e"] },
+  { id: "dnd4eTips", category: "dnd4e", phase: 58, systems: ["dnd4e"] }
 ];
 
 /** Whether a category / feature entry applies to the active game system. */
@@ -165,6 +166,7 @@ export const PLACE = {
   pf2eTemporalDistortion: { page: "pf2eClasses", section: "oracle" },
   dnd4eClassFeatures: { page: "dnd4eClasses" },
   dnd4eHud: { page: "dnd4eInterface" },
+  dnd4eTips: { page: "dnd4eInterface" },
   dnd4eReadableRolls: { page: "dnd4eInterface" },
   dnd4eSheetHighlights: { page: "dnd4eInterface" },
   dnd4ePowerSymbols: { page: "dnd4eInterface" },

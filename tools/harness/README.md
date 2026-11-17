@@ -91,6 +91,7 @@ sets `game.system.id`.
 | `test53.js` | PF2e cover: the owner's diagram, creatures, the DC per roll, the window's buttons, the card (54) |
 | `test54.js` | PF2e effect areas: the 25% reach rule (the owner's two cases), targeting, hover cover (55) |
 | `test55.js` | Instant Range: measuring, hover, Alt, targets, the cover preview's claim, combat only (57) |
+| `test56.js` | 4e grab riders; New Player Tips: the ranger's prey reminder, ping, Portuguese (58) |
 | `test39.js` | D&D 4e HUD: data from the owner's sheets, columns and tabs, dock, clicks, dying, condition icons, party and selection cards, window sizes, players list and hotbar moved and put back (39); the monster HUD: role block, resistances, recharge roll, traits (40) |
 
 For a new feature, copy the closest test, keep its mock setup and replace the

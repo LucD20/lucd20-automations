@@ -278,6 +278,7 @@
       "GreatCleave": "Grande Trespassar +{count} (inimigos adjacentes)",
       "GreatCleaveHint": "+1 de dano para cada inimigo adjacente a você.",
       "AutoModsLegend": "Modificadores automáticos (automação 4e)",
+      "Grabbed": "<strong>{target}</strong> fica agarrado ({power}).",
       "Prone": "<strong>{target}</strong> fica derrubado ({power})."
     },
     "TempHp": {
@@ -565,6 +566,16 @@
           "playersSeeProgress": {
             "Name": "Jogadores veem o progresso por padrão",
             "Hint": "Para desafios que não definem isso: ligado = o resultado de cada teste e a contagem vão para o chat de todos; desligado = secreto, os resultados são sussurrados ao Mestre. Pode ser trocado por desafio na janela dele."
+          }
+        }
+      },
+      "dnd4eTips": {
+        "Name": "Dicas para Novos Jogadores",
+        "Hint": "Sugestões acima do HUD de 4e durante o turno do seu personagem, com o poder indicado piscando; classe por classe. Patrulheiro: um lembrete para marcar uma presa com Presa do Caçador, ou qual criatura é a sua presa (marcada no mapa no início do seu turno, para você e o Mestre). Precisa do HUD de 4e.",
+        "Setting": {
+          "ranger": {
+            "Name": "Patrulheiro",
+            "Hint": "Presa do Caçador: ainda sem presa, ou quem é a sua presa."
           }
         }
       }
@@ -860,6 +871,12 @@
       },
       "RechargeYes": "{name} recarrega.",
       "RechargeNo": "{name} não recarrega."
+    },
+    "Dnd4eTips": {
+      "Ranger": {
+        "NoPrey": "Você não possui uma presa. Você pode usar {power}, como uma ação mínima, para marcar uma presa.",
+        "Prey": "{name} é a sua presa."
+      }
     }
   },
   "EFFECT": {

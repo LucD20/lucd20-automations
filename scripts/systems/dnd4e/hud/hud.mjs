@@ -5,6 +5,7 @@ import { BASIC_ACTIONS, useBasicAction } from "../actions/basic.mjs";
 import { defenceModifiers } from "../sheet-mods.mjs";
 import { buildModel, defLabel, TABS, ROWS, NPC_TABS, NPC_ROWS } from "./hud-data.mjs";
 import { waitForDice } from "../../../core/dice.js";
+import { tipFor, onTurnStart } from "./tips.mjs";
 
 /*
  * D&D 4e HUD (phase 39, docs/PLAN.md §17; mockup docs/mockups/hud-4e-sheet.html, take C):
@@ -89,6 +90,8 @@ export function mountHud(feature) {
 		"deleteActiveEffect", "createCombatant", "updateCombatant", "deleteCombatant", "updateCombat", "deleteCombat", "combatStart", "updateUser", "canvasReady", "updateToken"]) {
 		feature.on(hook, redraw);
 	}
+	// New Player Tips: a ping on a ranger's prey as its turn starts (its players and the GM).
+	feature.on("updateCombat", (combat, change) => { if ("turn" in (change ?? {}) || "round" in (change ?? {})) onTurnStart(combat); });
 	for (const hook of ["renderHotbar", "renderPlayers", "renderPlayerList", "collapseSidebar", "renderSidebar", "renderChatLog"]) feature.on(hook, () => setTimeout(placeAll, 0));
 	const onResize = () => place();
 	window.addEventListener("resize", onResize);
@@ -237,7 +240,37 @@ function render() {
 	root.querySelector(".h4-main").innerHTML = `${portrait(m)}${m.kind === "npc" ? npcStats(m) : stats(m)}${powers(m, inCombat)}`;
 	root.querySelector(".h4-dock").innerHTML = dock(combatant, inCombat);
 	conditionList(m);
+	showTip(root, actor);
 	fitAll(root);
+}
+
+/**
+ * New Player Tips (owner, Q253): a strip on top of the HUD with the suggestion for this character, and the
+ * power (and its tab) it points to blinking. × hides it for this turn.
+ */
+function showTip(root, actor) {
+	let strip = root.querySelector(".h4-tip");
+	if (!strip) {
+		strip = document.createElement("div");
+		strip.className = "h4-tip";
+		root.prepend(strip);
+	}
+	let tip = null;
+	try { tip = tipFor(actor); } catch (err) { tip = null; }
+	const c = game.combat;
+	const turnKey = `${c?.id}:${c?.round}:${c?.turn}`;
+	if (!tip || st.tipHidden === `${turnKey}:${tip.key}`) {
+		strip.hidden = true;
+		strip.innerHTML = "";
+		return;
+	}
+	strip.hidden = false;
+	strip.dataset.key = `${turnKey}:${tip.key}`;
+	strip.innerHTML = `<i class="fa-solid fa-lightbulb"></i><span>${esc(tip.text)}</span><button type="button" data-h4="tipClose" aria-label="×"><i class="fa-solid fa-xmark"></i></button>`;
+	if (tip.blink) {
+		root.querySelector(`.h4-tabs [data-tab="${tip.blink.tab}"]:not(.act)`)?.classList.add("h4-blink");
+		for (const id of tip.blink.powers ?? []) root.querySelector(`.h4-pw[data-power="${id}"]`)?.classList.add("h4-blink");
+	}
 }
 
 /* -------------------------------------------- */
@@ -455,6 +488,8 @@ async function onClick(event) {
 	if (card) { event.preventDefault(); return onParty(card.dataset.party); }
 	const pick = event.target.closest("[data-focus]");
 	if (pick) { event.preventDefault(); st.focus = pick.dataset.focus; return schedule(0); }
+	const tipClose = event.target.closest('[data-h4="tipClose"]');
+	if (tipClose) { event.preventDefault(); event.stopPropagation(); st.tipHidden = tipClose.closest(".h4-tip")?.dataset.key; return showTip(st.root, st.actor); }
 	const cond = event.target.closest("[data-cond]");
 	if (cond) { event.preventDefault(); event.stopPropagation(); st.condOpen = !st.condOpen; return conditionList(st.model); }
 	const rech = event.target.closest("[data-recharge]");

@@ -125,6 +125,24 @@ const PRONE_ALWAYS = [
  * { combatAdvantage, when } when the power knocks targets prone, else null. when = "hit" (Hit line, hit
  * targets) or "effect" (Effect line, every target).
  */
+/*
+ * "The target is grabbed" riders (owner, v0.65.0: the Ravenous Wolf's Bite and most wolves): read from the
+ * Hit text; "+2 against a grabbed target" is not a rider.
+ */
+const GRAB = [
+	/\b(?:the )?target is grabbed\b/i,
+	/\b(?:grabs|seizes) the target\b/i,
+	/\band (?:it )?is grabbed\b/i,
+	/\bo alvo (?:fica|é|está) agarrad[oa]\b/i,
+	/\bagarra o alvo\b/i,
+];
+
+/** { when: "hit" } when the power grabs the targets it hits, else null. */
+export function grabRiderFor(item) {
+	const text = sectionTexts(item).hit;
+	return text && GRAB.some((re) => re.test(text)) ? { when: "hit" } : null;
+}
+
 export function proneRiderFor(item) {
 	const texts = sectionTexts(item);
 	for (const when of ["hit", "effect"]) {

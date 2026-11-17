@@ -1977,3 +1977,23 @@ Artilharia, Espreitador, Escaramuçador, Controlador, Elite, Solo, Lacaio,
 (Líder), Resistência / Vulnerabilidade / Imunidade: to check against the
 Manual dos Monstros. The harness takes `?lang=pt-BR` (test39 with
 `HUD_LANG=pt-BR` saves a screenshot).
+
+### 17.3 Grab riders and New Player Tips (v0.65.0)
+
+- Owner: "Ravenous Wolf (and most wolves): After hitting with Bite, apply grab
+  to the target." Q250 (general): any power whose Hit text says the target is
+  grabbed ("the target is grabbed", "grabs the target", "o alvo fica
+  agarrado"; not "against a grabbed target") puts Grabbed on each target hit
+  (`grabRiderFor` in movement/parse.mjs, `applyGrabRider` in on-hit.mjs, with
+  the power riders' switch). Q251: prone riders already existed.
+- Owner: "A module to help new players, we will do class by class, slowly."
+  `dnd4eTips` (Interface page, per player; one switch per class). Q253: on
+  the HUD: a strip above the band with the suggestion during the character's
+  own turn in combat (× hides it for the turn), the power it points to and
+  its tab blinking (`hud/tips.mjs`, `showTip` in hud.mjs). Ranger: no prey →
+  "You don't have a prey. You can use Hunter's Quarry, as a minor action, to
+  assign one." (Hunter's Quarry blinks); a prey → "[Name] is your prey.";
+  Q254: at the start of the ranger's turn the prey is pinged for its players
+  and the GM, each on their own screen (`canvas.controls.drawPing`, (verify));
+  Q255: no ping when the prey is on another scene. Not at 0 HP. Portuguese
+  uses the book's "ação mínima" (the owner wrote "Ação Menor").

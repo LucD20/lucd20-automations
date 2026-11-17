@@ -114,6 +114,16 @@ card({
   onSettingChange: f => hud().then(m => m.refreshHud(f))
 });
 
+// New Player Tips (owner, Q252–Q255): on the HUD, class by class; each player can turn them off.
+card({
+  id: "dnd4eTips",
+  scope: "client",
+  settings: { ranger: { kind: "boolean", default: true, scope: "client" } },
+  enable: () => import("./hud/hud.mjs").then(m => m.refreshHud?.()).catch(() => {}),
+  disable: () => import("./hud/hud.mjs").then(m => m.refreshHud?.()).catch(() => {}),
+  onSettingChange: () => import("./hud/hud.mjs").then(m => m.refreshHud?.()).catch(() => {})
+});
+
 card({ id: "dnd4eOpportunity", enable: noop });
 card({ id: "dnd4eTriggeredPowers", enable: noop });
 card({ id: "dnd4eDamageApply", enable: noop });

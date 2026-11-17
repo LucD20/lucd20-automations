@@ -719,6 +719,13 @@
         "Name": "Monster texts",
         "Hint": "File with replacement text for monsters (name, powers, description). Import it in a new world to bring them all at once. Text only: numbers stay the compendium's."
       },
+      "dnd4eTips": {
+        "Name": "New Player Tips",
+        "Hint": "Suggestions on top of the 4e HUD during your character's turn, with the power they point to blinking; class by class. Ranger: a reminder to mark a prey with Hunter's Quarry, or which creature is your prey (pinged at the start of your turn for you and the GM). Needs the 4e HUD.",
+        "Setting": {
+          "ranger": { "Name": "Ranger", "Hint": "Hunter's Quarry: no prey yet, or who your prey is." }
+        }
+      },
       "dnd4eGameLanguage": {
         "Name": "4e game language",
         "Hint": "Language for the dnd4e system (abilities, skills, conditions, sheet labels) and this module, independent of Foundry's interface language. Strings missing from the translation stay in Foundry's language. Requires reload.",
@@ -1948,6 +1955,12 @@
         "EffectText": "{value} temporary Hit Points from {name}'s Roaring Heart, until the start of {name}'s next turn."
       }
     },
+    "Dnd4eTips": {
+      "Ranger": {
+        "NoPrey": "You don't have a prey. You can use {power}, as a minor action, to assign one.",
+        "Prey": "{name} is your prey."
+      }
+    },
     "Dnd4eHud": {
       "Theme": {
         "dark": "Dark",
@@ -2304,6 +2317,7 @@
       "GreatCleave": "Great Cleave +{count} (adjacent enemies)",
       "GreatCleaveHint": "+1 damage for each enemy adjacent to you.",
       "AutoModsLegend": "Automatic modifiers (4e automation)",
+      "Grabbed": "<strong>{target}</strong> is grabbed ({power}).",
       "Prone": "<strong>{target}</strong> falls prone ({power})."
     },
     "TempHp": {

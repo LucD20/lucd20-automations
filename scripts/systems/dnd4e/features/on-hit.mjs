@@ -3,7 +3,7 @@ import { F, L, matches, actorHas, abilityMod, setting, log, tokenForActor, gridD
 import { buildEffect, createEffects } from "../effects.mjs";
 import { conditionalModifiers, markApplied } from "./conditional.mjs";
 import { bloodhuntModifier } from "./class-features.mjs";
-import { proneRiderFor } from "../movement/parse.mjs";
+import { proneRiderFor, grabRiderFor } from "../movement/parse.mjs";
 
 /*
  * Power riders applied automatically to the targets a power hits, plus attack-roll modifiers:
@@ -100,6 +100,28 @@ export async function onAttackRolled(itemData, targetData, actor) {
 	}
 	await stirringShoutHeal(actor, hit);
 	await applyProneRider(itemData, targetData, actor);
+	await applyGrabRider(itemData, targetData, actor);
+}
+
+/** "The target is grabbed" on a hit: Grabbed on each target hit (owner, Q250). */
+async function applyGrabRider(itemData, targetData, actor) {
+	if (!setting("powerRiders")) return;
+	const item = itemData?.uuid ? fromUuidSync(itemData.uuid) : null;
+	if (!grabRiderFor(item ?? itemData)) return;
+	const status = CONFIG.statusEffects?.find((s) => s.id === "grabbed");
+	for (const target of targetData?.targetHit ?? []) {
+		if (!target.actor || target.actor.statuses?.has("grabbed")) continue;
+		await createEffects(target.actor, [{
+			name: game.i18n.localize(status?.name ?? "EFFECT.StatusGrabbed"),
+			img: status?.img ?? "icons/svg/net.svg",
+			statuses: ["grabbed"],
+			disabled: false,
+			origin: actor.uuid,
+			flags: { [MODULE_ID]: { kind: "grabRider", source: actor.uuid } },
+		}]);
+		ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: `<p>${F("OnHit.Grabbed", { target: target.name, power: item?.name ?? itemData?.name ?? "" })}</p>` });
+		log("grab rider", item?.name, target.name);
+	}
 }
 
 /* -------------------------------------------- */

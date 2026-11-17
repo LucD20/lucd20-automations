@@ -1,0 +1,60 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="settings-base.css"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<style>
+.sec { margin-bottom: 8px; border: 1px solid #3a3a40; border-radius: 5px; }
+.sec > .h { display: flex; align-items: center; gap: 8px; padding: 5px 9px; background: #26262c; font-weight: 700; }
+.sec > .h .n { margin-left: auto; font-weight: 400; opacity: .6; font-size: 11px; }
+.sec.closed > .rows { display: none; }
+.rows { display: grid; grid-template-columns: 1fr 1fr; }
+.row { display: flex; align-items: center; gap: 8px; padding: 5px 9px; border-top: 1px solid #2f2f35; }
+.row:nth-child(odd) { border-right: 1px solid #2f2f35; }
+.row .nm { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row .gear { opacity: .6; }
+.row.open { grid-column: 1 / -1; flex-wrap: wrap; background: #24242a; border-right: 0; }
+.row.open .detail { flex-basis: 100%; padding: 4px 0 2px 34px; font-size: 12px; opacity: .85; }
+.opt { display: flex; gap: 14px; margin-top: 5px; } .opt label { display: flex; gap: 5px; align-items: center; }
+.cls { display: inline-block; font-size: 10.5px; padding: 0 5px; border: 1px solid #666; border-radius: 3px; opacity: .8; }
+</style></head><body>
+<div class="win"><div class="title">LucD20 Automations <small>A · Collapsible sections, two features per row</small></div><div class="body">
+<nav class="nav"><div class="search"><i class="fa-solid fa-magnifying-glass"></i> Search settings…</div>
+<div class="navgroup">General</div>
+<div class="tab"><i class="fa-solid fa-shield-halved"></i>Combat<span class="n">2/10</span></div>
+<div class="tab"><i class="fa-solid fa-comments"></i>Chat<span class="n">6/9</span></div>
+<div class="tab"><i class="fa-solid fa-map-location-dot"></i>Tokens<span class="n">4/10</span></div>
+<div class="tab"><i class="fa-solid fa-eye"></i>Vision &amp; Doors<span class="n">1/5</span></div>
+<div class="tab"><i class="fa-solid fa-clapperboard"></i>Scenes &amp; Windows<span class="n">0/7</span></div>
+<div class="navgroup">Pathfinder 2e</div>
+<div class="tab on"><i class="fa-solid fa-dice-d20"></i>Automation<span class="n">17/17</span></div>
+<div class="tab"><i class="fa-solid fa-magnifying-glass"></i>Exploration<span class="n">0/2</span></div>
+<div class="navgroup">Setup</div>
+<div class="tab"><i class="fa-solid fa-user-lock"></i>Players &amp; Presets<span class="n">1/2</span></div>
+</nav>
+<section class="content"><h2>Pathfinder 2e · Automation</h2><p class="lead">Everything starts collapsed. Click a section to open it; click a feature for its text and options.</p>
+<div class="sec"><div class="h"><i class="fa-solid fa-caret-down"></i>Core Rules<span class="n">13/13 on</span></div>
+<div class="rows">
+<div class="row"><span class="sw"></span><span class="nm">Frightened</span><span class="cls">Conditions</span></div>
+<div class="row"><span class="sw"></span><span class="nm">Sickened</span><span class="cls">Conditions</span></div>
+<div class="row"><span class="sw"></span><span class="nm">Shove</span><span class="cls">Actions</span></div>
+<div class="row"><span class="sw"></span><span class="nm">Trip</span><span class="cls">Actions</span></div>
+<div class="row open"><span class="sw"></span><span class="nm"><b>Flat Checks</b></span><span class="cls">Checks</span><i class="fa-solid fa-caret-up gear"></i>
+<div class="detail">After a Strike, a spell attack, a spell cast at targets or an attack action, the flat check it needs is rolled once per target at the highest DC that applies.
+<div class="opt"><label><input type="checkbox"> Ignore Concealed</label><label><input type="checkbox"> Ignore Grabbed</label><label><input type="checkbox"> Hide the number</label></div></div></div>
+<div class="row"><span class="sw"></span><span class="nm">Reactions</span><span class="cls">Reactions</span><i class="fa-solid fa-gear gear"></i></div>
+<div class="row"><span class="sw"></span><span class="nm">Reactive Strike</span><span class="cls">Reactions</span><i class="fa-solid fa-gear gear"></i></div>
+<div class="row"><span class="sw"></span><span class="nm">Shield Block</span><span class="cls">Reactions</span></div>
+<div class="row"><span class="sw"></span><span class="nm">Cover</span><span class="cls">Battlefield</span><i class="fa-solid fa-gear gear"></i></div>
+<div class="row"><span class="sw"></span><span class="nm">Effect Areas</span><span class="cls">Battlefield</span><i class="fa-solid fa-gear gear"></i></div>
+<div class="row"><span class="sw"></span><span class="nm">Sustained Spells</span><span class="cls">Spells</span></div>
+<div class="row"><span class="sw"></span><span class="nm">Hand Reminders</span><span class="cls">Tools</span></div>
+<div class="row"><span class="sw"></span><span class="nm">Ctrl-click Effects</span><span class="cls">Tools</span><i class="fa-solid fa-gear gear"></i></div>
+</div></div>
+<div class="sec"><div class="h"><i class="fa-solid fa-caret-down"></i>Classes<span class="n">4/4 on</span></div>
+<div class="rows">
+<div class="row"><span class="sw"></span><span class="nm">Roaring Heart</span><span class="cls">Animist</span></div>
+<div class="row"><span class="sw"></span><span class="nm">Demoralizing Charge</span><span class="cls">Commander</span></div>
+<div class="row"><span class="sw"></span><span class="nm">Punishing Shove</span><span class="cls">Guardian</span></div>
+<div class="row"><span class="sw"></span><span class="nm">Temporal Distortion</span><span class="cls">Oracle</span></div>
+</div></div>
+<div class="sec closed"><div class="h"><i class="fa-solid fa-caret-right"></i>Chat helpers (Chances, Modifiers Matter, Damage Estimate)<span class="n">3/3 on</span></div><div class="rows"></div></div>
+</section></div>
+<div class="legend"><span><i class="fa-solid fa-earth-americas"></i> World</span><span><i class="fa-solid fa-user"></i> Per player</span><span><i class="fa-solid fa-rotate"></i> Requires reload</span></div></div>
+</body></html>

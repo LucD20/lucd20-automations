@@ -1,0 +1,59 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="settings-base.css"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<style>
+.content { display: flex; flex-direction: column; }
+.chips { display: flex; gap: 4px; margin-bottom: 8px; flex-wrap: wrap; }
+.chip { padding: 2px 9px; border: 1px solid #555; border-radius: 3px; font-size: 12px; }
+.chip.on { border-color: #c4573e; background: #3a3238; }
+.split { flex: 1; display: flex; gap: 10px; min-height: 0; }
+.grid { flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; align-content: start; }
+.gh { grid-column: 1 / -1; font-weight: 700; font-size: 12px; opacity: .75; margin: 6px 0 0; border-bottom: 1px solid #3a3a40; padding-bottom: 2px; }
+.tile { border: 1px solid #3a3a40; border-radius: 5px; padding: 6px 8px; display: flex; flex-direction: column; gap: 3px; background: #222228; }
+.tile .top { display: flex; align-items: center; gap: 7px; font-weight: 700; }
+.tile .s { font-size: 11px; opacity: .65; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.tile.sel { outline: 1px solid #c4573e; background: #2a2329; }
+.detail { width: 270px; border-left: 1px solid #3a3a40; padding-left: 10px; }
+.detail h3 { margin: 2px 0 4px; display: flex; gap: 8px; align-items: center; }
+.detail p { font-size: 12px; opacity: .85; margin: 0 0 8px; }
+.detail label { display: flex; gap: 6px; align-items: center; margin: 4px 0; }
+.detail .hint { font-size: 11px; opacity: .6; margin: -2px 0 4px 22px; }
+</style></head><body>
+<div class="win"><div class="title">LucD20 Automations <small>B · Tiles three per row, details on the side</small></div><div class="body">
+<nav class="nav"><div class="search"><i class="fa-solid fa-magnifying-glass"></i> Search settings…</div>
+<div class="tab"><i class="fa-solid fa-shield-halved"></i>Combat<span class="n">2/10</span></div>
+<div class="tab"><i class="fa-solid fa-comments"></i>Chat<span class="n">6/9</span></div>
+<div class="tab"><i class="fa-solid fa-map-location-dot"></i>Tokens<span class="n">4/10</span></div>
+<div class="tab"><i class="fa-solid fa-eye"></i>Vision &amp; Doors<span class="n">1/5</span></div>
+<div class="tab"><i class="fa-solid fa-clapperboard"></i>Scenes &amp; Windows<span class="n">0/7</span></div>
+<div class="tab"><i class="fa-solid fa-user-lock"></i>Players &amp; Setup<span class="n">1/2</span></div>
+<div class="tab on"><i class="fa-solid fa-dice-d20"></i>Pathfinder 2e<span class="n">17/19</span></div>
+</nav>
+<section class="content"><h2>Pathfinder 2e</h2>
+<div class="chips"><span class="chip on">All</span><span class="chip">Core Rules</span><span class="chip">Classes</span><span class="chip">Exploration</span><span class="chip">Only on</span><span class="chip">Only off</span></div>
+<div class="split"><div class="grid">
+<div class="gh">Core Rules · Conditions &amp; Actions</div>
+<div class="tile"><div class="top"><span class="sw"></span>Frightened</div><div class="s">Goes down by 1 at the end of the creature's turn.</div></div>
+<div class="tile"><div class="top"><span class="sw"></span>Sickened</div><div class="s">A DC to retch; a reminder at turn start.</div></div>
+<div class="tile"><div class="top"><span class="sw"></span>Shove</div><div class="s">Choose where the target is pushed.</div></div>
+<div class="tile"><div class="top"><span class="sw"></span>Trip</div><div class="s">Prone and damage by degree of success.</div></div>
+<div class="tile sel"><div class="top"><span class="sw"></span>Flat Checks</div><div class="s">Rolled per target at the highest DC.</div></div>
+<div class="tile"><div class="top"><span class="sw"></span>Hand Reminders</div><div class="s">Too many hands, weapon not held…</div></div>
+<div class="gh">Core Rules · Reactions &amp; Battlefield</div>
+<div class="tile"><div class="top"><span class="sw"></span>Reactions</div><div class="s">Tracked per round, badge on the token.</div></div>
+<div class="tile"><div class="top"><span class="sw"></span>Reactive Strike</div><div class="s">A prompt when it can be used.</div></div>
+<div class="tile"><div class="top"><span class="sw"></span>Shield Block</div><div class="s">A prompt before physical damage.</div></div>
+<div class="tile"><div class="top"><span class="sw"></span>Cover</div><div class="s">Per attack and area save; buttons in the roll window.</div></div>
+<div class="tile"><div class="top"><span class="sw"></span>Effect Areas</div><div class="s">Targeting window, cover on hover.</div></div>
+<div class="tile"><div class="top"><span class="sw"></span>Sustained Spells</div><div class="s">Sustain / End, asked at turn end.</div></div>
+<div class="gh">Classes</div>
+<div class="tile"><div class="top"><span class="sw"></span>Roaring Heart</div><div class="s">Animist</div></div>
+<div class="tile"><div class="top"><span class="sw"></span>Demoralizing Charge</div><div class="s">Commander</div></div>
+<div class="tile"><div class="top"><span class="sw off"></span>Punishing Shove</div><div class="s">Guardian</div></div>
+</div>
+<aside class="detail"><h3><span class="sw"></span>Flat Checks</h3>
+<p>After a Strike, a spell attack, a spell cast at targets or an attack action, the flat check it needs is rolled once per target at the highest DC that applies. Never on a reroll.</p>
+<label><input type="checkbox"> Ignore Concealed <i class="fa-solid fa-earth-americas ico"></i></label><div class="hint">No flat check for Concealed targets.</div>
+<label><input type="checkbox"> Ignore Grabbed <i class="fa-solid fa-earth-americas ico"></i></label><div class="hint">No check for manipulate while Grabbed.</div>
+<label><input type="checkbox"> Hide the number <i class="fa-solid fa-earth-americas ico"></i></label><div class="hint">Only success or failure.</div>
+</aside></div></section></div>
+<div class="legend"><span><i class="fa-solid fa-earth-americas"></i> World</span><span><i class="fa-solid fa-user"></i> Per player</span><span><i class="fa-solid fa-rotate"></i> Requires reload</span></div></div>
+</body></html>

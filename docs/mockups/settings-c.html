@@ -1,0 +1,49 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="settings-base.css"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<style>
+.nav { width: 230px; }
+.tab.parent { font-weight: 700; }
+table { width: 100%; border-collapse: collapse; }
+td { padding: 4px 6px; border-bottom: 1px solid #2f2f35; vertical-align: middle; }
+td.nm { font-weight: 700; white-space: nowrap; width: 170px; }
+td.sum { opacity: .7; font-size: 12px; }
+td.ic { width: 54px; text-align: right; white-space: nowrap; }
+tr.grp td { background: #26262c; font-weight: 700; font-size: 12px; opacity: .85; padding: 4px 6px; }
+tr.exp td { background: #24242a; }
+.optrow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px 14px; padding: 2px 0 4px 32px; font-size: 12px; }
+.optrow label { display: flex; gap: 6px; align-items: center; }
+</style></head><body>
+<div class="win"><div class="title">LucD20 Automations <small>C · Tree on the left, one line per feature</small></div><div class="body">
+<nav class="nav"><div class="search"><i class="fa-solid fa-magnifying-glass"></i> Search settings…</div>
+<div class="tab"><i class="fa-solid fa-caret-right"></i>General<span class="n">13/43</span></div>
+<div class="tab parent"><i class="fa-solid fa-caret-down"></i>Pathfinder 2e<span class="n">17/19</span></div>
+<div class="tab sub on">Core Rules<span class="n">13/13</span></div>
+<div class="tab sub">Classes<span class="n">3/4</span></div>
+<div class="tab sub" style="padding-left:40px;opacity:.8">Animist</div>
+<div class="tab sub" style="padding-left:40px;opacity:.8">Commander</div>
+<div class="tab sub" style="padding-left:40px;opacity:.8">Guardian</div>
+<div class="tab sub" style="padding-left:40px;opacity:.8">Oracle</div>
+<div class="tab sub">Exploration<span class="n">0/2</span></div>
+<div class="tab sub">Chat helpers<span class="n">3/3</span></div>
+<div class="tab"><i class="fa-solid fa-caret-right"></i>Setup<span class="n">1/2</span></div>
+</nav>
+<section class="content"><h2>Pathfinder 2e · Core Rules</h2><p class="lead">One line each; the arrow opens a feature's options under it.</p>
+<table>
+<tr class="grp"><td colspan="4">Conditions</td></tr>
+<tr><td class="nm"><span class="sw" style="display:inline-block;vertical-align:middle;margin-right:8px"></span>Frightened</td><td class="sum">Goes down by 1 at the end of the creature's turn.</td><td class="ic"><i class="fa-solid fa-earth-americas ico"></i></td></tr>
+<tr><td class="nm"><span class="sw" style="display:inline-block;vertical-align:middle;margin-right:8px"></span>Sickened</td><td class="sum">A DC to retch; a reminder at the start of the turn.</td><td class="ic"><i class="fa-solid fa-earth-americas ico"></i></td></tr>
+<tr class="grp"><td colspan="4">Actions &amp; Checks</td></tr>
+<tr><td class="nm"><span class="sw" style="display:inline-block;vertical-align:middle;margin-right:8px"></span>Shove</td><td class="sum">Choose where the target is pushed.</td><td class="ic"><i class="fa-solid fa-earth-americas ico"></i></td></tr>
+<tr><td class="nm"><span class="sw" style="display:inline-block;vertical-align:middle;margin-right:8px"></span>Trip</td><td class="sum">Prone and damage by degree of success.</td><td class="ic"><i class="fa-solid fa-earth-americas ico"></i></td></tr>
+<tr class="exp"><td class="nm"><span class="sw" style="display:inline-block;vertical-align:middle;margin-right:8px"></span>Flat Checks</td><td class="sum">Per target at the highest DC; never on rerolls.</td><td class="ic"><i class="fa-solid fa-caret-up"></i></td></tr>
+<tr class="exp"><td colspan="3"><div class="optrow"><label><input type="checkbox"> Ignore Concealed</label><label><input type="checkbox"> Ignore Grabbed</label><label><input type="checkbox"> Hide the number</label></div></td></tr>
+<tr class="grp"><td colspan="4">Reactions</td></tr>
+<tr><td class="nm"><span class="sw" style="display:inline-block;vertical-align:middle;margin-right:8px"></span>Reactions</td><td class="sum">Tracked per round; badge on the token.</td><td class="ic"><i class="fa-solid fa-caret-down"></i></td></tr>
+<tr><td class="nm"><span class="sw" style="display:inline-block;vertical-align:middle;margin-right:8px"></span>Reactive Strike</td><td class="sum">A prompt when it can be used; drag warning.</td><td class="ic"><i class="fa-solid fa-caret-down"></i></td></tr>
+<tr><td class="nm"><span class="sw" style="display:inline-block;vertical-align:middle;margin-right:8px"></span>Shield Block</td><td class="sum">A prompt before physical damage.</td><td class="ic"></td></tr>
+<tr class="grp"><td colspan="4">Battlefield &amp; Spells</td></tr>
+<tr><td class="nm"><span class="sw" style="display:inline-block;vertical-align:middle;margin-right:8px"></span>Cover</td><td class="sum">Per attack and area save; buttons in the roll window.</td><td class="ic"><i class="fa-solid fa-caret-down"></i></td></tr>
+<tr><td class="nm"><span class="sw" style="display:inline-block;vertical-align:middle;margin-right:8px"></span>Effect Areas</td><td class="sum">Targeting window, cover on hover, exact reach.</td><td class="ic"><i class="fa-solid fa-caret-down"></i></td></tr>
+<tr><td class="nm"><span class="sw" style="display:inline-block;vertical-align:middle;margin-right:8px"></span>Sustained Spells</td><td class="sum">Sustain / End at turn start; asked at turn end.</td><td class="ic"></td></tr>
+</table></section></div>
+<div class="legend"><span><i class="fa-solid fa-earth-americas"></i> World</span><span><i class="fa-solid fa-user"></i> Per player</span><span><i class="fa-solid fa-rotate"></i> Requires reload</span></div></div>
+</body></html>

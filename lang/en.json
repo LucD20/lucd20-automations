@@ -774,7 +774,11 @@
       },
       "pf2eRoaringHeart": {
         "Name": "Roaring Heart (Animist)",
-        "Hint": "When an animist uses Roaring Heart, a small card follows the movement: their Shoves (the first two) are counted, and after their second move (or Finish, or the end of their turn) they and each ally within 30 ft gain temporary HP (half their level for one enemy Shoved, their level for two) through an effect that ends at the start of their next turn."
+        "Hint": "When an animist uses Roaring Heart, a small card (reprinted after each Shove) offers Shove, Confirm and Cancel: the first two Shoves are counted, and Confirm gives them and each ally within 30 ft temporary HP (half their level for one enemy Shoved, their level for two) through an effect that ends at the start of their next turn."
+      },
+      "pf2ePunishingShove": {
+        "Name": "Punishing Shove (Guardian)",
+        "Hint": "When a creature with Punishing Shove succeeds at a Shove, after the dice the shoved creature's bludgeoning damage is rolled (Strength modifier, +2 / +6 / +12 at expert / master / legendary Athletics; doubled on a critical success), to apply with PF2e's own buttons."
       }
     },
     "ForceSettings": {
@@ -1669,6 +1673,7 @@
       "ShoveDone": "That Shove was already resolved.",
       "Off": "That automation is switched off.",
       "TripDamage": "Trip (critical success): damage to {name}",
+      "TripCreature": "the creature",
       "Cancel": "Cancel",
       "Speaker": "Conditions",
       "FrightenedDown": "{name}: Frightened {before} → {after} (end of turn).",
@@ -1759,6 +1764,11 @@
         "Give": "Give",
         "NoOne": "No one",
         "Replaced": "Replaced by a new signal."
+      },
+      "PunishingShove": {
+        "Flavor": "Punishing Shove: damage to {name}",
+        "FlavorCritical": "Punishing Shove (critical success): damage to {name}",
+        "Creature": "the creature"
       },
       "RoaringHeart": {
         "Name": "Roaring Heart",

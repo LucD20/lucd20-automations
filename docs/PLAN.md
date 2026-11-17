@@ -1903,3 +1903,7 @@ details in the ledger §10.
 v0.49.1: the card's Shove / Confirm / Cancel buttons replace ending on the
 second move (owner). v0.49.2: the card is reprinted after each Shove, is one
 row of buttons, and ends as one message (owner: least vertical clutter).
+
+**v0.50.0 (phase 46): PF2e rule 11, the Guardian's Punishing Shove**
+(`pf2ePunishingShove`, `scripts/systems/pf2e/punishing-shove.js`, `test45.js`);
+details in the ledger §11.

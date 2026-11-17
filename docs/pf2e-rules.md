@@ -19,6 +19,7 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 | 8 | Shield Block: prompt when it can be used | built v0.47.0 | `pf2eShieldBlock` |
 | 9 | Commander: Demoralizing Charge | built v0.48.0 | `pf2eDemoralizingCharge` |
 | 10 | Animist: Roaring Heart | built v0.49.2 | `pf2eRoaringHeart` |
+| 11 | Guardian: Punishing Shove | built v0.50.0 | `pf2ePunishingShove` |
 
 Commander (Battlecry!): research notes in `docs/pf2e-commander.md`; rules to
 automate come from the owner, one at a time.
@@ -373,3 +374,25 @@ one that leaves fewer squares next to enemies (see PLAN).
   `game.pf2e.actions.shove` as a fallback).
 - (verify) in PF2e 8.7: the TempHP rule element granting on creation, taking
   them back when the effect is deleted, and keeping the higher of two.
+
+## 11. Guardian: Punishing Shove
+
+- Owner: "next punishing shove feat".
+- The feat (guardian 1, trained in Athletics, passive): "When you
+  successfully Shove a creature, that creature takes an amount of bludgeoning
+  damage equal to your Strength modifier (or double that amount on a critical
+  success). This damage increases by 2 when you become an expert in Athletics,
+  6 when you become a master, and 12 when you become legendary." The system
+  only adds a Note with a damage link to the Shove roll.
+- Decided (Q180–Q184, "as recommended"): after the Shove's dice, **a normal
+  PF2e damage roll** on the shoved creature, **applied with PF2e's own
+  buttons** (Target Helper rows), not by itself; **every successful Shove**
+  counts (Roaring Heart, Double Team...); **no target, no roll** (the Note
+  stays); **independent of the push**.
+- Built (v0.50.0): Strength modifier + 0 / 2 / 6 / 12 (trained / expert /
+  master / legendary Athletics), doubled on a critical success; nothing if
+  it comes to 0. The roll is as secret as the Shove (its whisper list; the GM
+  only for a hidden shover); a hidden NPC name reads "the creature". Trip's
+  critical damage line now hides a hidden NPC's name the same way.
+- (verify) `actor.abilities.str.mod`, `actor.skills.athletics.rank`; Target
+  Helper reading `flags["pf2e-toolbelt"].targetHelper.targets` on our roll.

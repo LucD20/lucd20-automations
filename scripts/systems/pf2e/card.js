@@ -13,7 +13,7 @@ export function sourceUuid(item) {
 
 /** An actor's item by slug (or name). */
 export function itemBySlug(actor, slugs, name) {
-	return (actor?.items ?? []).find((i) => slugs.includes(i.slug ?? i.system?.slug) || (name && name.test(i.name ?? ""))) ?? null;
+	return Array.from(actor?.items?.contents ?? actor?.items ?? []).find((i) => slugs.includes(i.slug ?? i.system?.slug) || (name && name.test(i.name ?? ""))) ?? null;
 }
 
 /**

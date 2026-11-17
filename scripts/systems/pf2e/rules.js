@@ -391,7 +391,8 @@ async function onTripMessage(message) {
   if (!DamageRoll) return;
   const roll = await new DamageRoll("1d6[bludgeoning]").evaluate();
   await roll.toMessage({
-    flavor: `<strong>${esc(L("TripDamage", { name: target.name }))}</strong>`,
+    // A hidden NPC name stays hidden (PF2e's playersCanSeeName).
+    flavor: `<strong>${esc(L("TripDamage", { name: tokenOf(context.target?.token)?.playersCanSeeName === false ? L("TripCreature") : target.name }))}</strong>`,
     speaker: ChatMessage.getSpeaker?.({ actor: tripper }) ?? { alias: tripper?.name ?? "" }
   });
 }

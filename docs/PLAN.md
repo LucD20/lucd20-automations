@@ -1795,3 +1795,9 @@ than the 182 px column, so the column is now 224 px.
   height is always reserved.
 - Height 190 -> 168 px; conditions on one line. The band's background is
   slightly see-through.
+
+**v0.43.5 (owner: the macro area "is just a block" with nothing selected):**
+the hotbar is anchored to the bottom of its column with 44 px slots (column
+322 px); the dock above it is taller (58 px, bigger icons). With nothing
+selected the column has no background and the dock's place stays empty, so
+only the hotbar itself shows, in the same place as when a character is shown.

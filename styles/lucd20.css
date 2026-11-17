@@ -2459,7 +2459,7 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-hud4e.light { --band: rgba(244, 238, 224, .9); --bg: #f4eee0; --bg2: #e9e0ca; --ink: #2a251c; --mute: #6c6250; --line: #c2b393; --gold: #8c6418; --btn: #fbf7ec; --edge: #6f6248; }
 .lucd20-hud4e .h4-empty { margin: auto; color: var(--mute); font-style: italic; }
 /* Nothing selected: the party, on a see-through band (v0.43.4). */
-.lucd20-hud4e.empty { background: transparent; border-top-color: transparent; }
+.lucd20-hud4e.empty { background: transparent; border-top-color: transparent; border-right-color: transparent; }
 .lucd20-hud4e.empty .h4-main { align-items: flex-end; }
 .lucd20-hud4e .h4-party { display: flex; align-items: flex-end; gap: 6px; padding: 0 6px 6px; overflow-x: auto; }
 .lucd20-hud4e .h4-pc { width: 168px; flex: none; background: var(--band); border: 1px solid var(--edge); border-top: 2px solid var(--plate); cursor: pointer; }
@@ -2525,20 +2525,23 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-hud4e .h4-pw.act .h4-h { font-weight: 600; }
 .lucd20-hud4e .h4-uses { display: inline-flex; gap: 2px; margin-left: 5px; vertical-align: 1px; } .lucd20-hud4e .h4-uses i { width: 7px; height: 7px; border: 1px solid #fff; border-radius: 50%; } .lucd20-hud4e .h4-uses i.full { background: #fff; }
 .lucd20-hud4e .h4-none { margin: 6px 8px; color: var(--mute); font-size: 11px; }
-.lucd20-hud4e .h4-right { width: 300px; flex: none; display: flex; flex-direction: column; border-left: 1px solid var(--line); background: var(--band); }
-.lucd20-hud4e .h4-dock { height: 36px; flex: none; border-bottom: 1px solid var(--line); box-sizing: border-box; }
-.lucd20-hud4e .h4-dock .h4-none { margin: 0; padding: 10px 8px; }
+.lucd20-hud4e .h4-right { width: 322px; flex: none; display: flex; flex-direction: column; border-left: 1px solid var(--line); background: var(--band); }
+.lucd20-hud4e .h4-dock { height: 58px; flex: none; border-bottom: 1px solid var(--line); box-sizing: border-box; }
+.lucd20-hud4e .h4-dock .h4-none { margin: 0; padding: 20px 8px; }
+/* v0.43.5: nothing selected, only the hotbar shows, in the same place (no block behind it). */
+.lucd20-hud4e.empty .h4-right { background: transparent; border-left-color: transparent; }
+.lucd20-hud4e.empty .h4-dock { visibility: hidden; }
 .lucd20-hud4e .h4-tiles { display: grid; grid-template-columns: repeat(5, 1fr); height: 100%; }
-.lucd20-hud4e .h4-tiles span { position: relative; display: grid; justify-items: center; padding: 3px 0 2px; border-left: 1px solid var(--line); font-size: 8.5px; overflow: hidden; }
-.lucd20-hud4e .h4-tiles span:first-child { border-left: 0; } .lucd20-hud4e .h4-tiles i { font-size: 14px; } .lucd20-hud4e .h4-tiles [data-pip] { cursor: pointer; }
+.lucd20-hud4e .h4-tiles span { position: relative; display: grid; justify-items: center; align-content: center; gap: 3px; border-left: 1px solid var(--line); font-size: 10px; overflow: hidden; }
+.lucd20-hud4e .h4-tiles span:first-child { border-left: 0; } .lucd20-hud4e .h4-tiles i { font-size: 18px; } .lucd20-hud4e .h4-tiles [data-pip] { cursor: pointer; }
 .lucd20-hud4e .h4-tiles .on { background: var(--plate); color: #fff; } .lucd20-hud4e .h4-tiles .spent { color: var(--mute); text-decoration: line-through; } .lucd20-hud4e .h4-tiles .spent i { opacity: .4; }
 .lucd20-hud4e .h4-tiles .off { color: var(--mute); } .lucd20-hud4e .h4-tiles sup { position: absolute; top: 1px; right: 4px; font: 700 9px sans-serif; color: var(--gold); }
-.lucd20-hud4e .h4-hot { flex: 1; display: flex; align-items: center; justify-content: center; padding: 4px; min-height: 0; }
+.lucd20-hud4e .h4-hot { flex: 1; display: flex; align-items: flex-end; justify-content: center; padding: 0 6px 6px; min-height: 0; }
 /* (verify) V14's hotbar markup: Foundry's own hotbar, held in place and laid out 5 × 2. */
 .lucd20-hud4e .h4-hot #hotbar { position: static; inset: auto; margin: 0; width: auto; height: auto; transform: none; display: flex; align-items: center; gap: 2px; }
 /* V14 (owner's check): #hotbar-controls-left (mute, menu), menu#action-bar (li.slot), #hotbar-controls-right (page controls + lock/clear, side by side). */
-.lucd20-hud4e .h4-hot #hotbar #action-bar { display: grid; grid-template-columns: repeat(5, 40px); grid-auto-rows: 40px; gap: 2px; margin: 0; padding: 0; width: auto; height: auto; }
-.lucd20-hud4e .h4-hot #hotbar .slot { width: 40px; height: 40px; min-width: 0; flex: none; }
+.lucd20-hud4e .h4-hot #hotbar #action-bar { display: grid; grid-template-columns: repeat(5, 44px); grid-auto-rows: 44px; gap: 2px; margin: 0; padding: 0; width: auto; height: auto; }
+.lucd20-hud4e .h4-hot #hotbar .slot { width: 44px; height: 44px; min-width: 0; flex: none; }
 .lucd20-hud4e .h4-hot #hotbar .slot .key { font-size: 9px; line-height: 1; padding: 1px 2px; top: 1px; left: 1px; background: rgba(0, 0, 0, .55); border-radius: 2px; }
 .lucd20-hud4e .h4-hot #hotbar #hotbar-controls-left { display: flex; flex-direction: column; gap: 2px; }
 .lucd20-hud4e .h4-hot #hotbar #hotbar-controls-right { display: flex; flex-direction: row; gap: 2px; height: auto; }

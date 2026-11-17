@@ -1865,3 +1865,11 @@ Speed / Init, and PCs get passive Perception / Insight.
 - (verify) in the owner's world: `details.role`, `details.saves`,
   `skills.prc.total`, `resistances.<type>.value` (resist > 0, vulnerable < 0)
   and `.immune` on real monsters; `durationType` labels on conditions.
+
+**v0.45.0 (phase 41): PF2e rule 6, reactions** (`pf2eReactions`,
+`scripts/systems/pf2e/reactions.js`, `test40.js`). The owner wants the
+reaction part automated before the Commander's Demoralizing Charge. Q160–Q163:
+reactions only (no PF2e action tracker); a badge on the token everyone who sees
+the token sees, and a mark in the Combat Tracker; spent by reaction cards,
+off-turn Strikes and (with the tactics) tactic responses; trigger prompts
+later. Details in the ledger, `docs/pf2e-rules.md` §6.

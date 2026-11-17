@@ -67,6 +67,7 @@ export const FEATURE_ORDER = [
   { id: "pf2eShove", category: "pf2e", phase: 37, systems: ["pf2e"] },
   { id: "pf2eTrip", category: "pf2e", phase: 37, systems: ["pf2e"] },
   { id: "pf2eTemporalDistortion", category: "pf2e", phase: 38, systems: ["pf2e"] },
+  { id: "pf2eReactions", category: "pf2e", phase: 41, systems: ["pf2e"] },
   { id: "dnd4eClassFeatures", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
   { id: "dnd4eCover", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
   { id: "dnd4eActionTracker", category: "dnd4e", phase: 26, systems: ["dnd4e"] },

@@ -9,3 +9,4 @@ import "./loot-pile.js";
 import "./door-locks.js";
 import "./search.js";
 import "./rules.js";
+import "./reactions.js";

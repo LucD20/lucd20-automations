@@ -37,7 +37,7 @@ const tokenOf = uuid => (uuid ? fromUuidSync(uuid) : null);
  * Who may read a line about this combatant: everyone, unless the creature or its name is hidden
  * from the players; then only the GMs (a hidden creature's name must not reach them).
  */
-function audience(combatant) {
+export function audience(combatant) {
   const secret = combatant?.hidden || combatant?.token?.hidden || combatant?.token?.playersCanSeeName === false;
   return secret ? { whisper: game.users.filter(u => u.isGM).map(u => u.id) } : {};
 }
@@ -79,7 +79,7 @@ function movedForward(prior, current) {
 const positions = new Map(); // combat id → { round, turn, combatantId }
 const positionOf = combat => ({ round: combat.round ?? 0, turn: combat.turn ?? 0, combatantId: combat.combatant?.id ?? null });
 
-function onTurns(feature, { end, start }) {
+export function onTurns(feature, { end, start }) {
   for (const combat of game.combats ?? []) if (!positions.has(combat.id)) positions.set(combat.id, positionOf(combat));
   const key = `turns-${feature.id}`;
   const seen = new Map(); // combat id → last position this feature acted on

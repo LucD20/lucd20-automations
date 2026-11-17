@@ -2621,3 +2621,9 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-hud4e[data-size="tiny"] .h4-por { width: 38px; }
 .lucd20-hud4e[data-size="tiny"] .h4-cicons { grid-template-columns: repeat(2, 16px); left: 1px; top: 1px; }
 .lucd20-hud4e[data-size="tiny"] .h4-cicon { width: 16px; height: 16px; }
+
+/* PF2e reactions (v0.45.0): the mark in the Combat Tracker. */
+.lucd20-rx { display: inline-grid; place-items: center; width: 18px; height: 18px; margin-left: 6px; border-radius: 50%; border: 1px solid #000; cursor: pointer; vertical-align: middle; flex: none; }
+.lucd20-rx[data-state="on"] { background: #d9b26a; color: #1b1a18; }
+.lucd20-rx[data-state="off"] { background: #5a5a5a; color: #ccc; opacity: .75; text-decoration: line-through; }
+.lucd20-rx .lucd20-rx-glyph { font-family: "Pathfinder2eActions", "Signika", sans-serif; font-size: 12px; line-height: 1; }

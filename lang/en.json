@@ -749,6 +749,10 @@
             "Hint": "Foundry's players list moves into the corner above the HUD's left end."
           }
         }
+      },
+      "pf2eReactions": {
+        "Name": "Reactions",
+        "Hint": "Tracks each creature's reaction in combat: refilled at the start of its turn, spent by a reaction's card (Shield Block, Reactive Strike, Nimble Dodge…) or a Strike made outside its own turn. A badge on the token and a mark in the Combat Tracker show it (gold = available, grey = spent); owners and the GM click either to toggle it. Using one with none left warns the GM and the owners."
       }
     },
     "ForceSettings": {
@@ -1674,6 +1678,12 @@
         "NotYours": "{who} rolls this d4.",
         "NoCondition": "PF2e's {condition} condition was not found.",
         "Replaced": "Replaced by a new save."
+      },
+      "Reaction": {
+        "Available": "Reaction available (click to mark it spent)",
+        "Spent": "Reaction spent (click to give it back)",
+        "NoneLeft": "{name} has no reaction left this round ({source}).",
+        "Strike": "Strike"
       }
     },
     "Dnd4eHud": {

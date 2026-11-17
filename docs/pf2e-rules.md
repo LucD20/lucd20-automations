@@ -14,6 +14,7 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 | 3 | Shove: choose where the target is pushed | built v0.41.0 | `pf2eShove` |
 | 4 | Trip: conditions and damage by degree of success | built v0.41.0 | `pf2eTrip` |
 | 5 | Temporal Distortion: d4 for the condition after the save | built v0.42.0 | `pf2eTemporalDistortion` |
+| 6 | Reactions: track their use, as the PF2e Reaction module does | built v0.45.0 | `pf2eReactions` |
 
 Commander (Battlecry!): research notes in `docs/pf2e-commander.md`; rules to
 automate come from the owner, one at a time.
@@ -151,3 +152,34 @@ Standing decisions:
 - Checked by the owner in V14 / PF2e 8.7 (v0.42.0): it all works, including
   the condition's value and the effect ending with its condition after the
   rounds above.
+
+## 6. Reactions
+
+- Owner: before Demoralizing Charge, "automate uses like PF2e Reactions
+  module does it". Asked whether an action tracker or only reactions, and
+  how to show it: an overlay on the token rather than an effect item (effects
+  pile up at higher levels).
+- Decided (Q160–Q163): **reactions only** (a 3-action tracker would miss too
+  much in PF2e); a **badge on the token, seen by everyone** who can see the
+  token, plus a mark in the Combat Tracker; spent by **reaction cards**,
+  **off-turn Strikes** and **tactic reactions**; the trigger **prompts**
+  ("X can use Reactive Strike") come later, as their own rules (keep the PF2e
+  Reaction module for those until then, with its tracking off).
+- Built (v0.45.0):
+  - One reaction per creature, refilled at the start of its turn and when the
+    encounter starts; stored on the combatant.
+  - Spent by the card of anything whose cost is a reaction (actions and feats
+    with `actionType: reaction`, spells cast as a reaction), and by a Strike or
+    spell attack outside the creature's own turn. A reaction card followed by
+    its Strike (within 30 s) counts once. Rerolls don't count.
+  - With none left: a note to the GMs and the owners; nothing is blocked.
+  - Badge: bottom-right of the token, gold = available, grey with a red slash
+    = spent. Combat Tracker: an "R" mark beside the name. Owners and the GM
+    click either to toggle.
+  - For tactics (next, with Demoralizing Charge): `spendReaction(combatant)`;
+    Drilled Reactions' extra reaction is still to do.
+- (verify) in PF2e 8.7: the card's item (`message.item`) and its
+  `actionType` for Shield Block / Reactive Strike; a spell's
+  `system.time.value === "reaction"`; the "R" of the `Pathfinder2eActions`
+  font drawing the reaction symbol on the badge; the Combat Tracker row
+  (`[data-combatant-id]` with `.token-name`).

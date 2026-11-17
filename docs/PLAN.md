@@ -1933,3 +1933,8 @@ smaller.
 `scripts/features/modifiers-matter.js`, adapters `systems/pf2e/modifiers-matter.js`
 and `systems/dnd4e/modifiers-matter.mjs`, `test51.js`); ledger §17. 4e chances
 made robust (owner: not working).
+
+**v0.57.0 (phase 53): Damage Estimate, PF2e and 4e** (`damageEstimate`,
+`scripts/features/damage-estimate.js`, adapters `systems/pf2e/damage-estimate.js`
+and `systems/dnd4e/damage-estimate.mjs`, `test52.js`); ledger §18. Damage
+Log: its PF2e-only setting no longer read in other systems.

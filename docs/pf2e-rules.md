@@ -26,6 +26,7 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 | 15 | Hand reminders (replaces PF2e Hands Management) | built v0.54.0 | `pf2eHands` |
 | 16 | Roll chances, PF2e and 4e (replaces PF2e Chances) | built v0.56.0 | `rollChances` |
 | 17 | Modifiers Matter, PF2e and 4e (replaces PF2e Modifiers Matter) | built v0.56.0 | `modifiersMatter` |
+| 18 | Damage Estimate, PF2e and 4e (replaces PF2e Damage Estimate) | built v0.57.0 | `damageEstimate` |
 
 Commander (Battlecry!): research notes in `docs/pf2e-commander.md`; rules to
 automate come from the owner, one at a time.
@@ -577,6 +578,9 @@ one that leaves fewer squares next to enemies (see PLAN).
   faces or formula, the rows by `.hit-prediction` else `.dice-result`, and
   with no numbers kept on the message the target's defense now (crit 20).
   `CONFIG.debug.lucd20Chances = true` logs each step in the console.
+  The owner's first log showed only the power's card (no attack roll in it)
+  and an unrelated error: Damage Log read its PF2e-only "details" setting in
+  4e on every chat message (fixed in v0.57.0).
 - (verify) PF2e 8.7's roll window: `renderCheckModifiersDialog`,
   `app.check.totalModifier`, `app.context.dc`, `rollTwice`, and that it
   re-renders when a modifier is toggled; 4e: the multiroll card's
@@ -613,3 +617,23 @@ one that leaves fewer squares next to enemies (see PLAN).
 - (verify) PF2e: `target.armorClass.modifiers`, `getStatistic(slug).dc`,
   the tags' `data-slug`; 4e: `commonAttackBonuses` in the preAttackRoll
   config.
+
+## 18. Damage Estimate (PF2e and D&D 4e)
+
+- The original (PF2e): avg and min~max appended to the damage window's Roll
+  button; ignored the crit doubling notation; GM-only option, per-user
+  average / range.
+- Decided (Q224–Q227, as recommended): a generic feature `damageEstimate`
+  (chat; `scripts/features/damage-estimate.js` with a small dice-formula
+  estimator; adapters per system): one small line above the Roll button,
+  "Average 14 (6–22)", on the roller's screen only (each user: average and
+  range / average / range); not on the card.
+  - PF2e: each damage instance on the Roll button ("2 × (1d8 + 4)" on a
+    critical), persistent damage (hourglass, bleed) apart, at least 1.
+  - 4e: the power's parts and its critical parts from the window's
+    `rollConfig`, with the Bonus field as it is typed: "Average 9.5 (5–14)
+    Crit: Average 17.5 (15–20)".
+- Switch off "PF2e Damage Estimate".
+- (verify) PF2e: `renderDamageModifierDialog` re-rendering when a modifier is
+  toggled; 4e: `rollConfig.parts` / `partsCrit`, the `bonus` input and
+  `.dialog-buttons`.

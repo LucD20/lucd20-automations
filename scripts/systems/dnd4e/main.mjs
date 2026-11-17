@@ -3,6 +3,7 @@ import { registerSettings } from "./settings.mjs";
 import "./cards.mjs";
 import "./chances.mjs";
 import "./modifiers-matter.mjs";
+import "./damage-estimate.mjs";
 import "./skill-challenge.mjs";
 import "./party-stash.mjs";
 import "./reactions/opportunity-warning.mjs";

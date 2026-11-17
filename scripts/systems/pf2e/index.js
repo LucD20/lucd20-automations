@@ -21,3 +21,4 @@ import "./sustain.js";
 import "./hands.js";
 import "./chances.js";
 import "./modifiers-matter.js";
+import "./damage-estimate.js";

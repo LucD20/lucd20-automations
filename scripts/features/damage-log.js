@@ -117,7 +117,8 @@ function onDeltaHook(delta, changes, options, userId) {
 
 /** System messages that explain a change (e.g. PF2e "takes 12 damage"). */
 function onChatMessage(message) {
-  if (!game.user.isActiveGM || !state.feature?.get("details")) return;
+  // "details" exists only where an adapter explains changes (PF2e): elsewhere, nothing to do.
+  if (!game.user.isActiveGM || game.system.id !== "pf2e" || !state.feature?.get("details")) return;
   for (const adapter of activeAdapters()) {
     const cause = adapter.causeFromMessage?.(message);
     if (!cause) continue;

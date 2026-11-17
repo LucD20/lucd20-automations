@@ -38,3 +38,4 @@ import "./gm-vision.js";
 import "./loot-pile.js";
 import "./roll-chances.js";
 import "./modifiers-matter.js";
+import "./damage-estimate.js";

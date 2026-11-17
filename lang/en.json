@@ -307,6 +307,13 @@
         "Name": "Modifiers Matter",
         "Hint": "On a roll's card, the modifiers that changed its result: a bonus that made the difference in green, a penalty that cost it in red. PF2e: the card's modifier tags, and one line for the target's own modifiers (Off-Guard, a raised shield...) where its DC may be seen. D&D 4e: per target, the common attack bonuses (combat advantage, cover...) that turned a miss into a hit or back. Replaces PF2e Modifiers Matter (switch that one off)."
       },
+      "damageEstimate": {
+        "Name": "Damage Estimate",
+        "Hint": "In the damage window, one small line above the Roll button: the average and the range of the damage (PF2e: persistent damage apart; 4e: the critical too). Only on the roller's screen, not on the card. Replaces PF2e Damage Estimate (switch that one off).",
+        "Setting": {
+          "show": { "Name": "Show", "Hint": "What your own damage windows show." }
+        }
+      },
       "diceStats": {
         "Name": "Dice Stats",
         "Hint": "Roll statistics for everyone, for this session and all time, opened from the bottom of the Actors tab. PF2e checks are split by type and degree of success. Blind and secret rolls only count in the GM's view.",
@@ -964,6 +971,13 @@
     "ModifiersMatter": {
       "Target": "Target",
       "Mattered": "Mattered"
+    },
+    "DamageEstimate": {
+      "Average": "Average {avg}",
+      "Both": "Average {avg} ({range})",
+      "Persistent": "Persistent",
+      "Crit": "Crit",
+      "Choice": { "both": "Average and range", "average": "Average only", "range": "Range only" }
     },
     "DiceStats": {
       "Title": "Dice Stats",

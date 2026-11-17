@@ -1,5 +1,6 @@
 import { MATCHERS, KIND } from "../constants.mjs";
-import { matches, actorFromSpeaker } from "../utils.mjs";
+import { matches, actorFromSpeaker, setting } from "../utils.mjs";
+import { getState, remaining } from "../actions/state.mjs";
 import { tokensWithEffect } from "../effects.mjs";
 import { getFeature } from "../../../core/registry.js";
 import { localize } from "../../../core/constants.js";
@@ -25,6 +26,7 @@ const T = (key, data) => localize(`LUCD20.Dnd4eTips.${key}`, data);
 const POWERS = {
 	nimbleStrike: { ids: ["ranger-01-nimble-strike"], names: /nimble strike|golpe [áa]gil/i },
 	twinStrike: { ids: ["ranger-01-twin-strike"], names: /twin strike|golpe duplo|ataque duplo/i },
+	howlingStrike: { ids: ["barbarian-01-howling-strike"], names: /howling strike|golpe uivante|golpe ululante/i },
 	greatCleave: { ids: ["barbarian-01-great-cleave"], names: /great cleave|grande (?:trespassar|golpe)|clivagem/i },
 	elvenAccuracy: { ids: ["elf-power-elven-accuracy", "elven-accuracy", "precisao-elfica"], names: /elven accuracy|precis[ãa]o [ée]lfica/i },
 	majesticWord: { ids: ["bard-majestic-word", "majestic-word"], names: /majestic word|palavra majestosa/i },
@@ -138,8 +140,10 @@ function turnTips(actor) {
 		}
 	}
 	if (enabled("barbarian")) {
-		const cleave = usable(actor, POWERS.greatCleave), pressing = usable(actor, MATCHERS.pressingStrike);
+		const cleave = usable(actor, POWERS.greatCleave), pressing = usable(actor, MATCHERS.pressingStrike), howling = usable(actor, POWERS.howlingStrike);
 		if (adjacent.length >= 2 && cleave) out.push(tip("barb-cleave", T("Barbarian.Cleave", { power: cleave.name, n: adjacent.length }), [cleave], "standard"));
+		// v0.68.0 (owner): one enemy adjacent → Howling Strike before Pressing Strike.
+		else if (adjacent.length && howling) out.push(tip("barb-howling", T("Barbarian.Howling", { power: howling.name, name: adjacent[0].name }), [howling], "standard"));
 		else if (pressing && near.length && !adjacent.length) out.push(tip("barb-pressing", T("Barbarian.Pressing", { power: pressing.name }), [pressing], "standard"));
 		else if (pressing || cleave) out.push(tip("barb-charge", T("Barbarian.Charge", { power: (pressing ?? cleave).name }), pressing ? [pressing] : [], "standard", ["charge"]));
 	}
@@ -197,10 +201,25 @@ function liveEvents(actor) {
 	return list;
 }
 
-/** Every tip for this actor now (up to 3): after-a-roll ones first. */
+/**
+ * Can this actor still take an action of this kind this turn (owner, v0.68.0: no tip for a spent action)?
+ * 4e trades down: a standard action can be a move or a minor one, a move action a minor one. Only with the
+ * action tracker on; free actions and reactions are never filtered.
+ */
+export function canStill(actor, kind) {
+	if (!["standard", "move", "minor"].includes(kind) || !setting("actionTracker")) return true;
+	const combatant = game.combat?.combatants?.find?.((c) => c.actor?.id === actor?.id);
+	if (!combatant) return true;
+	const r = remaining(getState(combatant));
+	if (kind === "standard") return r.standard > 0;
+	if (kind === "move") return r.move > 0 || r.standard > 0;
+	return r.minor > 0 || r.move > 0 || r.standard > 0;
+}
+
+/** Every tip for this actor now (up to 3): after-a-roll ones first; none for an action already spent. */
 export function tipsFor(actor) {
 	if (!actor) return [];
-	return [...liveEvents(actor), ...turnTips(actor)].slice(0, 3);
+	return [...liveEvents(actor), ...turnTips(actor)].filter((t) => !t.blink?.tab || canStill(actor, t.blink.tab)).slice(0, 3);
 }
 /** The first tip (kept for older callers). */
 export function tipFor(actor) {

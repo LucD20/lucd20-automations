@@ -2038,3 +2038,19 @@ levels above. No tip for Words of Friendship. Fix found on the sheet: a
 "feature" and a "power" can share a name (Elven Accuracy / Precisão
 Élfica): tips point to the power. (Majestic Word's once-per-round limit is
 not tracked.)
+
+### 17.6 Tips follow the action left; Howling Strike; a shorter cover label (v0.68.0)
+
+- Owner: "In Melee with an adjacent enemy, Barbarian should suggest Howling
+  Strike above Pressing Strike": two or more adjacent → Great Cleave; one →
+  Howling Strike; within 3, none adjacent → Pressing Strike; else Charge or
+  Pressing Strike.
+- Owner: "If a PC doesn't have that action type available, change or stop
+  suggesting": with the action tracker on, a tip for a standard / move /
+  minor action shows only while that action (or a bigger one to trade down)
+  is left this turn (`canStill`); free actions and reactions are not
+  filtered.
+- Owner: "The text to calculate cover is too big in portuguese": the 4e
+  cover preview shows one line when melee and ranged agree ("Cobertura:
+  nenhuma"), "Corpo a corpo" instead of "Corpo a corpo/contíguo", and a
+  smaller font (about a fifth of a square).

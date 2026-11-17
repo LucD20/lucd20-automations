@@ -175,7 +175,7 @@
     },
     "Cover": {
       "Label": "Cobertura",
-      "MeleeLabel": "Corpo a corpo/contíguo",
+      "MeleeLabel": "Corpo a corpo",
       "RangedLabel": "À distância",
       "None": "nenhuma",
       "Cover": "cobertura (-2)",
@@ -905,7 +905,8 @@
         "Pressing": "Um inimigo a até 3 quadrados: {power} permite ajustar na direção dele e atacar.",
         "Charge": "Faça uma investida, ou use {power}, para alcançar um inimigo.",
         "Furious": "Você atingiu {name}: {power} (ação livre) causa dano extra; marque-o na janela de dano.",
-        "Swift": "{name} caiu: {power} permite fazer uma investida contra outro inimigo."
+        "Swift": "{name} caiu: {power} permite fazer uma investida contra outro inimigo.",
+        "Howling": "{name} está adjacente: {power} acerta com força (dano extra)."
       },
       "Elf": {
         "Accuracy": "Você errou {name}: {power} (ação livre) permite rolar o ataque de novo."

@@ -78,6 +78,19 @@ const assert = require("assert");
       const ogre2 = npc("o2", "Ogre 2", 4);
       canvas.tokens.placeables = [tok(barb, 0, 0, 1), tok(ogre, 1, 0, -1), tok(ogre2, 0, 1, -1)];
       out.cleave = text(barb);
+      // One adjacent → Howling Strike (v0.68.0).
+      barb.items.push({ id: "hs", name: "Howling Strike", type: "power", system: { identifier: "barbarian-01-howling-strike", uses: {} } });
+      canvas.tokens.placeables = [tok(barb, 0, 0, 1), tok(ogre, 1, 0, -1)];
+      out.howling = text(barb);
+      // The standard action spent (action tracker): no standard-action tips.
+      // The harness has no mergeObject: a small deep merge for the tracker's state.
+      const merge = (a, b) => { const o = structuredClone(a); for (const [k, v] of Object.entries(b ?? {})) o[k] = v && typeof v === "object" && !Array.isArray(v) ? merge(o[k] ?? {}, v) : v; return o; };
+      foundry.utils.mergeObject ??= (a, b) => merge(a, b);
+      const combatant = { actor: barb, getFlag: () => ({ used: { standard: 1, move: 0, minor: 0, immediate: 0, opportunity: 0 } }) };
+      game.combat.combatants = [combatant];
+      await game.settings.set(M, "dnd4eActionTracker_enabled", true);
+      out.spentStandard = text(barb);
+      game.combat.combatants = [];
       canvas.tokens.placeables = [tok(barb, 0, 0, 1), tok(ogre, 3, 0, -1)];
       out.pressing = text(barb);
       canvas.tokens.placeables = [tok(barb, 0, 0, 1), tok(ogre, 8, 0, -1)];
@@ -156,6 +169,8 @@ const assert = require("assert");
   assert.deepStrictEqual(en.rangerFar, ["ranger-noPrey", "ranger-twin"], "none adjacent: Twin Strike");
   assert.deepStrictEqual(en.warlock, ["You haven't cursed anyone. Warlock's Curse: as a minor action, curse the nearest enemy you can see."]);
   assert.deepStrictEqual(en.cursed, ["Ogre is cursed."]);
+  assert.deepStrictEqual(en.howling, ["barb-howling"], "one adjacent: Howling Strike");
+  assert.deepStrictEqual(en.spentStandard, [], "the standard action spent: no standard-action suggestion");
   assert.deepStrictEqual([en.cleave, en.pressing], [["barb-cleave"], ["barb-pressing"]], "two adjacent: Great Cleave; one within 3: Pressing Strike");
   assert.deepStrictEqual(en.charge, [["barb-charge", ["charge"]]], "otherwise: charge (the Charge button blinks) or Pressing Strike");
   assert.strictEqual(en.minionHit, false, "not against a minion");

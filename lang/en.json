@@ -1973,6 +1973,7 @@
       },
       "Barbarian": {
         "Cleave": "{n} enemies adjacent: {power} hits one and damages the others.",
+        "Howling": "{name} is adjacent: {power} hits it hard (extra damage).",
         "Pressing": "An enemy within 3 squares: {power} lets you shift toward it and attack.",
         "Charge": "Charge, or {power}, to reach an enemy.",
         "Furious": "You hit {name}: {power} (free action) adds damage; tick it in the damage window.",

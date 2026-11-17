@@ -37,7 +37,7 @@ function label(level, prefix) {
 }
 
 function makeText(text, color) {
-	const style = { fontFamily: "Signika", fontSize: Math.max(18, Math.round((canvas.grid?.size ?? 100) * 0.26)), fill: color, stroke: 0x000000, strokeThickness: Math.max(4, Math.round((canvas.grid?.size ?? 100) * 0.05)), align: "center" };
+	const style = { fontFamily: "Signika", fontSize: Math.max(18, Math.round((canvas.grid?.size ?? 100) * 0.19)), fill: color, stroke: 0x000000, strokeThickness: Math.max(4, Math.round((canvas.grid?.size ?? 100) * 0.05)), align: "center" };
 	const Precise = foundry.canvas?.containers?.PreciseText ?? globalThis.PreciseText;
 	return Precise ? new Precise(text, new PIXI.TextStyle(style)) : new PIXI.Text(text, style);
 }
@@ -65,9 +65,9 @@ export function drawPreview() {
 		g.beginFill(0xffffff, 0.9).lineStyle(0).drawCircle(shown.origin.x, shown.origin.y, 4).endFill();
 		container.addChild(g);
 
-		const lines = [label(result.walls.level, L("Cover.MeleeLabel"))];
-		if (result.ranged !== result.walls) lines.push(label(result.ranged.level, L("Cover.RangedLabel")));
-		else lines[0] = label(result.walls.level, L("Cover.Label"));
+		// One line when melee and ranged agree (owner, v0.68.0: the Portuguese text was too big).
+		const lines = result.ranged.level === result.walls.level ? [label(result.walls.level, L("Cover.Label"))]
+			: [label(result.walls.level, L("Cover.MeleeLabel")), label(result.ranged.level, L("Cover.RangedLabel"))];
 		if (shown.noLineOfEffect) lines.push(L("Cover.NoLoE"));
 		const worst = Math.max(result.walls.level, result.ranged.level);
 		const color = worst === COVER.SUPERIOR ? 0xff8a80 : worst === COVER.COVER ? 0xffd180 : 0xb9f6ca;

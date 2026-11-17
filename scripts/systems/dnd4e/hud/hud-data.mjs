@@ -13,6 +13,63 @@
 export const TABS = ["standard", "move", "minor", "free", "triggered"];
 export const ROWS = ["atwill", "enc", "daily", "basic"];
 export const DEFENCES = [["ac", "AC"], ["fort", "Fort"], ["ref", "Ref"], ["wil", "Will"]];
+// Monsters (Q157): a Traits tab (auras, passive abilities) instead of Free; columns At-Will, Recharge, Basic.
+export const NPC_TABS = ["standard", "move", "minor", "triggered", "traits"];
+export const NPC_ROWS = ["atwill", "rech", "basic"];
+
+/** A monster power's tab: free actions go with the triggered ones, no action = a trait. */
+export function npcTabFor(actionType) {
+	if (["standard", "move", "minor"].includes(actionType)) return actionType;
+	if (["reaction", "interrupt", "opportunity", "free"].includes(actionType)) return "triggered";
+	return "traits";
+}
+
+/** A monster power's column. Every monster power is `powerType: inherent`, so Basic is the basic-attack flag. */
+export function npcRowFor(system = {}) {
+	if (system.attack?.isBasic) return "basic";
+	if (["atwill", "other", undefined, null, ""].includes(system.useType)) return "atwill";
+	return "rech";
+}
+
+/**
+ * A recharge power: { roll } (recharges on that number or more on a d6) or { cond } (a condition such as
+ * "when first bloodied"), else null. As dnd4e's sheet does: a recharge power with neither recharges on a 6.
+ */
+export function rechargeOf(system = {}) {
+	if (system.useType !== "recharge") return null;
+	const roll = parseInt(system.rechargeRoll, 10);
+	if (Number.isFinite(roll) && roll > 0) return { roll: Math.min(6, roll) };
+	const cond = typeof system.rechargeCondition === "string" ? system.rechargeCondition.trim() : "";
+	return cond ? { cond } : { roll: 6 };
+}
+
+const stripHTML = (html) => String(html ?? "").replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim();
+
+/** A trait's text: its effect, else its description, without markup; cut at about 220 characters. */
+export function traitText(system = {}) {
+	const text = stripHTML(system.effect?.detail || system.description?.value || "");
+	return text.length > 220 ? `${text.slice(0, 217).trimEnd()}…` : text;
+}
+
+/**
+ * Resistances, vulnerabilities and immunities: [{ kind: "res"|"vul"|"imm", value, type }] (the words are
+ * the HUD's, in lang/en.json). (verify) field use in dnd4e 0.9.3: `resistances.<type>.{value,immune}`.
+ */
+export function resistancesOf(s = {}) {
+	const out = [];
+	for (const [type, r] of Object.entries(s.resistances ?? {})) {
+		if (!r || typeof r !== "object") continue;
+		if (r.immune) { out.push({ kind: "imm", value: 0, type }); continue; }
+		const v = Number(r.value) || 0;
+		if (v > 0) out.push({ kind: "res", value: v, type });
+		else if (v < 0) out.push({ kind: "vul", value: -v, type });
+	}
+	const u = s.untypedResistances ?? {};
+	for (const t of u.resistances ?? []) out.push({ kind: "res", value: 0, type: String(t) });
+	for (const t of u.vulnerabilities ?? []) out.push({ kind: "vul", value: 0, type: String(t) });
+	for (const t of u.immunities ?? []) out.push({ kind: "imm", value: 0, type: String(t) });
+	return out;
+}
 
 /** Which tab a power's action type goes in. */
 export function tabFor(actionType) {
@@ -94,7 +151,7 @@ export function attackText(s = {}, bonus = null) {
 const HARMFUL = new Set(["blinded", "dazed", "deafened", "dominated", "dying", "grabbed", "helpless", "immobilized", "marked", "petrified",
 	"prone", "restrained", "slowed", "stunned", "surprised", "unconscious", "weakened", "removed", "ongoing", "bleeding", "poisoned", "dead"]);
 
-/** The actor's current conditions and temporary effects: [{ name, bad }]. */
+/** The actor's current conditions and temporary effects: [{ name, img, bad, duration }]. */
 export function conditionsOf(actor) {
 	const effects = actor?.appliedEffects ?? actor?.effects?.filter?.((e) => !e.disabled) ?? [];
 	const out = [];
@@ -102,7 +159,11 @@ export function conditionsOf(actor) {
 		if (!e.isTemporary && !(e.statuses?.size)) continue;
 		const statuses = [...(e.statuses ?? [])];
 		const bad = statuses.some((s) => HARMFUL.has(s)) || /ongoing|marked|weakened|slowed|dazed|stunned/i.test(e.name ?? "");
-		out.push({ name: e.name ?? statuses[0] ?? "", bad });
+		// The duration as dnd4e words it ("End of target's next turn", "Save ends"), else Foundry's.
+		const dt = e.system?.durationType;
+		const label = dt && globalThis.CONFIG?.DND4E?.durationType?.[dt]?.label;
+		const duration = label ? game.i18n.localize(label) : (e.duration?.label ?? "");
+		out.push({ name: e.name ?? statuses[0] ?? "", img: e.img ?? e.icon ?? "icons/svg/aura.svg", bad, duration });
 	}
 	return out;
 }
@@ -123,6 +184,7 @@ export function keywordsOf(p = {}) {
 
 /** The HUD's data for one actor. `bonusOf(item)` gives an attack bonus (or null). */
 export async function buildModel(actor, { bonusOf = async () => null, defenceMods = null } = {}) {
+	const npc = actor.type === "NPC";
 	const s = actor.system ?? {};
 	const d = s.details ?? {};
 	const hp = s.attributes?.hp ?? {};
@@ -140,17 +202,28 @@ export async function buildModel(actor, { bonusOf = async () => null, defenceMod
 			if (p.attack?.isAttack) {
 				try { bonus = await bonusOf(item); } catch (err) { bonus = null; }
 			}
+			const tab = npc ? npcTabFor(p.actionType) : tabFor(p.actionType);
 			powers.push({
-				id: item.id, name: cleanName(String(item.name ?? "")), fullName: String(item.name ?? ""), tab: tabFor(p.actionType), row: rowFor(p),
+				id: item.id, name: cleanName(String(item.name ?? "")), fullName: String(item.name ?? ""), tab, row: npc ? npcRowFor(p) : rowFor(p),
 				range: rangeInfo(p), attack: attackText(p, bonus), uses, used: !!uses && uses.left < 1,
 				trigger: typeof p.trigger === "string" ? p.trigger : "", keywords: keywordsOf(p),
+				recharge: npc ? rechargeOf(p) : null, text: npc && tab === "traits" ? traitText(p) : "",
 			});
 		} catch (err) {
 			console.warn("lucd20-automations | 4e HUD: power skipped", item.name, err);
 		}
 	}
 	powers.sort((a, b) => a.name.localeCompare(b.name));
+	const role = d.role ?? {};
 	return {
+		kind: npc ? "npc" : "pc",
+		role: npc ? { primary: role.primary || "", secondary: role.secondary || "standard", leader: !!role.leader } : null,
+		level: d.level ?? "", xp: d.exp ?? "",
+		minion: npc && (role.secondary === "minion" || Number(hp.max) === 1),
+		saves: Number(d.saves?.value) || 0,
+		perception: s.skills?.prc?.total ?? s.skills?.prc?.value ?? "",
+		passive: { perception: s.passive?.pasprc?.value ?? "", insight: s.passive?.pasins?.value ?? "" },
+		resistances: npc ? resistancesOf(s) : [],
 		name: actor.name,
 		sub: [d.race, d.class, d.level].filter((v) => v !== undefined && v !== null && v !== "").join(" "),
 		img: actor.img,
@@ -167,3 +240,4 @@ export async function buildModel(actor, { bonusOf = async () => null, defenceMod
 		powers,
 	};
 }
+

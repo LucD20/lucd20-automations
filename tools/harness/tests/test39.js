@@ -89,7 +89,14 @@ const assert = require("assert");
     out.mounted = [!!root(), root().classList.contains("dark"), root().querySelector(".h4-hot #hotbar") !== null, root().querySelector(".h4-players #players") !== null];
     out.plate = [...root().querySelector(".h4-plate").children].map(txt).join(" ");
     out.hp = txt(root().querySelector(".h4-hp"));
-    out.conds = [...root().querySelectorAll(".h4-conds span")].map(s => [s.textContent, s.classList.contains("bad")]);
+    // Q159: conditions as icons on the portrait; a click lists them with their durations.
+    out.conds = [...root().querySelectorAll(".h4-por .h4-cicon")].map(i => i.classList.contains("bad"));
+    out.condLine = !!root().querySelector(".h4-conds");
+    root().querySelector(".h4-cicon").click();
+    out.condList = [...root().querySelectorAll(".h4-conditions .h4-crow")].map(r => [txt(r.querySelector("span")), r.classList.contains("bad")]);
+    root().querySelector('[data-h4="cond-close"]').click();
+    out.condClosed = !root().querySelector(".h4-conditions");
+    out.passive = txt(root().querySelectorAll(".h4-stats .h4-ln")[3]);
     out.defs = [...root().querySelectorAll(".h4-defs div")].map(d => `${txt(d)}${d.className ? `(${d.className})` : ""}`);
     out.standard = rows();
     const twin = root().querySelector('[data-power="p1"]');
@@ -133,6 +140,61 @@ const assert = require("assert");
     out.noCombat = [txt(root().querySelector(".h4-dock")), rows().find(r => r[0] === "Basic")?.[1]];
     game.combat.started = true;
     Hooks.callAll("updateCombat", game.combat, {}); await settle();
+
+    // ---- Monsters (Q155–Q158) ----
+    window.ChatMessage ??= { getSpeaker: ({ actor }) => ({ alias: actor?.name }) };
+    window.Roll = class { constructor(f) { this.formula = f; } async evaluate() { this.total = window.__d6; return this; }
+      async toMessage(d, o) { window.__rechargeMsg = [d.flavor, o?.rollMode]; return { id: "rm1" }; } };
+    const npower = (id, name, sys) => ({ id, name, type: "power", system: { prepared: true, uses: { value: null, max: "" }, attack: { isAttack: false }, keyWords: [], powerType: "inherent", ...sys },
+      getAttackBonus: async () => 8, update: async d => { window.__itemUpdate = [name, d]; } });
+    const nitems = [
+      npower("n1", "Claw", { actionType: "standard", useType: "atwill", rangeType: "melee", rangePower: "2", attack: { isAttack: true, isBasic: true, def: "ac" } }),
+      npower("n2", "Rending Pounce", { actionType: "standard", useType: "recharge", rechargeRoll: "5", rangeType: "closeBlast", area: "3", uses: { value: 0, max: "1" }, preparedMaxUses: 1, attack: { isAttack: true, def: "ac" } }),
+      npower("n3", "Bloodied Howl", { actionType: "standard", useType: "recharge", rechargeRoll: "", rechargeCondition: "when first bloodied", rangeType: "closeBurst", area: "2", uses: { value: 1, max: "1" }, attack: { isAttack: true, def: "wil" } }),
+      npower("n4", "Savage Retort", { actionType: "reaction", useType: "atwill", rangeType: "melee", rangePower: "1", attack: { isAttack: true, def: "ac" } }),
+      npower("n5", "Stench of the Mire", { actionType: "none", useType: "atwill", rangeType: "", effect: { detail: "<p>Enemies in the aura take <b>−2</b> to saving throws.</p>" } })
+    ];
+    const stalker = { id: "stk", name: "Marsh Stalker", type: "NPC", isOwner: true, img: "icons/svg/mystery-man.svg", appliedEffects: [],
+      system: { attributes: { hp: { value: 85, max: 104 }, temphp: { value: 0 }, init: { value: 5 } }, actionpoints: { value: 1 }, movement: { walk: { value: 7 } },
+        details: { level: 3, exp: 300, saves: { value: 2 }, bloodied: 52, role: { primary: "brute", secondary: "elite", leader: true } }, skills: { prc: { total: 8 } },
+        resistances: { poison: { value: 5 }, fire: { value: -5 }, cold: { value: 0 } }, defences: { ac: { value: 17 }, fort: { value: 16 }, ref: { value: 15 }, wil: { value: 13 } } },
+      items: Object.assign(nitems, { get(id) { return this.find(i => i.id === id); } }), sheet: { render() {} } };
+    const whelp = { id: "wh", name: "Stalker Whelp", type: "NPC", isOwner: true, img: "", appliedEffects: [], items: Object.assign([], { get() {} }),
+      system: { attributes: { hp: { value: 1, max: 1 }, init: { value: 5 } }, movement: { walk: { value: 7 } }, details: { level: 2, saves: { value: 0 }, role: { primary: "skirmisher", secondary: "minion" } }, defences: { ac: { value: 16 } } } };
+    const tok = (id, a) => ({ id, name: a.name, actor: a, document: { texture: { src: "" } } });
+    canvas.tokens.controlled = [tok("t-stk", stalker)];
+    Hooks.callAll("controlToken"); await settle();
+    out.npcPlate = [root().querySelector(".h4-plate").className, txt(root().querySelector(".h4-role"))];
+    out.npcRes = [...root().querySelectorAll(".h4-res span")].map(s => `${s.className}:${txt(s)}`);
+    out.npcLines = [...root().querySelectorAll(".h4-stats .h4-ln")].map(txt);
+    out.npcTabs = [...root().querySelectorAll(".h4-tabs button")].map(b => b.dataset.tab);
+    out.npcCols = rows();
+    out.rechargeShown = [txt(root().querySelector('[data-power="n2"] .h4-roll')), root().querySelectorAll('[data-power="n2"] .fa-dice-five, [data-power="n2"] .fa-dice-six').length, txt(root().querySelector('[data-power="n3"] .h4-rc.cond'))];
+    window.__d6 = 4; root().querySelector('[data-recharge="n2"]').click(); await settle(50);
+    out.rechargeFail = [window.__rechargeMsg, window.__itemUpdate ?? null];
+    window.__d6 = 5; root().querySelector('[data-recharge="n2"]').click(); await settle(50);
+    out.rechargeOk = [window.__rechargeMsg, window.__itemUpdate];
+    root().querySelector('[data-tab="traits"]').click();
+    out.traits = [...root().querySelectorAll(".h4-trait")].map(t => txt(t));
+    root().querySelector('[data-tab="triggered"]').click();
+    out.npcTriggered = rows();
+    // Several selected: a card each; a click shows that one; "‹ 3" goes back to the cards.
+    canvas.tokens.controlled = [tok("t-stk", stalker), tok("t-wh", whelp), { id: "t-aeg", name: "Aegustarion", actor, document: { texture: { src: "" } } }];
+    Hooks.callAll("controlToken"); await settle();
+    out.cards = [...root().querySelectorAll("[data-focus]")].map(c => [c.dataset.focus, txt(c.querySelector(".h4-pc-name small")), !!c.querySelector(".h4-mtag")]);
+    root().querySelector('[data-focus="t-stk"]').click(); await settle();
+    out.focused = [txt(root().querySelector(".h4-plate .fit")), txt(root().querySelector(".h4-back"))];
+    root().querySelector('[data-h4="back"]').click(); await settle();
+    out.backToCards = root().querySelectorAll("[data-focus]").length;
+    // A player never gets a monster's HUD.
+    game.user.isGM = false;
+    canvas.tokens.controlled = [tok("t-stk", stalker)];
+    game.user.character = null;
+    Hooks.callAll("controlToken"); await settle();
+    out.playerNpc = !!root().querySelector(".h4-stats");
+    game.user.isGM = true;
+    canvas.tokens.controlled = [{ actor }];
+    Hooks.callAll("controlToken"); await settle();
 
     // Light theme.
     await game.settings.set(M, "dnd4eHud_theme", "light"); await settle();
@@ -227,7 +289,10 @@ const assert = require("assert");
   assert.deepStrictEqual(r.mounted, [true, true, true, true], "mounted, dark, hotbar and players list moved in");
   assert.strictEqual(r.plate, "Aegustarion Eng Elf Ranger 1");
   assert.strictEqual(r.hp, "21 / 26");
-  assert.deepStrictEqual(r.conds, [["Slowed", true], ["Hunter's Quarry: Gnoll", false], ["Shield of Faith", false]], "conditions; harmful ones marked");
+  assert.deepStrictEqual([r.conds, r.condLine], [[true, false, false], false], "conditions as icons on the portrait, harmful ones framed; no text line");
+  assert.deepStrictEqual(r.condList, [["Slowed", true], ["Hunter's Quarry: Gnoll", false], ["Shield of Faith", false]], "a click lists them");
+  assert.strictEqual(r.condClosed, true);
+  assert.strictEqual(r.passive, "Speed 7Init +4 Passive /", "speed, initiative and passives on their own line");
   assert.deepStrictEqual(r.defs, ["17AC(up)", "13Fort", "15Ref", "12Will"], "a defence raised by an effect is marked");
   assert.deepStrictEqual(r.standard, [["At-Will", ["Nimble Strike", "Twin Strike"]], ["Daily", ["Split the Tree"]],
     ["Basic", ["Melee Basic Attack", "Ranged Basic Attack", "Charge", "Total Defense", "Second Wind", "Aid Another", "Ready"]]], "Standard tab in usage rows; basic actions in combat");
@@ -247,6 +312,20 @@ const assert = require("assert");
   assert.strictEqual(r.itemSheet, "Ranger 01-Twin Strike", "right click opens the power");
   assert.deepStrictEqual(r.noCombat, ["Actions are tracked in combat.", ["Melee Basic Attack", "Ranged Basic Attack"]], "out of combat: no dock, no basic actions");
   assert.strictEqual(r.light, true);
+  assert.deepStrictEqual(r.npcPlate, ["h4-plate role-brute elite", "Level 3 Elite Brute (Leader) · 300 XP"], "monster plate in the role's colour, elite edge; role line");
+  assert.deepStrictEqual(r.npcRes, ["res:Resist 5 poison", "vul:Vulnerable 5 fire"], "resist and vulnerable");
+  assert.deepStrictEqual(r.npcLines, ["HP 85 / 104", "Saves +2AP 1 Spend", "Speed 7Init +5 Perception +8"]);
+  assert.deepStrictEqual(r.npcTabs, ["standard", "move", "minor", "triggered", "traits"]);
+  assert.deepStrictEqual(r.npcCols, [["Recharge", ["Bloodied Howlwhen first bloodied", "Rending Pounce"]], ["Basic", ["Claw"]]], "columns At-Will, Recharge, Basic (basic = the basic-attack flag)");
+  assert.deepStrictEqual(r.rechargeShown, ["Roll", 2, "when first bloodied"], "a used recharge power: Roll with its dice 5-6; a condition recharge shows the condition");
+  assert.deepStrictEqual(r.rechargeFail, [["Rending Pounce does not recharge.", "gmroll"], null], "a 4: no recharge, GM-only roll");
+  assert.deepStrictEqual(r.rechargeOk, [["Rending Pounce recharges.", "gmroll"], ["Rending Pounce", { "system.uses.value": 1 }]], "a 5: the uses refill");
+  assert.deepStrictEqual(r.traits, ["Stench of the MireEnemies in the aura take −2 to saving throws."], "traits with their text");
+  assert.deepStrictEqual(r.npcTriggered, [["At-Will", ["Savage Retort"]]]);
+  assert.deepStrictEqual(r.cards, [["t-stk", "L3 Elite Brute", false], ["t-wh", "L2 Minion Skirmisher", true], ["t-aeg", "Ranger 1", false]], "several selected: a card each, minions marked");
+  assert.deepStrictEqual(r.focused, ["Marsh Stalker", "‹ 3"], "a card shows that one, with a way back");
+  assert.strictEqual(r.backToCards, 3);
+  assert.strictEqual(r.playerNpc, false, "a player never gets a monster's HUD");
   assert.deepStrictEqual(r3.empty, [true, true, 168, true], "nothing selected: the band keeps its size and place, hotbar stays");
   assert.strictEqual(r3.hotTop, r.hotTop, "the macro area does not move between selected and not");
   assert.deepStrictEqual(r3.partyGM, ["Grontar", "Linkedin", "Pebraxeon"], "the party: player characters, not NPCs");

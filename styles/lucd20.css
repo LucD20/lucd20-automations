@@ -2478,7 +2478,7 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-hud4e .h4-players #players { position: static; inset: auto; margin: 0; }
 /* Only the HUD's own buttons: Foundry's hotbar buttons keep their icon font (v0.43.3). */
 .lucd20-hud4e .h4-main button { font: inherit; cursor: pointer; }
-.lucd20-hud4e .h4-por { width: 84px; flex: none; cursor: pointer; background: #000; } .lucd20-hud4e .h4-por img { width: 100%; height: 100%; object-fit: cover; border: 0; display: block; }
+.lucd20-hud4e .h4-por { width: 84px; flex: none; cursor: pointer; background: #000; }
 .lucd20-hud4e .h4-stats { width: 248px; flex: none; display: flex; flex-direction: column; border-left: 1px solid var(--line); }
 .lucd20-hud4e .h4-plate { display: flex; align-items: baseline; gap: 6px; padding: 3px 8px; background: var(--plate); color: #fff; font: 700 14px "DragonHead", Georgia, serif; }
 .lucd20-hud4e .h4-plate .fit { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -2562,7 +2562,7 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-hud4e:is([data-size="narrow"], [data-size="tiny"]) .h4-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: min-content; overflow-y: auto; align-content: start; }
 .lucd20-hud4e:is([data-size="narrow"], [data-size="tiny"]) .h4-stack { overflow: visible; flex: none; }
 /* Tiny: the hotbar sits just above the HUD's right end; the column keeps the dock (icons only). */
-.lucd20-hud4e[data-size="tiny"] .h4-stats { width: 200px; }
+.lucd20-hud4e[data-size="tiny"] .h4-stats { width: 196px; }
 .lucd20-hud4e[data-size="tiny"] .h4-right { width: 118px; position: relative; }
 .lucd20-hud4e[data-size="tiny"] .h4-dock { height: 100%; border-bottom: 0; }
 .lucd20-hud4e[data-size="tiny"] .h4-tiles { grid-template-columns: 1fr; grid-template-rows: repeat(5, 1fr); }
@@ -2571,3 +2571,53 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-hud4e[data-size="tiny"] .h4-dock .h4-none { padding: 8px; }
 .lucd20-hud4e[data-size="tiny"] .h4-hot { position: absolute; right: 0; bottom: calc(100% + 2px); padding: 3px; background: var(--band); border: 1px solid var(--line); }
 .lucd20-hud4e[data-size="tiny"].empty .h4-hot { background: transparent; border-color: transparent; }
+
+/* ---- 4e HUD v0.44.0: conditions as icons on the portrait (Q159) ---- */
+.lucd20-hud4e .h4-por { position: relative; }
+.lucd20-hud4e .h4-por .h4-face { width: 100%; height: 100%; object-fit: cover; border: 0; display: block; }
+.lucd20-hud4e .h4-cicons { position: absolute; left: 2px; top: 2px; right: 2px; display: grid; grid-template-columns: repeat(4, 18px); gap: 2px; justify-content: start; }
+.lucd20-hud4e .h4-cicon { width: 18px; height: 18px; border: 1px solid #000; background: rgba(0, 0, 0, .7); object-fit: contain; cursor: pointer; }
+.lucd20-hud4e .h4-cicon.bad { border-color: #d33; box-shadow: 0 0 0 1px #d33; }
+.lucd20-hud4e .h4-conditions { position: absolute; left: 0; bottom: calc(100% + 4px); z-index: 2; min-width: 260px; max-width: 380px; max-height: 300px; overflow-y: auto;
+  background: var(--bg); color: var(--ink); border: 1px solid var(--edge); border-top: 2px solid var(--plate); box-shadow: 0 4px 14px rgba(0, 0, 0, .5); }
+.lucd20-hud4e .h4-conditions .h4-ch { display: flex; justify-content: space-between; align-items: center; padding: 3px 8px; font-weight: 700; border-bottom: 1px solid var(--line); }
+.lucd20-hud4e .h4-conditions .h4-ch i { cursor: pointer; opacity: .7; }
+.lucd20-hud4e .h4-crow { display: grid; grid-template-columns: 20px 1fr auto; gap: 8px; align-items: center; padding: 3px 8px; border-bottom: 1px solid var(--line); }
+.lucd20-hud4e .h4-crow img { width: 20px; height: 20px; border: 0; object-fit: contain; } .lucd20-hud4e .h4-crow small { color: var(--mute); font-size: 10.5px; }
+.lucd20-hud4e .h4-crow.bad span { color: #d55; }
+/* Narrow and tiny: the portrait comes back as a slim strip that only holds the icons. */
+.lucd20-hud4e:is([data-size="narrow"], [data-size="tiny"]) .h4-por { display: block; width: 44px; }
+.lucd20-hud4e:is([data-size="narrow"], [data-size="tiny"]) .h4-por .h4-face { opacity: .35; }
+.lucd20-hud4e:is([data-size="narrow"], [data-size="tiny"]) .h4-cicons { grid-template-columns: repeat(2, 18px); }
+.lucd20-hud4e .h4-stats .h4-ln { padding-top: 2px; padding-bottom: 2px; }
+
+/* ---- monsters (Q155–Q158) ---- */
+.lucd20-hud4e .role-brute { --role: #7a2a1c; } .lucd20-hud4e .role-soldier { --role: #2c4766; } .lucd20-hud4e .role-artillery { --role: #6e521c; }
+.lucd20-hud4e .role-lurker { --role: #4a3a5e; } .lucd20-hud4e .role-skirmisher { --role: #2e5b39; } .lucd20-hud4e .role-controller { --role: #5c2c52; }
+.lucd20-hud4e .h4-plate[class*="role-"] { background: var(--role, var(--plate)); }
+.lucd20-hud4e .h4-plate.elite { box-shadow: inset 0 -2px 0 #d9b26a; } .lucd20-hud4e .h4-plate.solo { box-shadow: inset 0 -3px 0 #f0c674, inset 0 2px 0 #f0c674; }
+.lucd20-hud4e .h4-back { flex: none; margin-right: 6px; padding: 0 5px; border: 1px solid rgba(255, 255, 255, .5); background: transparent; color: #fff; font: 600 11px "Signika", sans-serif; line-height: 16px; height: auto; width: auto; }
+.lucd20-hud4e .h4-role { padding: 1px 8px; font-size: 10.5px; color: var(--mute); border-top: 1px solid var(--line); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lucd20-hud4e .h4-role b { color: var(--ink); }
+.lucd20-hud4e .h4-res { display: flex; gap: 3px; padding: 2px 8px; border-top: 1px solid var(--line); overflow: hidden; }
+.lucd20-hud4e .h4-res span { font-size: 10px; line-height: 15px; padding: 0 5px; border: 1px solid var(--line); white-space: nowrap; }
+.lucd20-hud4e .h4-res .res { border-color: #3d6b9a; color: #5a8fc4; } .lucd20-hud4e .h4-res .vul { border-color: #b5651d; color: #d98a3d; } .lucd20-hud4e .h4-res .imm { color: var(--mute); }
+.lucd20-hud4e .h4-minion { flex: 1; text-align: center; font-weight: 700; letter-spacing: .04em; color: var(--mute); border: 1px dashed var(--line); line-height: 16px; }
+.lucd20-hud4e .u-rech { --u: #8e5a12; }
+.lucd20-hud4e .h4-cols.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.lucd20-hud4e .h4-rc { margin-left: 5px; font-weight: 400; font-size: 11px; } .lucd20-hud4e .h4-rc i { margin-left: 1px; }
+.lucd20-hud4e .h4-rc.cond { font-size: 9.5px; opacity: .9; }
+.lucd20-hud4e .h4-roll { margin-left: auto; flex: none; border: 1px solid var(--gold); color: var(--gold); background: var(--btn); font: 600 10px "Signika", sans-serif; padding: 0 5px; line-height: 13px; height: auto; width: auto; cursor: pointer; }
+.lucd20-hud4e .h4-pw.used.rech { opacity: .8; }
+.lucd20-hud4e .h4-traits { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; align-content: start; }
+.lucd20-hud4e:is([data-size="narrow"], [data-size="tiny"]) .h4-traits { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.lucd20-hud4e .h4-trait { border: 1px solid var(--edge); background: var(--bg); cursor: pointer; }
+.lucd20-hud4e .h4-trait .h4-h { display: flex; justify-content: space-between; gap: 6px; padding: 2px 6px; background: #3f4f5f; color: #fff; font-weight: 700; }
+.lucd20-hud4e .h4-trait .h4-h .fit { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .lucd20-hud4e .h4-trait .h4-h small { flex: none; font-weight: 400; font-size: 10px; }
+.lucd20-hud4e .h4-trait p { margin: 0; padding: 2px 6px 3px; font-size: 10.5px; line-height: 1.3; }
+.lucd20-hud4e .h4-pc .h4-edge { width: 5px; align-self: stretch; flex: none; background: var(--role); }
+.lucd20-hud4e .h4-pc .h4-mtag { margin: 0 4px 4px; text-align: center; font-weight: 700; font-size: 10.5px; color: var(--mute); border: 1px dashed var(--line); }
+.lucd20-hud4e .h4-pc .h4-pc-name small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lucd20-hud4e[data-size="tiny"] .h4-por { width: 38px; }
+.lucd20-hud4e[data-size="tiny"] .h4-cicons { grid-template-columns: repeat(2, 16px); left: 1px; top: 1px; }
+.lucd20-hud4e[data-size="tiny"] .h4-cicon { width: 16px; height: 16px; }

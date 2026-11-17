@@ -1841,3 +1841,27 @@ Decisions Q155–Q158, all as recommended:
 Mockup: `docs/mockups/hud-4e-npc.html` (+ `.png`), drawn with the released
 HUD's stylesheet: A one monster, Standard tab (dark); B bloodied, Traits tab
 (light); C several monsters selected.
+
+**Q159 (owner: five conditions did not fit the text line):** conditions and
+effects become **icons on the portrait** (the effect's image, 4 per row,
+harmful ones framed red); clicking one lists every condition with its duration
+(dnd4e's `durationType` label, else Foundry's) just above the HUD. Narrow and
+tiny keep a slim portrait strip for the icons. The freed line splits AP from
+Speed / Init, and PCs get passive Perception / Insight.
+
+**Built v0.44.0 (phase 40): the monster HUD** (owner: "the NPC is good"),
+`hud-data.mjs` / `hud.mjs`, `test39.js` extended:
+- GM only. One selected PC or NPC: its HUD; several selected: a card each
+  (role colour on the edge, "L3 Elite Brute", defences, saves, speed, init,
+  HP, MINION for minions); a card shows that one, "‹ 3" goes back; a new
+  selection starts from the cards. Players never get an NPC's HUD.
+- The monster block, the tabs and columns as in §17.1. Free actions go in
+  Triggered; powers with no action are Traits (their text from the effect,
+  else the description, about 220 characters).
+- Recharge: dice for "Recharge N" (a recharge power with neither roll nor
+  condition recharges on a 6, as the sheet does); the condition text
+  otherwise. Used: a Roll button, a d6 whispered to the GMs, after Dice So
+  Nice; on N or more `system.uses.value` goes back to `preparedMaxUses`.
+- (verify) in the owner's world: `details.role`, `details.saves`,
+  `skills.prc.total`, `resistances.<type>.value` (resist > 0, vulnerable < 0)
+  and `.immune` on real monsters; `durationType` labels on conditions.

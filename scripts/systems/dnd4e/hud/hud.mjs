@@ -3,7 +3,8 @@ import { L, tokenForActor } from "../utils.mjs";
 import { getState, remaining, isCombatantsTurn, canModify, combatantForActor, togglePip } from "../actions/state.mjs";
 import { BASIC_ACTIONS, useBasicAction } from "../actions/basic.mjs";
 import { defenceModifiers } from "../sheet-mods.mjs";
-import { buildModel, TABS, ROWS } from "./hud-data.mjs";
+import { buildModel, TABS, ROWS, NPC_TABS, NPC_ROWS } from "./hud-data.mjs";
+import { waitForDice } from "../../../core/dice.js";
 
 /*
  * D&D 4e HUD (phase 39, docs/PLAN.md §17; mockup docs/mockups/hud-4e-sheet.html, take C):
@@ -25,24 +26,44 @@ const H = (key, data) => localize(`LUCD20.Dnd4eHud.${key}`, data);
 const esc = (v) => Handlebars.escapeExpression(String(v ?? ""));
 const PC = "Player Character";
 const ICON = { melee: "fa-khanda", ranged: "fa-bullseye", meleeRanged: "fa-khanda", close: "fa-burst", area: "fa-circle-dot", personal: "fa-user" };
-const TAB_ICON = { standard: "fa-hand-fist", move: "fa-person-walking", minor: "fa-hand", free: "fa-feather", triggered: "fa-bolt-lightning" };
+const TAB_ICON = { standard: "fa-hand-fist", move: "fa-person-walking", minor: "fa-hand", free: "fa-feather", triggered: "fa-bolt-lightning", traits: "fa-paw" };
+const NPC = "NPC";
+const DIE = ["", "one", "two", "three", "four", "five", "six"];
 const DOCK = [["standard", "fa-hand-fist"], ["move", "fa-person-walking"], ["minor", "fa-hand"], ["immediate", "fa-bolt-lightning"], ["opportunity", "fa-eye"]];
 // The module's basic actions (actions/basic.mjs), shown in the Basic row of their tab while in combat.
 const BASIC_BY_TAB = { standard: ["charge", "totalDefense", "secondWind", "aidAnother", "ready"], move: ["walk", "shift", "run", "standUp"] };
 
-const st = { feature: null, root: null, tab: "standard", model: null, actor: null, seq: 0, timer: null, homes: new Map() };
+const st = { feature: null, root: null, tab: "standard", model: null, actor: null, seq: 0, timer: null, homes: new Map(), focus: null, list: null, condOpen: false };
 
 /* -------------------------------------------- */
 /*  Whose HUD                                   */
 /* -------------------------------------------- */
 
-/** Q152: the one selected PC the user owns; else (players only) their assigned character. */
-export function currentActor() {
-	const pcs = (canvas?.tokens?.controlled ?? []).filter((t) => t.actor?.type === PC && t.actor.isOwner);
-	if (pcs.length === 1) return pcs[0].actor;
-	if (pcs.length > 1 || game.user.isGM) return null;
+/**
+ * What the HUD shows: { actor, list } (list: the selected tokens when several are, for the GM).
+ * Players (Q152): the one selected PC they own, else their assigned character; never a monster.
+ * The GM (Q155): one selected PC or NPC; several: their cards, until one is picked (st.focus).
+ */
+export function currentView() {
+	const ctl = canvas?.tokens?.controlled ?? [];
+	if (game.user.isGM) {
+		const toks = ctl.filter((t) => t.actor && [PC, NPC].includes(t.actor.type));
+		if (toks.length === 1) return { actor: toks[0].actor, list: null };
+		if (toks.length > 1) {
+			const focused = toks.find((t) => t.id === st.focus);
+			return { actor: focused?.actor ?? null, list: toks };
+		}
+		return { actor: null, list: null };
+	}
+	const pcs = ctl.filter((t) => t.actor?.type === PC && t.actor.isOwner);
+	if (pcs.length === 1) return { actor: pcs[0].actor, list: null };
+	if (pcs.length > 1) return { actor: null, list: null };
 	const own = game.user.character;
-	return own?.type === PC && own.isOwner ? own : null;
+	return { actor: own?.type === PC && own.isOwner ? own : null, list: null };
+}
+
+export function currentActor() {
+	return currentView().actor;
 }
 
 /* -------------------------------------------- */
@@ -62,6 +83,8 @@ export function mountHud(feature) {
 		st.root.addEventListener("contextmenu", onContext);
 	}
 	const redraw = () => schedule();
+	// A new selection starts from the cards again (Q155).
+	feature.on("controlToken", () => { st.focus = null; st.condOpen = false; });
 	for (const hook of ["controlToken", "updateActor", "createItem", "updateItem", "deleteItem", "createActiveEffect", "updateActiveEffect",
 		"deleteActiveEffect", "createCombatant", "updateCombatant", "deleteCombatant", "updateCombat", "deleteCombat", "combatStart", "updateUser", "canvasReady", "updateToken"]) {
 		feature.on(hook, redraw);
@@ -181,14 +204,16 @@ export async function draw() {
 	const root = st.root;
 	if (!root) return;
 	const seq = ++st.seq;
-	const actor = currentActor();
+	const { actor, list } = currentView();
+	st.list = list;
 	const main = root.querySelector(".h4-main");
 	root.classList.toggle("empty", !actor);
 	if (!actor) {
 		st.actor = null; st.model = null;
+		root.querySelector(".h4-conditions")?.remove();
 		// v0.43.3: the band keeps its size and place with nobody shown (owner: "make elements be fixed").
-		// v0.43.4 (owner, as PF2e HUD does): with nobody selected the band shows the party.
-		main.innerHTML = partyStrip();
+		// v0.43.4 (owner, as PF2e HUD does): with nobody selected the band shows the party; several selected: their cards.
+		main.innerHTML = list ? selectionStrip(list) : partyStrip();
 		fitAll(main);
 		root.querySelector(".h4-dock").innerHTML = "";
 		return placeAll();
@@ -209,8 +234,9 @@ function render() {
 	if (!root || !m || !actor) return;
 	const combatant = combatantForActor(actor);
 	const inCombat = !!combatant?.combat?.started;
-	root.querySelector(".h4-main").innerHTML = `${portrait(m)}${stats(m)}${powers(m, inCombat)}`;
+	root.querySelector(".h4-main").innerHTML = `${portrait(m)}${m.kind === "npc" ? npcStats(m) : stats(m)}${powers(m, inCombat)}`;
 	root.querySelector(".h4-dock").innerHTML = dock(combatant, inCombat);
+	conditionList(m);
 	fitAll(root);
 }
 
@@ -242,6 +268,39 @@ function partyStrip() {
 	}).join("")}</div>`;
 }
 
+/** Several tokens selected (GM): a card for each; clicking one shows its HUD. */
+function selectionStrip(tokens) {
+	return `<div class="h4-party">${tokens.map((t) => {
+		const a = t.actor, s = a.system ?? {}, d = s.details ?? {}, hp = s.attributes?.hp ?? {};
+		const npc = a.type === NPC, role = d.role ?? {};
+		const value = Number(hp.value) || 0, max = Number(hp.max) || 0;
+		const minion = npc && (role.secondary === "minion" || max === 1);
+		const pct = max > 0 ? Math.max(0, Math.min(100, (100 * value) / max)) : 0;
+		const def = (k) => esc(s.defences?.[k]?.value ?? "");
+		const sub = npc ? roleText(d, true) : [d.class, d.level].filter((v) => v !== undefined && v !== "").join(" ");
+		const line = npc
+			? `<span>${H("Saves")} ${signed(d.saves?.value)}</span><span>${H("Speed")} ${esc(s.movement?.walk?.value ?? "")}</span><span>${H("Init")} ${esc(signed(s.attributes?.init?.value))}</span>`
+			: `<span>${H("Surges")} ${Number(d.surges?.value) || 0}</span><span>${H("AP")} ${Number(s.actionpoints?.value) || 0}</span><span>${H("Speed")} ${esc(s.movement?.walk?.value ?? "")}</span>`;
+		return `<div class="h4-pc${minion ? " minion" : ""}" data-focus="${t.id}">
+			<div class="h4-pc-top">${npc ? `<span class="h4-edge role-${esc(role.primary)}"></span>` : ""}<img src="${esc(t.document?.texture?.src || a.img)}" alt=""><div class="h4-pc-name"><b class="fit">${esc(t.name ?? a.name)}</b><small>${esc(sub)}</small></div></div>
+			<div class="h4-pc-defs"><span><small>AC</small>${def("ac")}</span><span><small>Fort</small>${def("fort")}</span><span><small>Ref</small>${def("ref")}</span><span><small>Will</small>${def("wil")}</span></div>
+			<div class="h4-pc-line">${line}</div>
+			${minion ? `<div class="h4-mtag">${H("Minion")}</div>` : `<div class="h4-hp"><div class="f" style="width:${pct}%"></div><div class="bl" style="left:50%"></div><span>${value} / ${max}</span></div>`}
+		</div>`;
+	}).join("")}</div>`;
+}
+
+/** "Level 3 Elite Brute (Leader)" (short: "L3 Elite Brute"). */
+function roleText(d, short = false) {
+	const role = d.role ?? {};
+	const parts = [];
+	if (role.secondary && role.secondary !== "standard") parts.push(H(`Role.${role.secondary}`));
+	if (role.primary) parts.push(H(`Role.${role.primary}`));
+	const lvl = short ? `L${d.level ?? ""}` : H("LevelN", { n: d.level ?? "" });
+	return `${lvl} ${parts.join(" ")}${role.leader && !short ? ` ${H("Leader")}` : ""}`.trim();
+}
+const signed = (v) => (v === "" || v === null || v === undefined ? "" : Number(v) >= 0 ? `+${Number(v)}` : String(v));
+
 /** A party card: select that character's token (the HUD then shows it); no token here: its sheet. */
 function onParty(id, sheet = false) {
 	const actor = game.actors?.get(id);
@@ -251,7 +310,23 @@ function onParty(id, sheet = false) {
 	actor.sheet?.render(true);
 }
 
-const portrait = (m) => `<div class="h4-por" data-h4="sheet"><img src="${esc(m.img)}" alt=""></div>`;
+/** The portrait, with the conditions and effects as icons over it (Q159; red frame = harmful). */
+function portrait(m) {
+	const icons = m.conditions.map((c, i) => `<img class="h4-cicon${c.bad ? " bad" : ""}" data-cond="${i}" src="${esc(c.img)}" alt="">`).join("");
+	return `<div class="h4-por" data-h4="sheet"><img class="h4-face" src="${esc(m.img)}" alt="">${icons ? `<div class="h4-cicons">${icons}</div>` : ""}</div>`;
+}
+
+/** Clicking a condition icon: every condition with its duration, just above the HUD. */
+function conditionList(m) {
+	const root = st.root;
+	root.querySelector(".h4-conditions")?.remove();
+	if (!st.condOpen || !m.conditions.length) return;
+	const box = document.createElement("div");
+	box.className = "h4-conditions";
+	box.innerHTML = `<div class="h4-ch">${H("Conditions")}<i class="fa-solid fa-xmark" data-h4="cond-close"></i></div>${m.conditions.map((c) => `<div class="h4-crow${c.bad ? " bad" : ""}">
+		<img src="${esc(c.img)}" alt=""><span>${esc(c.name)}</span><small>${esc(c.duration)}</small></div>`).join("")}`;
+	root.append(box);
+}
 
 function hpBar(m) {
 	const { value, max, temp } = m.hp;
@@ -262,7 +337,6 @@ function hpBar(m) {
 }
 
 function stats(m) {
-	const conds = m.conditions.length ? `<div class="h4-conds">${m.conditions.map((c) => `<span class="${c.bad ? "bad" : ""}">${esc(c.name)}</span>`).join("")}</div>` : "";
 	const surgeLine = m.dying
 		? `<div class="h4-ln"><b class="h4-red">${H("Dying")}</b><span class="h4-death">${H("DeathSaves")} ${Array.from({ length: m.deathMax }, (_, i) => `<i class="${i < m.deathFails ? "x" : ""}"></i>`).join("")}</span>
 			<button type="button" class="h4-btn" data-h4="death">${H("Roll")}</button></div>`
@@ -270,12 +344,32 @@ function stats(m) {
 			<button type="button" class="h4-btn${m.secondWindUsed ? " done" : ""}" data-h4="sw">${H("SecondWind")}</button></div>`;
 	return `<div class="h4-stats">
 		<div class="h4-plate"><span class="fit">${esc(m.name)}</span><small>${esc(m.sub)}</small></div>
-		<div class="h4-ln"><span>${H("HP")}</span>${hpBar(m)}</div>${conds}${surgeLine}
-		<div class="h4-ln"><span><b>${H("AP")}</b> ${m.ap}</span><button type="button" class="h4-btn" data-h4="ap" ${m.ap < 1 ? "disabled" : ""}>${H("Spend")}</button>
-			<span class="h4-push"><b>${H("Speed")}</b> ${esc(m.speed)}</span><span><b>${H("Init")}</b> ${esc(signedInit(m.init))}</span></div>
+		<div class="h4-ln"><span>${H("HP")}</span>${hpBar(m)}</div>${surgeLine}
+		<div class="h4-ln"><span><b>${H("AP")}</b> ${m.ap}</span><button type="button" class="h4-btn" data-h4="ap" ${m.ap < 1 ? "disabled" : ""}>${H("Spend")}</button></div>
+		<div class="h4-ln"><span><b>${H("Speed")}</b> ${esc(m.speed)}</span><span><b>${H("Init")}</b> ${esc(signedInit(m.init))}</span>
+			<span class="h4-push" >${H("Passive")} <b>${esc(m.passive.perception)}</b> / <b>${esc(m.passive.insight)}</b></span></div>
 		<div class="h4-defs">${m.defences.map((d) => `<div class="${d.mod > 0 ? "up" : d.mod < 0 ? "dn" : ""}"><b>${esc(d.value)}</b><small>${d.label}</small></div>`).join("")}</div>
 	</div>`;
 }
+/** The monster block (Q158). */
+function npcStats(m) {
+	const r = m.role ?? {};
+	const plate = `role-${esc(r.primary)}${r.secondary === "elite" ? " elite" : r.secondary === "solo" ? " solo" : ""}`;
+	const back = st.list ? `<button type="button" class="h4-back" data-h4="back">‹ ${st.list.length}</button>` : "";
+	const res = m.resistances.length ? `<div class="h4-res">${m.resistances.map((x) => `<span class="${x.kind}">${esc(H(`Res.${x.kind}`, { value: x.value || "", type: x.type }).replace(/\s+/g, " "))}</span>`).join("")}</div>` : "";
+	const hpLine = m.minion ? `<span class="h4-minion">${H("Minion")}</span>` : hpBar(m);
+	return `<div class="h4-stats npc">
+		<div class="h4-plate ${plate}">${back}<span class="fit">${esc(m.name)}</span></div>
+		<div class="h4-role"><b>${esc(roleText({ role: r, level: m.level }))}</b>${m.xp !== "" ? ` · ${esc(m.xp)} ${H("XP")}` : ""}</div>
+		<div class="h4-ln"><span>${H("HP")}</span>${hpLine}</div>${res}
+		<div class="h4-ln"><span><b>${H("Saves")}</b> ${esc(signed(m.saves))}</span><span class="h4-push"><b>${H("AP")}</b> ${m.ap}</span>
+			<button type="button" class="h4-btn" data-h4="ap" ${m.ap < 1 ? "disabled" : ""}>${H("Spend")}</button></div>
+		<div class="h4-ln"><span><b>${H("Speed")}</b> ${esc(m.speed)}</span><span><b>${H("Init")}</b> ${esc(signedInit(m.init))}</span>
+			<span class="h4-push"><b>${H("Perception")}</b> ${esc(signed(m.perception))}</span></div>
+		<div class="h4-defs">${m.defences.map((d) => `<div class="${d.mod > 0 ? "up" : d.mod < 0 ? "dn" : ""}"><b>${esc(d.value)}</b><small>${d.label}</small></div>`).join("")}</div>
+	</div>`;
+}
+
 const signedInit = (v) => (v === "" || v === null || v === undefined ? "" : Number(v) >= 0 ? `+${Number(v)}` : String(v));
 
 function rangeHTML(r) {
@@ -287,8 +381,17 @@ function rangeHTML(r) {
 
 function powerChip(p) {
 	const pips = p.uses && p.uses.max > 1 ? `<span class="h4-uses">${Array.from({ length: p.uses.max }, (_, i) => `<i class="${i < p.uses.left ? "full" : ""}"></i>`).join("")}</span>` : "";
-	return `<div class="h4-pw u-${p.row}${p.used ? " used" : ""}" data-power="${p.id}">
-		<div class="h4-h fit">${esc(p.name)}${pips}</div><div class="h4-k"><span class="rg fit">${rangeHTML(p.range)}</span><span class="at">${esc(p.attack)}</span></div></div>`;
+	// Q156: a recharge power shows its dice (or condition); used, a Roll button.
+	const rc = p.recharge;
+	const dice = rc?.roll ? `<span class="h4-rc">${Array.from({ length: 7 - rc.roll }, (_, i) => `<i class="fa-solid fa-dice-${DIE[rc.roll + i]}"></i>`).join("")}</span>` : "";
+	const cond = rc?.cond ? `<span class="h4-rc cond">${esc(rc.cond)}</span>` : "";
+	const right = p.used && rc?.roll ? `<button type="button" class="h4-roll" data-recharge="${p.id}">${H("Roll")} ${dice}</button>` : `<span class="at">${esc(p.attack)}</span>`;
+	return `<div class="h4-pw u-${p.row}${p.used ? " used" : ""}${rc ? " rech" : ""}" data-power="${p.id}">
+		<div class="h4-h fit">${esc(p.name)}${pips}${p.used && rc?.roll ? "" : dice}${cond}</div><div class="h4-k"><span class="rg fit">${rangeHTML(p.range)}</span>${right}</div></div>`;
+}
+
+function traitCard(p) {
+	return `<div class="h4-trait" data-power="${p.id}"><div class="h4-h"><span class="fit">${esc(p.name)}</span><small>${rangeHTML(p.range)}</small></div><p>${esc(p.text)}</p></div>`;
 }
 
 function basicChip(key) {
@@ -298,20 +401,23 @@ function basicChip(key) {
 }
 
 function powers(m, inCombat) {
+	const npc = m.kind === "npc";
+	const tabs = npc ? NPC_TABS : TABS, rows = npc ? NPC_ROWS : ROWS;
 	const basics = (tab) => (inCombat ? (BASIC_BY_TAB[tab] ?? []).filter((k) => BASIC_ACTIONS[k]) : []);
 	const count = (tab) => m.powers.filter((p) => p.tab === tab).length + basics(tab).length;
-	if (!TABS.includes(st.tab)) st.tab = "standard";
+	if (!tabs.includes(st.tab)) st.tab = "standard";
 	const tab = st.tab;
 	const list = m.powers.filter((p) => p.tab === tab);
+	const tabBar = `<div class="h4-tabs">${tabs.map((t) => `<button type="button" data-tab="${t}" class="${t === tab ? "act" : ""}">
+		<i class="fa-solid ${TAB_ICON[t]}"></i><span class="lbl"> ${H(`Tab.${t}`)}</span><span class="n">${count(t)}</span></button>`).join("")}</div>`;
+	if (tab === "traits") return `<div class="h4-powers">${tabBar}<div class="h4-traits">${list.map(traitCard).join("") || `<span class="h4-dash">—</span>`}</div></div>`;
 	// v0.43.3 (owner): usage in columns, which grow downward (and scroll) as powers are added.
-	const cols = ROWS.map((row) => {
+	const cols = rows.map((row) => {
 		const chips = list.filter((p) => p.row === row).map(powerChip);
 		if (row === "basic") chips.push(...basics(tab).map(basicChip));
 		return `<div class="h4-col"><b class="u-${row}">${H(`Row.${row}`)}</b><div class="h4-stack">${chips.join("") || `<span class="h4-dash">—</span>`}</div></div>`;
 	}).join("");
-	return `<div class="h4-powers"><div class="h4-tabs">${TABS.map((t) => `<button type="button" data-tab="${t}" class="${t === tab ? "act" : ""}">
-		<i class="fa-solid ${TAB_ICON[t]}"></i><span class="lbl"> ${H(`Tab.${t}`)}</span><span class="n">${count(t)}</span></button>`).join("")}</div>
-		<div class="h4-cols">${cols}</div></div>`;
+	return `<div class="h4-powers">${tabBar}<div class="h4-cols${npc ? " three" : ""}">${cols}</div></div>`;
 }
 
 function dock(combatant, inCombat) {
@@ -347,6 +453,15 @@ export function fitAll(root) {
 async function onClick(event) {
 	const card = event.target.closest("[data-party]");
 	if (card) { event.preventDefault(); return onParty(card.dataset.party); }
+	const pick = event.target.closest("[data-focus]");
+	if (pick) { event.preventDefault(); st.focus = pick.dataset.focus; return schedule(0); }
+	const cond = event.target.closest("[data-cond]");
+	if (cond) { event.preventDefault(); event.stopPropagation(); st.condOpen = !st.condOpen; return conditionList(st.model); }
+	const rech = event.target.closest("[data-recharge]");
+	if (rech && st.actor) {
+		event.preventDefault(); event.stopPropagation();
+		return rollRecharge(st.actor, st.actor.items.get(rech.dataset.recharge)).catch((err) => console.error("lucd20-automations | 4e HUD recharge", err));
+	}
 	const el = event.target.closest("[data-tab], [data-power], [data-basic], [data-pip], [data-h4]");
 	const actor = st.actor;
 	if (!el || !actor) return;
@@ -369,6 +484,8 @@ async function onClick(event) {
 		if (el.dataset.pip) return inCombat && canModify(combatant) ? await togglePip(combatant, el.dataset.pip) : undefined;
 		switch (el.dataset.h4) {
 			case "sheet": return actor.sheet?.render(true);
+			case "back": st.focus = null; return schedule(0);
+			case "cond-close": st.condOpen = false; return conditionList(st.model);
 			case "sw": return inCombat ? await useBasicAction("secondWind", combatant) : await BASIC_ACTIONS.secondWind.run(actor);
 			case "death": return await actor.rollDeathSave?.(event, { isFF: false });
 			case "ap":
@@ -380,6 +497,24 @@ async function onClick(event) {
 	}
 }
 
+/**
+ * Q156: roll a used recharge power's d6, as dnd4e's sheet does (on its number or more the uses refill),
+ * whispered to the GMs, after the dice of Dice So Nice.
+ */
+export async function rollRecharge(actor, item) {
+	if (!actor || !item || !game.user.isGM) return;
+	const need = parseInt(item.system?.rechargeRoll, 10) || 6;
+	const roll = await new Roll("1d6").evaluate();
+	const ok = roll.total >= need;
+	const message = await roll.toMessage({
+		speaker: ChatMessage.getSpeaker?.({ actor }) ?? { alias: actor.name },
+		flavor: H(ok ? "RechargeYes" : "RechargeNo", { name: esc(item.name) }),
+	}, { rollMode: "gmroll" });
+	await waitForDice(message?.id);
+	if (ok) await item.update({ "system.uses.value": Number(item.system?.preparedMaxUses) || Number(item.system?.uses?.max) || 1 });
+	return ok;
+}
+
 function onContext(event) {
 	const card = event.target.closest("[data-party]");
 	if (card) { event.preventDefault(); return onParty(card.dataset.party, true); }
@@ -389,4 +524,4 @@ function onContext(event) {
 	st.actor.items.get(el.dataset.power)?.sheet?.render(true);
 }
 
-export const _test = { st, render, currentActor, tokenForActor, partyActors, sizeFor };
+export const _test = { st, render, currentActor, currentView, tokenForActor, partyActors, sizeFor, rollRecharge };

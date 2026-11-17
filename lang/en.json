@@ -734,7 +734,7 @@
       },
       "dnd4eHud": {
         "Name": "4e HUD",
-        "Hint": "A band across the bottom of the screen for the selected character (else your own): HP, conditions, healing surges and Second Wind (death saves at 0 HP), Action Points with Spend, speed, initiative and defences; powers in tabs by action type, in At-Will, Encounter, Daily and Basic rows (click to use, right-click to open); the action dock. Replaces the floating action panel. Only for you.",
+        "Hint": "A band across the bottom of the screen for the selected character (else your own): HP, conditions as icons on the portrait, healing surges and Second Wind (death saves at 0 HP), Action Points with Spend, speed, initiative and defences; powers in tabs by action type, in At-Will, Encounter, Daily and Basic rows (click to use, right-click to open); the action dock. Replaces the floating action panel. For the GM, monsters too (role, saves, resistances, recharge powers, traits); several tokens selected show a card each. Only for you.",
         "Setting": {
           "theme": {
             "Name": "Theme",
@@ -1700,13 +1700,15 @@
         "move": "Move",
         "minor": "Minor",
         "free": "Free",
-        "triggered": "Triggered"
+        "triggered": "Triggered",
+        "traits": "Traits"
       },
       "Row": {
         "atwill": "At-Will",
         "enc": "Encounter",
         "daily": "Daily",
-        "basic": "Basic"
+        "basic": "Basic",
+        "rech": "Recharge"
       },
       "Dock": {
         "standard": "Standard",
@@ -1719,7 +1721,33 @@
       "NotInCombat": "Actions are tracked in combat.",
       "APUsed": "{name} already spent an Action Point this encounter.",
       "EmptyGM": "Select a character's token to see its HUD.",
-      "EmptyPlayer": "No character: select your token, or ask the GM to assign you one."
+      "EmptyPlayer": "No character: select your token, or ask the GM to assign you one.",
+      "Saves": "Saves",
+      "Perception": "Perception",
+      "Passive": "Passive",
+      "Minion": "MINION",
+      "Conditions": "Conditions and effects",
+      "LevelN": "Level {n}",
+      "Leader": "(Leader)",
+      "XP": "XP",
+      "Role": {
+        "brute": "Brute",
+        "soldier": "Soldier",
+        "artillery": "Artillery",
+        "lurker": "Lurker",
+        "skirmisher": "Skirmisher",
+        "controller": "Controller",
+        "elite": "Elite",
+        "solo": "Solo",
+        "minion": "Minion"
+      },
+      "Res": {
+        "res": "Resist {value} {type}",
+        "vul": "Vulnerable {value} {type}",
+        "imm": "Immune {type}"
+      },
+      "RechargeYes": "{name} recharges.",
+      "RechargeNo": "{name} does not recharge."
     }
   },
   "DND4EAUTO": {

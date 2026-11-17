@@ -81,6 +81,7 @@ export const FEATURE_ORDER = [
   { id: "pf2eSustain", category: "pf2e", phase: 49, systems: ["pf2e"] },
   { id: "pf2eHands", category: "pf2e", phase: 50, systems: ["pf2e"] },
   { id: "pf2eCover", category: "pf2e", phase: 54, systems: ["pf2e"] },
+  { id: "pf2eAreas", category: "pf2e", phase: 55, systems: ["pf2e"] },
   { id: "dnd4eClassFeatures", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
   { id: "dnd4eCover", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
   { id: "dnd4eActionTracker", category: "dnd4e", phase: 26, systems: ["dnd4e"] },

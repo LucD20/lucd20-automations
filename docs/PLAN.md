@@ -1940,5 +1940,9 @@ and `systems/dnd4e/damage-estimate.mjs`, `test52.js`); ledger §18. Damage
 Log: its PF2e-only setting no longer read in other systems.
 
 **v0.58.0 (phase 54): PF2e cover for attack rolls** (`pf2eCover`,
-`scripts/systems/pf2e/cover.js`, `test53.js`); ledger §19. Next: cover for
-areas (Reflex saves).
+`scripts/systems/pf2e/cover.js`, `test53.js`); ledger §19. v0.59–0.60: areas
+(Reflex saves), areas reaching past wall ends.
+
+**v0.61.0 (phase 55): PF2e effect areas** (`pf2eAreas`,
+`scripts/systems/pf2e/area.js`, `test54.js`): the 25% reach rule, a targeting
+window replacing Toolbelt's, cover on hover, the exact reach; ledger §20.

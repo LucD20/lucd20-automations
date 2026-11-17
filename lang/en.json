@@ -826,6 +826,15 @@
           "areaReach": { "Name": "Areas reach past wall ends", "Hint": "PF2e leaves a square out of an area when the line to its center hits a wall, so a creature partly behind a wall's end is never targeted. On: the square counts when a clear line reaches any part of it, and the creature gets cover instead." }
         }
       },
+      "pf2eAreas": {
+        "Name": "Effect Areas",
+        "Hint": "Placing an area opens a small window: Enemies / Allies / All / None, include me, include neutral, remove the area after; the creatures in the area (counting squares partly behind wall ends, see Cover) are targeted and set on the spell's message for Toolbelt's save rows. Hovering an area shows the cover toward each creature in it; a light overlay shows exactly what the area reaches. Replaces Toolbelt's template targeting (switch that option off).",
+        "Setting": {
+          "targeting": { "Name": "Target window", "Hint": "Ask whom to target when an area is placed." },
+          "hover": { "Name": "Cover on hover", "Hint": "While hovering an area, lines to the creatures in it with their cover (only you see them)." },
+          "reach": { "Name": "Exact reach", "Hint": "A light overlay of the area's shape with what walls cut off removed." }
+        }
+      },
       "pf2ePunishingShove": {
         "Name": "Punishing Shove (Guardian)",
         "Hint": "When a creature with Punishing Shove succeeds at a Shove, after the dice the shoved creature's bludgeoning damage is rolled (Strength modifier, +2 / +6 / +12 at expert / master / legendary Athletics; doubled on a critical success), to apply with PF2e's own buttons."
@@ -1835,6 +1844,11 @@
         "Give": "Give",
         "NoOne": "No one",
         "Replaced": "Replaced by a new signal."
+      },
+      "Area": {
+        "Title": "Area",
+        "Targets": { "enemies": "Enemies", "allies": "Allies", "all": "All", "none": "None" },
+        "Choice": { "self": "Include me", "neutral": "Include neutral", "dismiss": "Remove the area after" }
       },
       "Cover": {
         "Level": { "none": "No cover", "lesser": "Lesser cover", "standard": "Standard cover", "greater": "Greater cover" },

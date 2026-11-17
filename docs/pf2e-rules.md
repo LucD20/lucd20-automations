@@ -27,7 +27,8 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 | 16 | Roll chances, PF2e and 4e (replaces PF2e Chances) | built v0.57.1 | `rollChances` |
 | 17 | Modifiers Matter, PF2e and 4e (replaces PF2e Modifiers Matter) | built v0.56.0 | `modifiersMatter` |
 | 18 | Damage Estimate, PF2e and 4e (replaces PF2e Damage Estimate) | built v0.57.0 | `damageEstimate` |
-| 19 | Cover for attack rolls and area saves; areas reach past wall ends | built v0.60.0 | `pf2eCover` |
+| 19 | Cover for attack rolls and area saves; areas reach past wall ends | built v0.61.0 | `pf2eCover` |
+| 20 | Effect areas: targeting window, hover cover, exact reach | built v0.61.0 | `pf2eAreas` |
 
 Commander (Battlecry!): research notes in `docs/pf2e-commander.md`; rules to
 automate come from the owner, one at a time.
@@ -708,3 +709,33 @@ one that leaves fewer squares next to enemies (see PLAN).
   `flags.pf2e.origin`, `shapes[0].x / y`), templates kept as a fallback.
   (verify) the targeting and the save prompts following the region's
   coverage; the region redrawing at once.
+- v0.61.0 (owner: a 6% sliver of a square counted; "how much is the square
+  actually covered?"; Q237 as recommended): a square PF2e walled off counts
+  when at least 25% of it is reached, inside the area's shape and with a
+  clear line from the origin (10 × 10 sample points; the earlier case 35–37%
+  counts, the sliver 6% doesn't).
+
+## 20. Effect areas
+
+- Owner: "you will need to rewrite the target button from PF2e Toolbelt,
+  since it uses PF2e default targeting"; hover an area to see the cover
+  toward each creature; "Show exactly which parts of the square the areas
+  fill". Toolbelt's template helper (on `createRegion`) takes `region.tokens`
+  and drops any token whose center line to the origin hits a wall.
+- Decided (Q238–Q240, as recommended), built v0.61.0 (`pf2eAreas`,
+  `scripts/systems/pf2e/area.js`):
+  - Placing an area (by this user, with a PF2e origin): a window with
+    Enemies / Allies / All / None and Include me / Include neutral / Remove
+    the area after (remembered per browser). The creatures whose squares the
+    area covers (PF2e's coverage, widened as above), not hidden, dead,
+    non-creatures, by the caster's alliance (Toolbelt's rules), are
+    targeted, and the spell message's `flags.pf2e-toolbelt.targetHelper.
+    targets` set. Switch off Toolbelt's template targeting.
+  - Hover (client setting): on `hoverRegion`, a line from the origin to each
+    creature in the area the user can see, labelled with its cover.
+  - Exact reach (client setting): a light overlay of the area's polygon
+    intersected with Foundry's movement sweep from the origin.
+- (verify) `hoverRegion` firing for effect areas outside the Regions tool;
+  `canvas.regions._highlights` as the overlay's parent; the sweep polygon's
+  `intersectPolygon`; `canvas.tokens.setTargets`; the message update by the
+  caster's player.

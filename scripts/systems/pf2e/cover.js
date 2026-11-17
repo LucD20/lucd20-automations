@@ -148,7 +148,7 @@ export function areaOrigin(itemUuid, target) {
 	const c = centerOf(rectOf(target));
 	const byItem = regions.filter((d) => itemUuid && (d.flags.pf2e.origin?.uuid === itemUuid || d.flags.pf2e.origin?.item === itemUuid));
 	const region = byItem.at(-1) ?? regions.filter((d) => d.testPoint?.({ ...c, elevation: 0 }) ?? reachesSquare(d, rectOf(target))).at(-1);
-	if (region) return { x: region.shapes[0].x, y: region.shapes[0].y };
+	if (region) return areaPoint(region);
 	const templates = (canvas.templates?.placeables ?? []).map((t) => ({ doc: t.document ?? t, obj: t }));
 	const mine = templates.filter(({ doc }) => itemUuid && (doc.flags?.pf2e?.origin?.uuid === itemUuid || doc.flags?.pf2e?.origin?.item === itemUuid));
 	let found = mine.at(-1);
@@ -167,30 +167,59 @@ export function areaOrigin(itemUuid, target) {
  * PF2e 8.7 counts a grid square in an effect area only if the line from the area's origin to the square's
  * center is clear (RegionDocumentPF2e#getCoverage), so a creature whose square center sits behind a wall's
  * end is left out entirely and never targeted (owner: not the rules; a creature partly behind a wall is in
- * the area, with cover). Here a square PF2e walled off counts when a clear line reaches any part of it (its
- * corners and edges, a hair inside); cover is then worked out as usual.
+ * the area, with cover). Here a square PF2e walled off counts when at least a quarter of it is reached:
+ * inside the area's shape and with a clear line from the origin (owner, Q237: the case that should count
+ * reaches 35% of its square, a sliver that shouldn't 6%). Cover is then worked out as usual.
  */
-const SAMPLE = [[0.5, 0.5], [0.02, 0.02], [0.98, 0.02], [0.02, 0.98], [0.98, 0.98], [0.5, 0.02], [0.5, 0.98], [0.02, 0.5], [0.98, 0.5]];
+export const REACH_MIN = 0.25;
+const GRID_N = 10;
 const widened = new WeakMap();
 
-function clearLine(from, to, level) {
+export function clearLine(from, to, level) {
 	const backend = CONFIG.Canvas?.polygonBackends?.move;
 	if (backend?.testCollision) return !backend.testCollision(from, to, { type: "move", mode: "any", level });
 	return !blockingWalls().some(([c, d]) => crosses(from, to, c, d));
+}
+
+/** Is this point inside the area's own shape (before walls)? */
+export function inShape(region, p) {
+	const shape = region.shapes?.[0];
+	const tree = region.polygonTree;
+	if (tree?.testPoint) return tree.testPoint(p);
+	if (shape?.type === "circle" && Number(shape.radius)) return Math.hypot(p.x - shape.x, p.y - shape.y) <= Number(shape.radius) + 0.5;
+	const poly = region.polygons?.[0];
+	if (poly?.contains) return poly.contains(p.x, p.y);
+	return true;
+}
+
+/** The share (0..1) of a grid square the area reaches: inside its shape, with a clear line from its origin. */
+export function squareReach(region, offset, level, origin = areaPoint(region)) {
+	const size = canvas.grid.size;
+	const { x, y } = canvas.grid.getTopLeftPoint(offset);
+	let hit = 0;
+	for (let i = 0; i < GRID_N; i++) for (let j = 0; j < GRID_N; j++) {
+		const p = { x: x + (i + 0.5) * size / GRID_N, y: y + (j + 0.5) * size / GRID_N };
+		if (inShape(region, p) && clearLine(origin, p, level)) hit++;
+	}
+	return hit / (GRID_N * GRID_N);
+}
+
+/** An area's origin: a burst's center, a cone's or line's start (an emanation's base). */
+export function areaPoint(region) {
+	const s = region.shapes?.[0];
+	if (!s) return null;
+	if (s.origin) return { x: s.origin.x, y: s.origin.y };
+	if (s.base) return { x: s.base.x, y: s.base.y };
+	return { x: s.x, y: s.y };
 }
 
 export function widenCoverage(region, coverage, level) {
 	if (!coverage?.blocked?.length || !region?.shapes?.length) return coverage;
 	const cached = widened.get(coverage);
 	if (cached) return cached;
-	const origin = { x: region.shapes[0].x, y: region.shapes[0].y };
-	const size = canvas.grid.size;
+	const origin = areaPoint(region);
 	const covered = [...coverage.covered], blocked = [];
-	for (const offset of coverage.blocked) {
-		const { x, y } = canvas.grid.getTopLeftPoint(offset);
-		const reach = SAMPLE.some(([fx, fy]) => clearLine(origin, { x: x + fx * size, y: y + fy * size }, level));
-		(reach ? covered : blocked).push(offset);
-	}
+	for (const offset of coverage.blocked) (squareReach(region, offset, level, origin) >= REACH_MIN ? covered : blocked).push(offset);
 	const keys = new Set(covered.map((o) => `${o.i},${o.j}`));
 	const result = { covered, blocked, covers: (o) => keys.has(`${o.i},${o.j}`) };
 	widened.set(coverage, result);
@@ -208,7 +237,7 @@ function reachesSquare(region, rect) {
 	return false;
 }
 
-function refreshRegions() {
+export function refreshRegions() {
 	for (const r of canvas.regions?.placeables ?? []) {
 		r.document?.clearCoverage?.();
 		r.renderFlags?.set?.({ refreshGeometry: true });

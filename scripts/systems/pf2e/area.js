@@ -1,0 +1,200 @@
+import { MODULE_ID, error, localize } from "../../core/constants.js";
+import { defineFeature } from "../../core/registry.js";
+import { areaPoint, coverFromPoint, rectOf, LEVELS } from "./cover.js";
+
+/**
+ * Rule 20 (docs/pf2e-rules.md): PF2e effect areas (owner, Q237–Q240, as recommended).
+ * - Targeting (replaces Toolbelt's template targeting, which drops any creature whose center is behind a wall):
+ *   placing an area opens a small window: Enemies / Allies / All / None, "Include me", "Include neutral",
+ *   "Remove the area after". The creatures in the area (by its squares, which "Areas reach past wall ends"
+ *   widens) are targeted and set as the spell message's targets (Toolbelt's save rows read them).
+ *   Toolbelt's own template targeting should be off.
+ * - Hovering an area: a line from its origin to each creature in it you can see, with the cover it gets.
+ * - The exact reach: a light overlay of the area's shape with what walls cut off removed.
+ */
+
+const L = (key, data) => localize(`LUCD20.PF2eRules.Area.${key}`, data);
+const esc = (v) => Handlebars.escapeExpression(String(v ?? ""));
+const STORE = `${MODULE_ID}.areaTargets`;
+const COLORS = { none: 0x43a047, lesser: 0xfdd835, standard: 0xfb8c00, greater: 0xe53935 };
+
+const isArea = (doc) => !!doc?.flags?.pf2e?.areaShape && (doc.shapes?.length ?? 0) >= 1;
+const remembered = () => { try { return JSON.parse(localStorage.getItem(STORE) ?? "{}"); } catch { return {}; } };
+const remember = (v) => { try { localStorage.setItem(STORE, JSON.stringify(v)); } catch { /* private mode */ } };
+
+/** The grid squares a token occupies. */
+function offsetsOf(doc) {
+	const size = canvas.grid.size, out = [];
+	for (let i = 0; i < Math.max(1, Math.round(doc.width ?? 1)); i++) for (let j = 0; j < Math.max(1, Math.round(doc.height ?? 1)); j++) {
+		out.push(canvas.grid.getOffset({ x: doc.x + (i + 0.5) * size, y: doc.y + (j + 0.5) * size }));
+	}
+	return out;
+}
+
+/** Token documents in the area: by its (widened) squares; else Foundry's own membership. */
+export function tokensInArea(region) {
+	const coverage = region.getCoverage?.();
+	const all = (canvas.tokens?.placeables ?? []).map((t) => t.document ?? t);
+	if (coverage) return all.filter((d) => offsetsOf(d).some((o) => coverage.covers(o)));
+	return [...(region.tokens ?? [])];
+}
+
+/** Who the choice targets. */
+export function chooseTargets(region, { targets = "enemies", self = false, neutral = false } = {}) {
+	if (targets === "none") return [];
+	let caster = null;
+	try { caster = region.flags.pf2e.origin?.actor ? fromUuidSync(region.flags.pf2e.origin.actor) : null; } catch { caster = null; }
+	const alliance = caster ? caster.alliance : game.user.isGM ? "opposition" : "party";
+	const opposition = alliance === "party" ? "opposition" : alliance === "opposition" ? "party" : null;
+	return tokensInArea(region).filter((d) => {
+		const actor = d.actor;
+		if (!actor || d.hidden) return false;
+		if (actor.isOfType && !actor.isOfType("creature", "hazard", "vehicle")) return false;
+		if (actor.isDead) return false;
+		if (caster && actor === caster) return !!self;
+		const a = actor.alliance ?? null;
+		if (a === null && !neutral) return false;
+		if (targets === "allies" && a !== alliance && a !== null) return false;
+		if (targets === "enemies" && a !== opposition && a !== null) return false;
+		return true;
+	});
+}
+
+async function applyTargets(region, docs) {
+	const ids = docs.map((d) => d.id);
+	if (canvas.tokens?.setTargets) canvas.tokens.setTargets(ids);
+	else {
+		for (const t of game.user.targets ?? []) t.setTarget?.(false, { releaseOthers: false });
+		for (const d of docs) d.object?.setTarget?.(true, { releaseOthers: false, groupSelection: true });
+	}
+	const message = region.flags.pf2e.messageId ? game.messages.get(region.flags.pf2e.messageId) : null;
+	if (message?.isOwner ?? message?.isAuthor) await message.update({ "flags.pf2e-toolbelt.targetHelper.targets": docs.map((d) => d.uuid) }).catch(() => {});
+}
+
+/** The window: Enemies / Allies / All / None, and three choices remembered per user. */
+async function ask(region) {
+	const DialogV2 = foundry.applications?.api?.DialogV2;
+	const last = { self: false, neutral: false, dismiss: false, ...remembered() };
+	const box = (name) => `<label class="lucd20-area-check"><input type="checkbox" name="${name}" ${last[name] ? "checked" : ""}> ${esc(L(`Choice.${name}`))}</label>`;
+	const content = `<div class="lucd20-area-window">${box("self")}${box("neutral")}${box("dismiss")}</div>`;
+	const read = (dialog) => Object.fromEntries(["self", "neutral", "dismiss"].map((n) => [n, !!dialog.element?.querySelector(`[name="${n}"]`)?.checked]));
+	const buttons = ["enemies", "allies", "all", "none"].map((action, i) => ({
+		action, label: L(`Targets.${action}`), default: i === 0,
+		callback: (event, button, dialog) => ({ targets: action, ...read(dialog) })
+	}));
+	if (!DialogV2) return { targets: "enemies", ...last };
+	return DialogV2.wait({ window: { title: region.flags.pf2e.origin?.name ?? L("Title") }, content, buttons, rejectClose: false, classes: ["lucd20-area-dialog"] });
+}
+
+async function onCreateRegion(feature, region, options, userId) {
+	if (userId !== game.user.id || !isArea(region) || !feature.get("targeting")) return;
+	if (!region.flags.pf2e.origin) return;
+	await new Promise((r) => setTimeout(r, 50)); // the region's coverage is ready once drawn
+	const choice = await ask(region);
+	if (!choice) return;
+	remember({ self: choice.self, neutral: choice.neutral, dismiss: choice.dismiss });
+	if (choice.targets !== "none") await applyTargets(region, chooseTargets(region, choice));
+	if (choice.dismiss) await region.delete().catch(() => {});
+}
+
+/* -------------------------------------------- */
+/*  Hover lines and the exact reach             */
+/* -------------------------------------------- */
+
+let hoverLayer = null, reachLayer = null;
+const clear = (layer) => { if (layer && !layer.destroyed) layer.removeChildren().forEach((c) => c.destroy({ children: true })); };
+const ensure = (layer, parent) => {
+	if (layer && !layer.destroyed && layer.parent) return layer;
+	if (layer && !layer.destroyed) layer.destroy({ children: true });
+	const l = new PIXI.Container();
+	l.eventMode = "none";
+	parent?.addChild(l);
+	return l;
+};
+const label = (text, color) => {
+	const style = { fontFamily: "Signika", fontSize: 16, fill: color, stroke: 0x000000, strokeThickness: 4 };
+	const Precise = foundry.canvas?.containers?.PreciseText ?? globalThis.PreciseText;
+	return Precise ? new Precise(text, new PIXI.TextStyle(style)) : new PIXI.Text(text, style);
+};
+
+export function hoverLines(region) {
+	const origin = areaPoint(region);
+	if (!origin) return [];
+	return tokensInArea(region).filter((d) => d.object?.visible !== false && !d.hidden).map((d) => {
+		const r = coverFromPoint(origin, d);
+		return { token: d, level: r.level, from: origin, to: r.to };
+	});
+}
+
+function drawHover(region, hovered) {
+	clear(hoverLayer);
+	if (!hovered || !isArea(region)) return;
+	hoverLayer = ensure(hoverLayer, canvas.controls ?? canvas.interface);
+	for (const line of hoverLines(region)) {
+		const g = new PIXI.Graphics();
+		g.lineStyle(3, COLORS[line.level], 0.9).moveTo(line.from.x, line.from.y).lineTo(line.to.x, line.to.y);
+		hoverLayer.addChild(g);
+		const t = label(localize(`LUCD20.PF2eRules.Cover.Level.${line.level}`), COLORS[line.level]);
+		t.anchor?.set?.(0.5, 1);
+		t.position.set(line.to.x, line.to.y - 6);
+		hoverLayer.addChild(t);
+	}
+}
+
+/** The area's shape with what walls cut off removed (Foundry's movement sweep from the origin, clipped). */
+export function reachPolygon(region) {
+	const origin = areaPoint(region);
+	const shapePoly = region.polygons?.[0] ?? region.object?.polygons?.[0];
+	const backend = CONFIG.Canvas?.polygonBackends?.move;
+	if (!origin || !shapePoly || !backend?.create) return null;
+	const sweep = backend.create(origin, { type: "move" });
+	return sweep?.intersectPolygon ? sweep.intersectPolygon(shapePoly) : null;
+}
+
+function drawReach() {
+	clear(reachLayer);
+	if (!canvas?.ready) return;
+	reachLayer = ensure(reachLayer, canvas.regions?._highlights ?? canvas.interface);
+	for (const r of canvas.regions?.placeables ?? []) {
+		const doc = r.document ?? r;
+		if (!isArea(doc) || r.visible === false) continue;
+		let poly = null;
+		try { poly = reachPolygon(doc); } catch { poly = null; }
+		if (!poly?.points?.length) continue;
+		const g = new PIXI.Graphics();
+		g.beginFill(0xffffff, 0.18).lineStyle(2, 0xffffff, 0.7).drawPolygon(poly.points).endFill();
+		reachLayer.addChild(g);
+	}
+}
+
+let timer = null;
+const redraw = () => { clearTimeout(timer); timer = setTimeout(() => { try { drawReach(); } catch (err) { error("Area overlay failed.", err); } }, 80); };
+
+defineFeature({
+	id: "pf2eAreas",
+	category: "pf2e",
+	systems: ["pf2e"],
+	scope: "world",
+	defaultEnabled: true,
+	settings: {
+		targeting: { kind: "boolean", default: true, scope: "world" },
+		hover: { kind: "boolean", default: true, scope: "client" },
+		reach: { kind: "boolean", default: true, scope: "client" }
+	},
+
+	enable(feature) {
+		feature.on("createRegion", (region, options, userId) => onCreateRegion(feature, region, options, userId).catch((err) => error("Area targeting failed.", err)));
+		feature.on("hoverRegion", (region, hovered) => { if (feature.get("hover")) drawHover(region.document ?? region, hovered); });
+		for (const hook of ["canvasReady", "createRegion", "updateRegion", "deleteRegion", "createWall", "updateWall", "deleteWall"]) {
+			feature.on(hook, () => (feature.get("reach") ? redraw() : clear(reachLayer)));
+		}
+		redraw();
+		feature.onCleanup(() => { clear(hoverLayer); clear(reachLayer); });
+	},
+
+	onSettingChange() {
+		redraw();
+	}
+});
+
+export const _test = { tokensInArea, chooseTargets, hoverLines, onCreateRegion, applyTargets, LEVELS };

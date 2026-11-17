@@ -2682,3 +2682,10 @@ li:has(> .lucd20-scene-nav) {
 
 /* Damage Estimate (v0.57.0) */
 .lucd20-de-line { display: flex; flex-wrap: wrap; gap: 4px 10px; justify-content: center; font-size: .85em; opacity: .85; margin: 4px 0; }
+
+/* PF2e cover (v0.58.0) */
+.lucd20-cover-pick { display: flex; gap: 3px; margin: 6px 0 4px; }
+.lucd20-cover-pick button { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 1px; height: auto; padding: 3px 2px; line-height: 1.1; font-size: .78em; opacity: .65; }
+.lucd20-cover-pick button i { font-size: 1.25em; }
+.lucd20-cover-pick button.active { opacity: 1; outline: 2px solid var(--color-border-highlight, #ff6400); }
+.lucd20-cover-note { font-size: .82em; margin: 2px 0; opacity: .9; }

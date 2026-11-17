@@ -27,6 +27,7 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 | 16 | Roll chances, PF2e and 4e (replaces PF2e Chances) | built v0.57.1 | `rollChances` |
 | 17 | Modifiers Matter, PF2e and 4e (replaces PF2e Modifiers Matter) | built v0.56.0 | `modifiersMatter` |
 | 18 | Damage Estimate, PF2e and 4e (replaces PF2e Damage Estimate) | built v0.57.0 | `damageEstimate` |
+| 19 | Cover for attack rolls | built v0.58.0 | `pf2eCover` |
 
 Commander (Battlecry!): research notes in `docs/pf2e-commander.md`; rules to
 automate come from the owner, one at a time.
@@ -643,3 +644,38 @@ one that leaves fewer squares next to enemies (see PLAN).
 - (verify) PF2e: `renderDamageModifierDialog` re-rendering when a modifier is
   toggled; 4e: `rollConfig.parts` / `partsCrit`, the `bonus` input and
   `.dialog-buttons`.
+
+## 19. Cover (attack rolls)
+
+- Owner (Q228–Q232, with a diagram): "If the target is more than 50%
+  covered from the origin's PoV, greater cover should apply." Q229: attacks
+  now, areas next. Q230: "On the roll dialog, it should show four icons
+  right above the roll [...]: No cover | Lesser Cover | Standard Cover |
+  Greater Cover. so anyone can override. If overriden, show so on the attack
+  roll." "Prone is a GM call." The diagram: a wall hiding most of the target:
+  greater; a line passing beside a wall's end: none; a line through the
+  wall's end: standard; a line through another creature: lesser; dead and
+  prone creatures on the line: nothing.
+- Built (v0.58.0):
+  - From the attacker's center: the share of the target's silhouette walls
+    hide (rays spread over the angle the target takes, each to where it
+    enters the target): more than half, greater (+4); else the line center to
+    center crossing a wall (its very end counts), standard (+2); else the
+    line through another creature's space, lesser (+1). Not dead creatures,
+    not prone ones (the GM's call: the buttons), never hidden tokens. Walls
+    that block movement; open doors don't. The diagram gives 79% (greater),
+    exactly 50% (standard), 19% (none).
+  - Per roll: PF2e's `Check.roll` is wrapped; for an attack roll with a
+    target (not a reroll) the DC (the target's AC) goes up by the bonus,
+    minus a Cover circumstance bonus the target already has (the higher
+    wins). The context keeps `lucd20Cover {auto, chosen, applied, existing}`
+    (it rides into the message's flags).
+  - The roll window: four buttons above Roll (and above the Chances bar),
+    the automatic one chosen; a click changes the DC and redraws the window.
+  - The card: "Standard cover (+2)", or "Lesser cover (+1), set by hand
+    (auto: Standard cover)"; nothing when there is none.
+  - Map preview (client setting, on): while targeting, the line from your
+    token to each target in the cover's color, with its name.
+- (verify) `game.pf2e.Check.roll` being the path every attack takes (Strike
+  and spell attacks), `context.dc.statistic.modifiers`, the window's
+  re-render keeping our DC change.

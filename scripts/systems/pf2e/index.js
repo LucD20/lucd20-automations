@@ -22,3 +22,4 @@ import "./hands.js";
 import "./chances.js";
 import "./modifiers-matter.js";
 import "./damage-estimate.js";
+import "./cover.js";

@@ -818,6 +818,13 @@
         "Name": "Hand Reminders",
         "Hint": "Notices (no chat) to whoever acted and the GM: more than two hands in use; in an encounter, a Strike with a weapon not held or held in too few hands, a manipulate spell while Restrained, a concentrate action while raging, Raise a Shield with a buckler and both hands busy. Warnings only. Replaces PF2e Hands Management (switch that one off)."
       },
+      "pf2eCover": {
+        "Name": "Cover",
+        "Hint": "Attack rolls get the target's cover from the attacker's point of view: walls hiding more than half of it, greater (+4); a wall across the line center to center, standard (+2); another creature on the line, lesser (+1; not dead or prone ones). It raises the target's AC for that roll only, the higher of it and a Cover the target already has. The roll window shows No cover / Lesser / Standard / Greater to change it; the card says which was used.",
+        "Setting": {
+          "preview": { "Name": "Map preview", "Hint": "While you target, draw the line from your token and the cover it gives (only you see it)." }
+        }
+      },
       "pf2ePunishingShove": {
         "Name": "Punishing Shove (Guardian)",
         "Hint": "When a creature with Punishing Shove succeeds at a Shove, after the dice the shoved creature's bludgeoning damage is rolled (Strength modifier, +2 / +6 / +12 at expert / master / legendary Athletics; doubled on a critical success), to apply with PF2e's own buttons."
@@ -1827,6 +1834,12 @@
         "Give": "Give",
         "NoOne": "No one",
         "Replaced": "Replaced by a new signal."
+      },
+      "Cover": {
+        "Level": { "none": "No cover", "lesser": "Lesser cover", "standard": "Standard cover", "greater": "Greater cover" },
+        "Short": { "none": "None", "lesser": "Lesser", "standard": "Standard", "greater": "Greater" },
+        "Note": "{level} (+{bonus})",
+        "NoteHand": "{level} (+{bonus}), set by hand (auto: {auto})"
       },
       "Hands": {
         "TooMany": "{name} is using more than two hands: {list}.",

@@ -822,7 +822,8 @@
         "Name": "Cover",
         "Hint": "Attack rolls get the target's cover from the attacker's point of view: walls hiding more than half of it, greater (+4); a wall across the line center to center, standard (+2); another creature on the line, lesser (+1; not dead or prone ones). It raises the target's AC for that roll only, the higher of it and a Cover the target already has. The roll window shows No cover / Lesser / Standard / Greater to change it; the card says which was used.",
         "Setting": {
-          "preview": { "Name": "Map preview", "Hint": "While you target, draw the line from your token and the cover it gives (only you see it)." }
+          "preview": { "Name": "Map preview", "Hint": "While you target, draw the line from your token and the cover it gives (only you see it)." },
+          "areaReach": { "Name": "Areas reach past wall ends", "Hint": "PF2e leaves a square out of an area when the line to its center hits a wall, so a creature partly behind a wall's end is never targeted. On: the square counts when a clear line reaches any part of it, and the creature gets cover instead." }
         }
       },
       "pf2ePunishingShove": {

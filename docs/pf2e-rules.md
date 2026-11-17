@@ -27,7 +27,7 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 | 16 | Roll chances, PF2e and 4e (replaces PF2e Chances) | built v0.57.1 | `rollChances` |
 | 17 | Modifiers Matter, PF2e and 4e (replaces PF2e Modifiers Matter) | built v0.56.0 | `modifiersMatter` |
 | 18 | Damage Estimate, PF2e and 4e (replaces PF2e Damage Estimate) | built v0.57.0 | `damageEstimate` |
-| 19 | Cover for attack rolls and area saves | built v0.59.0 | `pf2eCover` |
+| 19 | Cover for attack rolls and area saves; areas reach past wall ends | built v0.60.0 | `pf2eCover` |
 
 Commander (Battlecry!): research notes in `docs/pf2e-commander.md`; rules to
 automate come from the owner, one at a time.
@@ -693,3 +693,18 @@ one that leaves fewer squares next to enemies (see PLAN).
   modifier), same note on the card. No template: none, buttons still there.
   (verify) the template's `flags.pf2e.origin` fields; "area-effect" and the
   check's slug "reflex" on the save.
+- v0.60.0 (owner, with a picture: a burst on a corner, a creature whose square
+  center sits just behind a wall's end: "it doesnt even target, even though
+  it should be standard (or greater) cover. This is a core pf2e problem [...]
+  not RAW. We need to find a way around it."): PF2e 8.7 counts an effect
+  area's square only if the line from the origin to the square's center is
+  clear (`RegionDocumentPF2e#getCoverage`, move-wall collision), and a token
+  is in the area only through those squares. Setting "Areas reach past wall
+  ends" (world, on): `getCoverage` is wrapped; a square PF2e walled off counts
+  when a clear line reaches any part of it (center, corners and edge
+  midpoints, a hair inside), using the same collision backend; the region is
+  redrawn. Cover then applies. Also: in V14 effect areas are Regions, so the
+  area's origin is now read from the region (`flags.pf2e.areaShape`,
+  `flags.pf2e.origin`, `shapes[0].x / y`), templates kept as a fallback.
+  (verify) the targeting and the save prompts following the region's
+  coverage; the region redrawing at once.

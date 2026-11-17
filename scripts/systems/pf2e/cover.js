@@ -142,6 +142,13 @@ export function coverFromPoint(from, target, { walls = blockingWalls() } = {}) {
  * covers the target. Its x / y is the area's origin (a burst's center, a cone's or line's start).
  */
 export function areaOrigin(itemUuid, target) {
+	// Foundry V14 / PF2e 8.7: effect areas are Regions (flags.pf2e.areaShape, origin, messageId); the shape's x / y
+	// is the area's origin.
+	const regions = (canvas.regions?.placeables ?? []).map((r) => r.document ?? r).filter((d) => d.flags?.pf2e?.areaShape && d.shapes?.length);
+	const c = centerOf(rectOf(target));
+	const byItem = regions.filter((d) => itemUuid && (d.flags.pf2e.origin?.uuid === itemUuid || d.flags.pf2e.origin?.item === itemUuid));
+	const region = byItem.at(-1) ?? regions.filter((d) => d.testPoint?.({ ...c, elevation: 0 }) ?? reachesSquare(d, rectOf(target))).at(-1);
+	if (region) return { x: region.shapes[0].x, y: region.shapes[0].y };
 	const templates = (canvas.templates?.placeables ?? []).map((t) => ({ doc: t.document ?? t, obj: t }));
 	const mine = templates.filter(({ doc }) => itemUuid && (doc.flags?.pf2e?.origin?.uuid === itemUuid || doc.flags?.pf2e?.origin?.item === itemUuid));
 	let found = mine.at(-1);
@@ -150,6 +157,62 @@ export function areaOrigin(itemUuid, target) {
 		found = templates.filter(({ doc, obj }) => obj.shape?.contains?.(c.x - doc.x, c.y - doc.y)).at(-1);
 	}
 	return found ? { x: found.doc.x, y: found.doc.y } : null;
+}
+
+/* -------------------------------------------- */
+/*  Areas reach squares partly behind walls     */
+/* -------------------------------------------- */
+
+/**
+ * PF2e 8.7 counts a grid square in an effect area only if the line from the area's origin to the square's
+ * center is clear (RegionDocumentPF2e#getCoverage), so a creature whose square center sits behind a wall's
+ * end is left out entirely and never targeted (owner: not the rules; a creature partly behind a wall is in
+ * the area, with cover). Here a square PF2e walled off counts when a clear line reaches any part of it (its
+ * corners and edges, a hair inside); cover is then worked out as usual.
+ */
+const SAMPLE = [[0.5, 0.5], [0.02, 0.02], [0.98, 0.02], [0.02, 0.98], [0.98, 0.98], [0.5, 0.02], [0.5, 0.98], [0.02, 0.5], [0.98, 0.5]];
+const widened = new WeakMap();
+
+function clearLine(from, to, level) {
+	const backend = CONFIG.Canvas?.polygonBackends?.move;
+	if (backend?.testCollision) return !backend.testCollision(from, to, { type: "move", mode: "any", level });
+	return !blockingWalls().some(([c, d]) => crosses(from, to, c, d));
+}
+
+export function widenCoverage(region, coverage, level) {
+	if (!coverage?.blocked?.length || !region?.shapes?.length) return coverage;
+	const cached = widened.get(coverage);
+	if (cached) return cached;
+	const origin = { x: region.shapes[0].x, y: region.shapes[0].y };
+	const size = canvas.grid.size;
+	const covered = [...coverage.covered], blocked = [];
+	for (const offset of coverage.blocked) {
+		const { x, y } = canvas.grid.getTopLeftPoint(offset);
+		const reach = SAMPLE.some(([fx, fy]) => clearLine(origin, { x: x + fx * size, y: y + fy * size }, level));
+		(reach ? covered : blocked).push(offset);
+	}
+	const keys = new Set(covered.map((o) => `${o.i},${o.j}`));
+	const result = { covered, blocked, covers: (o) => keys.has(`${o.i},${o.j}`) };
+	widened.set(coverage, result);
+	return result;
+}
+
+/** Fallback for areaOrigin: does the region's PF2e coverage include one of these squares? */
+function reachesSquare(region, rect) {
+	const coverage = region.getCoverage?.();
+	if (!coverage) return false;
+	const size = canvas.grid.size;
+	for (let x = rect.x; x < rect.x + rect.w; x += size) for (let y = rect.y; y < rect.y + rect.h; y += size) {
+		if (coverage.covers(canvas.grid.getOffset({ x: x + size / 2, y: y + size / 2 }))) return true;
+	}
+	return false;
+}
+
+function refreshRegions() {
+	for (const r of canvas.regions?.placeables ?? []) {
+		r.document?.clearCoverage?.();
+		r.renderFlags?.set?.({ refreshGeometry: true });
+	}
 }
 
 /* -------------------------------------------- */
@@ -312,7 +375,8 @@ defineFeature({
 	scope: "world",
 	defaultEnabled: true,
 	settings: {
-		preview: { kind: "boolean", default: true, scope: "client" }
+		preview: { kind: "boolean", default: true, scope: "client" },
+		areaReach: { kind: "boolean", default: true, scope: "world" }
 	},
 
 	enable(feature) {
@@ -322,6 +386,16 @@ defineFeature({
 				try { prepare(context, check); } catch (err) { error("Cover failed.", err); }
 				return original(check, context, ...rest);
 			});
+		}
+		const RegionDoc = CONFIG.Region?.documentClass;
+		if (typeof RegionDoc?.prototype?.getCoverage === "function") {
+			feature.wrap(RegionDoc.prototype, "getCoverage", function (original, level, ...rest) {
+				const coverage = original(level, ...rest);
+				if (!feature.get("areaReach")) return coverage;
+				try { return widenCoverage(this, coverage, level ?? canvas.level); } catch (err) { error("Cover failed.", err); return coverage; }
+			});
+			refreshRegions();
+			feature.onCleanup(refreshRegions);
 		}
 		feature.on("renderCheckModifiersDialog", (app, html) => onDialog(app, html));
 		feature.on("renderChatMessageHTML", (message, html) => onCard(message, html));
@@ -333,7 +407,8 @@ defineFeature({
 
 	onSettingChange() {
 		redraw();
+		refreshRegions();
 	}
 });
 
-export const _test = { computeCover, coverFromPoint, areaOrigin, crosses, throughRect, prepare, choose, onDialog, onCard, existingCover };
+export const _test = { widenCoverage, computeCover, coverFromPoint, areaOrigin, crosses, throughRect, prepare, choose, onDialog, onCard, existingCover };

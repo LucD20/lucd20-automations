@@ -63,6 +63,17 @@ const assert = require("assert");
     cv._test.choose(sc, "none", ch); out.areaNone = ch.mods.length;
     const ch2 = mkCheck(), notArea = save({ options: new Set(["reflex"]) }); cv._test.prepare(notArea, ch2); out.notArea = [notArea.lucd20Cover ?? null, ch2.mods.length];
     const ch3 = mkCheck(), noTemplate = save({ origin: { item: { uuid: "Item.other" } }, token: tok("r", 9, 9) }); canvas.templates = { placeables: [] }; cv._test.prepare(noTemplate, ch3); out.noTemplate = noTemplate.lucd20Cover;
+    // The owner's second case: a burst on a corner, the creature's square center just behind a wall's end.
+    // PF2e leaves the square out (line to its center blocked); widened, it's in, with standard cover.
+    canvas.grid = { size: 100, type: 1, getTopLeftPoint: ({ i, j }) => ({ x: i * 100, y: j * 100 }), getOffset: ({ x, y }) => ({ i: Math.floor(x / 100), j: Math.floor(y / 100) }) };
+    canvas.walls = { placeables: [wall(200, -300, 200, 275)] };
+    const region = { shapes: [{ type: "circle", x: 300, y: 300 }], flags: { pf2e: { areaShape: "burst", origin: { uuid: "Item.fireball" } } } };
+    const pf2eSaid = { covered: [{ i: 2, j: 2 }], blocked: [{ i: 1, j: 2 }, { i: 1, j: 1 }], covers: () => false };
+    const wide = cv._test.widenCoverage(region, pf2eSaid, null);
+    out.widened = [wide.covered.map(o => `${o.i},${o.j}`), wide.blocked.map(o => `${o.i},${o.j}`), wide.covers({ i: 1, j: 2 })];
+    canvas.regions = { placeables: [{ document: region }] }; canvas.templates = { placeables: [] };
+    out.regionOrigin = cv._test.areaOrigin("Item.fireball", tok("w", 1, 2));
+    out.regionCover = cv._test.coverFromPoint({ x: 300, y: 300 }, tok("w", 1, 2)).level;
     // The window grows instead of scrolling.
     let pos = null;
     const dlg2 = document.createElement("div"); dlg2.innerHTML = `<div class="window-content"><button class="roll">Roll</button></div>`;
@@ -94,6 +105,8 @@ const assert = require("assert");
   assert.deepStrictEqual([r.areaChosen, r.areaNone], [["lesser", [1]], 0], "the window's choice replaces the modifier; none removes it");
   assert.deepStrictEqual(r.notArea, [null, 0], "not an area: nothing");
   assert.deepStrictEqual(r.noTemplate, { kind: "area", auto: "none", chosen: "none" }, "no template: none, the buttons still there");
+  assert.deepStrictEqual(r.widened, [["2,2", "1,2"], ["1,1"], true], "the square behind the wall's end now counts; one fully behind the wall still doesn't");
+  assert.deepStrictEqual([r.regionOrigin, r.regionCover], [{ x: 300, y: 300 }, "greater"], "V14 areas are Regions: the origin from its shape; most of the square hidden: greater (the owner: standard or greater)");
   assert.deepStrictEqual(r.fit, { height: "auto" }, "the window grows to fit");
   assert.deepStrictEqual(errors, []);
   console.log("PHASE 54 CHECKS PASSED");

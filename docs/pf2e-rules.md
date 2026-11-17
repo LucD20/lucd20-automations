@@ -17,6 +17,7 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 | 6 | Reactions: track their use, as the PF2e Reaction module does | built v0.45.0 | `pf2eReactions` |
 | 7 | Reactive Strike: prompt when it can be used | built v0.46.0 | `pf2eReactiveStrike` |
 | 8 | Shield Block: prompt when it can be used | built v0.47.0 | `pf2eShieldBlock` |
+| 9 | Commander: Demoralizing Charge | built v0.48.0 | `pf2eDemoralizingCharge` |
 
 Commander (Battlecry!): research notes in `docs/pf2e-commander.md`; rules to
 automate come from the owner, one at a time.
@@ -278,3 +279,38 @@ player option Sound, on); the sound is now shared (`scripts/core/sound.js`).
 **v0.47.3 (owner):** no action symbol after the title on the cards ("it
 already has an image"). Pathfinding picks, of routes of the same length, the
 one that leaves fewer squares next to enemies (see PLAN).
+
+## 9. Commander: Demoralizing Charge
+
+- Owner: "one main automation, and go from there: Demoralizing Charge. Take
+  a look at it and suggest the automation"; reactions first (rules 6–8),
+  then "good, with dem charge" (the proposal as it was).
+- The tactic (PF2e / AoN): expert tactic, 2 actions, brandish. Up to two
+  squadmates in the banner's aura Stride toward an enemy (free), then Strike
+  it (reaction); each successful Strike: Will vs class DC or Frightened 1
+  (2 on a critical failure). Both Strikes on one enemy: one save after the
+  last, −1 (both struck), −2 (both hit), −3 (both hit, one critical).
+- Built (v0.48.0):
+  1. The commander's own card of the tactic starts it on their client.
+     Banner toggle off: a warning (brandish), the tactic goes on.
+  2. Allies within 30 ft (not the commander: brandish; not hidden) are
+     highlighted; click up to two, **Signal**; Cancel / Escape stops. "Any
+     ally in the aura" stands for "squadmate" (no squadmate roster yet).
+     Allies who answered a tactic this round aren't offered.
+  3. A card per ally (their player and the GM): Stride, then Strike as a
+     reaction; Skip. **Drilled Reactions**: once a round, an ally whose
+     reaction is spent gets the extra one (their Strike then doesn't spend
+     theirs; rule 6).
+  4. The GM's client reads each ally's next Strike (target, outcome). Their
+     card then shows only the tactic's name, to everyone.
+  5. When both answered (or the commander's turn ends): per enemy hit, a
+     GM-only card "Will save against DC N (−2)…"; **Roll** after Dice So
+     Nice: Frightened 1 / 2 (`increaseCondition`), a chat line (GM only if
+     hidden). Missed and skipped Strikes: no save.
+- Assumptions to check with the owner: Drilled Reactions goes to the first
+  chosen ally without a reaction (not asked); the Stride and Strike are made
+  by hand.
+- (verify) in PF2e 8.7: the commander's class DC (`actor.classDC.dc.value`);
+  the banner toggle (`actor.rollOptions.all["commanders-banner"]`);
+  `saves.will.roll({ dc, modifiers })` taking a circumstance Modifier;
+  `increaseCondition("frightened", { value })`.

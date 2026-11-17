@@ -22,6 +22,15 @@ const FLAG = "reaction";
 const BADGE = "lucd20RxBadge";
 const L = (key, data) => localize(`LUCD20.PF2eRules.Reaction.${key}`, data);
 const recentCard = new Map(); // actor id → time of its last reaction card (its Strike then counts once)
+const drilled = new Map(); // actor id → until: its next off-turn Strike uses the extra reaction of Drilled Reactions
+
+/**
+ * Drilled Reactions (the commander): this ally's next off-turn Strike (within `ms`) is answered with the extra
+ * reaction granted for that tactic, so its own reaction is not spent.
+ */
+export function grantDrilledReaction(actorId, ms = 120000) {
+	drilled.set(actorId, Date.now() + ms);
+}
 
 const stateOf = (combatant) => combatant?.getFlag?.(MODULE_ID, FLAG) ?? { used: 0 };
 export const hasReaction = (combatant) => (Number(stateOf(combatant).used) || 0) < 1;
@@ -91,6 +100,7 @@ async function onMessage(message) {
 	}
 	// A Strike outside the creature's own turn is a reaction, unless its reaction card just came.
 	if (combatant.combat.combatant?.id === combatant.id) return;
+	if ((drilled.get(actorId) ?? 0) > Date.now()) return void drilled.delete(actorId);
 	if (Date.now() - (recentCard.get(actorId) ?? 0) < 30000) return void recentCard.delete(actorId);
 	return spendReaction(combatant, { source: message.item?.name ?? L("Strike") });
 }

@@ -767,6 +767,10 @@
       "pf2eShieldBlock": {
         "Name": "Shield Block",
         "Hint": "When a creature that has Shield Block, its shield raised and its reaction left is hit by physical damage, its owner (the GM for a monster) gets a card with the damage and the shield's Hardness and HP: Block applies that damage with PF2e's shield block, spends the reaction and marks Target Helper's row applied; Skip closes the card."
+      },
+      "pf2eDemoralizingCharge": {
+        "Name": "Demoralizing Charge (Commander)",
+        "Hint": "When a commander uses Demoralizing Charge: pick up to two allies within 30 ft on the map (not those who already answered a tactic this round); each gets a card to Stride and Strike as a reaction (Drilled Reactions gives one an extra reaction if theirs is spent). Their Strikes are read from chat; then, for each enemy hit, the GM gets the Will save against the class DC with the right penalty, and Frightened 1 or 2 is applied after the dice."
       }
     },
     "ForceSettings": {
@@ -1727,6 +1731,26 @@
         "Blocked": "Blocked: the damage was applied with Shield Block.",
         "Skipped": "Not blocked.",
         "NotYours": "That is not your creature."
+      },
+      "Commander": {
+        "Name": "Demoralizing Charge",
+        "NotInCombat": "Demoralizing Charge: no encounter running.",
+        "NoBanner": "Demoralizing Charge has the brandish trait: your banner should be raised (in hand).",
+        "NoAllies": "Demoralizing Charge: no ally within 30 feet who can still answer a tactic this round.",
+        "Pick": "Demoralizing Charge: click up to two squadmates within 30 ft",
+        "Signal": "Signal",
+        "Cancel": "Cancel",
+        "Do": "Stride toward an enemy you can see (free action); if you end adjacent to an enemy, Strike it (reaction).",
+        "Drilled": "Drilled Reactions: you get an extra reaction for this Strike.",
+        "Skip": "Skip",
+        "Skipped": "Not answered.",
+        "Roll": "Roll the save",
+        "SaveLine": "{name}: Will save against DC {dc}{penalty} or Frightened 1 (2 on a critical failure).",
+        "Frightened": "Frightened {value}.",
+        "Resisted": "Resisted.",
+        "Result": "{name} is Frightened {value} ({title}).",
+        "ACreature": "a creature",
+        "Speaker": "Conditions"
       }
     },
     "Dnd4eHud": {

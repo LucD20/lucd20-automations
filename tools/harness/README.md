@@ -78,6 +78,7 @@ sets `game.system.id`.
 | `test40.js` | PF2e rules: reactions tracked, badge on tokens, Combat Tracker mark (41) |
 | `test41.js` | PF2e rules: Reactive Strike cards, triggers, the Strike button, the drag warning (42) |
 | `test42.js` | PF2e rules: Shield Block cards, Block with Target Helper, secret damage (43) |
+| `test43.js` | PF2e rules: Demoralizing Charge, picking squadmates, their Strikes, Drilled Reactions, the save and Frightened (44) |
 | `test39.js` | D&D 4e HUD: data from the owner's sheets, columns and tabs, dock, clicks, dying, condition icons, party and selection cards, window sizes, players list and hotbar moved and put back (39); the monster HUD: role block, resistances, recharge roll, traits (40) |
 
 For a new feature, copy the closest test, keep its mock setup and replace the

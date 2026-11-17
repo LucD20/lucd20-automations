@@ -1891,3 +1891,8 @@ square, so of two routes of the same length it takes the one leaving fewer
 such squares, never a longer one (Q still adds +4 to go around). The PF2e
 reaction cards no longer show the action symbol after the title (the image is
 enough).
+
+**v0.48.0 (phase 44): PF2e rule 9, the Commander's Demoralizing Charge**
+(`pf2eDemoralizingCharge`, `scripts/systems/pf2e/commander.js`, `test43.js`;
+`core/square-picker.js` gains `pickSeveral`; the reaction tracker honours
+Drilled Reactions). Details in the ledger §9.

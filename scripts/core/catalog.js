@@ -70,6 +70,7 @@ export const FEATURE_ORDER = [
   { id: "pf2eReactions", category: "pf2e", phase: 41, systems: ["pf2e"] },
   { id: "pf2eReactiveStrike", category: "pf2e", phase: 42, systems: ["pf2e"] },
   { id: "pf2eShieldBlock", category: "pf2e", phase: 43, systems: ["pf2e"] },
+  { id: "pf2eDemoralizingCharge", category: "pf2e", phase: 44, systems: ["pf2e"] },
   { id: "dnd4eClassFeatures", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
   { id: "dnd4eCover", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
   { id: "dnd4eActionTracker", category: "dnd4e", phase: 26, systems: ["dnd4e"] },

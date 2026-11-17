@@ -12,6 +12,8 @@ const M = "lucd20-automations";
   page.on("console", m => { if (m.type() === "error" && !m.text().includes("Failed to load resource")) { errors.push(m.text()); console.log("CONSOLE", m.text().slice(0, 400)); } });
   await page.goto("http://localhost:8765/index.html?gm=1&system=dnd4e");
   await page.waitForFunction(() => window.__done, null, { timeout: 15000 });
+  // The mock actors list sits at the bottom left (in Foundry it is in the right sidebar, past the 4e HUD): HUD off here.
+  await page.evaluate(() => game.settings.set("lucd20-automations", "dnd4eHud_enabled", false));
   await page.evaluate(() => {
     document.querySelector(".lucd20-hub").style.display = "none";
     document.getElementById("core-config").style.display = "none";

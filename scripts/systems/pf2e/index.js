@@ -13,3 +13,4 @@ import "./reactions.js";
 import "./reactive-strike.js";
 import "./shield-block.js";
 import "./commander.js";
+import "./roaring-heart.js";

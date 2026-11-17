@@ -1896,3 +1896,7 @@ enough).
 (`pf2eDemoralizingCharge`, `scripts/systems/pf2e/commander.js`, `test43.js`;
 `core/square-picker.js` gains `pickSeveral`; the reaction tracker honours
 Drilled Reactions). Details in the ledger §9.
+
+**v0.49.0 (phase 45): PF2e rule 10, the Animist's Roaring Heart**
+(`pf2eRoaringHeart`, `scripts/systems/pf2e/roaring-heart.js`, `test44.js`);
+details in the ledger §10.

@@ -18,6 +18,7 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 | 7 | Reactive Strike: prompt when it can be used | built v0.46.0 | `pf2eReactiveStrike` |
 | 8 | Shield Block: prompt when it can be used | built v0.47.0 | `pf2eShieldBlock` |
 | 9 | Commander: Demoralizing Charge | built v0.48.0 | `pf2eDemoralizingCharge` |
+| 10 | Animist: Roaring Heart | built v0.49.0 | `pf2eRoaringHeart` |
 
 Commander (Battlecry!): research notes in `docs/pf2e-commander.md`; rules to
 automate come from the owner, one at a time.
@@ -326,3 +327,29 @@ one that leaves fewer squares next to enemies (see PLAN).
   is cancelled ("Replaced by a new signal", its extra reaction taken back) and
   Drilled Reactions may be chosen again; allies who answered another
   commander's tactic this round are shown grey but can be picked.
+
+## 10. Animist: Roaring Heart
+
+- Owner: "next Roaring Heart" (AoN Feats.aspx?ID=7134).
+- The feat (animist 6, apparition, divine, wandering; War of Immortals p. 25;
+  2 actions): "You Stride twice. At any point during this movement, you can
+  Shove up to two creatures you pass adjacent to. When you end the movement,
+  [...] you and each ally in a 30-foot emanation gain temporary Hit Points
+  equal to half your level if you successfully Shoved at least one enemy, or
+  equal to your level if you succeeded at Shoving both. These temporary Hit
+  Points last until the beginning of your next turn."
+- Decided (Q177–Q179, as recommended): the movement ends after the animist's
+  **second token move, or Finish, or the end of their turn**; **successes on
+  enemies** count, of the first two Shoves; the temporary HP through **an
+  effect that ends by itself**.
+- Built (v0.49.0): using it posts a small card (Finish) to the player and the
+  GM, which counts "Enemies Shoved: n (of m Shoves)". At the end: half the
+  level (rounded down) for one enemy, the level for two, nothing for none;
+  an effect "Roaring Heart (N temp HP)" (PF2e's TempHP rule) on the animist
+  and each ally within 30 ft of their final square, lasting until the start
+  of the animist's next turn (and removed then by the module); a second use
+  replaces the first. Chat: "Lini and 2 allies gain 3 temporary Hit Points
+  until the start of Lini's next turn". The card shrinks to the feat's name.
+  Shove's own push is forced movement and doesn't count as a move.
+- (verify) in PF2e 8.7: the TempHP rule element granting on creation, taking
+  them back when the effect is deleted, and keeping the higher of two.

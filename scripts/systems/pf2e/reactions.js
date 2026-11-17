@@ -129,6 +129,7 @@ function combatantForToken(token) {
 
 /** The badge on a token: bottom-right; gold = available, grey = spent. */
 export function drawBadge(token) {
+	if (typeof token?.addChild !== "function") return; // not a drawn token
 	const old = token.children?.find?.((c) => c.name === BADGE);
 	const combatant = combatantForToken(token);
 	if (!feature?.active || !combatant || token.document?.hidden && !game.user.isGM) {

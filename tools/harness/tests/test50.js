@@ -84,6 +84,15 @@ const assert = require("assert");
     const host4 = document.createElement("div"); host4.innerHTML = `<div class="dice-result"></div><div class="hit-prediction">Hit</div>`;
     Hooks.callAll("renderChatMessageHTML", bare, host4);
     out.live = host4.querySelector(".lucd20-ch-bar")?.textContent;
+    // dnd4e 0.9.3: one roll per target, its row in roll.options.multirollData.
+    Hooks.callAll("dnd4e.preAttackRoll", { system: { weaponType: "melee" } }, null, null, { targetOptions: {} });
+    Hooks.callAll("dnd4e.rollAttack", {}, { targDefValArray: [16], targImmArray: [false] });
+    const per = { getFlag() {}, flags: {}, rolls: [{ total: 17, options: { multirollData: { target: "Wolf", targetID: "w" } }, dice: [{ faces: 20, number: 1, modifiers: [], results: [{ result: 10, active: true }] }] }],
+      updateSource(u) { for (const [k, v] of Object.entries(u)) foundry.utils.setProperty(this, k, v); } };
+    Hooks.callAll("preCreateChatMessage", per, {}, {}, game.user.id);
+    const host5 = document.createElement("div"); host5.innerHTML = `<div class="dice-result"></div><div class="hit-prediction">Hit</div>`;
+    Hooks.callAll("renderChatMessageHTML", per, host5);
+    out.perRoll = [per.flags[M]?.chances?.defs, host5.querySelector(".lucd20-ch-bar")?.textContent];
     // A saving throw: everyone.
     const save = { getFlag() {}, flags: {}, rolls: [{ total: 12, dice: [{ faces: 20, number: 1, modifiers: [], options: { target: 10, critical: 21 }, results: [{ result: 10, active: true }] }] }] };
     const host3 = document.createElement("div"); host3.innerHTML = `<div class="dice-roll"></div>`;
@@ -111,6 +120,7 @@ const assert = require("assert");
   assert.deepStrictEqual(r4.bars, [["45%45%10%", "Hit"], ["80%10%10%", "Miss"]], "one bar per target: +8 vs 18; +8 vs 25 (crit range 19)");
   assert.deepStrictEqual([r4.player, r4.playerOn], [0, 2], "players only with the setting");
   assert.strictEqual(r4.live, "30%65%", "fallback: +8 vs Reflex 15 now: miss 1..6, hit 7..19, crit 20");
+  assert.deepStrictEqual(r4.perRoll, [[16], "40%55%"], "0.9.3's one roll per target: +7 vs 16, miss 1..8, hit 9..19, crit 20");
   assert.strictEqual(r4.saveBar, "35%65%", "a saving throw for everyone (+2 vs 10)");
   assert.deepStrictEqual(errors, []);
   console.log("PHASE 51 CHECKS PASSED");

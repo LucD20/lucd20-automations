@@ -1,5 +1,6 @@
 import { MODULE_ID } from "./constants.mjs";
 import { registerModifiersMatterAdapter, mattered, lineHTML, L } from "../../features/modifiers-matter.js";
+import { attackRows } from "./attack-rows.mjs";
 
 /**
  * D&D 4e for Modifiers Matter: per target of an attack, the common attack bonuses the system applied
@@ -28,23 +29,15 @@ function onPreAttack(item, attacker, target, config = {}) {
 }
 
 function onPreCreate(message) {
-	const rows = message.rolls?.[0]?.multirollData;
-	if (!rows?.length || !fresh() || !pending.defs?.length) return;
+	if (!attackRows(message).length || !fresh() || !pending.defs?.length) return;
 	message.updateSource({ [`flags.${MODULE_ID}.mm4e`]: { defs: pending.defs, rows: pending.rows } });
 	pending = null;
 }
 
-function natural(parts) {
-	const die = (parts ?? []).find((p) => Number(p.faces) === 20 || /d20/i.test(String(p.formula ?? "")));
-	const kept = (die?.rolls ?? []).filter((r) => !/discarded|rerolled/.test(String(r.classes ?? "")));
-	const n = parseInt(String(kept[0]?.result ?? "").replace(/<[^>]+>/g, ""), 10);
-	return Number.isFinite(n) ? n : null;
-}
-
 function onCard(feature, message, html) {
 	const data = message.flags?.[MODULE_ID]?.mm4e;
-	const multi = message.rolls?.[0]?.multirollData;
-	if (!data || !multi?.length || html.querySelector?.(".lucd20-mm-line")) return;
+	const multi = attackRows(message);
+	if (!data || !multi.length || html.querySelector?.(".lucd20-mm-line")) return;
 	if (!game.user.isGM) {
 		let show = false;
 		try { show = !!game.settings.get(MODULE_ID, "rollChances_showPlayers4e"); } catch { show = false; }
@@ -52,11 +45,10 @@ function onCard(feature, message, html) {
 	}
 	let rows = [...html.querySelectorAll(".hit-prediction")];
 	if (rows.length !== multi.length) rows = [...html.querySelectorAll(".dice-result")];
-	multi.forEach((entry, i) => {
-		const def = Number(data.defs?.[i]), row = data.rows?.[i], nat = natural(entry.parts);
-		if (!row?.bonuses?.length || !Number.isFinite(def) || nat === null || entry.immune || !rows[i]) return;
+	multi.forEach(({ entry, total, natural: nat }, i) => {
+		const def = Number(data.defs?.[i]), row = data.rows?.[i];
+		if (!row?.bonuses?.length || !Number.isFinite(def) || !nat || !Number.isFinite(total) || entry.immune || !rows[i]) return;
 		if (nat >= (row.crit ?? 20) || nat === 1) return;
-		const total = Number(entry.total);
 		const list = mattered(row.bonuses.map((b) => ({ ...b, side: "roll" })), (delta) => total + delta >= def);
 		if (list.length) rows[i].insertAdjacentHTML("afterend", lineHTML(L("Mattered"), list));
 	});

@@ -24,7 +24,7 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 | 13 | Ctrl-click effects (replaces PF2e Ctrl Click Effects) | built v0.53.0 | `pf2eCtrlClick` |
 | 14 | Sustained spells (replaces PF2e Sustain Reminder) | built v0.54.0 | `pf2eSustain` |
 | 15 | Hand reminders (replaces PF2e Hands Management) | built v0.54.0 | `pf2eHands` |
-| 16 | Roll chances, PF2e and 4e (replaces PF2e Chances) | built v0.56.0 | `rollChances` |
+| 16 | Roll chances, PF2e and 4e (replaces PF2e Chances) | built v0.57.1 | `rollChances` |
 | 17 | Modifiers Matter, PF2e and 4e (replaces PF2e Modifiers Matter) | built v0.56.0 | `modifiersMatter` |
 | 18 | Damage Estimate, PF2e and 4e (replaces PF2e Damage Estimate) | built v0.57.0 | `damageEstimate` |
 
@@ -581,6 +581,12 @@ one that leaves fewer squares next to enemies (see PLAN).
   The owner's first log showed only the power's card (no attack roll in it)
   and an unrelated error: Damage Log read its PF2e-only "details" setting in
   4e on every chat message (fixed in v0.57.0).
+- v0.57.1: the owner's second log showed the attack message without
+  `multirollData`: dnd4e 0.9.3's `MultiAttackRoll.toMessage` posts one roll
+  per target (`message.rolls = rollArray`), each with its row in
+  `roll.options.multirollData`. Both Chances and Modifiers Matter now read
+  the rows that way (`scripts/systems/dnd4e/attack-rows.mjs`; the older
+  shapes still read).
 - (verify) PF2e 8.7's roll window: `renderCheckModifiersDialog`,
   `app.check.totalModifier`, `app.context.dc`, `rollTwice`, and that it
   re-renders when a modifier is toggled; 4e: the multiroll card's

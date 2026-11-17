@@ -1,5 +1,6 @@
 import { MODULE_ID } from "./constants.mjs";
 import { registerChancesAdapter, chances, d20Of, barHTML, label } from "../../features/roll-chances.js";
+import { attackRows } from "./attack-rows.mjs";
 
 /**
  * D&D 4e for Roll Chances: Miss / Hit / Crit per target of an attack roll, against the defense the system
@@ -26,31 +27,6 @@ export function saveSegments(modifier, dc, mode = "normal") {
 
 const debug = (...args) => CONFIG.debug?.lucd20Chances && console.log(`${MODULE_ID} | chances`, ...args);
 
-/** The kept d20 of one multiroll entry's dice parts, and its mode. */
-function partD20(parts) {
-	const die = (parts ?? []).find((p) => Number(p.faces) === 20 || /d20/i.test(String(p.formula ?? "")));
-	if (!die) return null;
-	const rolls = die.rolls ?? die.results ?? [];
-	const kept = rolls.filter((r) => !/discarded|rerolled/.test(String(r.classes ?? "")) && r.discarded !== true && r.active !== false);
-	const formula = String(die.formula ?? "");
-	const mode = rolls.length >= 2 ? (/kl|dh/.test(formula) ? "low" : "high") : "normal";
-	const natural = parseInt(String(kept[0]?.result ?? "").replace(/<[^>]+>/g, ""), 10);
-	return Number.isFinite(natural) ? { natural, mode } : null;
-}
-
-/** The attack's rows, from the Roll or straight from the message's stored data (any Roll class). */
-function multiData(message) {
-	const roll = message.rolls?.[0];
-	if (roll?.multirollData?.length) return roll.multirollData;
-	try {
-		const raw = message._source?.rolls?.[0];
-		const data = typeof raw === "string" ? JSON.parse(raw) : raw;
-		return data?.multirollData?.length ? data.multirollData : null;
-	} catch {
-		return null;
-	}
-}
-
 /** The defense of a row's target now (when the attack's own numbers weren't kept). */
 function liveDefense(entry) {
 	const token = canvas.tokens?.get?.(entry.targetID) ?? canvas.tokens?.placeables?.find((t) => t.id === entry.targetID);
@@ -59,8 +35,8 @@ function liveDefense(entry) {
 }
 
 function onPreCreate(message) {
-	const rows = multiData(message);
-	debug("preCreate", { rows: rows?.length, pending, fresh: fresh() });
+	const rows = attackRows(message);
+	debug("preCreate", { rows: rows.length, pending, fresh: fresh() });
 	if (!rows?.length || !fresh()) return;
 	message.updateSource({ [`flags.${MODULE_ID}.chances`]: { crit: pending.crit ?? 20, defs: pending.defs ?? [], immune: pending.immune ?? [] } });
 	pending = null;
@@ -70,18 +46,17 @@ function onCard(feature, message, html) {
 	if (html.querySelector?.(".lucd20-ch-bar")) return;
 	const roll = message.rolls?.[0];
 	const data = message.flags?.[MODULE_ID]?.chances ?? null;
-	const multi = multiData(message);
-	debug("render", { multi: multi?.length, data });
-	if (multi?.length) {
+	const multi = attackRows(message);
+	debug("render", { rows: multi.length, data });
+	if (multi.length) {
 		if (!game.user.isGM && !feature.get("showPlayers4e")) return;
 		let rows = [...html.querySelectorAll(".hit-prediction")];
 		if (rows.length !== multi.length) rows = [...html.querySelectorAll(".dice-result")];
-		multi.forEach((entry, i) => {
+		multi.forEach(({ entry, total, natural, mode }, i) => {
 			const def = Number(data?.defs?.[i] ?? liveDefense(entry));
-			const die = partD20(entry.parts);
-			debug("row", i, { entry, def, die, row: !!rows[i] });
-			if (!die || !Number.isFinite(def) || data?.immune?.[i] || entry.immune || !rows[i]) return;
-			rows[i].insertAdjacentHTML("afterend", barHTML(attackSegments(Number(entry.total) - die.natural, def, { crit: data?.crit ?? 20, mode: die.mode })));
+			debug("row", i, { entry, total, natural, def, row: !!rows[i] });
+			if (!natural || !Number.isFinite(total) || !Number.isFinite(def) || data?.immune?.[i] || entry.immune || !rows[i]) return;
+			rows[i].insertAdjacentHTML("afterend", barHTML(attackSegments(total - natural, def, { crit: data?.crit ?? 20, mode })));
 		});
 		return;
 	}
@@ -115,4 +90,4 @@ registerChancesAdapter({
 	}
 });
 
-export const _test = { attackSegments, saveSegments, onCard, onPreCreate, partD20, setPending: (p) => { pending = p; } };
+export const _test = { attackSegments, saveSegments, onCard, onPreCreate, setPending: (p) => { pending = p; } };

@@ -152,10 +152,10 @@ export function place() {
 	const rightEls = ["sidebar", "sidebar-tabs", "sidebar-content", "chat-form"].map((id) => document.getElementById(id)).concat([...document.querySelectorAll("#chat-notifications .chat-form, #interface .chat-form")]);
 	const lefts = rightEls.map(vis).filter((r) => r && r.bottom > band && r.left > W * 0.35).map((r) => r.left);
 	const right = lefts.length ? Math.min(...lefts) : W;
-	const width = Math.max(560, Math.min(1240, right - 8));
+	const width = Math.max(560, Math.min(1480, right - 8));
 	const hot = document.getElementById("hotbar");
 	const outside = hot && !root.contains(hot) ? vis(hot) : null;
-	Object.assign(root.style, { left: "0px", width: root.classList.contains("empty") ? "auto" : `${Math.round(width)}px`, bottom: `${outside ? Math.round(H0 - outside.top + 4) : 0}px` });
+	Object.assign(root.style, { left: "0px", width: `${Math.round(width)}px`, bottom: `${outside ? Math.round(H0 - outside.top + 4) : 0}px` });
 }
 
 /* -------------------------------------------- */
@@ -176,7 +176,8 @@ export async function draw() {
 	root.classList.toggle("empty", !actor);
 	if (!actor) {
 		st.actor = null; st.model = null;
-		main.innerHTML = "";
+		// v0.43.3: the band keeps its size and place with nobody shown (owner: "make elements be fixed").
+		main.innerHTML = `<p class="h4-empty">${H(game.user.isGM ? "EmptyGM" : "EmptyPlayer")}</p>`;
 		root.querySelector(".h4-dock").innerHTML = "";
 		return placeAll();
 	}
@@ -201,7 +202,7 @@ function render() {
 	fitAll(root);
 }
 
-const portrait = (m) => `<div class="h4-por" data-h4="sheet" data-tooltip="${esc(H("OpenSheet"))}"><img src="${esc(m.img)}" alt=""></div>`;
+const portrait = (m) => `<div class="h4-por" data-h4="sheet"><img src="${esc(m.img)}" alt=""></div>`;
 
 function hpBar(m) {
 	const { value, max, temp } = m.hp;
@@ -235,13 +236,9 @@ function rangeHTML(r) {
 	return `${icon}${second}${r.text ? ` ${esc(r.text)}` : ""}`;
 }
 
-function tooltipOf(p) {
-	return [p.fullName, p.keywords, p.trigger ? `${H("Trigger")}: ${p.trigger}` : ""].filter(Boolean).join(" · ");
-}
-
 function powerChip(p) {
 	const pips = p.uses && p.uses.max > 1 ? `<span class="h4-uses">${Array.from({ length: p.uses.max }, (_, i) => `<i class="${i < p.uses.left ? "full" : ""}"></i>`).join("")}</span>` : "";
-	return `<div class="h4-pw u-${p.row}${p.used ? " used" : ""}" data-power="${p.id}" data-tooltip="${esc(tooltipOf(p))}">
+	return `<div class="h4-pw u-${p.row}${p.used ? " used" : ""}" data-power="${p.id}">
 		<div class="h4-h fit">${esc(p.name)}${pips}</div><div class="h4-k"><span class="rg fit">${rangeHTML(p.range)}</span><span class="at">${esc(p.attack)}</span></div></div>`;
 }
 
@@ -257,14 +254,15 @@ function powers(m, inCombat) {
 	if (!TABS.includes(st.tab)) st.tab = "standard";
 	const tab = st.tab;
 	const list = m.powers.filter((p) => p.tab === tab);
-	const rows = ROWS.map((row) => {
+	// v0.43.3 (owner): usage in columns, which grow downward (and scroll) as powers are added.
+	const cols = ROWS.map((row) => {
 		const chips = list.filter((p) => p.row === row).map(powerChip);
 		if (row === "basic") chips.push(...basics(tab).map(basicChip));
-		return chips.length ? `<div class="h4-row"><b class="u-${row}">${H(`Row.${row}`)}</b><div class="h4-chips">${chips.join("")}</div></div>` : "";
+		return `<div class="h4-col"><b class="u-${row}">${H(`Row.${row}`)}</b><div class="h4-stack">${chips.join("") || `<span class="h4-dash">—</span>`}</div></div>`;
 	}).join("");
 	return `<div class="h4-powers"><div class="h4-tabs">${TABS.map((t) => `<button type="button" data-tab="${t}" class="${t === tab ? "act" : ""}">
 		<i class="fa-solid ${TAB_ICON[t]}"></i> ${H(`Tab.${t}`)}<span class="n">${count(t)}</span></button>`).join("")}</div>
-		<div class="h4-rows">${rows || `<p class="h4-none">${H("NoPowers")}</p>`}</div></div>`;
+		<div class="h4-cols">${cols}</div></div>`;
 }
 
 function dock(combatant, inCombat) {
@@ -277,7 +275,7 @@ function dock(combatant, inCombat) {
 		const offTurnOnly = kind === "immediate" || kind === "opportunity";
 		const cls = left[kind] > 0 ? ((offTurnOnly ? ownTurn : !ownTurn) ? "off" : "on") : "spent";
 		const extra = kind === "standard" && state.extra > 0 ? `<sup>${Math.max(0, left.standard)}</sup>` : "";
-		return `<span class="${cls}" ${editable ? `data-pip="${kind}"` : ""} data-tooltip="${esc(L(`Actions.${kind}`))}"><i class="fa-solid ${icon}"></i>${esc(H(`Dock.${kind}`))}${extra}</span>`;
+		return `<span class="${cls}" ${editable ? `data-pip="${kind}"` : ""}><i class="fa-solid ${icon}"></i>${esc(H(`Dock.${kind}`))}${extra}</span>`;
 	}).join("")}</div>`;
 }
 

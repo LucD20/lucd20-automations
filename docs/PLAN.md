@@ -1767,3 +1767,20 @@ at x 1572 with `#sidebar-tabs` 48 wide and `#sidebar-content` 312 wide).
 The HUD drew at [0, 819, 1240 × 190]; `#players` sat in its corner at
 [4, 668, 200 × 145]; `#hotbar` (an `aside.flexrow`) is 210 × 62 inside it, wider
 than the 182 px column, so the column is now 224 px.
+
+**v0.43.3 (owner's first look in V14):**
+- The band keeps its size and place with nobody shown (a line says to select
+  a token), so the hotbar and players list no longer jump ("make elements be
+  fixed").
+- Usage in **columns** again (At-Will, Encounter, Daily, Basic; always all
+  four, "—" when empty), each growing downward and scrolling: "it will likely
+  increase".
+- No hover tooltips in the HUD for now.
+- Hotbar: slots 40 px with a small corner number (owner: the icons could not
+  be seen); the right controls (page + lock / clear) side by side; the HUD's
+  button style no longer reaches Foundry's hotbar buttons (it replaced their
+  icon font: the mute, menu, page and lock buttons showed empty boxes).
+  V14 hotbar (owner's check): `#hotbar-controls-left` (mute, menu, 24 px),
+  `menu#action-bar` of `li.slot`, `#hotbar-controls-right` (`nav#hotbar-page-controls`
+  + a column with lock / clear). Right column 300 px; HUD up to 1480 px wide.
+- (verify) the slot number element is `.slot .key` (styled small in a corner).

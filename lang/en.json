@@ -1717,7 +1717,9 @@
       },
       "NoPowers": "No powers of this kind.",
       "NotInCombat": "Actions are tracked in combat.",
-      "APUsed": "{name} already spent an Action Point this encounter."
+      "APUsed": "{name} already spent an Action Point this encounter.",
+      "EmptyGM": "Select a character's token to see its HUD.",
+      "EmptyPlayer": "No character: select your token, or ask the GM to assign you one."
     }
   },
   "DND4EAUTO": {

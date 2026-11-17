@@ -83,7 +83,8 @@ const assert = require("assert");
     Hooks.callAll("controlToken"); await settle();
     const root = () => document.getElementById("lucd20-hud4e");
     const txt = el => el?.textContent.replace(/\s+/g, " ").trim();
-    const rows = () => [...root().querySelectorAll(".h4-row")].map(row => [txt(row.querySelector(":scope > b")), [...row.querySelectorAll(".h4-pw")].map(p => txt(p.querySelector(".h4-h")))]);
+    // The usage columns that have something: [label, [names]].
+    const rows = () => [...root().querySelectorAll(".h4-col")].map(col => [txt(col.querySelector(":scope > b")), [...col.querySelectorAll(".h4-pw")].map(p => txt(p.querySelector(".h4-h")))]).filter(c => c[1].length);
 
     out.mounted = [!!root(), root().classList.contains("dark"), root().querySelector(".h4-hot #hotbar") !== null, root().querySelector(".h4-players #players") !== null];
     out.plate = [...root().querySelector(".h4-plate").children].map(txt).join(" ");
@@ -112,7 +113,8 @@ const assert = require("assert");
     out.freeUsed = root().querySelector('[data-power="p7"]').classList.contains("used");
     root().querySelector('[data-tab="triggered"]').click();
     out.triggered = rows();
-    out.tooltip = root().querySelector('[data-power="p8"]').dataset.tooltip;
+    out.tooltips = root().querySelectorAll("[data-tooltip]").length;
+    out.columns = [...root().querySelectorAll(".h4-col > b")].map(txt);
     root().querySelector('[data-tab="standard"]').click();
 
     // Dying: death saves in place of surges.
@@ -153,10 +155,12 @@ const assert = require("assert");
     const settle = (ms = 150) => new Promise(res => setTimeout(res, ms));
     const root = () => document.getElementById("lucd20-hud4e");
     const out = {};
+    const txt = el => el?.textContent.replace(/\s+/g, " ").trim();
     // The GM with nothing selected: no character; the hotbar stays in the HUD's corner.
     canvas.tokens.controlled = [];
     Hooks.callAll("controlToken"); await settle();
-    out.empty = [root().classList.contains("empty"), !!root().querySelector(".h4-hot #hotbar"), root().querySelector(".h4-main").children.length];
+    const box = root().getBoundingClientRect();
+    out.empty = [root().classList.contains("empty"), !!root().querySelector(".h4-hot #hotbar"), txt(root().querySelector(".h4-main")), Math.round(box.height), Math.round(box.width) > 1000];
     // The hotbar option off: back where Foundry had it.
     await game.settings.set(M, "dnd4eHud_hotbar", false); await settle();
     out.hotbarBack = document.getElementById("hotbar").parentElement.id;
@@ -182,19 +186,20 @@ const assert = require("assert");
   assert.deepStrictEqual(r.twin, ["/ W+6 vs AC", 2], "range icons and the sheet's attack bonus");
   assert.deepStrictEqual(r.fit, [true, true], "a long name fits its line");
   assert.deepStrictEqual(r.dock, ["spent", "on", "on", "off", "off"], "the dock: standard spent, immediate/opportunity not on own turn");
-  assert.ok(r.width >= 1000 && r.width <= 1240, `width ${r.width}`);
+  assert.ok(r.width >= 1000 && r.width <= 1480, `width ${r.width}`);
   assert.strictEqual(r.pip, 1, "a dock tile toggles its action");
   assert.deepStrictEqual(r.minor, [["At-Will", ["Hunter's Quarry"]], ["Encounter", ["Majestic Word"]]]);
   assert.deepStrictEqual(r.pips, ["full", "empty"], "uses left as pips");
   assert.strictEqual(r.freeUsed, true, "a power with no uses left is greyed");
   assert.deepStrictEqual(r.triggered, [["Encounter", ["Fox's Cunning"]]]);
-  assert.ok(r.tooltip.includes("Trigger: An enemy makes a melee attack against you"));
+  assert.strictEqual(r.tooltips, 0, "no hover tooltips in the HUD (owner, v0.43.3)");
+  assert.deepStrictEqual(r.columns, ["At-Will", "Encounter", "Daily", "Basic"], "the four usage columns are always there");
   assert.deepStrictEqual(r.dying, ["-3 / 26 · Dying", "Death saves", 1], "at 0 HP: dying, death saves with one failure");
   assert.deepStrictEqual(r.calls, ["use:Ranger 01-Twin Strike", "ap", "death", "sheet"], "click uses (usePower), AP, death save, sheet");
   assert.strictEqual(r.itemSheet, "Ranger 01-Twin Strike", "right click opens the power");
   assert.deepStrictEqual(r.noCombat, ["Actions are tracked in combat.", ["Melee Basic Attack", "Ranged Basic Attack"]], "out of combat: no dock, no basic actions");
   assert.strictEqual(r.light, true);
-  assert.deepStrictEqual(r3.empty, [true, true, 0], "GM with nothing selected: no character, hotbar stays");
+  assert.deepStrictEqual(r3.empty, [true, true, "Select a character's token to see its HUD.", 190, true], "GM with nothing selected: the band keeps its size and place, hotbar stays");
   assert.strictEqual(r3.hotbarBack, "ui-bottom", "hotbar option off: back in Foundry's place");
   assert.deepStrictEqual(r3.off, [false, "ui-bottom", "ui-left"], "HUD off: gone, both back");
   assert.deepStrictEqual(errors, []);

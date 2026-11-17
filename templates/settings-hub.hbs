@@ -5,12 +5,24 @@
         <i class="fa-solid fa-magnifying-glass"></i>
         <input type="search" data-search placeholder="{{labels.search}}" autocomplete="off">
       </label>
-      {{#each categories}}
-      <button type="button" class="lucd20-hub-tab {{#if active}}active{{/if}}" data-action="selectCategory" data-category="{{id}}">
-        <i class="{{icon}} fa-fw"></i>
-        <span class="label">{{label}}</span>
-        {{#if builtCount}}<span class="count">{{enabledCount}}/{{builtCount}}</span>{{/if}}
-      </button>
+      {{#each groups}}
+      <div class="lucd20-nav-group {{#if open}}open{{/if}}" data-group="{{id}}">
+        <button type="button" class="lucd20-nav-group-head" data-action="toggleGroup">
+          <i class="fa-solid fa-caret-right fa-fw caret"></i><span class="label">{{label}}</span>
+        </button>
+        <div class="lucd20-nav-pages">
+        {{#each pages}}
+        <button type="button" class="lucd20-hub-tab {{#if active}}active{{/if}}" data-action="selectCategory" data-category="{{id}}">
+          <i class="{{icon}} fa-fw"></i>
+          <span class="label">{{label}}</span>
+          {{#if builtCount}}<span class="count">{{enabledCount}}/{{builtCount}}</span>{{/if}}
+        </button>
+        {{#each anchors}}
+        <button type="button" class="lucd20-hub-tab sub" data-action="selectCategory" data-category="{{../id}}" data-section="{{id}}"><span class="label">{{label}}</span></button>
+        {{/each}}
+        {{/each}}
+        </div>
+      </div>
       {{/each}}
     </nav>
 
@@ -26,9 +38,12 @@
           {{#if hint}}<p>{{hint}}</p>{{/if}}
         </header>
 
+        {{#each sections}}
+        <div class="lucd20-hub-section" data-section="{{id}}">
+        {{#if label}}<h3 class="lucd20-section-label">{{label}}</h3>{{/if}}
         {{#each cards}}
-        <article class="lucd20-feature {{#if planned}}planned{{/if}} {{#unless enabled}}off{{/unless}}" data-feature="{{id}}" data-search-text="{{searchText}}">
-          <header class="lucd20-feature-header">
+        <article class="lucd20-feature {{#if planned}}planned{{/if}} {{#unless enabled}}off{{/unless}} {{#if open}}open{{/if}}" data-feature="{{id}}" data-search-text="{{searchText}}">
+          <header class="lucd20-feature-header" data-action="toggleFeature">
             {{#if canToggle}}
             <label class="lucd20-switch" data-tooltip="{{@root.labels.enable}}">
               <input type="checkbox" name="{{enabledName}}" data-feature-toggle {{#if enabled}}checked{{/if}} {{#if toggleLocked}}disabled{{/if}}>
@@ -40,15 +55,17 @@
             <button type="button" class="lucd20-lock icon mode-{{toggleLock.mode}}" data-action="lockSetting" data-key="{{toggleLock.key}}" data-tooltip="{{toggleLock.tooltip}}"><i class="{{toggleLock.icon}}"></i></button>
             {{/if}}
             {{#if toggleLocked}}<i class="lucd20-lock fa-solid fa-lock" data-tooltip="{{toggleLock.tooltip}}"></i>{{/if}}
-            {{#each systemTags}}<span class="lucd20-tag system">{{this}}</span>{{/each}}
+            <span class="lucd20-feature-summary">{{hint}}</span>
             {{#if planned}}<span class="lucd20-tag planned">{{plannedLabel}}</span>{{/if}}
             {{#if isClient}}<i class="lucd20-badge fa-solid fa-user" data-tooltip="{{@root.labels.scopeClient}}"></i>{{/if}}
+            <i class="fa-solid fa-caret-down lucd20-feature-caret" aria-label="{{@root.labels.expand}}"></i>
+          </header>
+          <div class="lucd20-feature-body">
             {{#if canReset}}
-            <button type="button" class="lucd20-feature-reset icon" data-action="resetFeature" data-feature="{{id}}" data-tooltip="{{@root.labels.reset}}">
+            <button type="button" class="lucd20-feature-reset icon in-body" data-action="resetFeature" data-feature="{{id}}" data-tooltip="{{@root.labels.reset}}">
               <i class="fa-solid fa-arrow-rotate-left"></i>
             </button>
             {{/if}}
-          </header>
           {{#if hint}}<p class="lucd20-feature-hint">{{hint}}</p>{{/if}}
 
           {{#if hasSettings}}
@@ -92,7 +109,10 @@
             {{#if panelHTML}}<div class="lucd20-feature-panel">{{{panelHTML}}}</div>{{/if}}
           </div>
           {{/if}}
+          </div>
         </article>
+        {{/each}}
+        </div>
         {{/each}}
       </div>
       {{/each}}

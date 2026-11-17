@@ -759,3 +759,18 @@ one that leaves fewer squares next to enemies (see PLAN).
   hover, the exact reach (the area's shape minus what walls cut off) is drawn
   above the tokens, amber fill and outline, with the cover lines on top; if
   the shape can't be worked out, the covered squares are outlined instead.
+
+## Settings window and two small additions (v0.62.0)
+
+- Owner: "reorganize the settings [...] collapsed by default, organize so more
+  fits per row; for automation, divide between Core Rules, Classes (divide
+  per class)". Mockups A, B, C; Q241: "C is best"; Q242–Q243 defaults. See
+  PLAN §2.
+- Owner: "The cover calculation lines for 4e are under the token": the 4e
+  cover preview is drawn in the controls layer (above tokens).
+- Owner: "Another necessary addition: settings-markers": `settingsMarkers`
+  (Players & Presets page, per player): in Foundry's Configure Settings, a
+  mark before each setting: world / user / this device (the same icons as
+  our window). Switch off "Settings Markers".
+- Owner: "include a new module: instant-range [...] available to all
+  systems": questions asked (Q244–).

@@ -11,6 +11,7 @@
       "Search": "Search settings…",
       "NoResults": "No settings match your search.",
       "Empty": "Nothing to configure yet.",
+      "Expand": "Open or close",
       "Enable": "Turn this feature on or off",
       "Planned": "Planned · phase {phase}",
       "Reset": "Reset this feature's options to their defaults",
@@ -33,6 +34,28 @@
       "pf2e": "PF2e",
       "dnd4e": "D&D 4e",
       "demonlord": "SotDL"
+    },
+    "Nav": { "general": "General", "setup": "Setup", "pf2e": "Pathfinder 2e", "dnd4e": "D&D 4e" },
+    "Page": {
+      "combat": { "Label": "Combat", "Hint": "Turn markers, turn announcements, the combat tracker, movement and loot." },
+      "chat": { "Label": "Chat & Rolls", "Hint": "Pinned messages, the damage log, descriptions and dice statistics." },
+      "tokens": { "Label": "Tokens", "Hint": "Editing, placing, moving and showing tokens." },
+      "visionDoors": { "Label": "Vision & Doors", "Hint": "How the map looks to the GM; door icons, secret and locked doors." },
+      "scenesWindows": { "Label": "Scenes & Windows", "Hint": "Scene navigation, colors, sound; sheets and window title bars." },
+      "pf2eCore": { "Label": "Core Rules", "Hint": "The game's own rules, done for you." },
+      "pf2eClasses": { "Label": "Classes", "Hint": "Class feats and features, class by class." },
+      "pf2eExploration": { "Label": "Exploration", "Hint": "Search and hazard detection." },
+      "pf2eChat": { "Label": "Chat helpers", "Hint": "Chances, the modifiers that mattered, damage estimates." },
+      "dnd4eCore": { "Label": "Core Rules", "Hint": "Cover, opportunity attacks, triggered powers, actions and damage." },
+      "dnd4eClasses": { "Label": "Classes", "Hint": "Class features." },
+      "dnd4eInterface": { "Label": "Interface", "Hint": "The HUD, badges, symbols, sheets and texts." },
+      "dnd4eTools": { "Label": "Tools", "Hint": "Skill challenges, the party stash and the coin log." },
+      "dnd4eChat": { "Label": "Chat helpers", "Hint": "Chances, the modifiers that mattered, damage estimates." },
+      "players": { "Label": "Players & Presets", "Hint": "Defaults and locks for players' own settings; saved presets." }
+    },
+    "Section": {
+      "conditions": "Conditions", "actions": "Actions & Checks", "reactions": "Reactions", "battlefield": "Battlefield & Spells", "tools": "Tools",
+      "animist": "Animist", "commander": "Commander", "guardian": "Guardian", "oracle": "Oracle"
     },
     "Category": {
       "combat": {
@@ -323,6 +346,10 @@
             "Hint": "Yes clears the Session counts; All time is kept."
           }
         }
+      },
+      "settingsMarkers": {
+        "Name": "Settings Markers",
+        "Hint": "In Foundry's Configure Settings, a small mark before each setting: the world (the GM sets it for everyone), each user, or this device. Replaces Settings Markers (switch that one off)."
       },
       "forceSettings": {
         "Name": "Force Player Settings",
@@ -973,6 +1000,11 @@
       "Temp": "Temp",
       "Undo": "Undo this change",
       "Reverted": "undone"
+    },
+    "SettingsMarkers": {
+      "world": "World: the GM sets it for everyone",
+      "user": "User: each user sets their own",
+      "client": "This device: each browser keeps its own"
     },
     "Chances": {
       "criticalFailure": "Critical failure",

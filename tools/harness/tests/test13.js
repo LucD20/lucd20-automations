@@ -64,12 +64,12 @@ async function setupMocks(page) {
   // ---------- Settings window: Scenes & Sound + planned entries ----------
   const tabs = await page.$$eval(".lucd20-hub-tab", els => els.map(e => e.dataset.category));
   console.log("Tabs:", tabs.join(", "));
-  assert.ok(tabs.includes("scenes"), "Scenes & Sound category shown");
-  await page.click('.lucd20-hub-tab[data-category="scenes"]');
+  assert.ok(tabs.includes("scenesWindows"), "Scenes & Windows page shown");
+  await page.click('.lucd20-hub-tab[data-category="scenesWindows"]');
   await page.waitForTimeout(150);
-  const scenes = await page.$$eval('.lucd20-hub-category[data-category="scenes"] .lucd20-feature', els => els.map(e => [e.dataset.feature ?? e.querySelector("h3,h4,.lucd20-feature-name")?.textContent.trim(), e.classList.contains("planned")]));
+  const scenes = await page.$$eval('.lucd20-hub-category[data-category="scenesWindows"] .lucd20-feature', els => els.map(e => [e.dataset.feature ?? e.querySelector("h3,h4,.lucd20-feature-name")?.textContent.trim(), e.classList.contains("planned")]));
   console.log("Scenes:", scenes);
-  assert.strictEqual(scenes.length, 3);
+  assert.ok(scenes.some(s => s[0] === "sceneNavigation") && scenes.some(s => s[0] === "cleanTitleBars"), "scenes and windows share a page (v0.62.0)");
   assert.ok(scenes.every(s => !s[1]), "every scene feature is built");
   await page.screenshot({ path: `${out}/p12-hub-scenes.png` });
   await page.click('.lucd20-hub-tab[data-category="combat"]');

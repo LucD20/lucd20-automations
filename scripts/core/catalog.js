@@ -62,6 +62,7 @@ export const FEATURE_ORDER = [
   { id: "sceneAudit", category: "scenes", phase: 31 },
   { id: "diceStats", category: "statistics", phase: 8 },
   { id: "forceSettings", category: "playerSettings", phase: 2 },
+  { id: "settingsMarkers", category: "playerSettings", phase: 56 },
   { id: "settingPresets", category: "setup", phase: 34 },
   { id: "searchAutomation", category: "exploration", phase: 11, systems: ["pf2e"] },
   { id: "hazardDetection", category: "exploration", phase: 11, systems: ["pf2e"] },
@@ -105,4 +106,81 @@ export const FEATURE_ORDER = [
 /** Whether a category / feature entry applies to the active game system. */
 export function isAvailableForSystem(entry) {
   return !entry.systems?.length || entry.systems.includes(game.system.id);
+}
+
+/* -------------------------------------------- */
+/*  The settings window's layout (v0.62.0)      */
+/* -------------------------------------------- */
+
+/**
+ * The owner chose layout C (docs/mockups/settings-c.png): a tree on the left (groups → pages → a class's
+ * section), one line per feature, options opening under it. Groups: General, the active system, Setup.
+ * A page takes its features from old categories (`from`) and from PLACE; sections order a page.
+ */
+export const NAV = [
+  { id: "general", pages: [
+    { id: "combat", icon: "fa-solid fa-shield-halved", from: ["combat"] },
+    { id: "chat", icon: "fa-solid fa-comments", from: ["chat", "statistics"] },
+    { id: "tokens", icon: "fa-solid fa-map-location-dot", from: ["tokens"] },
+    { id: "visionDoors", icon: "fa-solid fa-eye", from: ["vision", "doors"] },
+    { id: "scenesWindows", icon: "fa-solid fa-clapperboard", from: ["scenes", "sheets"] }
+  ] },
+  { id: "pf2e", systems: ["pf2e"], pages: [
+    { id: "pf2eCore", icon: "fa-solid fa-book", from: ["pf2e"], sections: ["conditions", "actions", "reactions", "battlefield", "tools"] },
+    { id: "pf2eClasses", icon: "fa-solid fa-users", sections: ["animist", "commander", "guardian", "oracle"], tree: true },
+    { id: "pf2eExploration", icon: "fa-solid fa-magnifying-glass", from: ["exploration"] },
+    { id: "pf2eChat", icon: "fa-solid fa-dice", features: ["rollChances", "modifiersMatter", "damageEstimate"] }
+  ] },
+  { id: "dnd4e", systems: ["dnd4e"], pages: [
+    { id: "dnd4eCore", icon: "fa-solid fa-book", from: ["dnd4e"] },
+    { id: "dnd4eClasses", icon: "fa-solid fa-users" },
+    { id: "dnd4eInterface", icon: "fa-solid fa-display" },
+    { id: "dnd4eTools", icon: "fa-solid fa-toolbox" },
+    { id: "dnd4eChat", icon: "fa-solid fa-dice", features: ["rollChances", "modifiersMatter", "damageEstimate"] }
+  ] },
+  { id: "setup", pages: [
+    { id: "players", icon: "fa-solid fa-user-lock", from: ["playerSettings", "setup"] }
+  ] }
+];
+
+/** Where a feature goes when not by its category: page and section. */
+export const PLACE = {
+  pf2eFrightened: { page: "pf2eCore", section: "conditions" },
+  pf2eSickened: { page: "pf2eCore", section: "conditions" },
+  pf2eShove: { page: "pf2eCore", section: "actions" },
+  pf2eTrip: { page: "pf2eCore", section: "actions" },
+  pf2eFlatCheck: { page: "pf2eCore", section: "actions" },
+  pf2eReactions: { page: "pf2eCore", section: "reactions" },
+  pf2eReactiveStrike: { page: "pf2eCore", section: "reactions" },
+  pf2eShieldBlock: { page: "pf2eCore", section: "reactions" },
+  pf2eCover: { page: "pf2eCore", section: "battlefield" },
+  pf2eAreas: { page: "pf2eCore", section: "battlefield" },
+  pf2eSustain: { page: "pf2eCore", section: "battlefield" },
+  pf2eHands: { page: "pf2eCore", section: "tools" },
+  pf2eCtrlClick: { page: "pf2eCore", section: "tools" },
+  pf2eRoaringHeart: { page: "pf2eClasses", section: "animist" },
+  pf2eDemoralizingCharge: { page: "pf2eClasses", section: "commander" },
+  pf2ePunishingShove: { page: "pf2eClasses", section: "guardian" },
+  pf2eTemporalDistortion: { page: "pf2eClasses", section: "oracle" },
+  dnd4eClassFeatures: { page: "dnd4eClasses" },
+  dnd4eHud: { page: "dnd4eInterface" },
+  dnd4eReadableRolls: { page: "dnd4eInterface" },
+  dnd4eSheetHighlights: { page: "dnd4eInterface" },
+  dnd4ePowerSymbols: { page: "dnd4eInterface" },
+  dnd4eTokenBadges: { page: "dnd4eInterface" },
+  dnd4eMonsterTexts: { page: "dnd4eInterface" },
+  dnd4eGameLanguage: { page: "dnd4eInterface" },
+  dnd4eSkillChallenge: { page: "dnd4eTools" },
+  dnd4ePartyStash: { page: "dnd4eTools" },
+  dnd4eCoinLog: { page: "dnd4eTools" }
+};
+
+/** The page (and section) a feature belongs to in this world. */
+export function placeOf(id, category) {
+  const place = PLACE[id];
+  if (place) return place;
+  const groups = NAV.filter(isAvailableForSystem);
+  for (const group of groups) for (const page of group.pages) if (page.features?.includes(id)) return { page: page.id };
+  for (const group of groups) for (const page of group.pages) if (page.from?.includes(category)) return { page: page.id };
+  return { page: null };
 }

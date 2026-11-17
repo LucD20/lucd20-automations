@@ -29,15 +29,17 @@ const out = __dirname;
     };
   });
   console.log(info);
-  assert.ok(info.tabs.includes("dnd4e"), "D&D 4e category");
+  assert.ok(info.tabs.includes("dnd4eCore") && info.tabs.includes("dnd4eInterface"), "D&D 4e pages (v0.62.0 tree)");
   assert.deepStrictEqual(info.api.sort(), ["applyMark", "computeCover", "drawCoverPreview", "openActionPanel", "translateExisting"], "API under api.dnd4e");
   assert.ok(info.quarry && info.cover && info.preview, "defaults on");
   assert.ok(info.hooks[0] > 0 && info.hooks[1] > 0, "4e hooks registered");
-  await page.click('.lucd20-hub-tab[data-category="dnd4e"]');
+  await page.click('.lucd20-hub-tab[data-category="dnd4eCore"]');
   await page.waitForTimeout(150);
-  const cards = await page.$$eval('.lucd20-hub-category[data-category="dnd4e"] .lucd20-feature', els => els.map(e => [e.innerText.split("\n")[0].trim(), e.classList.contains("planned")]));
+  // Every 4e feature, on the 4e pages (Core Rules, Classes, Interface, Tools).
+  const cards = await page.$$eval('.lucd20-hub-category[data-category^="dnd4e"] .lucd20-feature[data-feature^="dnd4e"]', els => els.map(e => [e.dataset.feature, e.classList.contains("planned")]));
   console.log(cards);
-  assert.strictEqual(cards.length, 14, "14 cards (13 from the merge + Skill Challenges)");
+  const expected = await page.evaluate(async () => (await import("/modules/lucd20-automations/scripts/core/catalog.js")).FEATURE_ORDER.filter(f => f.id.startsWith("dnd4e")).length);
+  assert.strictEqual(cards.length, expected, "every 4e feature of the catalog is on a 4e page");
   assert.ok(cards.every(c => !c[1]), "all built");
   await page.evaluate(() => { const f = document.querySelector("form.lucd20-hub"); f.style.height = "960px"; });
   await page.screenshot({ path: `${out}/p26-dnd4e-cards.png` });
@@ -112,7 +114,7 @@ const out = __dirname;
     hooks: ["dnd4e.usePower", "dnd4e.rollAttack", "preCreateChatMessage"].map(h => (Hooks._h[h] ?? []).length)
   }));
   console.log(other);
-  assert.ok(!other.tabs.includes("dnd4e"), "no 4e category in PF2e");
+  assert.ok(!other.tabs.some(t => t?.startsWith("dnd4e")), "no 4e page in PF2e");
   assert.ok(!other.api, "no 4e API in PF2e");
   assert.deepStrictEqual(other.hooks.slice(0, 2), [0, 0], "no 4e hooks in PF2e");
 

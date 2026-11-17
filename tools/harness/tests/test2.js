@@ -16,12 +16,15 @@ const M = "lucd20-automations";
     return page;
   };
   const rules = page => page.evaluate(() => __values.get("lucd20-automations.forceSettings_rules"));
+  // v0.62.0: features start collapsed; open every line of the shown page (the window keeps them open).
+  const openAll = page => page.evaluate(() => { for (const f of document.querySelectorAll(".lucd20-hub-category.active .lucd20-feature:not(.open) .lucd20-feature-name")) f.click(); });
 
   // ---------- GM ----------
   let page = await open("gm=1");
   // feature off by default → no lock buttons
   assert.strictEqual(await page.$$eval(".lucd20-hub .lucd20-lock", e => e.length), 0);
-  await page.click('.lucd20-hub-tab[data-category="playerSettings"]');
+  await page.click('.lucd20-hub-tab[data-category="players"]');
+  await openAll(page);
   await page.click('.lucd20-feature[data-feature="forceSettings"] .lucd20-switch');
   await page.waitForTimeout(100);
   assert.ok(await page.isVisible("text=No forced settings yet."));
@@ -33,6 +36,7 @@ const M = "lucd20-automations";
 
   // lock "Show for me" (GM value true)
   await page.click('.lucd20-hub-tab[data-category="combat"]');
+  await openAll(page);
   await page.click(`button.lucd20-lock[data-key="${M}.demoMarker_myClient"]`);
   await page.waitForTimeout(100);
   let r = await rules(page);
@@ -47,7 +51,8 @@ const M = "lucd20-automations";
 
   // Shift+click = Default, Ctrl+click = Locked (no dialog)
   await page.evaluate(() => { window.__dialogContent = null; });
-  await page.click('.lucd20-hub-tab[data-category="sheets"]');
+  await page.click('.lucd20-hub-tab[data-category="scenesWindows"]');
+  await openAll(page);
   await page.click(`button.lucd20-lock[data-key="${M}.demoClient_enabled"]`, { modifiers: ["Shift"] });
   await page.waitForTimeout(100);
   assert.strictEqual((await rules(page))[`${M}.demoClient_enabled`].mode, "default");
@@ -57,6 +62,7 @@ const M = "lucd20-automations";
   assert.strictEqual(await page.evaluate(() => window.__dialogContent), null, "no dialog for shortcuts");
   // scroll kept on re-render
   await page.click('.lucd20-hub-tab[data-category="combat"]');
+  await openAll(page);
   await page.evaluate(() => { document.querySelector(".lucd20-hub-content").scrollTop = 120; });
   const before = await page.evaluate(() => document.querySelector(".lucd20-hub-content").scrollTop);
   console.log("scrollTop before re-render:", before);
@@ -67,6 +73,7 @@ const M = "lucd20-automations";
   await page.evaluate(() => game.settings.set("lucd20-automations", "forceSettings_rules",
     Object.fromEntries(Object.entries(game.settings.get("lucd20-automations", "forceSettings_rules")).filter(([k]) => !k.includes("demoClient")))));
   await page.click('.lucd20-hub-tab[data-category="combat"]');
+  await openAll(page);
 
   // core settings window: buttons for client settings only
   await page.evaluate(() => __decorateCore());
@@ -96,7 +103,8 @@ const M = "lucd20-automations";
   assert.strictEqual(r["other.mode"].value, "a");
 
   // panel lists both; screenshot
-  await page.click('.lucd20-hub-tab[data-category="playerSettings"]');
+  await page.click('.lucd20-hub-tab[data-category="players"]');
+  await openAll(page);
   await page.waitForTimeout(100);
   const rows = await page.$$eval(".lucd20-forced-list tbody tr", trs => trs.map(t => t.innerText.replace(/\s+/g, " ").trim()));
   console.log("Panel rows:", rows);
@@ -148,7 +156,8 @@ const M = "lucd20-automations";
   assert.ok(!(await page.isChecked('input[name="demoMarker_myClient"]')));
   assert.strictEqual(await page.$$eval(".lucd20-hub button.lucd20-lock", e => e.length), 0, "players get no lock buttons");
   await page.screenshot({ path: `${out}/p2-player-combat.png`, clip: { x: 0, y: 0, width: 960, height: 720 } });
-  await page.click('.lucd20-hub-tab[data-category="sheets"]');
+  await page.click('.lucd20-hub-tab[data-category="scenesWindows"]');
+  await openAll(page);
   assert.ok(await page.isDisabled('input[name="demoClient_enabled"]'));
   assert.ok(await page.isChecked('input[name="demoClient_enabled"]'));
 

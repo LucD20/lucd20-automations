@@ -57,6 +57,20 @@ System-only features get their own category, shown only in that system.
 System-specific extras of a generic feature appear inside that feature's card
 under a labelled sub-section (e.g. "PF2e").
 
+**v0.62.0: layout C** (owner, Q241–Q243; mockups `docs/mockups/settings-a/b/c`):
+the sidebar is a tree: **General** (Combat, Chat & Rolls, Tokens, Vision &
+Doors, Scenes & Windows), the active **system** (PF2e: Core Rules with
+sections Conditions / Actions & Checks / Reactions / Battlefield & Spells /
+Tools, Classes with a section and a tree entry per class, Exploration, Chat
+helpers; 4e: Core Rules, Classes, Interface, Tools, Chat helpers) and
+**Setup** (Players & Presets). The layout lives in `scripts/core/catalog.js`
+(`NAV`, `PLACE`, `placeOf`); features keep their ids and `category`. Each
+feature is one line (switch, name, its hint on one line, a caret); clicking
+it opens the full text and options (three per row; tick boxes beside their
+name; the reset button inside). Everything starts collapsed; opened lines
+stay open while the window is open; the last page and closed tree groups are
+remembered per browser. Search opens the lines whose options match.
+
 ```
 ⚔️ Combat               Turn Marker · Next-Turn Marker · Turn Announcer · Loot Pile
                           · Combat Tracker Window · Hidden Until Started · Defeat at 0 HP · Lock Combat Toggle

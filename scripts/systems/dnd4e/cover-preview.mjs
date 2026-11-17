@@ -16,11 +16,12 @@ function attackerToken() {
 }
 
 function ensureLayer() {
-	if (layer && !layer.destroyed) return layer;
+	if (layer && !layer.destroyed && layer.parent) return layer;
 	layer = new PIXI.Container();
 	layer.name = `${MODULE_ID}-cover-preview`;
 	layer.eventMode = "none";
-	(canvas.interface ?? canvas.stage).addChild(layer);
+	// Above the tokens (owner, v0.62.0: the lines were under them).
+	(canvas.controls ?? canvas.interface ?? canvas.stage).addChild(layer);
 	return layer;
 }
 

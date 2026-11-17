@@ -1,5 +1,5 @@
 import { MODULE_ID, TEMPLATE_PATH, localize, localizeIfExists, systemLabel } from "./constants.js";
-import { CATEGORIES, FEATURE_ORDER, isAvailableForSystem } from "./catalog.js";
+import { FEATURE_ORDER, NAV, isAvailableForSystem, placeOf } from "./catalog.js";
 import { availableFeatures, getFeature, settingInfo } from "./registry.js";
 import { lockInfo, openLockDialog } from "./setting-locks.js";
 
@@ -31,7 +31,7 @@ export class SettingsHub extends HandlebarsApplicationMixin(ApplicationV2) {
       icon: "fa-solid fa-dice-d20",
       resizable: true
     },
-    position: { width: 900, height: 680 },
+    position: { width: 980, height: 680 },
     form: {
       handler: SettingsHub.#onSubmit,
       submitOnChange: true,
@@ -39,6 +39,8 @@ export class SettingsHub extends HandlebarsApplicationMixin(ApplicationV2) {
     },
     actions: {
       selectCategory: SettingsHub.#onSelectCategory,
+      toggleGroup: SettingsHub.#onToggleGroup,
+      toggleFeature: SettingsHub.#onToggleFeature,
       resetFeature: SettingsHub.#onResetFeature,
       lockSetting: SettingsHub.#onLockSetting,
       featureAction: SettingsHub.#onFeatureAction
@@ -55,6 +57,9 @@ export class SettingsHub extends HandlebarsApplicationMixin(ApplicationV2) {
   /** Currently selected category id. */
   #category = null;
 
+  /** Features whose line is open (kept across re-renders while the window is open). */
+  #open = new Set();
+
   /** Current search text (lowercase). */
   #search = "";
 
@@ -68,36 +73,60 @@ export class SettingsHub extends HandlebarsApplicationMixin(ApplicationV2) {
   async _prepareContext(options) {
     const context = await super._prepareContext(options);
     const isGM = game.user.isGM;
-    const categories = [];
+    this.#category ??= remembered().page ?? null;
+    const placed = this.#placedFeatures();
+    const groups = [];
+    const pages = [];
 
-    for (const category of CATEGORIES.filter(isAvailableForSystem)) {
-      const cards = [];
-      for (const id of this.#featureIdsFor(category.id)) {
-        const feature = getFeature(id);
-        const card = feature ? this.#prepareFeature(feature, isGM) : isGM ? this.#preparePlanned(id) : null;
-        if (card) cards.push(card);
+    for (const group of NAV.filter(isAvailableForSystem)) {
+      const groupPages = [];
+      for (const page of group.pages.filter(isAvailableForSystem)) {
+        const sectionIds = page.sections ?? [];
+        const bySection = new Map([[null, []], ...sectionIds.map(id => [id, []])]);
+        for (const { id, section } of placed.filter(p => p.page === page.id)) {
+          const feature = getFeature(id);
+          const card = feature ? this.#prepareFeature(feature, isGM) : isGM ? this.#preparePlanned(id) : null;
+          if (!card) continue;
+          card.open = this.#open.has(card.id);
+          (bySection.get(section ?? null) ?? bySection.get(null)).push(card);
+        }
+        const sections = [...bySection.entries()].filter(([, cards]) => cards.length).map(([id, cards]) => ({
+          id: id ?? "",
+          label: id ? localize(`LUCD20.Section.${id}`) : null,
+          cards
+        }));
+        const cards = sections.flatMap(s => s.cards);
+        if (!cards.length && !isGM) continue;
+        if (!cards.length) continue;
+        const built = cards.filter(c => !c.planned);
+        const entry = {
+          id: page.id,
+          icon: page.icon,
+          label: localize(`LUCD20.Page.${page.id}.Label`),
+          hint: localizeIfExists(`LUCD20.Page.${page.id}.Hint`),
+          sections,
+          anchors: page.tree ? sections.filter(s => s.id).map(s => ({ id: s.id, label: s.label })) : [],
+          builtCount: built.length,
+          enabledCount: built.filter(c => c.enabled).length
+        };
+        groupPages.push(entry);
+        pages.push(entry);
       }
-      if (!cards.length && !isGM) continue;
-
-      const built = cards.filter(c => !c.planned);
-      categories.push({
-        id: category.id,
-        icon: category.icon,
-        label: localize(`LUCD20.Category.${category.id}.Label`),
-        hint: localizeIfExists(`LUCD20.Category.${category.id}.Hint`),
-        cards,
-        builtCount: built.length,
-        enabledCount: built.filter(c => c.enabled).length
-      });
+      if (!groupPages.length) continue;
+      const label = localizeIfExists(`LUCD20.Nav.${group.id}`, systemLabel(group.id));
+      groups.push({ id: group.id, label, pages: groupPages });
     }
 
-    if (!categories.some(c => c.id === this.#category)) this.#category = categories[0]?.id ?? null;
-    for (const c of categories) c.active = c.id === this.#category;
+    if (!pages.some(c => c.id === this.#category)) this.#category = pages[0]?.id ?? null;
+    for (const c of pages) c.active = c.id === this.#category;
+    const closed = remembered().closedGroups ?? [];
+    for (const g of groups) g.open = !closed.includes(g.id) || g.pages.some(p => p.active);
 
     return Object.assign(context, {
-      categories,
+      groups,
+      categories: pages,
       isGM,
-      empty: !categories.length,
+      empty: !pages.length,
       labels: {
         search: localize("LUCD20.Hub.Search"),
         noResults: localize("LUCD20.Hub.NoResults"),
@@ -109,18 +138,24 @@ export class SettingsHub extends HandlebarsApplicationMixin(ApplicationV2) {
         legendWorld: localize("LUCD20.Hub.LegendWorld"),
         legendClient: localize("LUCD20.Hub.LegendClient"),
         legendReload: localize("LUCD20.Hub.LegendReload"),
-        enable: localize("LUCD20.Hub.Enable")
+        enable: localize("LUCD20.Hub.Enable"),
+        expand: localize("LUCD20.Hub.Expand")
       }
     });
   }
 
-  /** Feature ids for a category: catalog order first, then any extra registered features. */
-  #featureIdsFor(categoryId) {
-    const ids = FEATURE_ORDER.filter(e => e.category === categoryId && isAvailableForSystem(e)).map(e => e.id);
-    for (const f of availableFeatures()) {
-      if (f.category === categoryId && !ids.includes(f.id)) ids.push(f.id);
+  /** Every feature of this world with its page and section: catalog order first, then extra registered ones. */
+  #placedFeatures() {
+    const out = [];
+    const seen = new Set();
+    for (const e of FEATURE_ORDER.filter(isAvailableForSystem)) {
+      out.push({ id: e.id, ...placeOf(e.id, e.category) });
+      seen.add(e.id);
     }
-    return ids;
+    for (const f of availableFeatures()) {
+      if (!seen.has(f.id)) out.push({ id: f.id, ...placeOf(f.id, f.category) });
+    }
+    return out;
   }
 
   #prepareFeature(feature, isGM) {
@@ -314,7 +349,11 @@ export class SettingsHub extends HandlebarsApplicationMixin(ApplicationV2) {
         }
         const visible = cardMatch || settingMatch;
         card.classList.toggle("search-hidden", !visible);
+        card.classList.toggle("search-open", !!query && settingMatch);
         if (visible) panelMatch = true;
+      }
+      for (const section of panel.querySelectorAll(".lucd20-hub-section")) {
+        section.classList.toggle("search-hidden", !!query && !section.querySelector(".lucd20-feature:not(.search-hidden)"));
       }
       panel.classList.toggle("search-match", !!query && panelMatch);
       if (panelMatch) anyMatch = true;
@@ -328,6 +367,7 @@ export class SettingsHub extends HandlebarsApplicationMixin(ApplicationV2) {
 
   static #onSelectCategory(event, target) {
     this.#category = target.dataset.category;
+    remember({ page: this.#category });
     const search = this.element.querySelector("input[data-search]");
     if (search) search.value = "";
     this.#applySearch("");
@@ -336,7 +376,30 @@ export class SettingsHub extends HandlebarsApplicationMixin(ApplicationV2) {
         el.classList.toggle("active", el.dataset.category === this.#category);
       }
     }
-    this.element.querySelector(".lucd20-hub-content")?.scrollTo({ top: 0 });
+    const section = target.dataset.section;
+    const content = this.element.querySelector(".lucd20-hub-content");
+    const anchor = section ? content?.querySelector(`.lucd20-hub-category.active [data-section="${CSS.escape(section)}"]`) : null;
+    if (anchor) anchor.scrollIntoView({ block: "start" });
+    else content?.scrollTo({ top: 0 });
+  }
+
+  /** A group of the tree opens or closes (remembered per player). */
+  static #onToggleGroup(event, target) {
+    const group = target.closest(".lucd20-nav-group");
+    if (!group) return;
+    group.classList.toggle("open");
+    const closed = [...this.element.querySelectorAll(".lucd20-nav-group:not(.open)")].map(g => g.dataset.group);
+    remember({ closedGroups: closed });
+  }
+
+  /** A feature's line opens or closes its text and options. */
+  static #onToggleFeature(event, target) {
+    if (event.target.closest("input, label.lucd20-switch, button:not([data-action='toggleFeature']), select, a")) return;
+    const card = target.closest(".lucd20-feature");
+    if (!card) return;
+    const open = card.classList.toggle("open");
+    if (open) this.#open.add(card.dataset.feature);
+    else this.#open.delete(card.dataset.feature);
   }
 
   static async #onResetFeature(event, target) {
@@ -392,6 +455,15 @@ export class SettingsHub extends HandlebarsApplicationMixin(ApplicationV2) {
     this.#updateCounts();
     if (reload) await confirmReload(reload === "world");
   }
+}
+
+const STORE = `${MODULE_ID}.hub`;
+/** What this player had open last time (the page, closed tree groups), in this browser. */
+function remembered() {
+  try { return JSON.parse(localStorage.getItem(STORE) ?? "{}") ?? {}; } catch { return {}; }
+}
+function remember(patch) {
+  try { localStorage.setItem(STORE, JSON.stringify({ ...remembered(), ...patch })); } catch { /* private mode */ }
 }
 
 function castValue(kind, raw) {

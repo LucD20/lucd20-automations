@@ -12,12 +12,16 @@ const out = __dirname;
   for (const k of ["turnMarker_enabled", "nextTurnMarker_enabled", "turnAnnouncer_enabled"]) await page.evaluate(k => game.settings.set("lucd20-automations", k, true), k);
   await page.evaluate(() => __hub.render());
   await page.waitForTimeout(200);
+  // v0.62.0: features start collapsed; open the page's lines.
+  await page.evaluate(() => { for (const f of document.querySelectorAll(".lucd20-hub-category.active .lucd20-feature:not(.open) .lucd20-feature-name")) f.click(); });
+  await page.waitForTimeout(100);
 
   // alignment: within each grid row, labels and controls start at the same y
   const rows = await page.evaluate(() => {
     const out = [];
     for (const grid of document.querySelectorAll(".lucd20-hub-category.active .lucd20-setting-grid")) {
-      const cells = [...grid.children].filter(c => c.offsetParent);
+      // Tick-box options sit beside their name (v0.62.0); alignment is checked among the others.
+      const cells = [...grid.children].filter(c => c.offsetParent && !c.classList.contains("boolean"));
       const byTop = new Map();
       for (const c of cells) {
         const top = Math.round(c.getBoundingClientRect().top);
@@ -34,12 +38,12 @@ const out = __dirname;
   });
   for (const row of rows) {
     console.log(row.map(r => r.name).join("  |  "));
-    if (row.length === 2) {
-      assert.strictEqual(row[0].control, row[1].control, `controls aligned: ${row.map(r => r.name)}`);
-      assert.strictEqual(row[0].label, row[1].label, `labels aligned: ${row.map(r => r.name)}`);
+    for (const other of row.slice(1)) {
+      assert.strictEqual(row[0].control, other.control, `controls aligned: ${row.map(r => r.name)}`);
+      assert.strictEqual(row[0].label, other.label, `labels aligned: ${row.map(r => r.name)}`);
     }
   }
-  assert.ok(rows.some(r => r.length === 2), "some options side by side");
+  assert.ok(rows.some(r => r.length >= 2), "some options side by side");
   await page.screenshot({ path: `${out}/p7-layout-combat.png`, clip: { x: 0, y: 0, width: 960, height: 1000 } });
 
   // next marker: own size options hidden while "same size and speed" is on

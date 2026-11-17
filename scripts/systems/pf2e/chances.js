@@ -76,6 +76,7 @@ function onDialog(app, html) {
 	const bar = barHTML(pf2eSegments(modifier, dc, { mode }), { extraClass: "lucd20-ch-dialog" });
 	if (button) button.insertAdjacentHTML("beforebegin", bar);
 	else root.querySelector(".window-content")?.insertAdjacentHTML("beforeend", bar);
+	requestAnimationFrame(() => { try { app?.setPosition?.({ height: "auto" }); } catch { /* not positionable */ } });
 }
 
 registerChancesAdapter({

@@ -128,6 +128,30 @@ export function computeCover(attacker, target, { walls = blockingWalls(), tokens
 	return { level, wallShare, wall, creature, from, to };
 }
 
+/** Cover from a point (an area's origin) to a target: walls only (Q234: creatures don't shield from areas). */
+export function coverFromPoint(from, target, { walls = blockingWalls() } = {}) {
+	const rt = rectOf(target), to = centerOf(rt);
+	const blocked = (p) => walls.some(([c, d]) => crosses(from, p, c, d));
+	const wallShare = silhouetteHidden(from, rt, blocked);
+	const wall = blocked(to);
+	return { level: wallShare > 0.5 ? "greater" : wall ? "standard" : "none", wallShare, wall, from, to };
+}
+
+/**
+ * The template placed for this area (Q236): the one whose PF2e origin is the spell, else the latest one that
+ * covers the target. Its x / y is the area's origin (a burst's center, a cone's or line's start).
+ */
+export function areaOrigin(itemUuid, target) {
+	const templates = (canvas.templates?.placeables ?? []).map((t) => ({ doc: t.document ?? t, obj: t }));
+	const mine = templates.filter(({ doc }) => itemUuid && (doc.flags?.pf2e?.origin?.uuid === itemUuid || doc.flags?.pf2e?.origin?.item === itemUuid));
+	let found = mine.at(-1);
+	if (!found) {
+		const c = centerOf(rectOf(target));
+		found = templates.filter(({ doc, obj }) => obj.shape?.contains?.(c.x - doc.x, c.y - doc.y)).at(-1);
+	}
+	return found ? { x: found.doc.x, y: found.doc.y } : null;
+}
+
 /* -------------------------------------------- */
 /*  The roll                                    */
 /* -------------------------------------------- */
@@ -144,8 +168,10 @@ function existingCover(dc) {
 }
 
 /** Before PF2e's check: the cover for this attack, added to the DC (the roll window can change it). */
-export function prepare(context) {
-	if (!context || context.isReroll || !ATTACKS.has(context.type) || !context.dc || context[KEY]) return;
+export function prepare(context, check = null) {
+	if (!context || context.isReroll || context[KEY]) return;
+	if (context.type === "saving-throw") return prepareSave(context, check);
+	if (!ATTACKS.has(context.type) || !context.dc) return;
 	const attacker = tokenOfContext(context.origin) ?? context.token?.object ?? context.actor?.getActiveTokens?.()?.[0];
 	const target = tokenOfContext(context.target);
 	if (!attacker || !target || !canvas?.ready) return;
@@ -156,9 +182,43 @@ export function prepare(context) {
 	context[KEY] = { auto, chosen: auto, applied, existing };
 }
 
-export function choose(context, level) {
+const MOD_SLUG = "lucd20-cover";
+const optionsOf = (context) => (context?.options instanceof Set ? context.options : new Set(context?.options ?? []));
+
+/**
+ * A Reflex save against an area (the roll has "area-effect"): cover is a circumstance bonus to the save, put
+ * in as a modifier, so PF2e's own stacking keeps the higher of it and a Cover effect the saver already has.
+ */
+function prepareSave(context, check) {
+	const options = optionsOf(context);
+	const reflex = check?.slug === "reflex" || context.statistic === "reflex" || options.has("reflex");
+	if (!reflex || !options.has("area-effect") || !check) return;
+	const target = context.token?.object ?? context.token ?? context.actor?.getActiveTokens?.()?.[0];
+	let auto = "none";
+	if (target && canvas?.ready) {
+		const item = context.origin?.item ?? context.item;
+		const origin = areaOrigin(item?.uuid ?? null, target);
+		if (origin) auto = coverFromPoint(origin, target).level;
+	}
+	context[KEY] = { kind: "area", auto, chosen: auto };
+	setSaveModifier(check, context, auto);
+}
+
+function setSaveModifier(check, context, level) {
+	check.delete?.(MOD_SLUG);
+	const Modifier = game.pf2e?.Modifier;
+	if (BONUS[level] && Modifier) check.push(new Modifier({ slug: MOD_SLUG, label: L(`Level.${level}`), modifier: BONUS[level], type: "circumstance" }));
+	check.calculateTotal?.(optionsOf(context));
+}
+
+export function choose(context, level, check = null) {
 	const c = context?.[KEY];
 	if (!c || !LEVELS.includes(level)) return;
+	if (c.kind === "area") {
+		if (check) setSaveModifier(check, context, level);
+		c.chosen = level;
+		return;
+	}
 	const applied = Math.max(0, BONUS[level] - c.existing);
 	context.dc.value = Number(context.dc.value) - c.applied + applied;
 	Object.assign(c, { chosen: level, applied });
@@ -176,13 +236,21 @@ function onDialog(app, html) {
 	const anchor = chances ?? roll;
 	if (anchor) anchor.insertAdjacentHTML("beforebegin", bar);
 	else root.querySelector(".window-content")?.insertAdjacentHTML("beforeend", bar);
+	fitWindow(app);
 	for (const b of root.querySelectorAll("[data-lucd20-cover]")) {
 		b.addEventListener("click", (event) => {
 			event.preventDefault();
-			choose(app.context, b.dataset.lucd20Cover);
+			choose(app.context, b.dataset.lucd20Cover, app.check);
 			app.render?.();
 		});
 	}
+}
+
+/** The window grows to fit what we added (owner: no scrolling). */
+export function fitWindow(app) {
+	requestAnimationFrame(() => {
+		try { app?.setPosition?.({ height: "auto" }); } catch { /* not positionable */ }
+	});
 }
 
 function onCard(message, html) {
@@ -214,7 +282,8 @@ function drawPreview() {
 	if (!layer || layer.destroyed) {
 		layer = new PIXI.Container();
 		layer.eventMode = "none";
-		(canvas.interface ?? canvas.stage).addChild(layer);
+		// Above the tokens (owner: the text was under them).
+		(canvas.controls ?? canvas.interface ?? canvas.stage).addChild(layer);
 	}
 	for (const target of game.user.targets) {
 		if (target === attacker) continue;
@@ -250,7 +319,7 @@ defineFeature({
 		const Check = game.pf2e?.Check;
 		if (Check?.roll) {
 			feature.wrap(Check, "roll", function (original, check, context = {}, ...rest) {
-				try { prepare(context); } catch (err) { error("Cover failed.", err); }
+				try { prepare(context, check); } catch (err) { error("Cover failed.", err); }
 				return original(check, context, ...rest);
 			});
 		}
@@ -267,4 +336,4 @@ defineFeature({
 	}
 });
 
-export const _test = { computeCover, crosses, throughRect, prepare, choose, onDialog, onCard, existingCover };
+export const _test = { computeCover, coverFromPoint, areaOrigin, crosses, throughRect, prepare, choose, onDialog, onCard, existingCover };

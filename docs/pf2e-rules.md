@@ -27,7 +27,7 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 | 16 | Roll chances, PF2e and 4e (replaces PF2e Chances) | built v0.57.1 | `rollChances` |
 | 17 | Modifiers Matter, PF2e and 4e (replaces PF2e Modifiers Matter) | built v0.56.0 | `modifiersMatter` |
 | 18 | Damage Estimate, PF2e and 4e (replaces PF2e Damage Estimate) | built v0.57.0 | `damageEstimate` |
-| 19 | Cover for attack rolls | built v0.58.0 | `pf2eCover` |
+| 19 | Cover for attack rolls and area saves | built v0.59.0 | `pf2eCover` |
 
 Commander (Battlecry!): research notes in `docs/pf2e-commander.md`; rules to
 automate come from the owner, one at a time.
@@ -679,3 +679,17 @@ one that leaves fewer squares next to enemies (see PLAN).
 - (verify) `game.pf2e.Check.roll` being the path every attack takes (Strike
   and spell attacks), `context.dc.statistic.modifiers`, the window's
   re-render keeping our DC change.
+- v0.59.0 (owner: "Cover text on the map is below tokens"; "Increase the
+  size of the roll dialog, so people dont have to scroll"): the preview is
+  drawn in the controls layer (above tokens); the roll window grows to fit
+  what Cover and Chances add (`setPosition({ height: "auto" })`).
+- Areas (Q233–Q236, as recommended), v0.59.0: a Reflex save whose roll
+  options have "area-effect": from the area's origin (the template placed
+  for the spell, matched by its PF2e origin, else the latest template over
+  the saver; its x / y), walls only (creatures don't shield from areas), the
+  same thresholds. It goes in as a circumstance modifier "Greater cover +4"
+  on the save, so PF2e's stacking keeps the higher of it and a Cover effect
+  the saver has. Same four buttons in the save's window (they replace the
+  modifier), same note on the card. No template: none, buttons still there.
+  (verify) the template's `flags.pf2e.origin` fields; "area-effect" and the
+  check's slug "reflex" on the save.

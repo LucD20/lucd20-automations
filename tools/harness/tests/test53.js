@@ -49,6 +49,26 @@ const assert = require("assert");
     out.beforeRoll = dlg.querySelector(".lucd20-cover-pick").nextElementSibling?.className;
     dlg.querySelector('[data-lucd20-cover="lesser"]').click();
     out.click = [c2x.dc.value, rendered];
+    // Areas: from the template's origin, walls only; a circumstance modifier on the Reflex save.
+    class Modifier { constructor(d) { Object.assign(this, d); } }
+    game.pf2e = { Modifier };
+    const mkCheck = () => ({ slug: "reflex", mods: [], push(m) { this.mods.push(m); }, delete(slug) { this.mods = this.mods.filter(m => m.slug !== slug); }, calculateTotal() {} });
+    canvas.walls = { placeables: [wall(300, 100, 300, 400)] };
+    canvas.templates = { placeables: [{ document: { x: 350, y: 250, flags: { pf2e: { origin: { uuid: "Item.fireball" } } } } }] };
+    canvas.tokens = { placeables: [tok("c", 3, 3)], controlled: [] };
+    const save = (extra = {}) => ({ type: "saving-throw", options: new Set(["area-effect", "reflex"]), token: tok("r", 2, 4), origin: { item: { uuid: "Item.fireball" } }, ...extra });
+    const ch = mkCheck(), sc = save(); cv._test.prepare(sc, ch);
+    out.area = [{ ...sc.lucd20Cover }, ch.mods.map(m => [m.slug, m.modifier, m.type, m.label])];
+    cv._test.choose(sc, "lesser", ch); out.areaChosen = [sc.lucd20Cover.chosen, ch.mods.map(m => m.modifier)];
+    cv._test.choose(sc, "none", ch); out.areaNone = ch.mods.length;
+    const ch2 = mkCheck(), notArea = save({ options: new Set(["reflex"]) }); cv._test.prepare(notArea, ch2); out.notArea = [notArea.lucd20Cover ?? null, ch2.mods.length];
+    const ch3 = mkCheck(), noTemplate = save({ origin: { item: { uuid: "Item.other" } }, token: tok("r", 9, 9) }); canvas.templates = { placeables: [] }; cv._test.prepare(noTemplate, ch3); out.noTemplate = noTemplate.lucd20Cover;
+    // The window grows instead of scrolling.
+    let pos = null;
+    const dlg2 = document.createElement("div"); dlg2.innerHTML = `<div class="window-content"><button class="roll">Roll</button></div>`;
+    Hooks.callAll("renderCheckModifiersDialog", { context: noTemplate, check: ch3, render() {}, setPosition(p) { pos = p; } }, dlg2);
+    await new Promise(r => requestAnimationFrame(() => setTimeout(r, 20)));
+    out.fit = pos;
     // The card.
     const card = cov => { const h = document.createElement("div"); h.innerHTML = `<div class="dice-roll"></div><div class="degree-of-success"></div>`; Hooks.callAll("renderChatMessageHTML", { flags: { pf2e: { context: { type: "attack-roll", lucd20Cover: cov } } } }, h); return h.querySelector(".lucd20-cover-note")?.textContent.trim() ?? null; };
     out.cards = [card({ auto: "standard", chosen: "standard" }), card({ auto: "standard", chosen: "lesser" }), card({ auto: "none", chosen: "none" })];
@@ -70,6 +90,11 @@ const assert = require("assert");
   assert.strictEqual(r.beforeRoll, "roll", "above the Roll button");
   assert.deepStrictEqual(r.click, [21, 1], "a click: lesser (+1), the window redrawn");
   assert.deepStrictEqual(r.cards, ["Standard cover (+2)", "Lesser cover (+1), set by hand (auto: Standard cover)", null], "the card says the cover used, and when it was set by hand");
+  assert.deepStrictEqual(r.area, [{ kind: "area", auto: "greater", chosen: "greater" }, [["lucd20-cover", 4, "circumstance", "Greater cover"]]], "a Reflex save vs an area: from the template, walls only, +4 circumstance to the save");
+  assert.deepStrictEqual([r.areaChosen, r.areaNone], [["lesser", [1]], 0], "the window's choice replaces the modifier; none removes it");
+  assert.deepStrictEqual(r.notArea, [null, 0], "not an area: nothing");
+  assert.deepStrictEqual(r.noTemplate, { kind: "area", auto: "none", chosen: "none" }, "no template: none, the buttons still there");
+  assert.deepStrictEqual(r.fit, { height: "auto" }, "the window grows to fit");
   assert.deepStrictEqual(errors, []);
   console.log("PHASE 54 CHECKS PASSED");
   await browser.close();

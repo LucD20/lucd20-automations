@@ -1884,3 +1884,10 @@ movement. Next: rule 8, Shield Block; then the Commander's Demoralizing Charge.
 `scripts/systems/pf2e/shield-block.js`, `test42.js`), working with PF2e
 Toolbelt's Target Helper (Q169–Q172 in the ledger §8). Next: the Commander's
 Demoralizing Charge.
+
+**v0.47.3 (owner):** Pathfinding, with Q off too, does "the least amount of
+reaction dodging": leaving a square next to a visible enemy costs 0.01 of a
+square, so of two routes of the same length it takes the one leaving fewer
+such squares, never a longer one (Q still adds +4 to go around). The PF2e
+reaction cards no longer show the action symbol after the title (the image is
+enough).

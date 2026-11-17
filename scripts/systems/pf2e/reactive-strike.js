@@ -155,7 +155,7 @@ export async function postCard(reactor, trigger, kind, detail = "") {
 	const item = itemBySlug(reactor.actor, [...SLUGS], NAMES);
 	// v0.47.1 (owner): PF2e's card style, buttons side by side, a click on the card opens the entry.
 	const content = pf2eCard({
-		img: item?.img, title: item?.name ?? L("Name"), glyph: "R", open: sourceUuid(item), extraClass: "lucd20-rs-card",
+		img: item?.img, title: item?.name ?? L("Name"), open: sourceUuid(item), extraClass: "lucd20-rs-card",
 		body: `<p class="lucd20-card-who">${esc(reactor.name)}</p><p>${reason}</p>${kind === "move" ? `<p class="lucd20-card-note">${L("NotStep")}</p>` : ""}`,
 		buttons: [...strikes.map((s) => ({ data: "lucd20-rs", value: s.index, icon: "fa-hand-fist", label: s.label })), { data: "lucd20-rs", value: "skip", icon: "fa-xmark", label: L("Skip") }]
 	});

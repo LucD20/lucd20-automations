@@ -90,6 +90,21 @@ const out = __dirname;
   const withQ = await route(page, [4, 3]);
   console.log("without Q:", JSON.stringify(withQ));
   assert.deepStrictEqual(withQ.map(p => p.slice(0, 2)), [[1, 3], [4, 3]], "without Q threats are ignored: straight line");
+  // v0.47.3 (owner): without Q, of routes of the same length, the one leaving fewer squares next to an enemy.
+  // From (1,3) to (3,1) with the enemy at (3,2): up-right twice leaves one such square; up-right, up, right leaves two.
+  const tie = await page.evaluate(async () => {
+    const keep = [__enemy.document.x, __enemy.document.y];
+    __enemy.document.x = 300; __enemy.document.y = 200; Hooks.callAll("updateToken", __enemy.document, {}, {});
+    const res = CONFIG.Token.objectClass.prototype.findMovementPath.call(__mover, [{ x: 100, y: 300 }, { x: 300, y: 100 }], { constrainOptions: {} });
+    const path = (res.result ?? (await res.promise)).map(w => [w.x / 100, w.y / 100]);
+    __enemy.document.x = keep[0]; __enemy.document.y = keep[1]; Hooks.callAll("updateToken", __enemy.document, {}, {});
+    return path;
+  });
+  const left = [];
+  for (let k = 1; k < tie.length; k++) { let [x, y] = tie[k - 1]; const [tx, ty] = tie[k]; while (x !== tx || y !== ty) { x += Math.sign(tx - x); y += Math.sign(ty - y); left.push([x, y]); } }
+  const nextToEnemy = ([x, y]) => Math.abs(x - 3) <= 1 && Math.abs(y - 2) <= 1;
+  console.log("same length, fewer reactions:", JSON.stringify(tie));
+  assert.ok(left.length <= 3 && left.slice(0, -1).filter(nextToEnemy).length <= 1, "the route of the same length that leaves fewer squares next to the enemy");
   // The Q hint sits above the macro bar while dragging, lights up with Q, and goes when the drag ends.
   const hint = await page.evaluate(async () => {
     const bar = document.createElement("div"); bar.id = "hotbar"; Object.assign(bar.style, { position: "fixed", left: "0", right: "0", bottom: "0", height: "60px" }); document.body.append(bar);

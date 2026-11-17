@@ -68,7 +68,7 @@ export async function onDamage(message) {
 		const item = itemBySlug(actor, ["shield-block"], /^shield block$/i);
 		// v0.47.1 (owner): PF2e's card style, buttons side by side, a click on the card opens the entry.
 		const body = (withAmount) => pf2eCard({
-			img: item?.img, title: item?.name ?? L("Title"), glyph: "R", open: sourceUuid(item), extraClass: "lucd20-sb-card",
+			img: item?.img, title: item?.name ?? L("Title"), open: sourceUuid(item), extraClass: "lucd20-sb-card",
 			body: `<p>${line(withAmount)}</p><p>${L("Shield", { name: esc(shield.name), hardness: shield.hardness, hp: shield.hp?.value ?? 0, max: shield.hp?.max ?? 0 })}</p>`,
 			buttons: [{ data: "lucd20-sb", value: "block", icon: "fa-shield", label: L("Block") }, { data: "lucd20-sb", value: "skip", icon: "fa-xmark", label: L("Skip") }]
 		});

@@ -33,6 +33,9 @@ import { defineFeature } from "../core/registry.js";
 
 const ACTIVE_KEY = "pathfindingActive";
 const THREAT_COST = 4; // extra squares for stepping through a threatened square
+// v0.47.3 (owner): even without Q, of two routes of the same length take the one that leaves fewer squares
+// next to an enemy (leaving one is what provokes). Far below any real difference in length.
+const LEAVE_COST = 0.01;
 const MAX_NODES = 400000;
 const state = { feature: null, versions: 0, context: null, logged: new Set() };
 
@@ -338,6 +341,7 @@ function context(token, { ignoreCost = false } = {}) {
     wallHits: new Map(),
     terrain: feature.get("avoidTerrain") && !keyDown("KeyT") && !ignoreCost ? terrainGrid(token.document, size) : new Map(),
     threats: feature.get("avoidThreats") && keyDown("KeyQ") ? threatGrid(token, size) : new Set(),
+    near: threatGrid(token, size), // squares next to a visible enemy, for the tie-break
     // Squares enemies stand on cannot be walked through (PF2e, D&D 4e). Slipping diagonally between
     // two of them stays possible: only the squares themselves are closed.
     enemies: feature.get("aroundEnemies") ? enemyGrid(token, size, 0) : new Set(),
@@ -396,6 +400,8 @@ function route(ctx, from, to, w, h, startOdd) {
   };
   spread(ctx.terrain, (k, v) => (footMult[k] = Math.max(footMult[k], v)));
   spread(ctx.threats, k => (footThreat[k] = 1));
+  const footNear = new Uint8Array(cellCount);
+  spread(ctx.near ?? new Set(), k => (footNear[k] = 1));
   const footEnemy = new Uint8Array(cellCount);
   spread(ctx.enemies ?? new Set(), k => (footEnemy[k] = 1));
 
@@ -465,6 +471,7 @@ function route(ctx, from, to, w, h, startOdd) {
       // A little extra on difficult squares: of two equally costly routes, the one that avoids them wins.
       if (mult > 1) step = step * mult + 0.25;
       if (!isGoal && footThreat[n]) step += THREAT_COST;
+      if (footNear[cell]) step += LEAVE_COST; // leaving a square next to an enemy
       const ns = n * 2 + nOdd;
       const ng = g[s] + step;
       if (ng >= g[ns]) continue;

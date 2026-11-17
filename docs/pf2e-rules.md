@@ -274,3 +274,7 @@ Block's second copy (the player's or the GM's) is deleted. Skipped: "Not used"
 / "Not blocked", still private. "Moving away overlay works, but not the
 noise": the Reactive Strike drag warning plays the same "shing" as 4e (per
 player option Sound, on); the sound is now shared (`scripts/core/sound.js`).
+
+**v0.47.3 (owner):** no action symbol after the title on the cards ("it
+already has an image"). Pathfinding picks, of routes of the same length, the
+one that leaves fewer squares next to enemies (see PLAN).

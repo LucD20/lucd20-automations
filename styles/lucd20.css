@@ -2645,6 +2645,9 @@ li:has(> .lucd20-scene-nav) {
 /* v0.50.1 (owner): no message header on these cards (the creature's name is in the card's own header). */
 .chat-message:has(.lucd20-pf2e-card) > .message-header { display: none; }
 .chat-message:has(.lucd20-pf2e-card) .message-content { margin-top: 0; }
+.lucd20-fc-card .lucd20-fc-line { margin: 2px 0; }
+.lucd20-fc-card .lucd20-fc-ok i { color: #2e7d32; }
+.lucd20-fc-card .lucd20-fc-fail, .lucd20-fc-card .lucd20-fc-fail i { color: #b71c1c; }
 .lucd20-pf2e-card .card-header h3 .lucd20-card-whom { font-size: .75em; font-weight: 400; opacity: .75; margin-left: 4px; }
 .lucd20-pf2e-card .lucd20-card-done { margin: 4px 0 0; font-style: italic; opacity: .75; }
 .lucd20-pf2e-card.lucd20-card-compact .card-header { margin: 0; border-bottom: 0; }

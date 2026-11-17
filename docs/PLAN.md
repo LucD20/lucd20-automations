@@ -1908,3 +1908,8 @@ row of buttons, and ends as one message (owner: least vertical clutter).
 (`pf2ePunishingShove`, `scripts/systems/pf2e/punishing-shove.js`, `test45.js`);
 details in the ledger §11. v0.50.1: compact cards for all the PF2e rules
 (no message header, one line, skipped cards deleted; ledger "Compact cards").
+
+**v0.51.0 (phase 47): PF2e rule 12, flat checks** (`pf2eFlatCheck`,
+`scripts/systems/pf2e/flat-check.js`, `test46.js`), replacing PF2e Flat
+Check; the merge order of the owner's other modules is in the ledger
+("Module merges").

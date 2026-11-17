@@ -776,6 +776,15 @@
         "Name": "Roaring Heart (Animist)",
         "Hint": "When an animist uses Roaring Heart, a small card (reprinted after each Shove) offers Shove, Confirm and Cancel: the first two Shoves are counted, and Confirm gives them and each ally within 30 ft temporary HP (half their level for one enemy Shoved, their level for two) through an effect that ends at the start of their next turn."
       },
+      "pf2eFlatCheck": {
+        "Name": "Flat Checks",
+        "Hint": "After a Strike, a spell attack, a spell cast at targets, or an attack action (Shove, Trip...), the flat check it needs is rolled once per target at the highest DC that applies: Concealed or Dazzled 5, Hidden, Invisible or Undetected 11, Grabbed 5 for manipulate actions, Stupefied 5 + its value for spells; Blind-Fight, Keen Eyes and Sure Strike are counted. Never on a reroll, never for an area. Replaces the PF2e Flat Check module (switch that one off). The card is GM-only when it would reveal a hidden creature.",
+        "Setting": {
+          "ignoreConcealed": { "Name": "Ignore Concealed", "Hint": "No flat check for Concealed targets (or Dazzled attackers)." },
+          "ignoreGrabbed": { "Name": "Ignore Grabbed", "Hint": "No flat check for manipulate actions while Grabbed." },
+          "hideValue": { "Name": "Hide the number", "Hint": "The card says only success or failure, not the d20's number." }
+        }
+      },
       "pf2ePunishingShove": {
         "Name": "Punishing Shove (Guardian)",
         "Hint": "When a creature with Punishing Shove succeeds at a Shove, after the dice the shoved creature's bludgeoning damage is rolled (Strength modifier, +2 / +6 / +12 at expert / master / legendary Athletics; doubled on a critical success), to apply with PF2e's own buttons."
@@ -1763,6 +1772,15 @@
         "Give": "Give",
         "NoOne": "No one",
         "Replaced": "Replaced by a new signal."
+      },
+      "FlatCheck": {
+        "Title": "Flat Check",
+        "Line": "{who}, DC {dc}",
+        "Success": "success",
+        "Failure": "failure",
+        "ACreature": "a creature",
+        "Lost": { "strike": "the Strike is lost", "spell": "the spell is lost", "action": "the action is lost", "manipulate": "the action is lost" },
+        "Why": { "concealed": "concealed", "hidden": "hidden", "invisible": "invisible", "undetected": "undetected", "unnoticed": "unnoticed", "grabbed": "Grabbed", "stupefied": "Stupefied {value}" }
       },
       "PunishingShove": {
         "Flavor": "Punishing Shove",

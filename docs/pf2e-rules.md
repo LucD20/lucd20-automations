@@ -20,6 +20,7 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 | 9 | Commander: Demoralizing Charge | built v0.48.0 | `pf2eDemoralizingCharge` |
 | 10 | Animist: Roaring Heart | built v0.49.2 | `pf2eRoaringHeart` |
 | 11 | Guardian: Punishing Shove | built v0.50.1 | `pf2ePunishingShove` |
+| 12 | Flat checks (replaces PF2e Flat Check) | built v0.51.0 | `pf2eFlatCheck` |
 
 Commander (Battlecry!): research notes in `docs/pf2e-commander.md`; rules to
 automate come from the owner, one at a time.
@@ -415,3 +416,49 @@ one that leaves fewer squares next to enemies (see PLAN).
 - (verify) the hidden header in V14's chat log (`.chat-message >
   .message-header`), and that the GM can still delete these messages (the
   message's right-click menu).
+
+## Module merges (owner, 2026-11-17)
+
+- Owner: "more module stuff that I want to merge [...] organize in the best
+  order": PF2e Flat Check ("a few problems of triggering when it shouldnt"),
+  PF2e Ctrl-click effects, PF2e Hands Management (notification), PF2e
+  Sustain Reminder; then, for all systems, one by one: PF2e Chances, PF2e
+  Damage Estimate, PF2e Modifiers Matter. Q194: "Cover calculation should be
+  added to the list."
+- Order (Q185, as recommended): 1. Flat checks, 2. Ctrl-click effects,
+  3. Sustain reminder, 4. Hands reminder, 5. Chances, 6. Modifiers Matter,
+  7. Damage Estimate; Cover calculation (PF2e) added after them.
+
+## 12. Flat checks
+
+- The original's false triggers found in its code: a second flat check on a
+  reroll; Dazzled checked with no target (Shield, healing yourself); a spell
+  only posted from the sheet; the user's current targets instead of the
+  roll's; Hidden / Invisible shown to players; 3D dice shown to everyone on a
+  GM-only card; one d20 for all targets.
+- Decided (Q186–Q195, as recommended; Q194: no Visioner or darkness module):
+  - When: Strikes (Reactive Strike too) and spell attack rolls (the roll's own
+    target); spells actually cast (`flags.pf2e.casting`; the targets from
+    Target Helper, else the caster's targets; a spell with an attack roll
+    waits for it); skill actions with the attack trait (Shove, Trip,
+    Grapple, Disarm); actions / consumables with manipulate (Grabbed). Not
+    areas or auras (target checks), not rerolls, not passive actions.
+  - No target: only Grabbed (manipulate, DC 5) and Stupefied (spells, 5 + N).
+  - Target: Concealed 5; Hidden, Invisible, Undetected, Unnoticed 11;
+    Dazzled makes targets concealed, Blinded hidden. The highest DC that
+    applies, one d20 per target, one card.
+  - Blind-Fight (no check for concealed; hidden / invisible 5; undetected 5 if
+    adjacent and not higher level), Keen Eyes / Liminal Fetchling (3 / 9),
+    Sure Strike / True Strike (no check for concealed or hidden), See the
+    Unseen (invisible counts as concealed).
+  - Who sees it: everyone, except a hidden token, Hidden / Invisible /
+    Undetected / Unnoticed, a hidden attacker, or a secret roll: GM only
+    (blind; the 3D dice follow). Hidden NPC names: "a creature".
+  - Card: compact, one line per target, "Goblin (concealed), DC 5: 3,
+    failure: the Strike is lost" in red; nothing is blocked.
+  - Settings: Ignore Concealed, Ignore Grabbed, Hide the number.
+- Switch off the "PF2e Flat Check" module (both would roll).
+- (verify) `context.traits` / options carrying "attack" on Shove etc.;
+  `flags.pf2e.casting` only on a real cast; the spell effects' slugs
+  (`spell-effect-sure-strike`, `spell-effect-see-the-unseen`); the caster's
+  targets readable on the GM's client.

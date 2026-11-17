@@ -15,3 +15,4 @@ import "./shield-block.js";
 import "./commander.js";
 import "./roaring-heart.js";
 import "./punishing-shove.js";
+import "./flat-check.js";

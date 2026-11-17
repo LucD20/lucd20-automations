@@ -19,7 +19,7 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 | 8 | Shield Block: prompt when it can be used | built v0.47.0 | `pf2eShieldBlock` |
 | 9 | Commander: Demoralizing Charge | built v0.48.0 | `pf2eDemoralizingCharge` |
 | 10 | Animist: Roaring Heart | built v0.49.2 | `pf2eRoaringHeart` |
-| 11 | Guardian: Punishing Shove | built v0.50.0 | `pf2ePunishingShove` |
+| 11 | Guardian: Punishing Shove | built v0.50.1 | `pf2ePunishingShove` |
 
 Commander (Battlecry!): research notes in `docs/pf2e-commander.md`; rules to
 automate come from the owner, one at a time.
@@ -396,3 +396,22 @@ one that leaves fewer squares next to enemies (see PLAN).
   critical damage line now hides a hidden NPC's name the same way.
 - (verify) `actor.abilities.str.mod`, `actor.skills.athletics.rank`; Target
   Helper reading `flags["pf2e-toolbelt"].targetHelper.targets` on our roll.
+
+## Compact cards (all PF2e rules, v0.50.1)
+
+- Owner: "Remove the header from reaction messages to decrease size, and
+  make the reactive strike and shield block more compact as well, similar to
+  roaring heart. 'punishing shove etc' text above damage roll for shove dont
+  need to be long; remember, it needs to be compact."
+- Now, on every card of these rules (Reactive Strike, Shield Block,
+  Demoralizing Charge, Roaring Heart): the chat message's own header
+  (speaker, time) is hidden; the creature's name sits small in the card's
+  header, after the feat's name. Reactive Strike: one short line ("Amiri left
+  your reach (not if a Step).", "Ogre: ranged attack (Javelin).") and the
+  buttons. Shield Block: "12 physical (Bite). Hardness 5, HP 18/20." and the
+  buttons. Skip / not blocked / not answered / replaced: the card is deleted
+  (no trace). Damage lines: "Punishing Shove", "Punishing Shove (critical)",
+  "Trip (critical)".
+- (verify) the hidden header in V14's chat log (`.chat-message >
+  .message-header`), and that the GM can still delete these messages (the
+  message's right-click menu).

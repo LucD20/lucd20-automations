@@ -2642,5 +2642,9 @@ li:has(> .lucd20-scene-nav) {
 .chat-message .lucd20-pf2e-card .card-buttons.lucd20-card-buttons { display: flex !important; flex-direction: row !important; flex-wrap: nowrap; gap: 4px; margin-top: 4px; }
 .chat-message .lucd20-pf2e-card .card-buttons.lucd20-card-buttons button { flex: 1 1 0; min-width: 0; width: auto; margin: 0; height: 24px; line-height: 22px; padding: 0 4px; font-size: .85em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
 .lucd20-pf2e-card .lucd20-card-buttons:empty, .lucd20-pf2e-card .card-content:empty { display: none; }
+/* v0.50.1 (owner): no message header on these cards (the creature's name is in the card's own header). */
+.chat-message:has(.lucd20-pf2e-card) > .message-header { display: none; }
+.chat-message:has(.lucd20-pf2e-card) .message-content { margin-top: 0; }
+.lucd20-pf2e-card .card-header h3 .lucd20-card-whom { font-size: .75em; font-weight: 400; opacity: .75; margin-left: 4px; }
 .lucd20-pf2e-card .lucd20-card-done { margin: 4px 0 0; font-style: italic; opacity: .75; }
 .lucd20-pf2e-card.lucd20-card-compact .card-header { margin: 0; border-bottom: 0; }

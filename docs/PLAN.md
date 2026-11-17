@@ -1906,4 +1906,5 @@ row of buttons, and ends as one message (owner: least vertical clutter).
 
 **v0.50.0 (phase 46): PF2e rule 11, the Guardian's Punishing Shove**
 (`pf2ePunishingShove`, `scripts/systems/pf2e/punishing-shove.js`, `test45.js`);
-details in the ledger §11.
+details in the ledger §11. v0.50.1: compact cards for all the PF2e rules
+(no message header, one line, skipped cards deleted; ledger "Compact cards").

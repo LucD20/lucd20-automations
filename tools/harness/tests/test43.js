@@ -25,7 +25,8 @@ const assert = require("assert");
     game.messages = Object.assign([], { get(id) { return this.find(m => m.id === id); } });
     Object.defineProperty(game.messages, "contents", { get() { return this; } });
     const mkMsg = d => ({ id: `m${++mid}`, author: { id: game.user.id }, flags: {}, whisper: [], ...d, getFlag(ns, k) { return this.flags[ns]?.[k]; },
-      async setFlag(ns, k, v) { (this.flags[ns] ??= {})[k] = v; }, async update(u) { for (const [k, v] of Object.entries(u)) foundry.utils.setProperty(this, k, v); } });
+      async setFlag(ns, k, v) { (this.flags[ns] ??= {})[k] = v; }, async update(u) { for (const [k, v] of Object.entries(u)) foundry.utils.setProperty(this, k, v); },
+      async delete() { game.messages.splice(game.messages.indexOf(this), 1); } });
     window.ChatMessage = { getSpeaker: () => ({}), create: async d => { const m = mkMsg(d); game.messages.push(m); Hooks.callAll("createChatMessage", m); return m; } };
     game.pf2e = { Modifier: class { constructor(o) { Object.assign(this, o); } } };
     // The scene: the commander (Kyra), Amiri next to her, Valeros 25 ft away, Seelah 40 ft away, a goblin.
@@ -96,7 +97,7 @@ const assert = require("assert");
     const use2b = ChatMessage.create({ actor: kyra.actor, token: kyra.document, item: tactic }); await settle(80);
     window.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })); await settle(80);
     window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); await use2b; await settle(120);
-    out.replaced = firstOpen.map(m => txt(m.content).includes("Replaced by a new signal."));
+    out.replaced = firstOpen.map(m => !game.messages.includes(m)); // v0.50.1: deleted, no trace
     // Answer the open one (two misses) so the next round starts clean.
     await strike(amiri, "failure"); await strike(valeros, "failure"); await settle(120);
     // Next round: one ally skips, the other misses: no save card. Then the commander's turn ends before an answer.
@@ -112,7 +113,7 @@ const assert = require("assert");
     const h3 = document.createElement("div"); h3.innerHTML = a3.content; document.body.append(h3); Hooks.callAll("renderChatMessageHTML", a3, h3);
     h3.querySelector("[data-lucd20-dc]").click(); await settle(80);
     await strike(valeros, "failure"); await settle(120);
-    out.skipMiss = [txt(a3.content).includes("Not answered."), cards("dcSave").length - nSaves];
+    out.skipMiss = [!game.messages.includes(a3), cards("dcSave").length - nSaves];
     return out;
   });
   console.log(JSON.stringify(r, null, 1));
@@ -126,14 +127,14 @@ const assert = require("assert");
   assert.deepStrictEqual(r.allyCards.map(c => c[1]), [["p2", "u1"], ["p2", "u1"]], "each ally's card to their player and the GM");
   assert.ok(r.allyCards[1][0].includes("Drilled Reactions") && !r.allyCards[0][0].includes("Drilled Reactions"), "Drilled Reactions for the ally the commander chose");
   assert.deepStrictEqual(r.marks, ["c1:2", "c1:2", "c1:2"], "the round's marks: answered a tactic; Drilled Reactions used");
-  assert.deepStrictEqual(r.collapsed, [["Demoralizing Charge", []], ["Demoralizing Charge", []]], "after their Strikes, the cards show only the tactic, to everyone");
+  assert.deepStrictEqual(r.collapsed, [["Demoralizing Charge Amiri", []], ["Demoralizing Charge Valeros", []]], "after their Strikes, the cards show only the tactic, to everyone");
   assert.deepStrictEqual(r.reactions, [1, 1, false], "Amiri's reaction spent; Valeros used the drilled one (no warning)");
   assert.deepStrictEqual(r.saveCard, ["Demoralizing Charge Goblin : Will save against DC 21 (-3) or Frightened 1 (2 on a critical failure). Roll the save", ["u1"]], "one save for the goblin, −3, GM only");
   assert.deepStrictEqual(r.roll, [21, -3, "circumstance", ["frightened", 2], true, "Goblin is Frightened 2 (Demoralizing Charge).", []], "the save: DC, penalty; a critical failure: Frightened 2");
   assert.strictEqual(r.second, "Demoralizing Charge: click two squadmates within 30 ft (Enter or Signal for fewer) (2/2)", "used again the same round: still allowed, the same allies chosen");
   assert.strictEqual(r.redoDrilled, "Drilled Reactions: click who gets the extra reaction (0/1)", "a redo may choose Drilled Reactions again");
-  assert.deepStrictEqual(r.replaced, [true, true], "an unanswered earlier signal is replaced");
-  assert.deepStrictEqual(r.skipMiss, [true, 0], "a skip and a miss: no save");
+  assert.deepStrictEqual(r.replaced, [true, true], "an unanswered earlier signal is replaced (its cards deleted)");
+  assert.deepStrictEqual(r.skipMiss, [true, 0], "a skip (its card deleted) and a miss: no save");
   assert.deepStrictEqual(errors, []);
   console.log("PHASE 44 CHECKS PASSED");
   await browser.close();

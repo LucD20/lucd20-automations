@@ -146,8 +146,8 @@ async function start({ commander, allies, item, drilled: drilledTo = null }) {
 		}
 		const card = await ChatMessage.create({
 			content: pf2eCard({
-				img: state.img, title: state.title, open: state.open, extraClass: "lucd20-dc-card",
-				body: `<p class="lucd20-card-who">${esc(doc.name)}</p><p>${L("Do")}</p>${drilled ? `<p class="lucd20-card-note">${L("Drilled")}</p>` : ""}`,
+				img: state.img, title: state.title, who: doc.name, open: state.open, extraClass: "lucd20-dc-card",
+				body: `<p>${L("Do")}</p>${drilled ? `<p class="lucd20-card-note">${L("Drilled")}</p>` : ""}`,
 				buttons: [{ data: "lucd20-dc", value: "skip", icon: "fa-xmark", label: L("Skip") }]
 			}),
 			speaker: { alias: nameForPlayers(cDoc, cDoc.name) },
@@ -180,9 +180,9 @@ async function collapse(ally, state, closed = false) {
 	const card = ally.card ? game.messages.get(ally.card) : null;
 	if (!card) return;
 	await card.setFlag(MODULE_ID, "dcAlly", { ...card.getFlag(MODULE_ID, "dcAlly"), done: true });
-	if (closed) return card.update({ content: answered(card.content, L(closed === "Replaced" ? "Replaced" : "Skipped")) });
+	if (closed) return card.delete(); // v0.50.1 (owner): skipped or replaced, no trace in the chat
 	const doc = fromUuidSync(ally.token);
-	await card.update({ content: compactCard({ img: state.img, title: state.title, open: state.open, extraClass: "lucd20-dc-card" }), whisper: [], speaker: { alias: nameForPlayers(doc, doc?.name ?? "") } });
+	await card.update({ content: compactCard({ img: state.img, title: state.title, who: nameForPlayers(doc, doc?.name ?? ""), open: state.open, extraClass: "lucd20-dc-card" }), whisper: [], speaker: { alias: nameForPlayers(doc, doc?.name ?? "") } });
 }
 
 async function maybeFinish(state, force = false) {

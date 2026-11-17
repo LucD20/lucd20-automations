@@ -3,7 +3,7 @@ import { defineFeature, getFeature } from "../../core/registry.js";
 import { executeAsGM, onGMRequest } from "../../core/socket.js";
 import { waitForDice } from "../../core/dice.js";
 import { hasReaction } from "./reactions.js";
-import { pf2eCard, answered, wireOpen, sourceUuid, itemBySlug, compactCard, nameForPlayers } from "./card.js";
+import { pf2eCard, wireOpen, sourceUuid, itemBySlug, compactCard, nameForPlayers } from "./card.js";
 import { shing } from "../../core/sound.js";
 
 /**
@@ -155,8 +155,8 @@ export async function postCard(reactor, trigger, kind, detail = "") {
 	const item = itemBySlug(reactor.actor, [...SLUGS], NAMES);
 	// v0.47.1 (owner): PF2e's card style, buttons side by side, a click on the card opens the entry.
 	const content = pf2eCard({
-		img: item?.img, title: item?.name ?? L("Name"), open: sourceUuid(item), extraClass: "lucd20-rs-card",
-		body: `<p class="lucd20-card-who">${esc(reactor.name)}</p><p>${reason}</p>${kind === "move" ? `<p class="lucd20-card-note">${L("NotStep")}</p>` : ""}`,
+		img: item?.img, title: item?.name ?? L("Name"), who: reactor.name, open: sourceUuid(item), extraClass: "lucd20-rs-card",
+		body: `<p>${reason}</p>`,
 		buttons: [...strikes.map((s) => ({ data: "lucd20-rs", value: s.index, icon: "fa-hand-fist", label: s.label })), { data: "lucd20-rs", value: "skip", icon: "fa-xmark", label: L("Skip") }]
 	});
 	return ChatMessage.create({
@@ -312,7 +312,7 @@ defineFeature({
 			if (!data || data.done) return false;
 			await message.setFlag(MODULE_ID, "reactiveStrike", { ...data, done: true });
 			if (!used) {
-				await message.update({ content: answered(message.content, L("NotUsed")) });
+				await message.delete(); // v0.50.1 (owner): not used, no trace in the chat
 				return true;
 			}
 			// v0.47.2 (owner): used, the card shows only the reaction's name and symbol, to everyone (a hidden
@@ -320,7 +320,7 @@ defineFeature({
 			const reactor = fromUuidSync(data.reactor);
 			const reveal = reactor && !reactor.hidden;
 			await message.update({
-				content: compactCard({ img: data.img, title: data.title, open: data.open, extraClass: "lucd20-rs-card" }),
+				content: compactCard({ img: data.img, title: data.title, who: reveal ? nameForPlayers(reactor, L("ACreature")) : reactor?.name, open: data.open, extraClass: "lucd20-rs-card" }),
 				...(reveal ? { whisper: [], speaker: { ...(message.speaker ?? {}), alias: nameForPlayers(reactor, L("ACreature")) } } : {})
 			});
 			return true;

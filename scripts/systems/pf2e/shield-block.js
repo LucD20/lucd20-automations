@@ -2,7 +2,7 @@ import { MODULE_ID, error, localize } from "../../core/constants.js";
 import { defineFeature, getFeature } from "../../core/registry.js";
 import { executeAsGM, onGMRequest } from "../../core/socket.js";
 import { hasReaction, spendReaction } from "./reactions.js";
-import { pf2eCard, answered, wireOpen, sourceUuid, itemBySlug, compactCard, nameForPlayers } from "./card.js";
+import { pf2eCard, wireOpen, sourceUuid, itemBySlug, compactCard, nameForPlayers } from "./card.js";
 
 /**
  * Rule 8 (docs/pf2e-rules.md): Shield Block prompts. Owner's choices (Q169–Q172): damage is applied with
@@ -64,12 +64,12 @@ export async function onDamage(message) {
 		const actor = doc.actor, shield = actor.attributes?.shield ?? actor.system?.attributes?.shield;
 		const gms = game.users.filter((u) => u.isGM).map((u) => u.id);
 		const owners = actor.hasPlayerOwner ? game.users.filter((u) => !u.isGM && u.active && actor.testUserPermission?.(u, "OWNER")).map((u) => u.id) : [];
-		const line = (withAmount) => L(withAmount ? "Incoming" : "IncomingSecret", { name: `<strong>${esc(doc.name)}</strong>`, amount: roll.total, source: esc(message.item?.name ?? "") });
+		const line = (withAmount) => L(withAmount ? "Incoming" : "IncomingSecret", { amount: roll.total, source: esc(message.item?.name ?? "") });
 		const item = itemBySlug(actor, ["shield-block"], /^shield block$/i);
 		// v0.47.1 (owner): PF2e's card style, buttons side by side, a click on the card opens the entry.
 		const body = (withAmount) => pf2eCard({
-			img: item?.img, title: item?.name ?? L("Title"), open: sourceUuid(item), extraClass: "lucd20-sb-card",
-			body: `<p>${line(withAmount)}</p><p>${L("Shield", { name: esc(shield.name), hardness: shield.hardness, hp: shield.hp?.value ?? 0, max: shield.hp?.max ?? 0 })}</p>`,
+			img: item?.img, title: item?.name ?? L("Title"), who: doc.name, open: sourceUuid(item), extraClass: "lucd20-sb-card",
+			body: `<p>${line(withAmount)} ${L("Shield", { hardness: shield.hardness, hp: shield.hp?.value ?? 0, max: shield.hp?.max ?? 0 })}</p>`,
 			buttons: [{ data: "lucd20-sb", value: "block", icon: "fa-shield", label: L("Block") }, { data: "lucd20-sb", value: "skip", icon: "fa-xmark", label: L("Skip") }]
 		});
 		const flags = { [MODULE_ID]: { shieldBlock: { message: message.id, token: doc.uuid, img: item?.img ?? null, title: item?.name ?? L("Title"), open: sourceUuid(item) } } };
@@ -112,11 +112,11 @@ async function claim({ card, damage, token, block }, senderId) {
 	const doc = fromUuidSync(data.token);
 	for (const [i, m] of copies.entries()) {
 		await m.setFlag(MODULE_ID, "shieldBlock", { ...m.getFlag(MODULE_ID, "shieldBlock"), done: true });
-		if (!block) { await m.update({ content: answered(m.content, L("Skipped")) }); continue; }
+		if (!block) { await m.delete(); continue; } // v0.50.1 (owner): not blocked, no trace in the chat
 		if (i > 0) { await m.delete(); continue; }
 		const reveal = doc && !doc.hidden;
 		await m.update({
-			content: compactCard({ img: data.img, title: data.title, open: data.open, extraClass: "lucd20-sb-card" }),
+			content: compactCard({ img: data.img, title: data.title, who: reveal ? nameForPlayers(doc, doc?.name ?? "") : doc?.name, open: data.open, extraClass: "lucd20-sb-card" }),
 			...(reveal ? { whisper: [], speaker: { ...(m.speaker ?? {}), alias: nameForPlayers(doc, doc?.name ?? "") } } : {})
 		});
 	}

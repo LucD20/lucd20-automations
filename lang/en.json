@@ -1672,8 +1672,7 @@
       "ShoveStale": "That Shove can no longer be resolved.",
       "ShoveDone": "That Shove was already resolved.",
       "Off": "That automation is switched off.",
-      "TripDamage": "Trip (critical success): damage to {name}",
-      "TripCreature": "the creature",
+      "TripDamage": "Trip (critical)",
       "Cancel": "Cancel",
       "Speaker": "Conditions",
       "FrightenedDown": "{name}: Frightened {before} → {after} (end of turn).",
@@ -1716,10 +1715,10 @@
       "Reactive": {
         "Title": "Reactive Strike: {name}",
         "Reason": {
-          "move": "{name} left a square within your reach.",
-          "ranged": "{name} made a ranged attack ({detail}) within your reach.",
-          "manipulate": "{name} used a manipulate action ({detail}) within your reach: a critical hit disrupts it.",
-          "moveAction": "{name} used a move action ({detail}) within your reach."
+          "move": "{name} left your reach (not if a Step).",
+          "ranged": "{name}: ranged attack ({detail}).",
+          "manipulate": "{name}: manipulate ({detail}); a crit disrupts it.",
+          "moveAction": "{name}: move action ({detail})."
         },
         "NotStep": "Not if it was a Step (or other movement that doesn't trigger reactions).",
         "Skip": "Skip",
@@ -1732,9 +1731,9 @@
       },
       "ShieldBlock": {
         "Title": "Shield Block",
-        "Incoming": "{name} is about to take {amount} physical damage ({source}).",
-        "IncomingSecret": "{name} is about to take physical damage.",
-        "Shield": "{name}: Hardness {hardness}, HP {hp}/{max}.",
+        "Incoming": "{amount} physical ({source}).",
+        "IncomingSecret": "Physical damage.",
+        "Shield": "Hardness {hardness}, HP {hp}/{max}.",
         "Block": "Block",
         "Skip": "Skip",
         "Blocked": "Blocked: the damage was applied with Shield Block.",
@@ -1766,9 +1765,8 @@
         "Replaced": "Replaced by a new signal."
       },
       "PunishingShove": {
-        "Flavor": "Punishing Shove: damage to {name}",
-        "FlavorCritical": "Punishing Shove (critical success): damage to {name}",
-        "Creature": "the creature"
+        "Flavor": "Punishing Shove",
+        "FlavorCritical": "Punishing Shove (critical)"
       },
       "RoaringHeart": {
         "Name": "Roaring Heart",
@@ -1780,8 +1778,8 @@
         "TargetFirst": "Target the creature to Shove first.",
         "Replaced": "Replaced by a new use.",
         "None": "No enemy Shoved: no temporary HP.",
-        "Result": "{name} and {others} allies: {value} temporary HP until {name}'s next turn.",
-        "ResultAlone": "{name}: {value} temporary HP until their next turn.",
+        "Result": "{value} temporary HP for them and {others} allies until their next turn.",
+        "ResultAlone": "{value} temporary HP until their next turn.",
         "Effect": "Roaring Heart ({value} temp HP)",
         "EffectText": "{value} temporary Hit Points from {name}'s Roaring Heart, until the start of {name}'s next turn."
       }

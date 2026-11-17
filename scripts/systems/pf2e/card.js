@@ -20,9 +20,15 @@ export function itemBySlug(actor, slugs, name) {
  * The card's HTML. glyph: PF2e's action font letter ("R" = reaction, "1"–"3", "F" = free).
  * body: HTML paragraphs. buttons: [{ data, value, icon, label }].
  */
-export function pf2eCard({ img, title, glyph = "", open = null, body = "", buttons = [], extraClass = "" }) {
+const headerOf = (img, title, glyph, who) => `<header class="card-header flexrow">${img ? `<img src="${esc(img)}" alt="" />` : ""}<h3>${esc(title)}${glyph ? ` <span class="action-glyph">${esc(glyph)}</span>` : ""}${who ? ` <span class="lucd20-card-whom">${esc(who)}</span>` : ""}</h3></header>`;
+
+/**
+ * who: the creature's name, small, in the header (v0.50.1: the chat message's own header is hidden on these
+ * cards, for the least vertical room).
+ */
+export function pf2eCard({ img, title, glyph = "", who = "", open = null, body = "", buttons = [], extraClass = "" }) {
 	return `<div class="pf2e chat-card action-card lucd20-pf2e-card ${extraClass}"${open ? ` data-lucd20-open="${esc(open)}"` : ""}>
-	<header class="card-header flexrow">${img ? `<img src="${esc(img)}" alt="" />` : ""}<h3>${esc(title)}${glyph ? ` <span class="action-glyph">${esc(glyph)}</span>` : ""}</h3></header>
+	${headerOf(img, title, glyph, who)}
 	<div class="card-content">${body}</div>
 	<div class="card-buttons lucd20-card-buttons">${buttons.map((b) => `<button type="button" data-${b.data}="${esc(b.value)}">${b.icon ? `<i class="fa-solid ${b.icon}"></i> ` : ""}${esc(b.label)}</button>`).join("")}</div>
 </div>`;
@@ -49,9 +55,9 @@ export function wireOpen(html) {
  * An answered reaction, as everyone may see it (owner, v0.47.2): only the reaction's image, name and
  * symbol, no text, so it takes little room in the chat.
  */
-export function compactCard({ img, title, glyph = "", open = null, extraClass = "" }) {
+export function compactCard({ img, title, glyph = "", who = "", open = null, extraClass = "" }) {
 	return `<div class="pf2e chat-card action-card lucd20-pf2e-card lucd20-card-compact ${extraClass}"${open ? ` data-lucd20-open="${esc(open)}"` : ""}>
-	<header class="card-header flexrow">${img ? `<img src="${esc(img)}" alt="" />` : ""}<h3>${esc(title)}${glyph ? ` <span class="action-glyph">${esc(glyph)}</span>` : ""}</h3></header>
+	${headerOf(img, title, glyph, who)}
 </div>`;
 }
 

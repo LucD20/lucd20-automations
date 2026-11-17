@@ -182,7 +182,7 @@ const assert = require("assert");
   assert.deepStrictEqual(r.moved, [["ogre", 5, 3], false, 0, true], "3. the click moves the target; the highlights go");
   assert.deepStrictEqual([r.twice, r.failure, r.cheat, r.cancelled], ["That Shove was already resolved.", false, "That Shove can no longer be resolved.", [false, false]], "3. once per Shove; nothing on a failure; a square that was not offered is refused; the Cancel button calls it off");
   assert.deepStrictEqual([r.rightClick, r.hoverArrow, r.barButton, r.escape], [true, [true, false], "Cancel", false], "3. a right click does not cancel; hovering a square draws the push; Escape cancels");
-  assert.deepStrictEqual(r.trip, { success: ["", "+prone", ""], criticalSuccess: ["", "+prone", "1d6[bludgeoning] | Trip (critical success): damage to Ogre | Amiri"], failure: ["", "", ""], criticalFailure: ["+prone", "", ""] }, "4. Trip by degree of success");
+  assert.deepStrictEqual(r.trip, { success: ["", "+prone", ""], criticalSuccess: ["", "+prone", "1d6[bludgeoning] | Trip (critical) | Amiri"], failure: ["", "", ""], criticalFailure: ["+prone", "", ""] }, "4. Trip by degree of success");
   assert.strictEqual(r.alreadyProne, "", "4. a creature that is already Prone is left as it is");
   assert.deepStrictEqual(r.off, [2, "", 0], "switched off without a reload");
   assert.deepStrictEqual(errors, []);

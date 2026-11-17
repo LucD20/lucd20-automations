@@ -49,7 +49,7 @@ const BUTTONS = {
 	cancel: { icon: "fa-xmark", label: "Cancel" }
 };
 const cardContent = (state) => pf2eCard({
-	img: state.img, title: state.title, open: state.link, extraClass: "lucd20-rh-card",
+	img: state.img, title: state.title, who: fromUuidSync(state.token)?.name ?? "", open: state.link, extraClass: "lucd20-rh-card",
 	body: state.shoves.length ? `<p class="lucd20-rh-line">${lineOf(state)}</p>` : "",
 	buttons: [...(state.shoves.length < 2 ? ["shove"] : []), ...(state.shoves.length ? ["confirm"] : []), "cancel"]
 		.map((value) => ({ data: "lucd20-rh", value, icon: BUTTONS[value].icon, label: L(BUTTONS[value].label) }))
@@ -117,7 +117,7 @@ export async function finish(actorId, { cancelled = false, replaced = false } = 
 	const successes = state.shoves.filter((s) => s.success && s.enemy).length;
 	const value = tempHPFor(actor.level ?? actor.system?.details?.level?.value, successes);
 	// One message at the end: the feat's name and the result under it.
-	const done = (text) => postCard(state, { done: true, content: compactCard({ img: state.img, title: state.title, open: state.link, extraClass: "lucd20-rh-card" }).replace(/<\/div>\s*$/, `<p class="lucd20-card-done">${text}</p></div>`) });
+	const done = (text) => postCard(state, { done: true, content: compactCard({ img: state.img, title: state.title, who: nameForPlayers(me, me.name), open: state.link, extraClass: "lucd20-rh-card" }).replace(/<\/div>\s*$/, `<p class="lucd20-card-done">${text}</p></div>`) });
 	const who = `<strong>${esc(nameForPlayers(me, me.name))}</strong>`;
 	if (!value) {
 		await done(L("None", { name: who }));

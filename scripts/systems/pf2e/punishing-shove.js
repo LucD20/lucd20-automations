@@ -1,7 +1,7 @@
 import { error, localize } from "../../core/constants.js";
 import { defineFeature } from "../../core/registry.js";
 import { waitForDice } from "../../core/dice.js";
-import { nameForPlayers, itemBySlug } from "./card.js";
+import { itemBySlug } from "./card.js";
 import { audience } from "./rules.js";
 
 /**
@@ -44,7 +44,7 @@ async function onShove(message) {
 	// As secret as the Shove: its whisper list (a blind or GM roll), or the GM only for a hidden shover.
 	const privacy = message.whisper?.length ? { whisper: [...message.whisper], blind: !!message.blind } : audience(shoverToken?.combatant ?? { token: shoverToken, hidden: shoverToken?.hidden });
 	await roll.toMessage({
-		flavor: `<strong>${esc(L(critical ? "FlavorCritical" : "Flavor", { name: nameForPlayers(target, L("Creature")) }))}</strong>`,
+		flavor: `<strong>${esc(L(critical ? "FlavorCritical" : "Flavor"))}</strong>`,
 		speaker: ChatMessage.getSpeaker?.({ actor: shover, token: shoverToken }) ?? { alias: shover.name },
 		...privacy,
 		// (verify) Target Helper reads its targets from this flag, so its apply rows show the shoved creature.

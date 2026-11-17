@@ -790,3 +790,8 @@ one that leaves fewer squares next to enemies (see PLAN).
   grid instead of a fixed 18 px: Instant Range about a third of a square,
   bold; the cover and area labels about a quarter (at least 18), with a
   thicker outline.
+- v0.63.2 (owner: "put a little ruler icon next to it. Allow resizing it,
+  put default at 16 px"): a ruler icon (Font Awesome, \uf545) before the
+  distance; the label is sized in screen pixels (per-player "Text size",
+  default 16, 8–48), drawn at twice that and scaled by the zoom, so it reads
+  the same at any zoom. (verify) the Font Awesome family name on the canvas.

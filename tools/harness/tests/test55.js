@@ -48,6 +48,13 @@ const assert = require("assert");
     // No token of yours: nothing.
     canvas.tokens.controlled = []; game.user.character = null; Hooks.callAll("controlToken", me, false); await settle();
     out.noSource = shown();
+    // The ruler icon beside the distance; the size in screen pixels (zoom 2: half the scale).
+    canvas.tokens.controlled = [me]; canvas.stage = { scale: { x: 2 } };
+    Hooks.callAll("hoverToken", wolf, true); await settle();
+    const l = ir._test.labels.get("wolf");
+    out.icon = [l.children.length, l.children[0].text, Math.round(l.scale.x * 100) / 100];
+    await game.settings.set(M, "instantRange_size", 24); await settle();
+    out.size = Math.round(ir._test.labels.get("wolf").words.style.fontSize);
     return out;
   });
   console.log(JSON.stringify(r));
@@ -59,6 +66,8 @@ const assert = require("assert");
   assert.deepStrictEqual(r.claimed, ["ogre:20 ft@398"], "a target the cover preview labels is left to it");
   assert.deepStrictEqual(r.combatOnly, [], "only in combat: none out of combat");
   assert.deepStrictEqual(r.noSource, [], "no token of yours: none");
+  assert.deepStrictEqual(r.icon, [2, "\uf545", 0.25], "a ruler icon and the distance; scaled for the zoom");
+  assert.strictEqual(r.size, 48, "the size setting (drawn at twice, for sharpness)");
   assert.deepStrictEqual(errors, []);
   console.log("PHASE 57 CHECKS PASSED");
   await browser.close();

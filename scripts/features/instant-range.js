@@ -77,12 +77,42 @@ function ensureLayer() {
 	return layer;
 }
 
+/**
+ * The label: a small ruler icon and the distance (owner, v0.63.2), sized in screen pixels (the "Text size"
+ * setting, 16 by default) so it reads the same at any zoom: drawn at twice that for sharpness and scaled by
+ * the canvas zoom.
+ */
+const RULER = "\uf545";
 function makeLabel(text) {
-	const style = { fontFamily: "Signika", fontWeight: "bold", fontSize: Math.max(18, Math.round((canvas.grid?.size ?? 100) * 0.32)), fill: 0xffffff, stroke: 0x000000, strokeThickness: Math.max(4, Math.round((canvas.grid?.size ?? 100) * 0.05)), align: "center" };
+	const size = Number(feature?.get("size")) || 16;
 	const Precise = foundry.canvas?.containers?.PreciseText ?? globalThis.PreciseText;
-	const t = Precise ? new Precise(text, new PIXI.TextStyle(style)) : new PIXI.Text(text, style);
-	t.anchor?.set?.(0.5, 1);
-	return t;
+	const mk = (str, style) => (Precise ? new Precise(str, new PIXI.TextStyle(style)) : new PIXI.Text(str, style));
+	const base = { fill: 0xffffff, stroke: 0x000000, strokeThickness: Math.max(3, Math.round(size * 0.4)) };
+	const icon = mk(RULER, { ...base, fontFamily: ["Font Awesome 6 Pro", "Font Awesome 6 Free", "FontAwesome"], fontWeight: "900", fontSize: Math.round(size * 1.6) });
+	const words = mk(text, { ...base, fontFamily: "Signika", fontWeight: "bold", fontSize: size * 2 });
+	const label = new PIXI.Container();
+	label.addChild(icon, words);
+	label.words = words;
+	label.text = text;
+	layout(label);
+	return label;
+}
+
+function layout(label) {
+	const [icon, words] = label.children;
+	const gap = 6;
+	const total = icon.width + gap + words.width;
+	icon.position.set(-total / 2, -icon.height - (words.height - icon.height) / 2);
+	words.position.set(-total / 2 + icon.width + gap, -words.height);
+	const zoom = canvas.stage?.scale?.x || 1;
+	label.scale.set(0.5 / zoom);
+}
+
+function setText(label, text) {
+	if (label.text === text) return;
+	label.text = text;
+	label.words.text = text;
+	layout(label);
 }
 
 /** Which tokens get a label now. */
@@ -109,10 +139,9 @@ function draw() {
 		const id = docOf(t).id;
 		keep.add(id);
 		let label = labels.get(id);
-		if (!label || label.destroyed) { label = makeLabel(text); labels.set(id, label); layer.addChild(label); } else if (label.text !== text) label.text = text;
+		if (!label || label.destroyed) { label = makeLabel(text); labels.set(id, label); layer.addChild(label); } else setText(label, text);
 		const d = docOf(t);
 		const w = (d.width ?? 1) * canvas.grid.size;
-		// Scaled to the grid (owner, v0.63.1: "waaaay too small"): about a third of a square, bold.
 		label.position.set(d.x + w / 2, d.y - 2 + healthEstimateOffset(t));
 	}
 	for (const [id, label] of labels) if (!keep.has(id)) { label.destroy(); labels.delete(id); }
@@ -132,7 +161,8 @@ defineFeature({
 	scope: "world",
 	defaultEnabled: true,
 	settings: {
-		combatOnly: { kind: "boolean", default: false, scope: "world" }
+		combatOnly: { kind: "boolean", default: false, scope: "world" },
+		size: { kind: "number", default: 16, min: 8, max: 48, step: 1, scope: "client" }
 	},
 
 	enable(f) {
@@ -142,11 +172,14 @@ defineFeature({
 		for (const hook of ["targetToken", "controlToken", "refreshToken", "updateToken", "deleteToken", "createCombat", "updateCombat", "deleteCombat"]) f.on(hook, redraw);
 		f.on("canvasTearDown", () => { hovered = null; clearAll(); });
 		f.on("canvasReady", redraw);
+		// Zooming: the labels keep their size on screen.
+		f.on("canvasPan", () => { for (const l of labels.values()) if (!l.destroyed) layout(l); });
 		f.onCleanup(() => { clearAll(); layer?.destroy?.({ children: true }); layer = null; hovered = null; });
 		redraw();
 	},
 
-	onSettingChange() {
+	onSettingChange(f, key) {
+		if (key === "size") clearAll();
 		redraw();
 	}
 });

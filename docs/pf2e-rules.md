@@ -15,6 +15,9 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 | 4 | Trip: conditions and damage by degree of success | built v0.41.0 | `pf2eTrip` |
 | 5 | Temporal Distortion: d4 for the condition after the save | built v0.42.0 | `pf2eTemporalDistortion` |
 
+Commander (Battlecry!): research notes in `docs/pf2e-commander.md`; rules to
+automate come from the owner, one at a time.
+
 Code: `scripts/systems/pf2e/rules.js`; tests `tools/harness/tests/test37.js` (1–4), `test38.js` (5).
 Each rule has its own switch under **Pathfinder 2e** in the module's settings.
 

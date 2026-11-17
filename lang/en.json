@@ -347,6 +347,13 @@
           }
         }
       },
+      "instantRange": {
+        "Name": "Instant Range",
+        "Hint": "The distance from your token (selected, else your character's) to a token you hover, to every token while Alt is held, and to your targets: a small label above the token, measured by the scene's grid rules between the nearest squares, with elevation. The cover previews show it too. Replaces Instant Range (switch that one off).",
+        "Setting": {
+          "combatOnly": { "Name": "Only in combat", "Hint": "Show distances only while an encounter is running." }
+        }
+      },
       "settingsMarkers": {
         "Name": "Settings Markers",
         "Hint": "In Foundry's Configure Settings, a small mark before each setting: the world (the GM sets it for everyone), each user, or this device. Replaces Settings Markers (switch that one off)."

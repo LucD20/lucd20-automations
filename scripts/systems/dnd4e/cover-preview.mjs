@@ -1,6 +1,7 @@
 import { MODULE_ID } from "./constants.mjs";
 import { L, setting, tokenForActor } from "./utils.mjs";
 import { computeCover, COVER, isSquareGrid } from "./cover.mjs";
+import { distanceText, claimed, refreshRange } from "../../features/instant-range.js";
 
 /*
  * Client-side preview: while you target a token, draw the best set of cover lines from your
@@ -26,6 +27,7 @@ function ensureLayer() {
 }
 
 export function clearPreview() {
+	if (claimed.size) { claimed.clear(); refreshRange(); }
 	if (layer && !layer.destroyed) layer.removeChildren().forEach((c) => c.destroy({ children: true }));
 }
 
@@ -46,6 +48,7 @@ export function drawPreview() {
 	const attacker = attackerToken();
 	if (!attacker) return;
 	const container = ensureLayer();
+	const hadClaims = claimed.size;
 
 	for (const target of game.user.targets) {
 		if (target === attacker) continue;
@@ -68,11 +71,15 @@ export function drawPreview() {
 		if (shown.noLineOfEffect) lines.push(L("Cover.NoLoE"));
 		const worst = Math.max(result.walls.level, result.ranged.level);
 		const color = worst === COVER.SUPERIOR ? 0xff8a80 : worst === COVER.COVER ? 0xffd180 : 0xb9f6ca;
+		// The distance too (owner, Q248), and Instant Range leaves this target to this label.
+		const range = distanceText(attacker, target);
+		if (range) { lines[0] = `${range} · ${lines[0]}`; claimed.add(target.document.id); }
 		const text = makeText(lines.join("\n"), color);
 		text.anchor?.set(0.5, 1);
 		text.position.set(target.center.x, target.document.y - 4);
 		container.addChild(text);
 	}
+	if (claimed.size || hadClaims) refreshRange();
 }
 
 /** Debounced redraw (token movement fires many refresh events). */

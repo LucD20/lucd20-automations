@@ -1,4 +1,5 @@
 import { MODULE_ID, error, localize } from "../../core/constants.js";
+import { distanceText } from "../../features/instant-range.js";
 import { defineFeature } from "../../core/registry.js";
 
 /**
@@ -387,7 +388,9 @@ function drawPreview() {
 		layer.addChild(g);
 		const Precise = foundry.canvas?.containers?.PreciseText ?? globalThis.PreciseText;
 		const style = { fontFamily: "Signika", fontSize: 18, fill: COLORS[r.level], stroke: 0x000000, strokeThickness: 4 };
-		const text = Precise ? new Precise(L(`Level.${r.level}`), new PIXI.TextStyle(style)) : new PIXI.Text(L(`Level.${r.level}`), style);
+		const range = distanceText(attacker, target);
+		const words = range ? `${range} · ${L(`Level.${r.level}`)}` : L(`Level.${r.level}`);
+		const text = Precise ? new Precise(words, new PIXI.TextStyle(style)) : new PIXI.Text(words, style);
 		text.anchor?.set?.(0.5, 1);
 		text.position.set((r.from.x + r.to.x) / 2, (r.from.y + r.to.y) / 2 - 4);
 		layer.addChild(text);

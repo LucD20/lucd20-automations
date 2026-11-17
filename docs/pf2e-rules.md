@@ -773,4 +773,17 @@ one that leaves fewer squares next to enemies (see PLAN).
   mark before each setting: world / user / this device (the same icons as
   our window). Switch off "Settings Markers".
 - Owner: "include a new module: instant-range [...] available to all
-  systems": questions asked (Q244–).
+  systems"; Q244–Q248 as recommended; "Remember that some texts appear
+  above the token as well". Built v0.63.0 (`instantRange`, Tokens page,
+  `scripts/features/instant-range.js`): the distance from your token
+  (selected, else your character's) to a hovered token, to every token
+  while Alt is held, and to your targets; the scene grid's `measurePath`
+  between the nearest occupied squares, with elevation, in the scene's
+  units; a label just above the token, in the controls layer; above Health
+  Estimate's text when that sits on top (the original module's offset);
+  never for a token the user can't see; a GM setting for combat only. The
+  PF2e cover preview's label reads "25 ft · Standard cover"; the 4e cover
+  preview's label (above the target) starts with the distance and Instant
+  Range leaves that target to it (`claimed`), so the two never overlap.
+  Switch off "Instant Range".
+

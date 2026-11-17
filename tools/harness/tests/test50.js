@@ -77,6 +77,13 @@ const assert = require("assert");
     await game.settings.set(M, "rollChances_showPlayers4e", true);
     Hooks.callAll("renderChatMessageHTML", message, host2);
     out.playerOn = host2.querySelectorAll(".lucd20-ch-bar").length;
+    // No numbers kept (an older card, another client's roll): the target's defense now, crit 20; the rows from stored data.
+    canvas.tokens = { get: id => ({ t2: { actor: { system: { defences: { ref: { value: 15 } } } } } })[id] };
+    game.user.isGM = true;
+    const bare = { getFlag() {}, flags: {}, rolls: [{}], _source: { rolls: [JSON.stringify({ multirollData: [{ total: 20, targetID: "t2", def: "ref", parts: [{ formula: "1d20", rolls: [{ result: "12", classes: "d20" }] }] }] })] } };
+    const host4 = document.createElement("div"); host4.innerHTML = `<div class="dice-result"></div><div class="hit-prediction">Hit</div>`;
+    Hooks.callAll("renderChatMessageHTML", bare, host4);
+    out.live = host4.querySelector(".lucd20-ch-bar")?.textContent;
     // A saving throw: everyone.
     const save = { getFlag() {}, flags: {}, rolls: [{ total: 12, dice: [{ faces: 20, number: 1, modifiers: [], options: { target: 10, critical: 21 }, results: [{ result: 10, active: true }] }] }] };
     const host3 = document.createElement("div"); host3.innerHTML = `<div class="dice-roll"></div>`;
@@ -103,6 +110,7 @@ const assert = require("assert");
   assert.deepStrictEqual(r4.flag, { crit: 19, defs: [18, 25], immune: [false, false] }, "the weapon's crit range and the defenses on the message");
   assert.deepStrictEqual(r4.bars, [["45%45%10%", "Hit"], ["80%10%10%", "Miss"]], "one bar per target: +8 vs 18; +8 vs 25 (crit range 19)");
   assert.deepStrictEqual([r4.player, r4.playerOn], [0, 2], "players only with the setting");
+  assert.strictEqual(r4.live, "30%65%", "fallback: +8 vs Reflex 15 now: miss 1..6, hit 7..19, crit 20");
   assert.strictEqual(r4.saveBar, "35%65%", "a saving throw for everyone (+2 vs 10)");
   assert.deepStrictEqual(errors, []);
   console.log("PHASE 51 CHECKS PASSED");

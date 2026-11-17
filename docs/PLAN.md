@@ -1928,3 +1928,8 @@ smaller.
 **v0.55.0 (phase 51): Roll Chances, PF2e and 4e** (`rollChances`,
 `scripts/features/roll-chances.js`, adapters `systems/pf2e/chances.js` and
 `systems/dnd4e/chances.mjs`, `test50.js`); ledger §16.
+
+**v0.56.0 (phase 52): Modifiers Matter, PF2e and 4e** (`modifiersMatter`,
+`scripts/features/modifiers-matter.js`, adapters `systems/pf2e/modifiers-matter.js`
+and `systems/dnd4e/modifiers-matter.mjs`, `test51.js`); ledger §17. 4e chances
+made robust (owner: not working).

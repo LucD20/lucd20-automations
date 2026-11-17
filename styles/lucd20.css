@@ -2673,3 +2673,9 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-ch-bar .lucd20-ch-success { background: #3f7a3a; }
 .lucd20-ch-bar .lucd20-ch-criticalSuccess { background: #285b8c; }
 .lucd20-ch-bar.lucd20-ch-dialog { height: 16px; line-height: 16px; font-size: 10px; margin: 6px 0; }
+
+/* Modifiers Matter (v0.56.0) */
+.lucd20-mm-line { font-size: .8em; line-height: 1.2; margin: 2px 0; }
+.lucd20-mm-line .lucd20-mm-good, .tags .tag.lucd20-mm-good { color: #fff; background: #3f7a3a; }
+.lucd20-mm-line .lucd20-mm-bad, .tags .tag.lucd20-mm-bad { color: #fff; background: #9b2c2c; }
+.lucd20-mm-line span { padding: 0 3px; border-radius: 2px; }

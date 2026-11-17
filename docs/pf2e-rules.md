@@ -24,7 +24,8 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 | 13 | Ctrl-click effects (replaces PF2e Ctrl Click Effects) | built v0.53.0 | `pf2eCtrlClick` |
 | 14 | Sustained spells (replaces PF2e Sustain Reminder) | built v0.54.0 | `pf2eSustain` |
 | 15 | Hand reminders (replaces PF2e Hands Management) | built v0.54.0 | `pf2eHands` |
-| 16 | Roll chances, PF2e and 4e (replaces PF2e Chances) | built v0.55.0 | `rollChances` |
+| 16 | Roll chances, PF2e and 4e (replaces PF2e Chances) | built v0.56.0 | `rollChances` |
+| 17 | Modifiers Matter, PF2e and 4e (replaces PF2e Modifiers Matter) | built v0.56.0 | `modifiersMatter` |
 
 Commander (Battlecry!): research notes in `docs/pf2e-commander.md`; rules to
 automate come from the owner, one at a time.
@@ -570,9 +571,45 @@ one that leaves fewer squares next to enemies (see PLAN).
     a target number): Fail / Save, to everyone.
   - No GM click to toggle per card (the setting instead).
 - Switch off "PF2e Chances".
+- v0.56.0 (owner: "Chance doesnt work on 4e."): not reproduced in the
+  harness; the 4e side no longer depends on one path: the rows are read from
+  the message's stored data whatever Roll class it gets, the d20 found by
+  faces or formula, the rows by `.hit-prediction` else `.dice-result`, and
+  with no numbers kept on the message the target's defense now (crit 20).
+  `CONFIG.debug.lucd20Chances = true` logs each step in the console.
 - (verify) PF2e 8.7's roll window: `renderCheckModifiersDialog`,
   `app.check.totalModifier`, `app.context.dc`, `rollTwice`, and that it
   re-renders when a modifier is toggled; 4e: the multiroll card's
   `.hit-prediction` rows, `weaponUuid` in `targetOptions`, save rolls' d20
   `options.target`. The defenses sit in the message's flags (a player who
   reads message data could see them).
+
+## 17. Modifiers Matter (PF2e and D&D 4e)
+
+- The original (PF2e): highlights the modifier tags that changed a check's
+  degree, a line for the opponent's DC modifiers read live when the card is
+  shown, "potentials", fail ↔ crit fail on attacks optional.
+- Decided (Q218–Q223, as recommended): a generic feature `modifiersMatter`
+  (chat; `scripts/features/modifiers-matter.js`, adapters per system):
+  - A modifier matters if removing it changes the outcome; failing any, all
+    the modifiers pushing the same way matter together if removing them all
+    does. Green: it helped the roller; red: it hurt.
+  - PF2e: the roll's enabled modifiers (not proficiency, attributes, the
+    multiple attack penalty or potency runes) are highlighted on the card's
+    tags (seen by whoever sees the tags); the target's AC / DC modifiers
+    (conditions, cover, raised shield; not its armor's item bonus or Dex),
+    read when the roll is created, plus Off-Guard from the roll's options,
+    get one line "Target: Off-Guard −2" before the result, where the DC may
+    be seen (as Chances). Failure ↔ critical failure on attacks doesn't count.
+    Saves: the roll's side only. No potentials.
+  - 4e: per target, the common attack bonuses the system applied
+    (`commonAttackBonuses` of `dnd4e.preAttackRoll`, after the attack window:
+    combat advantage, cover, concealment, long range, prone...) that turned a
+    miss into a hit or back, one line "Mattered: Combat Advantage +2" under
+    the target's Hit / Miss; not on a natural crit or 1. A power's own
+    bonuses are not named by the system, so they are not listed. GM only
+    unless Roll Chances' "Show 4e attack chances to players".
+- Switch off "PF2e Modifiers Matter".
+- (verify) PF2e: `target.armorClass.modifiers`, `getStatistic(slug).dc`,
+  the tags' `data-slug`; 4e: `commonAttackBonuses` in the preAttackRoll
+  config.

@@ -98,6 +98,7 @@ const assert = require("assert");
     out.fit = [parseFloat(rba.style.fontSize || "12") <= 12, rba.scrollWidth <= rba.clientWidth + 1];
     out.dock = [...root().querySelectorAll(".h4-tiles span")].map(s => s.className);
     out.width = Math.round(root().getBoundingClientRect().width);
+    out.hotTop = Math.round(root().querySelector(".h4-hot").getBoundingClientRect().top);
     window.__shot = "dark";
 
     // Clicks: use a power, open it, switch tab, a pip, AP.
@@ -156,11 +157,27 @@ const assert = require("assert");
     const root = () => document.getElementById("lucd20-hud4e");
     const out = {};
     const txt = el => el?.textContent.replace(/\s+/g, " ").trim();
-    // The GM with nothing selected: no character; the hotbar stays in the HUD's corner.
+    // Nothing selected: the party (characters with a player owner this user may observe), hotbar in place.
+    const pc = (id, name, observe = true) => ({ id, name, type: "Player Character", hasPlayerOwner: true, img: "icons/svg/mystery-man.svg",
+      testUserPermission: () => observe, getActiveTokens: () => [{ isOwner: true, control: () => { window.__controlled = id; } }], sheet: { render() { window.__sheet = id; } },
+      system: { attributes: { hp: { value: 18, max: 30 } }, details: { class: "Warlock", level: 1, surges: { value: 10 } }, actionpoints: { value: 1 }, movement: { walk: { value: 6 } },
+        defences: { ac: { value: 14 }, fort: { value: 14 }, ref: { value: 13 }, wil: { value: 13 } } } });
+    const party = [pc("peb", "Pebraxeon"), pc("lin", "Linkedin", false), { id: "wolf", name: "Wolf", type: "NPC", hasPlayerOwner: false }, pc("gro", "Grontar")];
+    game.actors = Object.assign(party, { contents: party, get(id) { return party.find(a => a.id === id); } });
     canvas.tokens.controlled = [];
     Hooks.callAll("controlToken"); await settle();
+    out.partyGM = [...root().querySelectorAll(".h4-pc .h4-pc-name b")].map(txt);
+    out.card = txt(root().querySelector('[data-party="peb"]'));
+    root().querySelector('[data-party="gro"]').click();
+    root().querySelector('[data-party="peb"]').dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true }));
+    out.partyClicks = [window.__controlled, window.__sheet];
+    game.user.isGM = false;
+    Hooks.callAll("controlToken"); await settle();
+    out.partyPlayer = [...root().querySelectorAll(".h4-pc .h4-pc-name b")].map(txt);
+    game.user.isGM = true;
     const box = root().getBoundingClientRect();
-    out.empty = [root().classList.contains("empty"), !!root().querySelector(".h4-hot #hotbar"), txt(root().querySelector(".h4-main")), Math.round(box.height), Math.round(box.width) > 1000];
+    out.empty = [root().classList.contains("empty"), !!root().querySelector(".h4-hot #hotbar"), Math.round(box.height), Math.round(box.width) > 1000];
+    out.hotTop = Math.round(root().querySelector(".h4-hot").getBoundingClientRect().top);
     // The hotbar option off: back where Foundry had it.
     await game.settings.set(M, "dnd4eHud_hotbar", false); await settle();
     out.hotbarBack = document.getElementById("hotbar").parentElement.id;
@@ -199,7 +216,12 @@ const assert = require("assert");
   assert.strictEqual(r.itemSheet, "Ranger 01-Twin Strike", "right click opens the power");
   assert.deepStrictEqual(r.noCombat, ["Actions are tracked in combat.", ["Melee Basic Attack", "Ranged Basic Attack"]], "out of combat: no dock, no basic actions");
   assert.strictEqual(r.light, true);
-  assert.deepStrictEqual(r3.empty, [true, true, "Select a character's token to see its HUD.", 190, true], "GM with nothing selected: the band keeps its size and place, hotbar stays");
+  assert.deepStrictEqual(r3.empty, [true, true, 168, true], "nothing selected: the band keeps its size and place, hotbar stays");
+  assert.strictEqual(r3.hotTop, r.hotTop, "the macro area does not move between selected and not");
+  assert.deepStrictEqual(r3.partyGM, ["Grontar", "Linkedin", "Pebraxeon"], "the party: player characters, not NPCs");
+  assert.strictEqual(r3.card, "PebraxeonWarlock 1 AC14Fort14Ref13Will13 Surges 10AP 1Speed 6 18 / 30");
+  assert.deepStrictEqual(r3.partyClicks, ["gro", "peb"], "click selects the token, right click opens the sheet");
+  assert.deepStrictEqual(r3.partyPlayer, ["Grontar", "Pebraxeon"], "a player sees only characters they may observe");
   assert.strictEqual(r3.hotbarBack, "ui-bottom", "hotbar option off: back in Foundry's place");
   assert.deepStrictEqual(r3.off, [false, "ui-bottom", "ui-left"], "HUD off: gone, both back");
   assert.deepStrictEqual(errors, []);

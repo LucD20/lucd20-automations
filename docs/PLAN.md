@@ -1784,3 +1784,14 @@ than the 182 px column, so the column is now 224 px.
   `menu#action-bar` of `li.slot`, `#hotbar-controls-right` (`nav#hotbar-page-controls`
   + a column with lock / clear). Right column 300 px; HUD up to 1480 px wide.
 - (verify) the slot number element is `.slot .key` (styled small in a corner).
+
+**v0.43.4 (owner, comparing with PF2e HUD):**
+- Nothing selected: the band is see-through and shows the **party**, as PF2e
+  HUD does: a 4e card per player character this user may observe (portrait,
+  name, class and level, the four defences, surges, AP, speed, HP); a click
+  selects that character's token (the HUD then shows it), a right click opens
+  the sheet. A player sees only characters they can observe.
+- The macro area no longer moves between selected and not: the dock row's
+  height is always reserved.
+- Height 190 -> 168 px; conditions on one line. The band's background is
+  slightly see-through.

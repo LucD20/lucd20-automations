@@ -2453,11 +2453,26 @@ li:has(> .lucd20-scene-nav) {
 
 /* ---------- D&D 4e HUD (phase 39): the band across the bottom ---------- */
 .lucd20-hud4e { --atwill: #619759; --enc: #961334; --daily: #4d4d4f; --basic: #6b5d45; --plate: #3a4a2a;
-  --bg: #1b1a18; --bg2: #23211e; --ink: #ece3cf; --mute: #a39a88; --line: #4a453c; --gold: #d9b26a; --btn: #2c2a26; --edge: #000;
-  position: fixed; left: 0; bottom: 0; z-index: 30; display: flex; align-items: stretch; height: 190px; box-sizing: border-box;
-  font: 12px "Signika", "Trebuchet MS", sans-serif; color: var(--ink); background: var(--bg); border-top: 2px solid var(--plate); border-right: 1px solid var(--edge); pointer-events: auto; }
-.lucd20-hud4e.light { --bg: #f4eee0; --bg2: #e9e0ca; --ink: #2a251c; --mute: #6c6250; --line: #c2b393; --gold: #8c6418; --btn: #fbf7ec; --edge: #6f6248; }
+  --band: rgba(27, 26, 24, .86); --bg: #1b1a18; --bg2: #23211e; --ink: #ece3cf; --mute: #a39a88; --line: #4a453c; --gold: #d9b26a; --btn: #2c2a26; --edge: #000;
+  position: fixed; left: 0; bottom: 0; z-index: 30; display: flex; align-items: stretch; height: 168px; box-sizing: border-box;
+  font: 12px "Signika", "Trebuchet MS", sans-serif; color: var(--ink); background: var(--band); border-top: 2px solid var(--plate); border-right: 1px solid var(--edge); pointer-events: auto; }
+.lucd20-hud4e.light { --band: rgba(244, 238, 224, .9); --bg: #f4eee0; --bg2: #e9e0ca; --ink: #2a251c; --mute: #6c6250; --line: #c2b393; --gold: #8c6418; --btn: #fbf7ec; --edge: #6f6248; }
 .lucd20-hud4e .h4-empty { margin: auto; color: var(--mute); font-style: italic; }
+/* Nothing selected: the party, on a see-through band (v0.43.4). */
+.lucd20-hud4e.empty { background: transparent; border-top-color: transparent; }
+.lucd20-hud4e.empty .h4-main { align-items: flex-end; }
+.lucd20-hud4e .h4-party { display: flex; align-items: flex-end; gap: 6px; padding: 0 6px 6px; overflow-x: auto; }
+.lucd20-hud4e .h4-pc { width: 168px; flex: none; background: var(--band); border: 1px solid var(--edge); border-top: 2px solid var(--plate); cursor: pointer; }
+.lucd20-hud4e .h4-pc:hover { outline: 1px solid var(--gold); }
+.lucd20-hud4e .h4-pc-top { display: flex; gap: 6px; align-items: center; padding: 4px; }
+.lucd20-hud4e .h4-pc-top img { width: 40px; height: 40px; object-fit: cover; border: 1px solid var(--line); flex: none; }
+.lucd20-hud4e .h4-pc-name { min-width: 0; display: flex; flex-direction: column; } .lucd20-hud4e .h4-pc-name b { font: 700 13px Georgia, serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lucd20-hud4e .h4-pc-name small { color: var(--mute); font-size: 10.5px; }
+.lucd20-hud4e .h4-pc-defs { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line); }
+.lucd20-hud4e .h4-pc-defs span { display: grid; justify-items: center; font: 700 14px/1.1 Georgia, serif; border-left: 1px solid var(--line); } .lucd20-hud4e .h4-pc-defs span:first-child { border-left: 0; }
+.lucd20-hud4e .h4-pc-defs small { font: 400 9px "Signika", sans-serif; color: var(--mute); }
+.lucd20-hud4e .h4-pc-line { display: flex; justify-content: space-between; padding: 2px 6px; border-top: 1px solid var(--line); font-size: 10.5px; }
+.lucd20-hud4e .h4-pc .h4-hp { margin: 0 4px 4px; }
 .lucd20-hud4e .h4-main { flex: 1; min-width: 0; display: flex; }
 .lucd20-hud4e .h4-players { position: absolute; left: 4px; bottom: calc(100% + 8px); }
 .lucd20-hud4e .h4-players #players { position: static; inset: auto; margin: 0; }
@@ -2476,7 +2491,7 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-hud4e .h4-hp .t { position: absolute; top: 0; left: 0; height: 4px; background: #5aa0ff; }
 .lucd20-hud4e .h4-hp .bl { position: absolute; top: -2px; bottom: -2px; width: 2px; background: #000; }
 .lucd20-hud4e .h4-hp span { position: relative; display: block; text-align: center; font: 700 11px/16px sans-serif; color: #fff; text-shadow: 0 1px 2px #000; }
-.lucd20-hud4e .h4-conds { display: flex; flex-wrap: wrap; gap: 3px; padding: 3px 8px; border-top: 1px solid var(--line); max-height: 40px; overflow: hidden; }
+.lucd20-hud4e .h4-conds { display: flex; flex-wrap: nowrap; gap: 3px; padding: 3px 8px; border-top: 1px solid var(--line); overflow: hidden; }
 .lucd20-hud4e .h4-conds span { font-size: 10px; line-height: 15px; padding: 0 5px; border: 1px solid var(--line); background: var(--bg2); white-space: nowrap; }
 .lucd20-hud4e .h4-conds .bad { border-color: #a33; color: #c0392b; } .lucd20-hud4e.dark .h4-conds .bad { color: #ff8a7a; }
 .lucd20-hud4e .h4-btn { border: 1px solid var(--gold); background: var(--btn); color: var(--gold); padding: 0 6px; font-size: 11px; font-weight: 700; line-height: 16px; height: auto; width: auto; min-height: 0; flex: none; }
@@ -2510,13 +2525,15 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-hud4e .h4-pw.act .h4-h { font-weight: 600; }
 .lucd20-hud4e .h4-uses { display: inline-flex; gap: 2px; margin-left: 5px; vertical-align: 1px; } .lucd20-hud4e .h4-uses i { width: 7px; height: 7px; border: 1px solid #fff; border-radius: 50%; } .lucd20-hud4e .h4-uses i.full { background: #fff; }
 .lucd20-hud4e .h4-none { margin: 6px 8px; color: var(--mute); font-size: 11px; }
-.lucd20-hud4e .h4-right { width: 300px; flex: none; display: flex; flex-direction: column; border-left: 1px solid var(--line); background: var(--bg); }
-.lucd20-hud4e .h4-tiles { display: grid; grid-template-columns: repeat(5, 1fr); border-bottom: 1px solid var(--line); }
+.lucd20-hud4e .h4-right { width: 300px; flex: none; display: flex; flex-direction: column; border-left: 1px solid var(--line); background: var(--band); }
+.lucd20-hud4e .h4-dock { height: 36px; flex: none; border-bottom: 1px solid var(--line); box-sizing: border-box; }
+.lucd20-hud4e .h4-dock .h4-none { margin: 0; padding: 10px 8px; }
+.lucd20-hud4e .h4-tiles { display: grid; grid-template-columns: repeat(5, 1fr); height: 100%; }
 .lucd20-hud4e .h4-tiles span { position: relative; display: grid; justify-items: center; padding: 3px 0 2px; border-left: 1px solid var(--line); font-size: 8.5px; overflow: hidden; }
 .lucd20-hud4e .h4-tiles span:first-child { border-left: 0; } .lucd20-hud4e .h4-tiles i { font-size: 14px; } .lucd20-hud4e .h4-tiles [data-pip] { cursor: pointer; }
 .lucd20-hud4e .h4-tiles .on { background: var(--plate); color: #fff; } .lucd20-hud4e .h4-tiles .spent { color: var(--mute); text-decoration: line-through; } .lucd20-hud4e .h4-tiles .spent i { opacity: .4; }
 .lucd20-hud4e .h4-tiles .off { color: var(--mute); } .lucd20-hud4e .h4-tiles sup { position: absolute; top: 1px; right: 4px; font: 700 9px sans-serif; color: var(--gold); }
-.lucd20-hud4e .h4-hot { flex: 1; display: flex; align-items: center; justify-content: center; padding: 4px; }
+.lucd20-hud4e .h4-hot { flex: 1; display: flex; align-items: center; justify-content: center; padding: 4px; min-height: 0; }
 /* (verify) V14's hotbar markup: Foundry's own hotbar, held in place and laid out 5 × 2. */
 .lucd20-hud4e .h4-hot #hotbar { position: static; inset: auto; margin: 0; width: auto; height: auto; transform: none; display: flex; align-items: center; gap: 2px; }
 /* V14 (owner's check): #hotbar-controls-left (mute, menu), menu#action-bar (li.slot), #hotbar-controls-right (page controls + lock/clear, side by side). */

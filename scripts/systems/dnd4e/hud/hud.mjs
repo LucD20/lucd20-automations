@@ -177,7 +177,9 @@ export async function draw() {
 	if (!actor) {
 		st.actor = null; st.model = null;
 		// v0.43.3: the band keeps its size and place with nobody shown (owner: "make elements be fixed").
-		main.innerHTML = `<p class="h4-empty">${H(game.user.isGM ? "EmptyGM" : "EmptyPlayer")}</p>`;
+		// v0.43.4 (owner, as PF2e HUD does): with nobody selected the band shows the party.
+		main.innerHTML = partyStrip();
+		fitAll(main);
 		root.querySelector(".h4-dock").innerHTML = "";
 		return placeAll();
 	}
@@ -200,6 +202,43 @@ function render() {
 	root.querySelector(".h4-main").innerHTML = `${portrait(m)}${stats(m)}${powers(m, inCombat)}`;
 	root.querySelector(".h4-dock").innerHTML = dock(combatant, inCombat);
 	fitAll(root);
+}
+
+/* -------------------------------------------- */
+/*  The party (nothing selected)                */
+/* -------------------------------------------- */
+
+/** The player characters this user may look at (never one a player cannot observe). */
+export function partyActors() {
+	return (game.actors?.contents ?? [...(game.actors ?? [])])
+		.filter((a) => a?.type === PC && a.hasPlayerOwner && (game.user.isGM || a.testUserPermission?.(game.user, "OBSERVER")))
+		.sort((a, b) => String(a.name).localeCompare(String(b.name)));
+}
+
+function partyStrip() {
+	const actors = partyActors();
+	if (!actors.length) return `<p class="h4-empty">${H(game.user.isGM ? "EmptyGM" : "EmptyPlayer")}</p>`;
+	return `<div class="h4-party">${actors.map((a) => {
+		const s = a.system ?? {}, d = s.details ?? {}, hp = s.attributes?.hp ?? {};
+		const value = Number(hp.value) || 0, max = Number(hp.max) || 0;
+		const pct = max > 0 ? Math.max(0, Math.min(100, (100 * value) / max)) : 0;
+		const def = (k) => esc(s.defences?.[k]?.value ?? "");
+		return `<div class="h4-pc" data-party="${a.id}">
+			<div class="h4-pc-top"><img src="${esc(a.img)}" alt=""><div class="h4-pc-name"><b class="fit">${esc(a.name)}</b><small>${esc([d.class, d.level].filter((v) => v !== undefined && v !== "").join(" "))}</small></div></div>
+			<div class="h4-pc-defs"><span><small>AC</small>${def("ac")}</span><span><small>Fort</small>${def("fort")}</span><span><small>Ref</small>${def("ref")}</span><span><small>Will</small>${def("wil")}</span></div>
+			<div class="h4-pc-line"><span>${H("Surges")} ${Number(d.surges?.value) || 0}</span><span>${H("AP")} ${Number(s.actionpoints?.value) || 0}</span><span>${H("Speed")} ${esc(s.movement?.walk?.value ?? "")}</span></div>
+			<div class="h4-hp"><div class="f" style="width:${pct}%"></div><div class="bl" style="left:50%"></div><span>${value} / ${max}</span></div>
+		</div>`;
+	}).join("")}</div>`;
+}
+
+/** A party card: select that character's token (the HUD then shows it); no token here: its sheet. */
+function onParty(id, sheet = false) {
+	const actor = game.actors?.get(id);
+	if (!actor) return;
+	const token = sheet ? null : (actor.getActiveTokens?.(true) ?? []).find((t) => t.isOwner || game.user.isGM);
+	if (token) return token.control({ releaseOthers: true });
+	actor.sheet?.render(true);
 }
 
 const portrait = (m) => `<div class="h4-por" data-h4="sheet"><img src="${esc(m.img)}" alt=""></div>`;
@@ -296,6 +335,8 @@ export function fitAll(root) {
 /* -------------------------------------------- */
 
 async function onClick(event) {
+	const card = event.target.closest("[data-party]");
+	if (card) { event.preventDefault(); return onParty(card.dataset.party); }
 	const el = event.target.closest("[data-tab], [data-power], [data-basic], [data-pip], [data-h4]");
 	const actor = st.actor;
 	if (!el || !actor) return;
@@ -330,10 +371,12 @@ async function onClick(event) {
 }
 
 function onContext(event) {
+	const card = event.target.closest("[data-party]");
+	if (card) { event.preventDefault(); return onParty(card.dataset.party, true); }
 	const el = event.target.closest("[data-power]");
 	if (!el || !st.actor) return;
 	event.preventDefault();
 	st.actor.items.get(el.dataset.power)?.sheet?.render(true);
 }
 
-export const _test = { st, render, currentActor, tokenForActor };
+export const _test = { st, render, currentActor, tokenForActor, partyActors };

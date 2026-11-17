@@ -387,7 +387,7 @@ function drawPreview() {
 		g.lineTo(r.to.x, r.to.y);
 		layer.addChild(g);
 		const Precise = foundry.canvas?.containers?.PreciseText ?? globalThis.PreciseText;
-		const style = { fontFamily: "Signika", fontSize: 18, fill: COLORS[r.level], stroke: 0x000000, strokeThickness: 4 };
+		const style = { fontFamily: "Signika", fontSize: Math.max(18, Math.round((canvas.grid?.size ?? 100) * 0.26)), fill: COLORS[r.level], stroke: 0x000000, strokeThickness: Math.max(4, Math.round((canvas.grid?.size ?? 100) * 0.05)) };
 		const range = distanceText(attacker, target);
 		const words = range ? `${range} · ${L(`Level.${r.level}`)}` : L(`Level.${r.level}`);
 		const text = Precise ? new Precise(words, new PIXI.TextStyle(style)) : new PIXI.Text(words, style);

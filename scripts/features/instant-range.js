@@ -78,7 +78,7 @@ function ensureLayer() {
 }
 
 function makeLabel(text) {
-	const style = { fontFamily: "Signika", fontSize: 18, fill: 0xffffff, stroke: 0x000000, strokeThickness: 4, align: "center" };
+	const style = { fontFamily: "Signika", fontWeight: "bold", fontSize: Math.max(18, Math.round((canvas.grid?.size ?? 100) * 0.32)), fill: 0xffffff, stroke: 0x000000, strokeThickness: Math.max(4, Math.round((canvas.grid?.size ?? 100) * 0.05)), align: "center" };
 	const Precise = foundry.canvas?.containers?.PreciseText ?? globalThis.PreciseText;
 	const t = Precise ? new Precise(text, new PIXI.TextStyle(style)) : new PIXI.Text(text, style);
 	t.anchor?.set?.(0.5, 1);
@@ -112,7 +112,8 @@ function draw() {
 		if (!label || label.destroyed) { label = makeLabel(text); labels.set(id, label); layer.addChild(label); } else if (label.text !== text) label.text = text;
 		const d = docOf(t);
 		const w = (d.width ?? 1) * canvas.grid.size;
-		label.position.set(d.x + w / 2, d.y - 4 + healthEstimateOffset(t));
+		// Scaled to the grid (owner, v0.63.1: "waaaay too small"): about a third of a square, bold.
+		label.position.set(d.x + w / 2, d.y - 2 + healthEstimateOffset(t));
 	}
 	for (const [id, label] of labels) if (!keep.has(id)) { label.destroy(); labels.delete(id); }
 }

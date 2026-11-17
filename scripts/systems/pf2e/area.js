@@ -128,7 +128,7 @@ const ensure = (layer, parent) => {
 	return l;
 };
 const label = (text, color) => {
-	const style = { fontFamily: "Signika", fontSize: 16, fill: color, stroke: 0x000000, strokeThickness: 4 };
+	const style = { fontFamily: "Signika", fontSize: Math.max(18, Math.round((canvas.grid?.size ?? 100) * 0.24)), fill: color, stroke: 0x000000, strokeThickness: Math.max(4, Math.round((canvas.grid?.size ?? 100) * 0.05)) };
 	const Precise = foundry.canvas?.containers?.PreciseText ?? globalThis.PreciseText;
 	return Precise ? new Precise(text, new PIXI.TextStyle(style)) : new PIXI.Text(text, style);
 };

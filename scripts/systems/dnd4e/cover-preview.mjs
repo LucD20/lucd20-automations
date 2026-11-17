@@ -37,7 +37,7 @@ function label(level, prefix) {
 }
 
 function makeText(text, color) {
-	const style = { fontFamily: "Signika", fontSize: 18, fill: color, stroke: 0x000000, strokeThickness: 4, align: "center" };
+	const style = { fontFamily: "Signika", fontSize: Math.max(18, Math.round((canvas.grid?.size ?? 100) * 0.26)), fill: color, stroke: 0x000000, strokeThickness: Math.max(4, Math.round((canvas.grid?.size ?? 100) * 0.05)), align: "center" };
 	const Precise = foundry.canvas?.containers?.PreciseText ?? globalThis.PreciseText;
 	return Precise ? new Precise(text, new PIXI.TextStyle(style)) : new PIXI.Text(text, style);
 }

@@ -786,4 +786,7 @@ one that leaves fewer squares next to enemies (see PLAN).
   preview's label (above the target) starts with the distance and Instant
   Range leaves that target to it (`claimed`), so the two never overlap.
   Switch off "Instant Range".
-
+- v0.63.1 (owner: "The text is waaaay too small"): the labels scale with the
+  grid instead of a fixed 18 px: Instant Range about a third of a square,
+  bold; the cover and area labels about a quarter (at least 18), with a
+  thicker outline.

@@ -152,10 +152,20 @@ export function place() {
 	const rightEls = ["sidebar", "sidebar-tabs", "sidebar-content", "chat-form"].map((id) => document.getElementById(id)).concat([...document.querySelectorAll("#chat-notifications .chat-form, #interface .chat-form")]);
 	const lefts = rightEls.map(vis).filter((r) => r && r.bottom > band && r.left > W * 0.35).map((r) => r.left);
 	const right = lefts.length ? Math.min(...lefts) : W;
-	const width = Math.max(560, Math.min(1480, right - 8));
+	const width = Math.max(480, Math.min(1480, right - 8));
+	// v0.43.6: a fixed layout per width band (Foundry's minimum window is 1024 px; with its sidebar open the HUD gets ~670).
+	root.dataset.size = sizeFor(width);
 	const hot = document.getElementById("hotbar");
 	const outside = hot && !root.contains(hot) ? vis(hot) : null;
 	Object.assign(root.style, { left: "0px", width: `${Math.round(width)}px`, bottom: `${outside ? Math.round(H0 - outside.top + 4) : 0}px` });
+}
+
+/** The layout for a HUD width: full, compact, narrow or tiny. */
+export function sizeFor(width) {
+	if (width >= 1250) return "full";
+	if (width >= 1000) return "compact";
+	if (width >= 780) return "narrow";
+	return "tiny";
 }
 
 /* -------------------------------------------- */
@@ -300,7 +310,7 @@ function powers(m, inCombat) {
 		return `<div class="h4-col"><b class="u-${row}">${H(`Row.${row}`)}</b><div class="h4-stack">${chips.join("") || `<span class="h4-dash">—</span>`}</div></div>`;
 	}).join("");
 	return `<div class="h4-powers"><div class="h4-tabs">${TABS.map((t) => `<button type="button" data-tab="${t}" class="${t === tab ? "act" : ""}">
-		<i class="fa-solid ${TAB_ICON[t]}"></i> ${H(`Tab.${t}`)}<span class="n">${count(t)}</span></button>`).join("")}</div>
+		<i class="fa-solid ${TAB_ICON[t]}"></i><span class="lbl"> ${H(`Tab.${t}`)}</span><span class="n">${count(t)}</span></button>`).join("")}</div>
 		<div class="h4-cols">${cols}</div></div>`;
 }
 
@@ -314,7 +324,7 @@ function dock(combatant, inCombat) {
 		const offTurnOnly = kind === "immediate" || kind === "opportunity";
 		const cls = left[kind] > 0 ? ((offTurnOnly ? ownTurn : !ownTurn) ? "off" : "on") : "spent";
 		const extra = kind === "standard" && state.extra > 0 ? `<sup>${Math.max(0, left.standard)}</sup>` : "";
-		return `<span class="${cls}" ${editable ? `data-pip="${kind}"` : ""}><i class="fa-solid ${icon}"></i>${esc(H(`Dock.${kind}`))}${extra}</span>`;
+		return `<span class="${cls}" ${editable ? `data-pip="${kind}"` : ""}><i class="fa-solid ${icon}"></i><span class="lbl">${esc(H(`Dock.${kind}`))}</span>${extra}</span>`;
 	}).join("")}</div>`;
 }
 
@@ -379,4 +389,4 @@ function onContext(event) {
 	st.actor.items.get(el.dataset.power)?.sheet?.render(true);
 }
 
-export const _test = { st, render, currentActor, tokenForActor, partyActors };
+export const _test = { st, render, currentActor, tokenForActor, partyActors, sizeFor };

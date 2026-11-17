@@ -96,7 +96,7 @@ const assert = require("assert");
     out.twin = [txt(twin.querySelector(".h4-k")), twin.querySelectorAll(".h4-k i").length];
     const rba = root().querySelector('[data-power="p4"] .h4-h');
     out.fit = [parseFloat(rba.style.fontSize || "12") <= 12, rba.scrollWidth <= rba.clientWidth + 1];
-    out.dock = [...root().querySelectorAll(".h4-tiles span")].map(s => s.className);
+    out.dock = [...root().querySelectorAll(".h4-tiles > span")].map(s => s.className);
     out.width = Math.round(root().getBoundingClientRect().width);
     out.hotTop = Math.round(root().querySelector(".h4-hot").getBoundingClientRect().top);
     window.__shot = "dark";
@@ -151,6 +151,30 @@ const assert = require("assert");
   });
   await page.screenshot({ path: __dirname + "/test39-dark.png" });
 
+  // Window sizes (v0.43.6): the owner's 1920 wide, a 1366 laptop, 1024 (Foundry's minimum) with the sidebar
+  // collapsed and open, and the owner's 958 px window. The layout, and nothing spilling out of its place.
+  const sizes = {};
+  for (const [label, w, side] of [["w1920", 1920, 48], ["w1366", 1366, 48], ["w1280", 1280, 48], ["w1024", 1024, 48], ["w1024open", 1024, 348], ["w958", 958, 110]]) {
+    await page.setViewportSize({ width: w, height: 800 });
+    sizes[label] = await page.evaluate(async side => {
+      document.getElementById("sidebar").style.width = `${side}px`;
+      window.dispatchEvent(new Event("resize"));
+      await new Promise(res => setTimeout(res, 120));
+      const root = document.getElementById("lucd20-hud4e");
+      const main = root.querySelector(".h4-main"), cols = root.querySelector(".h4-cols");
+      const box = el => el.getBoundingClientRect();
+      const names = [...root.querySelectorAll(".h4-pw .h4-h")];
+      const hot = box(root.querySelector("#hotbar")), powers = box(root.querySelector(".h4-powers"));
+      return { size: root.dataset.size, width: Math.round(box(root).width), fits: main.scrollWidth <= main.clientWidth + 1,
+        powersWidth: Math.round(powers.width), colWidth: Math.round(box(cols.firstElementChild).width),
+        smallestName: Math.min(...names.map(n => parseFloat(n.style.fontSize || "12"))),
+        hotbarClear: hot.right <= window.innerWidth - side + 1 && (hot.bottom <= powers.top + 1 || hot.left >= powers.right - 1) };
+    }, side);
+    await page.screenshot({ path: `${__dirname}/test39-${label}.png`, clip: { x: 0, y: 560, width: w, height: 240 } });
+  }
+  await page.setViewportSize({ width: 1615, height: 991 });
+  await page.evaluate(() => { document.getElementById("sidebar").style.width = "32px"; window.dispatchEvent(new Event("resize")); });
+
   const r3 = await page.evaluate(async () => {
     const M = "lucd20-automations";
     const settle = (ms = 150) => new Promise(res => setTimeout(res, ms));
@@ -188,7 +212,14 @@ const assert = require("assert");
     return out;
   });
 
-  console.log(JSON.stringify({ ...r, ...r3 }, null, 1));
+  console.log(JSON.stringify({ ...r, ...r3, sizes }, null, 1));
+  assert.deepStrictEqual(Object.values(sizes).map(x => x.size), ["full", "full", "compact", "narrow", "tiny", "narrow"], "a layout per width");
+  for (const [label, x] of Object.entries(sizes)) {
+    assert.ok(x.fits, `${label}: nothing spills out of the band`);
+    assert.ok(x.hotbarClear, `${label}: the hotbar is clear of the powers and the sidebar`);
+    assert.ok(x.colWidth >= 150, `${label}: a usage group is at least 150 px wide (${x.colWidth})`);
+    assert.ok(x.smallestName >= 9, `${label}: names stay readable (${x.smallestName}px)`);
+  }
   assert.deepStrictEqual(r.names, ["Twin Strike", "Hunter's Quarry", "Elven Accuracy", "Furious Assault", "Fate of the Void", "Majestic Word", "Warlock's Curse", "Ranged Basic Attack Heavy Thrown", "Wolf-Pack Tactics", "Precisão Élfica"], "names lose the compendium prefix, and only that");
   assert.deepStrictEqual(r.ranges, ["meleeRanged:W", "ranged:10", "close:burst 5", "area:burst 1 in 10", "personal:"]);
   assert.deepStrictEqual(r.keywords, ["Martial, Weapon", "Arcane, Fire", "Primal", "fire", "Charm", ""], "keywords from any shape");

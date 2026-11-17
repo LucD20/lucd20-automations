@@ -1801,3 +1801,16 @@ the hotbar is anchored to the bottom of its column with 44 px slots (column
 322 px); the dock above it is taller (58 px, bigger icons). With nothing
 selected the column has no background and the dock's place stays empty, so
 only the hotbar itself shows, in the same place as when a character is shown.
+
+**v0.43.6 (owner: small windows; Foundry's minimum is 1024 × 768):** a fixed
+layout per width the HUD gets (`data-size`), tested at 1920, 1366, 1280, 1024
+(sidebar collapsed and open) and 958 px:
+- **full** (1250 px and up): as before.
+- **compact** (1000–1249): portrait 64 px, stat block 232, macro slots 38.
+- **narrow** (780–999): no portrait (the name plate stays), stat block 214,
+  slots 32, tabs show icon and count, the four usage groups two per row
+  (At-Will | Encounter, Daily | Basic) under one scroll, so a group stays at
+  least 150 px wide.
+- **tiny** (under 780; 1024 with the sidebar open gives 668): as narrow, the
+  hotbar sits just above the HUD's right end and the dock is a slim column of
+  five rows (icon + name).

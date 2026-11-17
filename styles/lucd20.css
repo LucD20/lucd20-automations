@@ -2534,7 +2534,7 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-hud4e .h4-tiles { display: grid; grid-template-columns: repeat(5, 1fr); height: 100%; }
 .lucd20-hud4e .h4-tiles span { position: relative; display: grid; justify-items: center; align-content: center; gap: 3px; border-left: 1px solid var(--line); font-size: 10px; overflow: hidden; }
 .lucd20-hud4e .h4-tiles span:first-child { border-left: 0; } .lucd20-hud4e .h4-tiles i { font-size: 18px; } .lucd20-hud4e .h4-tiles [data-pip] { cursor: pointer; }
-.lucd20-hud4e .h4-tiles .on { background: var(--plate); color: #fff; } .lucd20-hud4e .h4-tiles .spent { color: var(--mute); text-decoration: line-through; } .lucd20-hud4e .h4-tiles .spent i { opacity: .4; }
+.lucd20-hud4e .h4-tiles .on { background: var(--plate); color: #fff; } .lucd20-hud4e .h4-tiles .spent { color: var(--mute); } .lucd20-hud4e .h4-tiles .spent .lbl { text-decoration: line-through; } .lucd20-hud4e .h4-tiles .spent i { opacity: .4; }
 .lucd20-hud4e .h4-tiles .off { color: var(--mute); } .lucd20-hud4e .h4-tiles sup { position: absolute; top: 1px; right: 4px; font: 700 9px sans-serif; color: var(--gold); }
 .lucd20-hud4e .h4-hot { flex: 1; display: flex; align-items: flex-end; justify-content: center; padding: 0 6px 6px; min-height: 0; }
 /* (verify) V14's hotbar markup: Foundry's own hotbar, held in place and laid out 5 × 2. */
@@ -2545,3 +2545,29 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-hud4e .h4-hot #hotbar .slot .key { font-size: 9px; line-height: 1; padding: 1px 2px; top: 1px; left: 1px; background: rgba(0, 0, 0, .55); border-radius: 2px; }
 .lucd20-hud4e .h4-hot #hotbar #hotbar-controls-left { display: flex; flex-direction: column; gap: 2px; }
 .lucd20-hud4e .h4-hot #hotbar #hotbar-controls-right { display: flex; flex-direction: row; gap: 2px; height: auto; }
+
+/* ---- 4e HUD sizes (v0.43.6): set from the width the HUD gets (data-size). ---- */
+.lucd20-hud4e[data-size="compact"] .h4-por { width: 64px; }
+.lucd20-hud4e[data-size="compact"] .h4-stats { width: 232px; }
+.lucd20-hud4e[data-size="compact"] .h4-right { width: 290px; }
+.lucd20-hud4e[data-size="compact"] .h4-hot #hotbar #action-bar { grid-template-columns: repeat(5, 38px); grid-auto-rows: 38px; }
+.lucd20-hud4e[data-size="compact"] .h4-hot #hotbar .slot { width: 38px; height: 38px; }
+.lucd20-hud4e:is([data-size="narrow"], [data-size="tiny"]) .h4-por { display: none; }
+.lucd20-hud4e[data-size="narrow"] .h4-stats { width: 214px; }
+.lucd20-hud4e[data-size="narrow"] .h4-right { width: 252px; }
+.lucd20-hud4e:is([data-size="narrow"], [data-size="tiny"]) .h4-hot #hotbar #action-bar { grid-template-columns: repeat(5, 32px); grid-auto-rows: 32px; }
+.lucd20-hud4e:is([data-size="narrow"], [data-size="tiny"]) .h4-hot #hotbar .slot { width: 32px; height: 32px; }
+.lucd20-hud4e:is([data-size="narrow"], [data-size="tiny"]) .h4-tabs .lbl { display: none; }
+/* Two usage groups per row, one scroll for the lot: names keep a readable width. */
+.lucd20-hud4e:is([data-size="narrow"], [data-size="tiny"]) .h4-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: min-content; overflow-y: auto; align-content: start; }
+.lucd20-hud4e:is([data-size="narrow"], [data-size="tiny"]) .h4-stack { overflow: visible; flex: none; }
+/* Tiny: the hotbar sits just above the HUD's right end; the column keeps the dock (icons only). */
+.lucd20-hud4e[data-size="tiny"] .h4-stats { width: 200px; }
+.lucd20-hud4e[data-size="tiny"] .h4-right { width: 118px; position: relative; }
+.lucd20-hud4e[data-size="tiny"] .h4-dock { height: 100%; border-bottom: 0; }
+.lucd20-hud4e[data-size="tiny"] .h4-tiles { grid-template-columns: 1fr; grid-template-rows: repeat(5, 1fr); }
+.lucd20-hud4e[data-size="tiny"] .h4-tiles span { display: flex; justify-content: flex-start; align-items: center; gap: 8px; padding: 0 10px; border-left: 0; border-top: 1px solid var(--line); font-size: 11px; }
+.lucd20-hud4e[data-size="tiny"] .h4-tiles span:first-child { border-top: 0; } .lucd20-hud4e[data-size="tiny"] .h4-tiles i { font-size: 14px; width: 16px; text-align: center; }
+.lucd20-hud4e[data-size="tiny"] .h4-dock .h4-none { padding: 8px; }
+.lucd20-hud4e[data-size="tiny"] .h4-hot { position: absolute; right: 0; bottom: calc(100% + 2px); padding: 3px; background: var(--band); border: 1px solid var(--line); }
+.lucd20-hud4e[data-size="tiny"].empty .h4-hot { background: transparent; border-color: transparent; }

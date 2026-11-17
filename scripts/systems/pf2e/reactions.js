@@ -6,7 +6,8 @@ import { onTurns } from "./rules.js";
 /**
  * Rule 6 (docs/pf2e-rules.md): PF2e reactions, tracked (owner: "automate uses like PF2e Reactions
  * module does it"; Q160–Q163).
- * - One reaction per creature per round, refilled at the start of its turn (and when combat starts).
+ * - One reaction per creature per round, refilled at the start of its turn. v0.45.1 (owner): none before
+ *   a creature's first turn in the encounter, except guardians (the guardian class).
  * - Spent automatically by: a card of something whose cost is a reaction (an action or feat with
  *   actionType "reaction", a spell cast as a reaction), and a Strike or spell attack made outside the
  *   creature's own turn (Reactive Strike, a Readied Strike, a tactic's reaction). A reaction card
@@ -39,6 +40,15 @@ function combatantOf(message) {
 async function setUsed(combatant, used, source = "") {
 	if (!combatant) return;
 	await combatant.setFlag(MODULE_ID, FLAG, { used, source });
+}
+
+/** Guardians have their reaction before their first turn (owner, v0.45.1). (verify) `actor.class.slug` in PF2e 8.7. */
+export const isGuardian = (actor) => actor?.class?.slug === "guardian" || actor?.itemTypes?.class?.[0]?.slug === "guardian";
+
+/** A creature that has not had its first turn yet: no reaction (source "notYet"), unless it is a guardian. */
+async function beforeFirstTurn(combatant) {
+	if (isGuardian(combatant.actor)) return setUsed(combatant, 0, "");
+	return setUsed(combatant, 1, "notYet");
 }
 
 /** Spend a reaction (exported for the commander's tactics). Warns when none is left. */
@@ -155,7 +165,8 @@ export function markTracker() {
 		let mark = li.querySelector(".lucd20-rx");
 		if (!feature?.active || !combatant || !combat.started) { mark?.remove(); continue; }
 		const available = hasReaction(combatant);
-		const state = available ? "on" : "off";
+		const notYet = stateOf(combatant).source === "notYet";
+		const state = available ? "on" : notYet ? "wait" : "off";
 		if (mark?.dataset.state === state) continue;
 		if (!mark) {
 			mark = document.createElement("span");
@@ -169,7 +180,7 @@ export function markTracker() {
 			(li.querySelector(".token-name") ?? li.querySelector("h4")?.parentElement ?? li).append(mark);
 		}
 		mark.dataset.state = state;
-		mark.dataset.tooltip = L(available ? "Available" : "Spent");
+		mark.dataset.tooltip = L(available ? "Available" : notYet ? "NotYet" : "Spent");
 		mark.innerHTML = `<span class="lucd20-rx-glyph">R</span>`;
 	}
 }
@@ -187,11 +198,15 @@ defineFeature({
 	enable(f) {
 		feature = f;
 		f.on("createChatMessage", (message) => { onMessage(message).catch((err) => error("Reaction tracking failed.", err)); });
-		// Refilled at the start of the creature's own turn; all fresh when the encounter starts.
+		// Refilled at the start of the creature's own turn. When the encounter starts, and for a creature
+		// joining it, none until its first turn (guardians excepted).
 		onTurns(f, { start: (combatant) => (hasReaction(combatant) ? null : setUsed(combatant, 0, "")) });
 		f.on("combatStart", (combat) => {
 			if (!game.user.isActiveGM) return;
-			for (const c of combat.combatants ?? []) if (!hasReaction(c)) setUsed(c, 0, "").catch(() => {});
+			for (const c of combat.combatants ?? []) if (c.id !== combat.combatant?.id) beforeFirstTurn(c).catch(() => {});
+		});
+		f.on("createCombatant", (c) => {
+			if (game.user.isActiveGM && c.combat?.started) beforeFirstTurn(c).catch(() => {});
 		});
 		const redraw = () => { refreshAll(); markTracker(); };
 		f.on("refreshToken", (token) => drawBadge(token));
@@ -202,4 +217,4 @@ defineFeature({
 	}
 });
 
-export const _test = { onMessage, reactionUse, drawBadge, markTracker, spendReaction, hasReaction, recentCard };
+export const _test = { onMessage, reactionUse, drawBadge, markTracker, spendReaction, hasReaction, recentCard, beforeFirstTurn };

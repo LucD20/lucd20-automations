@@ -178,7 +178,12 @@ Standing decisions:
     click either to toggle.
   - For tactics (next, with Demoralizing Charge): `spendReaction(combatant)`;
     Drilled Reactions' extra reaction is still to do.
-- (verify) in PF2e 8.7: the card's item (`message.item`) and its
+- v0.45.1 (owner): "Creatures don't have reaction until their first turn
+  (except guardians)". When the encounter starts, everyone but the creature
+  whose turn it is waits for its first turn (badge grey, a dashed "not yet"
+  mark in the tracker); a creature added during combat waits too. Guardians
+  (the guardian class) have it from the start.
+- (verify) in PF2e 8.7: `actor.class.slug === "guardian"`; the card's item (`message.item`) and its
   `actionType` for Shield Block / Reactive Strike; a spell's
   `system.time.value === "reaction"`; the "R" of the `Pathfinder2eActions`
   font drawing the reaction symbol on the badge; the Combat Tracker row

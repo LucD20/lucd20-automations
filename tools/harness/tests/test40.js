@@ -76,6 +76,16 @@ const assert = require("assert");
     mark("amiri").click(); await settle(60);
     out.markClick = [used(cA), mark("amiri")?.dataset.state];
 
+    // The encounter starts: no reaction before one's first turn, except guardians (owner, v0.45.1).
+    amiri.class = { slug: "fighter" }; ogre.class = null;
+    const guard = actor("gd", "Valeros", "p1"); guard.class = { slug: "guardian" }; const cG = combatant("gd", guard); cG.combat = combat;
+    combat.combatants.push(cG);
+    combat.combatant = cA;
+    for (const c of [cA, cO, cG]) await c.setFlag(M, "reaction", { used: 0 });
+    Hooks.callAll("combatStart", combat); await settle();
+    out.start = [used(cA), used(cO), used(cG), cO.getFlag(M, "reaction").source];
+    await settle(60);
+    out.waitMark = mark("ogre")?.dataset.state;
     // Start of the ogre's turn: refilled. (Turns as Foundry updates the encounter.)
     await cO.setFlag(M, "reaction", { used: 1 });
     Object.assign(combat, { turn: 1, combatant: cO }); Hooks.callAll("updateCombat", combat, { turn: 1 }, {}, "u1"); await settle();
@@ -98,6 +108,8 @@ const assert = require("assert");
   assert.deepStrictEqual(r.badgeClick, [0, "true"], "a click on the badge gives it back");
   assert.deepStrictEqual(r.marks, ["on", "on"], "the Combat Tracker marks");
   assert.deepStrictEqual(r.markClick, [1, "off"], "a click on the mark spends it");
+  assert.deepStrictEqual(r.start, [0, 1, 0, "notYet"], "combat starts: the creature whose turn it is and guardians have it; the rest wait for their first turn");
+  assert.strictEqual(r.waitMark, "wait", "shown as 'not yet' in the tracker");
   assert.strictEqual(r.refilled, 0, "refilled at the start of the creature's turn");
   assert.deepStrictEqual([r.off, r.offSpend], [[false, false], 0], "switched off without a reload");
   assert.deepStrictEqual(errors, []);

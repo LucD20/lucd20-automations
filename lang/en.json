@@ -752,7 +752,7 @@
       },
       "pf2eReactions": {
         "Name": "Reactions",
-        "Hint": "Tracks each creature's reaction in combat: refilled at the start of its turn, spent by a reaction's card (Shield Block, Reactive Strike, Nimble Dodge…) or a Strike made outside its own turn. A badge on the token and a mark in the Combat Tracker show it (gold = available, grey = spent); owners and the GM click either to toggle it. Using one with none left warns the GM and the owners."
+        "Hint": "Tracks each creature's reaction in combat: none before its first turn of the encounter (guardians excepted), refilled at the start of each of its turns, spent by a reaction's card (Shield Block, Reactive Strike, Nimble Dodge…) or a Strike made outside its own turn. A badge on the token and a mark in the Combat Tracker show it (gold = available, grey = spent); owners and the GM click either to toggle it. Using one with none left warns the GM and the owners."
       }
     },
     "ForceSettings": {
@@ -1683,7 +1683,8 @@
         "Available": "Reaction available (click to mark it spent)",
         "Spent": "Reaction spent (click to give it back)",
         "NoneLeft": "{name} has no reaction left this round ({source}).",
-        "Strike": "Strike"
+        "Strike": "Strike",
+        "NotYet": "No reaction before its first turn (click to give it)"
       }
     },
     "Dnd4eHud": {

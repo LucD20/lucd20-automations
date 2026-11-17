@@ -2627,3 +2627,4 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-rx[data-state="on"] { background: #d9b26a; color: #1b1a18; }
 .lucd20-rx[data-state="off"] { background: #5a5a5a; color: #ccc; opacity: .75; text-decoration: line-through; }
 .lucd20-rx .lucd20-rx-glyph { font-family: "Pathfinder2eActions", "Signika", sans-serif; font-size: 12px; line-height: 1; }
+.lucd20-rx[data-state="wait"] { background: transparent; color: #aaa; border-style: dashed; border-color: #888; }

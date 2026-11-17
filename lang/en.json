@@ -1774,12 +1774,8 @@
         "Replaced": "Replaced by a new signal."
       },
       "FlatCheck": {
-        "Title": "Flat Check",
-        "Line": "{who}, DC {dc}",
-        "Success": "success",
-        "Failure": "failure",
+        "Line": "Flat check DC {dc} ({why})",
         "ACreature": "a creature",
-        "Lost": { "strike": "the Strike is lost", "spell": "the spell is lost", "action": "the action is lost", "manipulate": "the action is lost" },
         "Why": { "concealed": "concealed", "hidden": "hidden", "invisible": "invisible", "undetected": "undetected", "unnoticed": "unnoticed", "grabbed": "Grabbed", "stupefied": "Stupefied {value}" }
       },
       "PunishingShove": {

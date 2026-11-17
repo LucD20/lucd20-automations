@@ -20,7 +20,7 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 | 9 | Commander: Demoralizing Charge | built v0.48.0 | `pf2eDemoralizingCharge` |
 | 10 | Animist: Roaring Heart | built v0.49.2 | `pf2eRoaringHeart` |
 | 11 | Guardian: Punishing Shove | built v0.50.1 | `pf2ePunishingShove` |
-| 12 | Flat checks (replaces PF2e Flat Check) | built v0.51.0 | `pf2eFlatCheck` |
+| 12 | Flat checks (replaces PF2e Flat Check) | built v0.51.1 | `pf2eFlatCheck` |
 
 Commander (Battlecry!): research notes in `docs/pf2e-commander.md`; rules to
 automate come from the owner, one at a time.
@@ -454,8 +454,11 @@ one that leaves fewer squares next to enemies (see PLAN).
   - Who sees it: everyone, except a hidden token, Hidden / Invisible /
     Undetected / Unnoticed, a hidden attacker, or a secret roll: GM only
     (blind; the 3D dice follow). Hidden NPC names: "a creature".
-  - Card: compact, one line per target, "Goblin (concealed), DC 5: 3,
-    failure: the Strike is lost" in red; nothing is blocked.
+  - Card: compact, one line per target; nothing is blocked. v0.51.1 (owner:
+    "can just be a single line, with the dice number and green or red
+    background, literally just like the flat check module. remember, chat
+    space."): no header, "[14] Flat check DC 5 (concealed)" on green or
+    red; the target's name only when there are several.
   - Settings: Ignore Concealed, Ignore Grabbed, Hide the number.
 - Switch off the "PF2e Flat Check" module (both would roll).
 - (verify) `context.traits` / options carrying "attack" on Shove etc.;

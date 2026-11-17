@@ -2645,9 +2645,11 @@ li:has(> .lucd20-scene-nav) {
 /* v0.50.1 (owner): no message header on these cards (the creature's name is in the card's own header). */
 .chat-message:has(.lucd20-pf2e-card) > .message-header { display: none; }
 .chat-message:has(.lucd20-pf2e-card) .message-content { margin-top: 0; }
-.lucd20-fc-card .lucd20-fc-line { margin: 2px 0; }
-.lucd20-fc-card .lucd20-fc-ok i { color: #2e7d32; }
-.lucd20-fc-card .lucd20-fc-fail, .lucd20-fc-card .lucd20-fc-fail i { color: #b71c1c; }
+/* v0.51.1 (owner): one line per target, like the PF2e Flat Check module: the die, a green or red background. */
+.lucd20-fc-card .lucd20-fc-line { display: flex; align-items: center; gap: 6px; margin: 1px 0; padding: 1px 6px 1px 2px; border-radius: 3px; color: #fff; line-height: 20px; }
+.lucd20-fc-card .lucd20-fc-ok { background: #2e7d32; }
+.lucd20-fc-card .lucd20-fc-fail { background: #b71c1c; }
+.lucd20-fc-card .lucd20-fc-die { min-width: 22px; text-align: center; font-weight: 700; font-size: 1.1em; background: rgba(0, 0, 0, .25); border-radius: 2px; }
 .lucd20-pf2e-card .card-header h3 .lucd20-card-whom { font-size: .75em; font-weight: 400; opacity: .75; margin-left: 4px; }
 .lucd20-pf2e-card .lucd20-card-done { margin: 4px 0 0; font-style: italic; opacity: .75; }
 .lucd20-pf2e-card.lucd20-card-compact .card-header { margin: 0; border-bottom: 0; }

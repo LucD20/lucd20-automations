@@ -166,7 +166,6 @@ async function onMessage(feature, message) {
 	// Who may see it.
 	const secret = !!message.blind || (message.whisper?.length ?? 0) > 0 || !!attackerDoc?.hidden
 		|| rows.some((r) => r.target?.hidden || HIDDEN_LIKE.includes(r.why));
-	const lost = L(`Lost.${found.kind}`);
 	const hideValue = !!feature.get("hideValue");
 	const rolls = [];
 	const lines = [];
@@ -175,13 +174,15 @@ async function onMessage(feature, message) {
 		rolls.push(roll);
 		const ok = roll.total >= r.dc;
 		const whyText = r.why === "stupefied" ? L("Why.stupefied", { value: r.value }) : L(`Why.${r.why}`);
-		const who = r.target ? `${esc(secret ? r.target.name : nameForPlayers(r.target, L("ACreature")))} (${esc(whyText)})` : esc(whyText);
-		const result = `${hideValue ? "" : `${roll.total}, `}${ok ? L("Success") : `${L("Failure")}: ${lost}`}`;
-		lines.push(`<p class="lucd20-fc-line ${ok ? "lucd20-fc-ok" : "lucd20-fc-fail"}"><i class="fa-solid ${ok ? "fa-check" : "fa-xmark"}"></i> ${L("Line", { who, dc: r.dc })}: <strong>${result}</strong></p>`);
+		// v0.51.1 (owner): one line per target, the die and a green or red background; the target's name only
+		// when there are several.
+		const who = r.target && rows.length > 1 ? `${esc(secret ? r.target.name : nameForPlayers(r.target, L("ACreature")))}: ` : "";
+		const die = hideValue ? `<i class="fa-solid ${ok ? "fa-check" : "fa-xmark"}"></i>` : roll.total;
+		lines.push(`<div class="lucd20-fc-line ${ok ? "lucd20-fc-ok" : "lucd20-fc-fail"}"><span class="lucd20-fc-die">${die}</span><span>${who}${esc(L("Line", { dc: r.dc, why: whyText }))}</span></div>`);
 	}
 	const name = secret ? (attackerDoc?.name ?? actor.name) : nameForPlayers(attackerDoc, actor.name);
 	await ChatMessage.create({
-		content: `<div class="pf2e chat-card lucd20-pf2e-card lucd20-fc-card"><header class="card-header flexrow"><h3>${esc(L("Title"))} <span class="lucd20-card-whom">${esc(name)}</span></h3></header><div class="card-content">${lines.join("")}</div></div>`,
+		content: `<div class="lucd20-pf2e-card lucd20-fc-card">${lines.join("")}</div>`,
 		speaker: { alias: name },
 		rolls,
 		sound: null,

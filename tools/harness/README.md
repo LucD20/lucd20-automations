@@ -85,6 +85,7 @@ sets `game.system.id`.
 | `test47.js` | PF2e: Ctrl-click effects: links, recipients, the GM relay, cast rank, persistent damage (48) |
 | `test48.js` | PF2e: sustained spells: effects per cast, reminder, the end-of-turn question, limits (49) |
 | `test49.js` | PF2e: hand reminders: hands in use, Strikes, Restrained, rage, buckler (50) |
+| `test50.js` | Roll Chances: PF2e degrees, fortune, adjustments, visibility, roll window; 4e hits, crit range, saves (51) |
 | `test39.js` | D&D 4e HUD: data from the owner's sheets, columns and tabs, dock, clicks, dying, condition icons, party and selection cards, window sizes, players list and hotbar moved and put back (39); the monster HUD: role block, resistances, recharge roll, traits (40) |
 
 For a new feature, copy the closest test, keep its mock setup and replace the

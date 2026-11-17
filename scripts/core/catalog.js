@@ -36,6 +36,7 @@ export const FEATURE_ORDER = [
   { id: "chatPins", category: "chat", phase: 4 },
   { id: "damageLog", category: "chat", phase: 7 },
   { id: "describe", category: "chat", phase: 18 },
+  { id: "rollChances", category: "chat", phase: 51, systems: ["pf2e", "dnd4e"] },
   { id: "multiTokenEdit", category: "tokens", phase: 6 },
   { id: "folderDrop", category: "tokens", phase: 6 },
   { id: "pauseNotifier", category: "tokens", phase: 15 },

@@ -296,6 +296,13 @@
         "Name": "Clean Title Bars",
         "Hint": "In every window, title-bar buttons show only their icon; hover for the name. The window title stays."
       },
+      "rollChances": {
+        "Name": "Roll Chances",
+        "Hint": "A thin bar under a roll's result with the chance of each outcome. PF2e: critical failure, failure, success, critical success against the DC (fortune and degree adjustments counted), also in the roll window; players see it only where they could see the DC. D&D 4e: miss, hit, crit per target against its defense, and saving throws. Replaces PF2e Chances (switch that one off).",
+        "Setting": {
+          "showPlayers4e": { "Name": "Show 4e attack chances to players", "Hint": "D&D 4e only. Off: only the GM sees the hit chances of attacks (they reveal a monster's defenses). Saving throws show to everyone." }
+        }
+      },
       "diceStats": {
         "Name": "Dice Stats",
         "Hint": "Roll statistics for everyone, for this session and all time, opened from the bottom of the Actors tab. PF2e checks are split by type and degree of success. Blind and secret rolls only count in the GM's view.",
@@ -938,6 +945,17 @@
       "Temp": "Temp",
       "Undo": "Undo this change",
       "Reverted": "undone"
+    },
+    "Chances": {
+      "criticalFailure": "Critical failure",
+      "failure": "Failure",
+      "success": "Success",
+      "criticalSuccess": "Critical success",
+      "miss": "Miss",
+      "hit": "Hit",
+      "crit": "Crit",
+      "fail": "Fail",
+      "save": "Save"
     },
     "DiceStats": {
       "Title": "Dice Stats",

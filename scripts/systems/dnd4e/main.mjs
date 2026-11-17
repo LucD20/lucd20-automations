@@ -1,6 +1,7 @@
 import { MODULE_ID } from "./constants.mjs";
 import { registerSettings } from "./settings.mjs";
 import "./cards.mjs";
+import "./chances.mjs";
 import "./skill-challenge.mjs";
 import "./party-stash.mjs";
 import "./reactions/opportunity-warning.mjs";

@@ -24,6 +24,7 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 | 13 | Ctrl-click effects (replaces PF2e Ctrl Click Effects) | built v0.53.0 | `pf2eCtrlClick` |
 | 14 | Sustained spells (replaces PF2e Sustain Reminder) | built v0.54.0 | `pf2eSustain` |
 | 15 | Hand reminders (replaces PF2e Hands Management) | built v0.54.0 | `pf2eHands` |
+| 16 | Roll chances, PF2e and 4e (replaces PF2e Chances) | built v0.55.0 | `rollChances` |
 
 Commander (Battlecry!): research notes in `docs/pf2e-commander.md`; rules to
 automate come from the owner, one at a time.
@@ -543,3 +544,35 @@ one that leaves fewer squares next to enemies (see PLAN).
 - Switch off "PF2e Hands Management".
 - (verify) "Effect: Rage" found by its compendium source; `handsHeld`,
   `hands`, `isHeld` on 8.7 weapons.
+
+## 16. Roll chances (PF2e and D&D 4e)
+
+- The original (PF2e only): a four-colour bar on check cards and in the roll
+  window; it counted modifiers the user unticked, ignored fortune /
+  misfortune and degree adjustments.
+- Decided (Q212–Q217, as recommended): a generic feature `rollChances`
+  (chat category; `scripts/features/roll-chances.js` holds the maths and the
+  bar, each system an adapter):
+  - A thin bar under the result, the % inside each segment (when 9% or
+    more); in PF2e also in the roll window, before Roll.
+  - PF2e: critical failure / failure / success / critical success, worked
+    out as PF2e does (±10, natural 20 / 1, then the roll's
+    `dosAdjustments`), over 1d20 or 2d20 kept (fortune / misfortune). Not on
+    flat checks or rolls without a DC. Players see it where they could see
+    the DC: PF2e's "show DCs" setting, a DC shown on the card, or a DC
+    belonging to a player's character (an attack on a PC, a save against a
+    PC's spell); never a blind roll. The roll window: no degree adjustments
+    (they depend on the roll).
+  - 4e: Miss / Hit / Crit per target against the defense the system compared
+    (from `dnd4e.rollAttack`, with the weapon's or implement's crit range from
+    `dnd4e.preAttackRoll`; a natural 1 misses), kept on the message; the GM
+    only unless "Show 4e attack chances to players". Saving throws (a d20 with
+    a target number): Fail / Save, to everyone.
+  - No GM click to toggle per card (the setting instead).
+- Switch off "PF2e Chances".
+- (verify) PF2e 8.7's roll window: `renderCheckModifiersDialog`,
+  `app.check.totalModifier`, `app.context.dc`, `rollTwice`, and that it
+  re-renders when a modifier is toggled; 4e: the multiroll card's
+  `.hit-prediction` rows, `weaponUuid` in `targetOptions`, save rolls' d20
+  `options.target`. The defenses sit in the message's flags (a player who
+  reads message data could see them).

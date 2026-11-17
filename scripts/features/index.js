@@ -36,3 +36,4 @@ import "./describe.js";
 import "./dice-stats.js";
 import "./gm-vision.js";
 import "./loot-pile.js";
+import "./roll-chances.js";

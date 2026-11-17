@@ -2664,3 +2664,12 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-pf2e-card .card-header h3 .lucd20-card-whom { font-size: .75em; font-weight: 400; opacity: .75; margin-left: 4px; }
 .lucd20-pf2e-card .lucd20-card-done { margin: 4px 0 0; font-style: italic; opacity: .75; }
 .lucd20-pf2e-card.lucd20-card-compact .card-header { margin: 0; border-bottom: 0; }
+
+/* Roll Chances (v0.55.0): a thin bar, the % inside. */
+.lucd20-ch-bar { display: flex; height: 13px; margin: 3px 0; border-radius: 2px; overflow: hidden; font-size: 9px; line-height: 13px; color: #fff; font-weight: 600; }
+.lucd20-ch-bar .lucd20-ch-seg { text-align: center; white-space: nowrap; overflow: hidden; min-width: 0; }
+.lucd20-ch-bar .lucd20-ch-criticalFailure { background: #7a1f1f; }
+.lucd20-ch-bar .lucd20-ch-failure { background: #b4532a; }
+.lucd20-ch-bar .lucd20-ch-success { background: #3f7a3a; }
+.lucd20-ch-bar .lucd20-ch-criticalSuccess { background: #285b8c; }
+.lucd20-ch-bar.lucd20-ch-dialog { height: 16px; line-height: 16px; font-size: 10px; margin: 6px 0; }

@@ -1924,3 +1924,7 @@ hand became a split button.
 **v0.54.0 (phase 50): hand reminders** (`pf2eHands`,
 `scripts/systems/pf2e/hands.js`, `test49.js`); ledger §15. Sustain card lines
 smaller.
+
+**v0.55.0 (phase 51): Roll Chances, PF2e and 4e** (`rollChances`,
+`scripts/features/roll-chances.js`, adapters `systems/pf2e/chances.js` and
+`systems/dnd4e/chances.mjs`, `test50.js`); ledger §16.

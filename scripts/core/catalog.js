@@ -74,6 +74,7 @@ export const FEATURE_ORDER = [
   { id: "pf2eRoaringHeart", category: "pf2e", phase: 45, systems: ["pf2e"] },
   { id: "pf2ePunishingShove", category: "pf2e", phase: 46, systems: ["pf2e"] },
   { id: "pf2eFlatCheck", category: "pf2e", phase: 47, systems: ["pf2e"] },
+  { id: "pf2eCtrlClick", category: "pf2e", phase: 48, systems: ["pf2e"] },
   { id: "dnd4eClassFeatures", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
   { id: "dnd4eCover", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
   { id: "dnd4eActionTracker", category: "dnd4e", phase: 26, systems: ["dnd4e"] },

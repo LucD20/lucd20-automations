@@ -785,6 +785,13 @@
           "hideValue": { "Name": "Hide the number", "Hint": "The card says only success or failure, not the d20's number." }
         }
       },
+      "pf2eCtrlClick": {
+        "Name": "Ctrl-click Effects",
+        "Hint": "In chat, Ctrl-click (⌘ on a Mac) a condition, effect or persistent damage link, or click the small hand after it, to apply it to your selected tokens (else your targets, else your character), through the GM for creatures you don't own. Effects keep their cast rank and origin. Replaces PF2e Ctrl Click Effects (switch that one off).",
+        "Setting": {
+          "icon": { "Name": "Hand icon", "Hint": "A small hand after each link that can be applied; clicking it applies the link like a Ctrl-click." }
+        }
+      },
       "pf2ePunishingShove": {
         "Name": "Punishing Shove (Guardian)",
         "Hint": "When a creature with Punishing Shove succeeds at a Shove, after the dice the shoved creature's bludgeoning damage is rolled (Strength modifier, +2 / +6 / +12 at expert / master / legendary Athletics; doubled on a critical success), to apply with PF2e's own buttons."
@@ -1772,6 +1779,12 @@
         "Give": "Give",
         "NoOne": "No one",
         "Replaced": "Replaced by a new signal."
+      },
+      "CtrlClick": {
+        "Tip": "Apply to the selected tokens (Ctrl-click the link does the same)",
+        "NoOne": "Select or target a token first.",
+        "Applied": "{what} → {who}",
+        "ACreature": "a creature"
       },
       "FlatCheck": {
         "Line": "Flat check DC {dc} ({why})",

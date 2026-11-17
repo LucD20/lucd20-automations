@@ -1913,3 +1913,6 @@ details in the ledger §11. v0.50.1: compact cards for all the PF2e rules
 `scripts/systems/pf2e/flat-check.js`, `test46.js`), replacing PF2e Flat
 Check; the merge order of the owner's other modules is in the ledger
 ("Module merges").
+
+**v0.52.0 (phase 48): Ctrl-click effects** (`pf2eCtrlClick`,
+`scripts/systems/pf2e/ctrl-click.js`, `test47.js`); ledger §13.

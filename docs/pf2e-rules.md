@@ -21,6 +21,7 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 | 10 | Animist: Roaring Heart | built v0.49.2 | `pf2eRoaringHeart` |
 | 11 | Guardian: Punishing Shove | built v0.50.1 | `pf2ePunishingShove` |
 | 12 | Flat checks (replaces PF2e Flat Check) | built v0.51.1 | `pf2eFlatCheck` |
+| 13 | Ctrl-click effects (replaces PF2e Ctrl Click Effects) | built v0.52.0 | `pf2eCtrlClick` |
 
 Commander (Battlecry!): research notes in `docs/pf2e-commander.md`; rules to
 automate come from the owner, one at a time.
@@ -465,3 +466,22 @@ one that leaves fewer squares next to enemies (see PLAN).
   `flags.pf2e.casting` only on a real cast; the spell effects' slugs
   (`spell-effect-sure-strike`, `spell-effect-see-the-unseen`); the caster's
   targets readable on the GM's client.
+
+## 13. Ctrl-click effects
+
+- The original: Ctrl-click a condition / effect / persistent damage link in
+  chat to apply it to the selected tokens; a hand icon after each. Its gaps:
+  no way to reach creatures you don't own, an uncaught error on a link that
+  isn't persistent, the link's number written into a field effects don't use.
+- Decided (Q196–Q201 as recommended; Q200: "do the hand icon, here its
+  fine"): to the selected tokens, else the targets, else the character;
+  through the GM for creatures not owned; conditions with the link's number,
+  effects with the cast rank, origin (caster, item, spellcasting) and roll
+  (and a counter badge set to the link's number), persistent damage as its
+  condition at DC 15; the hand icon (a client setting); a notice to the
+  clicker ("Frightened 2 → Goblin, Orc"; hidden NPC names: "a creature"),
+  nothing in chat. A plain click still opens the link.
+- Switch off "PF2e Ctrl Click Effects" (both would apply).
+- (verify) `increaseCondition(slug, { value })` setting the value; the
+  compendium index carrying `type` for the links; Ctrl-click on Foundry's
+  links not also opening the sheet.

@@ -2646,6 +2646,8 @@ li:has(> .lucd20-scene-nav) {
 .chat-message:has(.lucd20-pf2e-card) > .message-header { display: none; }
 .chat-message:has(.lucd20-pf2e-card) .message-content { margin-top: 0; }
 /* v0.51.1 (owner): one line per target, like the PF2e Flat Check module: the die, a green or red background. */
+.lucd20-cc-icon { font-size: .85em; opacity: .7; cursor: pointer; }
+.lucd20-cc-icon:hover { opacity: 1; }
 .lucd20-fc-card .lucd20-fc-line { display: flex; align-items: center; gap: 6px; margin: 1px 0; padding: 1px 6px 1px 2px; border-radius: 3px; color: #fff; line-height: 20px; }
 .lucd20-fc-card .lucd20-fc-ok { background: #2e7d32; }
 .lucd20-fc-card .lucd20-fc-fail { background: #b71c1c; }

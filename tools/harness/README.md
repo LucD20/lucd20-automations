@@ -82,6 +82,7 @@ sets `game.system.id`.
 | `test44.js` | PF2e rules: Roaring Heart, counting Shoves, the end of the movement, temporary HP effects (45) |
 | `test45.js` | PF2e rules: Punishing Shove, its damage by rank and degree, privacy, hidden names (46) |
 | `test46.js` | PF2e rules: flat checks: when, DCs, feats and effects, privacy, settings (47) |
+| `test47.js` | PF2e: Ctrl-click effects: links, recipients, the GM relay, cast rank, persistent damage (48) |
 | `test39.js` | D&D 4e HUD: data from the owner's sheets, columns and tabs, dock, clicks, dying, condition icons, party and selection cards, window sizes, players list and hotbar moved and put back (39); the monster HUD: role block, resistances, recharge roll, traits (40) |
 
 For a new feature, copy the closest test, keep its mock setup and replace the

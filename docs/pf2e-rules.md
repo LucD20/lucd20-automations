@@ -320,3 +320,9 @@ one that leaves fewer squares next to enemies (see PLAN).
   the banner toggle (`actor.rollOptions.all["commanders-banner"]`);
   `saves.will.roll({ dc, modifiers })` taking a circumstance Modifier;
   `increaseCondition("frightened", { value })`.
+- v0.48.2 (owner, bug): "if I already used it in my turn, I can't target if I
+  use it again; we need to still keep it allowed in case of misclicks". Using
+  it again is always allowed: the same commander's earlier signal still open
+  is cancelled ("Replaced by a new signal", its extra reaction taken back) and
+  Drilled Reactions may be chosen again; allies who answered another
+  commander's tactic this round are shown grey but can be picked.

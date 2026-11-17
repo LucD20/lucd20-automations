@@ -32,6 +32,11 @@ export function grantDrilledReaction(actorId, ms = 120000) {
 	drilled.set(actorId, Date.now() + ms);
 }
 
+/** A cancelled tactic takes its extra reaction back. */
+export function revokeDrilledReaction(actorId) {
+	drilled.delete(actorId);
+}
+
 const stateOf = (combatant) => combatant?.getFlag?.(MODULE_ID, FLAG) ?? { used: 0 };
 export const hasReaction = (combatant) => (Number(stateOf(combatant).used) || 0) < 1;
 const inCombat = (combatant) => !!combatant?.combat?.started;

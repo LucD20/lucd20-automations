@@ -1753,7 +1753,8 @@
         "Speaker": "Conditions",
         "PickDrilled": "Drilled Reactions: click who gets the extra reaction",
         "Give": "Give",
-        "NoOne": "No one"
+        "NoOne": "No one",
+        "Replaced": "Replaced by a new signal."
       }
     },
     "Dnd4eHud": {

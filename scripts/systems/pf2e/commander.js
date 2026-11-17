@@ -4,7 +4,7 @@ import { executeAsGM, onGMRequest } from "../../core/socket.js";
 import { waitForDice } from "../../core/dice.js";
 import { pickSeveral } from "../../core/square-picker.js";
 import { pf2eCard, answered, wireOpen, sourceUuid, compactCard, nameForPlayers } from "./card.js";
-import { grantDrilledReaction } from "./reactions.js";
+import { grantDrilledReaction, revokeDrilledReaction } from "./reactions.js";
 import { onTurns, audience } from "./rules.js";
 import { feetBetween } from "./reactive-strike.js";
 
@@ -83,10 +83,14 @@ async function onCommanderMessage(message) {
 	const size = canvas.grid.size;
 	const mine = cellsOf(token.document);
 	const allies = (canvas.tokens?.placeables ?? []).filter((t) => t !== token && t.actor && t.document.disposition === token.document.disposition && !t.document.hidden && feetBetween(mine, cellsOf(t.document)) <= AURA);
+	// v0.48.2 (owner): always allowed (misclicks happen). Allies who answered another commander's tactic this
+	// round are shown grey, as a reminder, but can be picked; this commander's own earlier signal is redone.
+	const commanderUuid = token.document.uuid;
 	const entries = allies.map((t) => {
-		const responded = t.document.combatant?.getFlag?.(MODULE_ID, "tacticRound") === roundKey();
-		return { x: t.document.x, y: t.document.y, width: t.document.width * size, height: t.document.height * size, color: responded ? 0x777777 : 0x3fb950, value: t.document.uuid, responded };
-	}).filter((e) => !e.responded);
+		const mark = t.document.combatant?.getFlag?.(MODULE_ID, "tacticRound");
+		const other = mark?.round === roundKey() && mark.commander !== commanderUuid;
+		return { x: t.document.x, y: t.document.y, width: t.document.width * size, height: t.document.height * size, color: other ? 0x777777 : 0x3fb950, value: t.document.uuid };
+	});
 	if (!entries.length) return ui.notifications.info(L("NoAllies"));
 	// v0.48.1 (owner): the last squadmates start chosen when they are still in range; the second click signals.
 	const last = actor.getFlag?.(MODULE_ID, "dcLast") ?? [];
@@ -95,7 +99,9 @@ async function onCommanderMessage(message) {
 	await actor.setFlag?.(MODULE_ID, "dcLast", chosen).catch?.(() => {});
 	// Drilled Reactions (owner): the commander chooses who gets the extra reaction, once a round.
 	let drilled = null;
-	const drilledFree = token.document.combatant?.getFlag?.(MODULE_ID, "drilledRound") !== roundKey();
+	// A redo in the same round may choose Drilled Reactions again (the earlier signal is cancelled).
+	const redo = token.document.combatant?.getFlag?.(MODULE_ID, "dcRound") === roundKey();
+	const drilledFree = redo || token.document.combatant?.getFlag?.(MODULE_ID, "drilledRound") !== roundKey();
 	if (drilledFree) {
 		const picks = entries.filter((e) => chosen.includes(e.value)).map((e) => ({ ...e, color: 0xd9b26a }));
 		drilled = (await pickSeveral(picks, { max: 1, hint: L("PickDrilled"), confirm: L("Give"), cancel: L("NoOne"), auto: true }))?.[0] ?? null;
@@ -112,15 +118,26 @@ async function start({ commander, allies, item, drilled: drilledTo = null }) {
 	const cDoc = fromUuidSync(commander);
 	const tactic = fromUuidSync(item);
 	if (!cDoc?.actor) return false;
+	// A redo: this commander's earlier signal that is still open is cancelled (its extra reaction taken back).
+	for (const old of [...tactics.values()].filter((t) => t.commander === commander && !t.done)) {
+		old.done = true;
+		tactics.delete(old.id);
+		for (const ally of old.allies) {
+			if (ally.drilled) revokeDrilledReaction(ally.actorId);
+			if (ally.status === "waiting") await collapse(ally, old, "Replaced");
+		}
+	}
+	const redo = cDoc.combatant?.getFlag?.(MODULE_ID, "dcRound") === roundKey();
+	await cDoc.combatant?.setFlag?.(MODULE_ID, "dcRound", roundKey());
 	const id = `dc${Date.now().toString(36)}${++idSeq}`;
 	const state = { id, commander, commanderCombatant: cDoc.combatant?.id ?? null, dc: classDC(cDoc.actor), img: tactic?.img ?? null, title: tactic?.name ?? L("Name"), open: sourceUuid(tactic), allies: [], done: false };
 	tactics.set(id, state);
-	const drilledFree = cDoc.combatant?.getFlag?.(MODULE_ID, "drilledRound") !== roundKey();
+	const drilledFree = redo || cDoc.combatant?.getFlag?.(MODULE_ID, "drilledRound") !== roundKey();
 	for (const uuid of allies) {
 		const doc = fromUuidSync(uuid);
 		if (!doc?.actor) continue;
 		const combatant = doc.combatant ?? null;
-		await combatant?.setFlag?.(MODULE_ID, "tacticRound", roundKey());
+		await combatant?.setFlag?.(MODULE_ID, "tacticRound", { round: roundKey(), commander });
 		// Drilled Reactions: once a round, the ally the commander chose gets an extra reaction for this tactic.
 		const drilled = drilledFree && drilledTo === uuid;
 		if (drilled) {
@@ -137,7 +154,7 @@ async function start({ commander, allies, item, drilled: drilledTo = null }) {
 			whisper: [...new Set([...ownersOf(doc.actor), ...gmIds()])],
 			flags: { [MODULE_ID]: { dcAlly: { tactic: id, token: uuid } } }
 		});
-		state.allies.push({ token: uuid, actorId: doc.actor.id, card: card?.id ?? null, status: "waiting", strike: null });
+		state.allies.push({ token: uuid, actorId: doc.actor.id, card: card?.id ?? null, status: "waiting", strike: null, drilled });
 	}
 	return true;
 }
@@ -159,11 +176,11 @@ async function onStrike(message) {
 	}
 }
 
-async function collapse(ally, state, skipped = false) {
+async function collapse(ally, state, closed = false) {
 	const card = ally.card ? game.messages.get(ally.card) : null;
 	if (!card) return;
 	await card.setFlag(MODULE_ID, "dcAlly", { ...card.getFlag(MODULE_ID, "dcAlly"), done: true });
-	if (skipped) return card.update({ content: answered(card.content, L("Skipped")) });
+	if (closed) return card.update({ content: answered(card.content, L(closed === "Replaced" ? "Replaced" : "Skipped")) });
 	const doc = fromUuidSync(ally.token);
 	await card.update({ content: compactCard({ img: state.img, title: state.title, open: state.open, extraClass: "lucd20-dc-card" }), whisper: [], speaker: { alias: nameForPlayers(doc, doc?.name ?? "") } });
 }

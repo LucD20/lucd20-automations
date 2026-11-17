@@ -70,7 +70,7 @@ const assert = require("assert");
     out.remembered = kyra.actor.flags[M]?.dcLast;
     // 3. A card each, to their player and the GM; Drilled Reactions for Valeros (his reaction was spent).
     out.allyCards = cards("dcAlly").map(m => [txt(m.content), m.whisper]);
-    out.marks = [amiri.document.combatant.flags[M].tacticRound, valeros.document.combatant.flags[M].tacticRound, kyra.document.combatant.flags[M].drilledRound];
+    out.marks = [amiri.document.combatant.flags[M].tacticRound?.round, valeros.document.combatant.flags[M].tacticRound?.round, kyra.document.combatant.flags[M].drilledRound];
     // 4. Their Strikes, on the goblin: Amiri hits, Valeros crits. Valeros's Strike uses the drilled reaction.
     const strike = (t, outcome) => ChatMessage.create({ actor: t.actor, token: t.document, item: { name: "Sword" }, flags: { pf2e: { context: { type: "attack-roll", outcome, target: { token: goblin.document.uuid } } } } });
     await strike(amiri, "success"); await settle();
@@ -85,10 +85,20 @@ const assert = require("assert");
     window.__degree = 0;
     host.querySelector("[data-lucd20-dcsave]").click(); await settle(120);
     out.roll = [window.__save.dc.value, window.__save.modifiers[0]?.modifier, window.__save.modifiers[0]?.type, frightened.at(-1), txt(save.content).includes("Frightened 2."), txt(game.messages.at(-1).content), game.messages.at(-1).whisper ?? "public"];
-    // Once a round: Amiri and Valeros can't answer another tactic; Drilled Reactions is used up.
+    // v0.48.2 (owner): used again the same round (a misclick): still allowed, the same allies offered and chosen.
     const use2 = ChatMessage.create({ actor: kyra.actor, token: kyra.document, item: tactic }); await settle(80);
-    out.second = document.querySelector(".lucd20-pick-bar") ? "picker" : "none";
-    await use2;
+    out.second = document.querySelector(".lucd20-pick-bar span")?.textContent;
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })); await settle(80);
+    out.redoDrilled = document.querySelector(".lucd20-pick-bar span")?.textContent ?? "none";
+    click(3, 2); await use2; await settle(120);
+    // ...and used once more before anyone answered: the open signal is replaced.
+    const firstOpen = cards("dcAlly").slice(-2);
+    const use2b = ChatMessage.create({ actor: kyra.actor, token: kyra.document, item: tactic }); await settle(80);
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })); await settle(80);
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); await use2b; await settle(120);
+    out.replaced = firstOpen.map(m => txt(m.content).includes("Replaced by a new signal."));
+    // Answer the open one (two misses) so the next round starts clean.
+    await strike(amiri, "failure"); await strike(valeros, "failure"); await settle(120);
     // Next round: one ally skips, the other misses: no save card. Then the commander's turn ends before an answer.
     game.combat.round = 3;
     const nSaves = cards("dcSave").length;
@@ -120,7 +130,9 @@ const assert = require("assert");
   assert.deepStrictEqual(r.reactions, [1, 1, false], "Amiri's reaction spent; Valeros used the drilled one (no warning)");
   assert.deepStrictEqual(r.saveCard, ["Demoralizing Charge Goblin : Will save against DC 21 (-3) or Frightened 1 (2 on a critical failure). Roll the save", ["u1"]], "one save for the goblin, −3, GM only");
   assert.deepStrictEqual(r.roll, [21, -3, "circumstance", ["frightened", 2], true, "Goblin is Frightened 2 (Demoralizing Charge).", []], "the save: DC, penalty; a critical failure: Frightened 2");
-  assert.strictEqual(r.second, "none", "the same round: no ally can answer another tactic");
+  assert.strictEqual(r.second, "Demoralizing Charge: click two squadmates within 30 ft (Enter or Signal for fewer) (2/2)", "used again the same round: still allowed, the same allies chosen");
+  assert.strictEqual(r.redoDrilled, "Drilled Reactions: click who gets the extra reaction (0/1)", "a redo may choose Drilled Reactions again");
+  assert.deepStrictEqual(r.replaced, [true, true], "an unanswered earlier signal is replaced");
   assert.deepStrictEqual(r.skipMiss, [true, 0], "a skip and a miss: no save");
   assert.deepStrictEqual(errors, []);
   console.log("PHASE 44 CHECKS PASSED");

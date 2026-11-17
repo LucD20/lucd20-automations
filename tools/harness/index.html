@@ -62,6 +62,11 @@ Object.assign(lang.LUCD20.Feature, {
 });
 const flat = { "CORE.FontSize": "Font Size", "OTHER.Mode": "Other mode", "OTHER.A": "Choice A", "OTHER.B": "Choice B" };
 (function walk(o, p) { for (const [k, v] of Object.entries(o)) typeof v === "object" ? walk(v, p + k + ".") : (flat[p + k] = v); })(lang, "");
+// ?lang=pt-BR: the module's translation over English (what's missing stays English).
+if (params.get("lang")) {
+  const extra = await (await fetch(`/modules/lucd20-automations/lang/${params.get("lang")}.json`)).json();
+  (function walk(o, p) { for (const [k, v] of Object.entries(o)) typeof v === "object" ? walk(v, p + k + ".") : (flat[p + k] = v); })(extra, "");
+}
 
 // ---- settings store ----
 const registered = new Map(); const values = new Map(); window.__sets = [];

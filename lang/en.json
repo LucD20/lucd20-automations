@@ -2000,6 +2000,9 @@
       "Minion": "MINION",
       "Conditions": "Conditions and effects",
       "LevelN": "Level {n}",
+      "LevelShort": "L{n}",
+      "Vs": "vs",
+      "Def": { "ac": "AC", "fort": "Fort", "ref": "Ref", "wil": "Will" },
       "Leader": "(Leader)",
       "XP": "XP",
       "Role": {

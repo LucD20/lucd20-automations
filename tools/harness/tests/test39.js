@@ -8,7 +8,7 @@ const assert = require("assert");
   const errors = [];
   page.on("pageerror", e => errors.push(`${e.message} ${e.stack?.split("\n")[1] ?? ""}`));
   page.on("console", m => m.type() === "error" && !m.text().includes("Failed to load resource") && (errors.push(m.text()), process.env.DBG && console.log("ERR", m.text())));
-  await page.goto("http://localhost:8765/index.html?gm=1&system=dnd4e");
+  await page.goto(`http://localhost:8765/index.html?gm=1&system=dnd4e${process.env.HUD_LANG ? `&lang=${process.env.HUD_LANG}` : ""}`);
   await page.waitForFunction(() => window.__done, null, { timeout: 15000 });
   await page.evaluate(() => { for (const w of document.querySelectorAll(".application, #lucd20-settings-hub, [id^='lucd20-hub']")) w.remove(); });
 
@@ -211,7 +211,7 @@ const assert = require("assert");
     await game.settings.set(M, "dnd4eHud_theme", "dark"); await settle();
     return out;
   });
-  await page.screenshot({ path: __dirname + "/test39-dark.png" });
+  await page.screenshot({ path: __dirname + `/test39-dark${process.env.HUD_LANG ? `-${process.env.HUD_LANG}` : ""}.png` });
 
   // Window sizes (v0.43.6): the owner's 1920 wide, a 1366 laptop, 1024 (Foundry's minimum) with the sidebar
   // collapsed and open, and the owner's 958 px window. The layout, and nothing spilling out of its place.

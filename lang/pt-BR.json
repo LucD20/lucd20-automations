@@ -779,6 +779,87 @@
         "RoutesInvalid": "Rotas: isso não é uma lista JSON válida.",
         "SaveFailed": "Não foi possível salvar o desafio."
       }
+    },
+    "Dnd4eHud": {
+      "Theme": {
+        "dark": "Escuro",
+        "light": "Claro"
+      },
+      "OpenSheet": "Abrir a ficha do personagem",
+      "HP": "PV",
+      "Temp": "temp.",
+      "Bloodied": "sangrando",
+      "Dying": "Moribundo",
+      "DeathSaves": "Testes contra a morte",
+      "Roll": "Rolar",
+      "Surges": "Pulsos",
+      "SecondWind": "Retomar o Fôlego",
+      "AP": "PA",
+      "Spend": "Gastar",
+      "Speed": "Desloc.",
+      "Init": "Inic.",
+      "Trigger": "Gatilho",
+      "Tab": {
+        "standard": "Padrão",
+        "move": "Movimento",
+        "minor": "Mínima",
+        "free": "Livre",
+        "triggered": "Com gatilho",
+        "traits": "Traços"
+      },
+      "Row": {
+        "atwill": "Sem limite",
+        "enc": "Por encontro",
+        "daily": "Diário",
+        "basic": "Básico",
+        "rech": "Recarga"
+      },
+      "Dock": {
+        "standard": "Padrão",
+        "move": "Movim.",
+        "minor": "Mínima",
+        "immediate": "Imed.",
+        "opportunity": "Oport."
+      },
+      "NoPowers": "Nenhum poder deste tipo.",
+      "NotInCombat": "As ações são contadas em combate.",
+      "APUsed": "{name} já gastou um ponto de ação neste encontro.",
+      "EmptyGM": "Selecione o token de um personagem para ver o HUD.",
+      "EmptyPlayer": "Nenhum personagem: selecione seu token ou peça ao Mestre que lhe atribua um.",
+      "Saves": "TR",
+      "Perception": "Percepção",
+      "Passive": "Passiva",
+      "Minion": "LACAIO",
+      "Conditions": "Condições e efeitos",
+      "LevelN": "Nível {n}",
+      "LevelShort": "N{n}",
+      "Vs": "contra",
+      "Def": {
+        "ac": "CA",
+        "fort": "Fort",
+        "ref": "Ref",
+        "wil": "Von"
+      },
+      "Leader": "(Líder)",
+      "XP": "PX",
+      "Role": {
+        "brute": "Bruto",
+        "soldier": "Soldado",
+        "artillery": "Artilharia",
+        "lurker": "Espreitador",
+        "skirmisher": "Escaramuçador",
+        "controller": "Controlador",
+        "elite": "Elite",
+        "solo": "Solo",
+        "minion": "Lacaio"
+      },
+      "Res": {
+        "res": "Resistência {value} {type}",
+        "vul": "Vulnerabilidade {value} {type}",
+        "imm": "Imunidade {type}"
+      },
+      "RechargeYes": "{name} recarrega.",
+      "RechargeNo": "{name} não recarrega."
     }
   },
   "EFFECT": {

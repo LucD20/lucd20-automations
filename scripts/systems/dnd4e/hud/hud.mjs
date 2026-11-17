@@ -3,7 +3,7 @@ import { L, tokenForActor } from "../utils.mjs";
 import { getState, remaining, isCombatantsTurn, canModify, combatantForActor, togglePip } from "../actions/state.mjs";
 import { BASIC_ACTIONS, useBasicAction } from "../actions/basic.mjs";
 import { defenceModifiers } from "../sheet-mods.mjs";
-import { buildModel, TABS, ROWS, NPC_TABS, NPC_ROWS } from "./hud-data.mjs";
+import { buildModel, defLabel, TABS, ROWS, NPC_TABS, NPC_ROWS } from "./hud-data.mjs";
 import { waitForDice } from "../../../core/dice.js";
 
 /*
@@ -261,7 +261,7 @@ function partyStrip() {
 		const def = (k) => esc(s.defences?.[k]?.value ?? "");
 		return `<div class="h4-pc" data-party="${a.id}">
 			<div class="h4-pc-top"><img src="${esc(a.img)}" alt=""><div class="h4-pc-name"><b class="fit">${esc(a.name)}</b><small>${esc([d.class, d.level].filter((v) => v !== undefined && v !== "").join(" "))}</small></div></div>
-			<div class="h4-pc-defs"><span><small>AC</small>${def("ac")}</span><span><small>Fort</small>${def("fort")}</span><span><small>Ref</small>${def("ref")}</span><span><small>Will</small>${def("wil")}</span></div>
+			<div class="h4-pc-defs">${["ac", "fort", "ref", "wil"].map((k) => `<span><small>${esc(defLabel(k))}</small>${def(k)}</span>`).join("")}</div>
 			<div class="h4-pc-line"><span>${H("Surges")} ${Number(d.surges?.value) || 0}</span><span>${H("AP")} ${Number(s.actionpoints?.value) || 0}</span><span>${H("Speed")} ${esc(s.movement?.walk?.value ?? "")}</span></div>
 			<div class="h4-hp"><div class="f" style="width:${pct}%"></div><div class="bl" style="left:50%"></div><span>${value} / ${max}</span></div>
 		</div>`;
@@ -283,7 +283,7 @@ function selectionStrip(tokens) {
 			: `<span>${H("Surges")} ${Number(d.surges?.value) || 0}</span><span>${H("AP")} ${Number(s.actionpoints?.value) || 0}</span><span>${H("Speed")} ${esc(s.movement?.walk?.value ?? "")}</span>`;
 		return `<div class="h4-pc${minion ? " minion" : ""}" data-focus="${t.id}">
 			<div class="h4-pc-top">${npc ? `<span class="h4-edge role-${esc(role.primary)}"></span>` : ""}<img src="${esc(t.document?.texture?.src || a.img)}" alt=""><div class="h4-pc-name"><b class="fit">${esc(t.name ?? a.name)}</b><small>${esc(sub)}</small></div></div>
-			<div class="h4-pc-defs"><span><small>AC</small>${def("ac")}</span><span><small>Fort</small>${def("fort")}</span><span><small>Ref</small>${def("ref")}</span><span><small>Will</small>${def("wil")}</span></div>
+			<div class="h4-pc-defs">${["ac", "fort", "ref", "wil"].map((k) => `<span><small>${esc(defLabel(k))}</small>${def(k)}</span>`).join("")}</div>
 			<div class="h4-pc-line">${line}</div>
 			${minion ? `<div class="h4-mtag">${H("Minion")}</div>` : `<div class="h4-hp"><div class="f" style="width:${pct}%"></div><div class="bl" style="left:50%"></div><span>${value} / ${max}</span></div>`}
 		</div>`;
@@ -296,7 +296,7 @@ function roleText(d, short = false) {
 	const parts = [];
 	if (role.secondary && role.secondary !== "standard") parts.push(H(`Role.${role.secondary}`));
 	if (role.primary) parts.push(H(`Role.${role.primary}`));
-	const lvl = short ? `L${d.level ?? ""}` : H("LevelN", { n: d.level ?? "" });
+	const lvl = short ? H("LevelShort", { n: d.level ?? "" }) : H("LevelN", { n: d.level ?? "" });
 	return `${lvl} ${parts.join(" ")}${role.leader && !short ? ` ${H("Leader")}` : ""}`.trim();
 }
 const signed = (v) => (v === "" || v === null || v === undefined ? "" : Number(v) >= 0 ? `+${Number(v)}` : String(v));

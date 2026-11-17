@@ -1960,3 +1960,20 @@ Log: its PF2e-only setting no longer read in other systems.
 **v0.61.0 (phase 55): PF2e effect areas** (`pf2eAreas`,
 `scripts/systems/pf2e/area.js`, `test54.js`): the 25% reach rule, a targeting
 window replacing Toolbelt's, cover on hover, the exact reach; ledger §20.
+
+### 17.2 The HUD in Portuguese (v0.64.0)
+
+Owner: "lets do the translation of the 4e HUD"; terms from the owner's
+Livro do Jogador (Devir) index; Q249: the book's term wins over the dnd4e
+system's pt-BR file. `LUCD20.Dnd4eHud` in `lang/pt-BR.json` (shown when
+Foundry, or the "4e game language" card, is Portuguese). The defence labels
+and "vs" became translatable (`Def.*`, `Vs`, `LevelShort`). Choices: PV, Pulsos
+(de cura), Retomar o Fôlego, PA, Gastar, Desloc., Inic., Gatilho; tabs Padrão /
+Movimento / Mínima / Livre / Com gatilho / Traços; rows Sem limite / Por
+encontro / Diário / Básico / Recarga; CA / Fort / Ref / Von; "contra"; TR;
+Percepção / Passiva; Moribundo, sangrando, Testes contra a morte; Nível,
+N{n}; PX. Monster roles are not in the Livro do Jogador: Bruto, Soldado,
+Artilharia, Espreitador, Escaramuçador, Controlador, Elite, Solo, Lacaio,
+(Líder), Resistência / Vulnerabilidade / Imunidade: to check against the
+Manual dos Monstros. The harness takes `?lang=pt-BR` (test39 with
+`HUD_LANG=pt-BR` saves a screenshot).

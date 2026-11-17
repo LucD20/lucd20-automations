@@ -12,7 +12,11 @@
 
 export const TABS = ["standard", "move", "minor", "free", "triggered"];
 export const ROWS = ["atwill", "enc", "daily", "basic"];
-export const DEFENCES = [["ac", "AC"], ["fort", "Fort"], ["ref", "Ref"], ["wil", "Will"]];
+/** A HUD text from the module's language file (the 4e game language too), else the English fallback. */
+const tr = (key, fallback) => (globalThis.game?.i18n?.has?.(`LUCD20.Dnd4eHud.${key}`) ? game.i18n.localize(`LUCD20.Dnd4eHud.${key}`) : fallback);
+const DEF_EN = { ac: "AC", fort: "Fort", ref: "Ref", wil: "Will" };
+export const defLabel = (k) => tr(`Def.${k}`, DEF_EN[k] ?? String(k).toUpperCase());
+export const DEFENCES = Object.keys(DEF_EN).map((k) => [k, DEF_EN[k]]);
 // Monsters (Q157): a Traits tab (auras, passive abilities) instead of Free; columns At-Will, Recharge, Basic.
 export const NPC_TABS = ["standard", "move", "minor", "triggered", "traits"];
 export const NPC_ROWS = ["atwill", "rech", "basic"];
@@ -136,15 +140,14 @@ export function usesOf(s = {}) {
 	return { left: Number.isFinite(left) ? Math.max(0, Math.min(left, max)) : max, max };
 }
 
-const DEF_LABEL = Object.fromEntries(DEFENCES);
 const signed = (v) => (v >= 0 ? `+${v}` : `−${Math.abs(v)}`);
 
 /** "+6 vs AC" (the bonus only when the system gives one). */
 export function attackText(s = {}, bonus = null) {
 	if (!s.attack?.isAttack) return "";
-	const def = DEF_LABEL[s.attack.def] ?? (s.attack.def ? String(s.attack.def).toUpperCase() : "");
+	const def = s.attack.def ? defLabel(s.attack.def) : "";
 	const b = Number(bonus);
-	return `${bonus !== null && bonus !== undefined && Number.isFinite(b) ? `${signed(b)} ` : ""}vs ${def}`.trim();
+	return `${bonus !== null && bonus !== undefined && Number.isFinite(b) ? `${signed(b)} ` : ""}${tr("Vs", "vs")} ${def}`.trim();
 }
 
 // Effects that hinder: shown in red. Statuses as Foundry / dnd4e name them.
@@ -235,7 +238,7 @@ export async function buildModel(actor, { bonusOf = async () => null, defenceMod
 		deathFails: Number(d.deathsavefail) || 0, deathMax: Number(d.deathsaves) || 3,
 		ap: Number(s.actionpoints?.value) || 0, apUsedThisEncounter: !!s.actionpoints?.encounteruse,
 		speed: s.movement?.walk?.value ?? "", init: s.attributes?.init?.value ?? "",
-		defences: DEFENCES.map(([k, label]) => ({ key: k, label, value: s.defences?.[k]?.value ?? "", mod: Math.sign(net(k)) })),
+		defences: DEFENCES.map(([k]) => ({ key: k, label: defLabel(k), value: s.defences?.[k]?.value ?? "", mod: Math.sign(net(k)) })),
 		conditions: conditionsOf(actor),
 		powers,
 	};

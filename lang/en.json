@@ -1737,7 +1737,7 @@
         "NotInCombat": "Demoralizing Charge: no encounter running.",
         "NoBanner": "Demoralizing Charge has the brandish trait: your banner should be raised (in hand).",
         "NoAllies": "Demoralizing Charge: no ally within 30 feet who can still answer a tactic this round.",
-        "Pick": "Demoralizing Charge: click up to two squadmates within 30 ft",
+        "Pick": "Demoralizing Charge: click two squadmates within 30 ft (Enter or Signal for fewer)",
         "Signal": "Signal",
         "Cancel": "Cancel",
         "Do": "Stride toward an enemy you can see (free action); if you end adjacent to an enemy, Strike it (reaction).",
@@ -1750,7 +1750,10 @@
         "Resisted": "Resisted.",
         "Result": "{name} is Frightened {value} ({title}).",
         "ACreature": "a creature",
-        "Speaker": "Conditions"
+        "Speaker": "Conditions",
+        "PickDrilled": "Drilled Reactions: click who gets the extra reaction",
+        "Give": "Give",
+        "NoOne": "No one"
       }
     },
     "Dnd4eHud": {

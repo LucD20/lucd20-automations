@@ -4,7 +4,7 @@ import { executeAsGM, onGMRequest } from "../../core/socket.js";
 import { waitForDice } from "../../core/dice.js";
 import { pickSeveral } from "../../core/square-picker.js";
 import { pf2eCard, answered, wireOpen, sourceUuid, compactCard, nameForPlayers } from "./card.js";
-import { hasReaction, grantDrilledReaction } from "./reactions.js";
+import { grantDrilledReaction } from "./reactions.js";
 import { onTurns, audience } from "./rules.js";
 import { feetBetween } from "./reactive-strike.js";
 
@@ -88,9 +88,19 @@ async function onCommanderMessage(message) {
 		return { x: t.document.x, y: t.document.y, width: t.document.width * size, height: t.document.height * size, color: responded ? 0x777777 : 0x3fb950, value: t.document.uuid, responded };
 	}).filter((e) => !e.responded);
 	if (!entries.length) return ui.notifications.info(L("NoAllies"));
-	const chosen = await pickSeveral(entries, { max: 2, hint: L("Pick"), confirm: L("Signal"), cancel: L("Cancel") });
+	// v0.48.1 (owner): the last squadmates start chosen when they are still in range; the second click signals.
+	const last = actor.getFlag?.(MODULE_ID, "dcLast") ?? [];
+	const chosen = await pickSeveral(entries, { max: 2, hint: L("Pick"), confirm: L("Signal"), cancel: L("Cancel"), preselected: last, auto: true });
 	if (!chosen?.length) return;
-	await executeAsGM("pf2eRules.dcStart", { commander: token.document.uuid, allies: chosen, item: item.uuid });
+	await actor.setFlag?.(MODULE_ID, "dcLast", chosen).catch?.(() => {});
+	// Drilled Reactions (owner): the commander chooses who gets the extra reaction, once a round.
+	let drilled = null;
+	const drilledFree = token.document.combatant?.getFlag?.(MODULE_ID, "drilledRound") !== roundKey();
+	if (drilledFree) {
+		const picks = entries.filter((e) => chosen.includes(e.value)).map((e) => ({ ...e, color: 0xd9b26a }));
+		drilled = (await pickSeveral(picks, { max: 1, hint: L("PickDrilled"), confirm: L("Give"), cancel: L("NoOne"), auto: true }))?.[0] ?? null;
+	}
+	await executeAsGM("pf2eRules.dcStart", { commander: token.document.uuid, allies: chosen, item: item.uuid, drilled });
 }
 
 /* -------------------------------------------- */
@@ -98,24 +108,22 @@ async function onCommanderMessage(message) {
 /* -------------------------------------------- */
 
 /** Start: the allies' cards, the round's marks, Drilled Reactions. */
-async function start({ commander, allies, item }) {
+async function start({ commander, allies, item, drilled: drilledTo = null }) {
 	const cDoc = fromUuidSync(commander);
 	const tactic = fromUuidSync(item);
 	if (!cDoc?.actor) return false;
 	const id = `dc${Date.now().toString(36)}${++idSeq}`;
 	const state = { id, commander, commanderCombatant: cDoc.combatant?.id ?? null, dc: classDC(cDoc.actor), img: tactic?.img ?? null, title: tactic?.name ?? L("Name"), open: sourceUuid(tactic), allies: [], done: false };
 	tactics.set(id, state);
-	let drilledFree = cDoc.combatant?.getFlag?.(MODULE_ID, "drilledRound") !== roundKey();
+	const drilledFree = cDoc.combatant?.getFlag?.(MODULE_ID, "drilledRound") !== roundKey();
 	for (const uuid of allies) {
 		const doc = fromUuidSync(uuid);
 		if (!doc?.actor) continue;
 		const combatant = doc.combatant ?? null;
 		await combatant?.setFlag?.(MODULE_ID, "tacticRound", roundKey());
-		// Drilled Reactions: once a round, an ally without their reaction gets an extra one for this tactic.
-		let drilled = false;
-		if (combatant && !hasReaction(combatant) && drilledFree) {
-			drilled = true;
-			drilledFree = false;
+		// Drilled Reactions: once a round, the ally the commander chose gets an extra reaction for this tactic.
+		const drilled = drilledFree && drilledTo === uuid;
+		if (drilled) {
 			grantDrilledReaction(doc.actor.id);
 			await cDoc.combatant?.setFlag?.(MODULE_ID, "drilledRound", roundKey());
 		}

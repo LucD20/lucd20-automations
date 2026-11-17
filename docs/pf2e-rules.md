@@ -307,9 +307,15 @@ one that leaves fewer squares next to enemies (see PLAN).
      GM-only card "Will save against DC N (−2)…"; **Roll** after Dice So
      Nice: Frightened 1 / 2 (`increaseCondition`), a chat line (GM only if
      hidden). Missed and skipped Strikes: no save.
-- Assumptions to check with the owner: Drilled Reactions goes to the first
-  chosen ally without a reaction (not asked); the Stride and Strike are made
-  by hand.
+- The Stride and Strike are made by hand.
+- v0.48.1 (owner): "Save the last selection the player made if they are
+  still in range (it's normal to always target the same); after selecting
+  two, it automatically signals." The commander's last squadmates start
+  chosen when still within 30 ft and free to answer (Enter or Signal sends
+  them); a second click signals at once. "The commander grants a reaction when
+  using these actions, so it needs to give the commander a choice of which
+  gains the reaction": after the signal, once a round, the commander clicks
+  the ally who gets Drilled Reactions' extra reaction (Escape: no one).
 - (verify) in PF2e 8.7: the commander's class DC (`actor.classDC.dc.value`);
   the banner toggle (`actor.rollOptions.all["commanders-banner"]`);
   `saves.will.roll({ dc, modifiers })` taking a circumstance Modifier;

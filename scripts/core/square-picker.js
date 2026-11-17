@@ -100,10 +100,11 @@ export function pickSquare(squares, { hint = "", cancel = "Cancel", from = null 
 
 /**
  * Pick up to `max` of a few highlighted areas (tokens, squares) on the map: a click toggles one (it turns
- * blue), the bar's confirm button ends the choice; Cancel or Escape gives null. Entries
+ * blue), the bar's confirm button (or Enter) ends the choice; Cancel or Escape gives null. Entries
  * [{ x, y, width, height, color, value }]; resolves the chosen entries' values, in click order.
+ * `preselected`: values chosen to begin with. `auto`: a click that reaches `max` ends the choice at once.
  */
-export function pickSeveral(entries, { max = 2, hint = "", confirm = "OK", cancel = "Cancel" } = {}) {
+export function pickSeveral(entries, { max = 2, hint = "", confirm = "OK", cancel = "Cancel", preselected = [], auto = false } = {}) {
   return new Promise(resolve => {
     if (!entries.length || !canvas?.ready) return resolve(null);
     const CHOSEN = 0x3b82f6;
@@ -113,7 +114,7 @@ export function pickSeveral(entries, { max = 2, hint = "", confirm = "OK", cance
     const parent = canvas.controls ?? canvas.interface ?? canvas.stage;
     parent.addChild(layer);
     if (parent.sortableChildren) parent.sortChildren?.();
-    const chosen = [];
+    const chosen = entries.filter(e => preselected.includes(e.value)).slice(0, max);
     const draw = () => {
       layer.removeChildren().forEach(c => c.destroy());
       for (const e of entries) {
@@ -172,10 +173,16 @@ export function pickSeveral(entries, { max = 2, hint = "", confirm = "OK", cance
       const i = chosen.indexOf(entry);
       if (i >= 0) chosen.splice(i, 1);
       else if (chosen.length < max) chosen.push(entry);
+      if (auto && i < 0 && chosen.length === max) return done(chosen.map(e => e.value));
       draw();
       label();
     }
     function onKey(event) {
+      if (event.key === "Enter" && chosen.length) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        return done(chosen.map(e => e.value));
+      }
       if (event.key !== "Escape") return;
       event.preventDefault();
       event.stopImmediatePropagation();

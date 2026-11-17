@@ -118,7 +118,12 @@ card({
 card({
   id: "dnd4eTips",
   scope: "client",
-  settings: { ranger: { kind: "boolean", default: true, scope: "client" } },
+  settings: {
+    ranger: { kind: "boolean", default: true, scope: "client" },
+    warlock: { kind: "boolean", default: true, scope: "client" },
+    barbarian: { kind: "boolean", default: true, scope: "client" },
+    elf: { kind: "boolean", default: true, scope: "client" }
+  },
   enable: () => import("./hud/hud.mjs").then(m => m.refreshHud?.()).catch(() => {}),
   disable: () => import("./hud/hud.mjs").then(m => m.refreshHud?.()).catch(() => {}),
   onSettingChange: () => import("./hud/hud.mjs").then(m => m.refreshHud?.()).catch(() => {})

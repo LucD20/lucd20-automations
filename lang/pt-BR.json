@@ -571,11 +571,23 @@
       },
       "dnd4eTips": {
         "Name": "Dicas para Novos Jogadores",
-        "Hint": "Sugestões acima do HUD de 4e durante o turno do seu personagem, com o poder indicado piscando; classe por classe. Patrulheiro: um lembrete para marcar uma presa com Presa do Caçador, ou qual criatura é a sua presa (marcada no mapa no início do seu turno, para você e o Mestre). Precisa do HUD de 4e.",
+        "Hint": "Sugestões acima do HUD de 4e, com o poder indicado piscando (até 3 de uma vez): durante o seu turno, e depois de uma rolagem quando vale a pena usar um poder (não contra lacaios ou criaturas mais de 2 níveis abaixo). Patrulheiro, Bruxo, Bárbaro, Elfo. Precisa do HUD de 4e.",
         "Setting": {
           "ranger": {
             "Name": "Patrulheiro",
-            "Hint": "Presa do Caçador: ainda sem presa, ou quem é a sua presa."
+            "Hint": "Presa do Caçador, Golpe Ágil ou Golpe Duplo, Astúcia da Raposa quando atacado."
+          },
+          "warlock": {
+            "Name": "Bruxo",
+            "Hint": "Maldição do Bruxo: ninguém amaldiçoado, ou quem está amaldiçoado."
+          },
+          "barbarian": {
+            "Name": "Bárbaro",
+            "Hint": "Grande Trespassar, Golpe Insistente ou investida; Assalto Furioso após um acerto; Investida Veloz após derrubar um inimigo."
+          },
+          "elf": {
+            "Name": "Elfo",
+            "Hint": "Precisão Élfica após um erro."
           }
         }
       }
@@ -875,7 +887,24 @@
     "Dnd4eTips": {
       "Ranger": {
         "NoPrey": "Você não possui uma presa. Você pode usar {power}, como uma ação mínima, para marcar uma presa.",
-        "Prey": "{name} é a sua presa."
+        "Prey": "{name} é a sua presa.",
+        "Nimble": "Um inimigo está adjacente: {power} permite ajustar antes ou depois do ataque.",
+        "Twin": "{power}: dois ataques neste turno.",
+        "Fox": "{name} está atacando você: {power} (reação imediata) permite ajustar e contra-atacar, antes do dano."
+      },
+      "Warlock": {
+        "NoCurse": "Você não amaldiçoou ninguém. {power}: como uma ação mínima, amaldiçoe o inimigo mais próximo que você puder ver.",
+        "Cursed": "{name} está amaldiçoado."
+      },
+      "Barbarian": {
+        "Cleave": "{n} inimigos adjacentes: {power} atinge um e causa dano aos outros.",
+        "Pressing": "Um inimigo a até 3 quadrados: {power} permite ajustar na direção dele e atacar.",
+        "Charge": "Faça uma investida, ou use {power}, para alcançar um inimigo.",
+        "Furious": "Você atingiu {name}: {power} (ação livre) causa dano extra; marque-o na janela de dano.",
+        "Swift": "{name} caiu: {power} permite fazer uma investida contra outro inimigo."
+      },
+      "Elf": {
+        "Accuracy": "Você errou {name}: {power} (ação livre) permite rolar o ataque de novo."
       }
     }
   },

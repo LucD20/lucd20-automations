@@ -721,9 +721,12 @@
       },
       "dnd4eTips": {
         "Name": "New Player Tips",
-        "Hint": "Suggestions on top of the 4e HUD during your character's turn, with the power they point to blinking; class by class. Ranger: a reminder to mark a prey with Hunter's Quarry, or which creature is your prey (pinged at the start of your turn for you and the GM). Needs the 4e HUD.",
+        "Hint": "Suggestions on top of the 4e HUD, with the power they point to blinking (up to 3 at once): during your turn, and after a roll when a power is worth using (not against minions or creatures more than 2 levels below). Ranger, Warlock, Barbarian, Elf. Needs the 4e HUD.",
         "Setting": {
-          "ranger": { "Name": "Ranger", "Hint": "Hunter's Quarry: no prey yet, or who your prey is." }
+          "ranger": { "Name": "Ranger", "Hint": "Hunter's Quarry, Nimble Strike or Twin Strike, Fox's Cunning when attacked." },
+          "warlock": { "Name": "Warlock", "Hint": "Warlock's Curse: nobody cursed yet, or who is cursed." },
+          "barbarian": { "Name": "Barbarian", "Hint": "Great Cleave, Pressing Strike or a charge; Furious Assault after a hit; Swift Charge after a kill." },
+          "elf": { "Name": "Elf", "Hint": "Elven Accuracy after a miss." }
         }
       },
       "dnd4eGameLanguage": {
@@ -1958,7 +1961,24 @@
     "Dnd4eTips": {
       "Ranger": {
         "NoPrey": "You don't have a prey. You can use {power}, as a minor action, to assign one.",
-        "Prey": "{name} is your prey."
+        "Prey": "{name} is your prey.",
+        "Nimble": "An enemy is adjacent: {power} lets you shift before or after the attack.",
+        "Twin": "{power}: two attacks this turn.",
+        "Fox": "{name} is attacking you: {power} (immediate reaction) lets you shift and attack back, before the damage."
+      },
+      "Warlock": {
+        "NoCurse": "You haven't cursed anyone. {power}: as a minor action, curse the nearest enemy you can see.",
+        "Cursed": "{name} is cursed."
+      },
+      "Barbarian": {
+        "Cleave": "{n} enemies adjacent: {power} hits one and damages the others.",
+        "Pressing": "An enemy within 3 squares: {power} lets you shift toward it and attack.",
+        "Charge": "Charge, or {power}, to reach an enemy.",
+        "Furious": "You hit {name}: {power} (free action) adds damage; tick it in the damage window.",
+        "Swift": "{name} dropped: {power} lets you charge another enemy."
+      },
+      "Elf": {
+        "Accuracy": "You missed {name}: {power} (free action) lets you reroll the attack."
       }
     },
     "Dnd4eHud": {

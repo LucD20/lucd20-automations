@@ -1,6 +1,6 @@
 import { MODULE_ID, MATCHERS } from "./constants.mjs";
 import { matches, isRagePower } from "./utils.mjs";
-import { forcedMovesFor, allyShiftsFor, proneRiderFor, sectionTexts } from "./movement/parse.mjs";
+import { forcedMovesFor, allyShiftsFor, proneRiderFor, grabRiderFor, sectionTexts } from "./movement/parse.mjs";
 import { freeShiftFor } from "./actions/free-shift.mjs";
 
 /*
@@ -81,6 +81,7 @@ function isPureClause(sys, clause) {
 const CONDITION = /\b(dazed|stunned|slowed|immobilized|weakened|blinded|deafened|prone|restrained|marked|grants combat advantage|pasmo|atordoado|lento|imobilizado|enfraquecido|cego|surdo|derrubado|impedido|marcado|vantagem de combate)\b/i;
 const MOVEMENT = /\b(push|pull|slide|shift|empurr|pux|conduz|ajust)\w*\b/i;
 const PRONE = /\bprone\b|derrubad/i;
+const GRABBED = /\bgrab|agarr/i;
 
 /**
  * Instructions in the "Attack:" line beyond "Ability vs. Defence" ("two attacks", "make two attack
@@ -112,9 +113,10 @@ export function guessAutomation(item) {
 	const hasEffects = (item.effects?.size ?? item.effects?.length ?? 0) > 0;
 	const moves = forcedMovesFor(item).length + allyShiftsFor(item).length + (freeShiftFor(item) ? 1 : 0);
 	const prone = !!proneRiderFor(item);
+	const grab = !!grabRiderFor(item); // v0.66.0: the module applies Grabbed too
 	// Movement and prone riders are done by the module itself; a condition word next to the power's own
 	// effects only probably is (the effect may need a click)
-	const sure = (c) => (moves && MOVEMENT.test(c)) || (prone && PRONE.test(c));
+	const sure = (c) => (moves && MOVEMENT.test(c)) || (prone && PRONE.test(c)) || (grab && GRABBED.test(c));
 	const likely = (c) => hasEffects && CONDITION.test(c);
 	const covered = extra.filter((c) => sure(c) || likely(c)).length;
 	if (extra.every(sure)) return 3;

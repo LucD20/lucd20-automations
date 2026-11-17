@@ -1997,3 +1997,30 @@ Manual dos Monstros. The harness takes `?lang=pt-BR` (test39 with
   and the GM, each on their own screen (`canvas.controls.drawPing`, (verify));
   Q255: no ping when the prey is on another scene. Not at 0 HP. Portuguese
   uses the book's "ação mínima" (the owner wrote "Ação Menor").
+
+### 17.4 More tips, NPC symbols (v0.66.0)
+
+Owner: "Do the same for Warlock and its prey" plus Ranger attack suggestions,
+Barbarian suggestions, Furious Assault, Swift Charge, Elven Accuracy, Fox's
+Cunning, and "Add automation symbols to NPCs too"; Q256–Q261 as recommended.
+- `hud/tips.mjs` gives up to 3 tips (after-a-roll first, then the turn's),
+  each with its power (and tab, or the Charge basic action) blinking; ×
+  hides the shown ones for the turn. Tips follow the powers a character has
+  (a half-orc's Furious Assault, an elf's Elven Accuracy), with one switch
+  each: Ranger, Warlock, Barbarian, Elf.
+- Turn: Ranger: prey; Nimble Strike with an enemy adjacent, else Twin Strike.
+  Warlock: nobody cursed → Warlock's Curse reminder, else "[Name] is
+  cursed." (pinged with the prey). Barbarian: ≥2 adjacent → Great Cleave; an
+  enemy within 3 squares, none adjacent → Pressing Strike; else Charge (its
+  button blinks) or Pressing Strike.
+- After a roll, with a use left and not against a weak enemy (a minion, or
+  more than 2 levels below): a hit → Furious Assault (until the damage roll
+  or the next attack); a miss → Elven Accuracy (until the next attack); an
+  enemy at 0 HP during a barbarian's turn → Swift Charge (until the turn's
+  end); an attack message against a ranger → Fox's Cunning, on its players'
+  and the GM's screens, until a damage roll (any attack: the message doesn't
+  say melee). Power names matched in English and Portuguese guesses (verify
+  against the owner's sheets).
+- Q261: the ◆ automation symbol on the HUD's power buttons (PCs and NPCs);
+  the symbols on sheets were already meant for NPC sheets too (the owner's
+  NPC sheet to confirm). Grab riders count as automated in the guess.

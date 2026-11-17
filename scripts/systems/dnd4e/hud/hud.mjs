@@ -5,7 +5,10 @@ import { BASIC_ACTIONS, useBasicAction } from "../actions/basic.mjs";
 import { defenceModifiers } from "../sheet-mods.mjs";
 import { buildModel, defLabel, TABS, ROWS, NPC_TABS, NPC_ROWS } from "./hud-data.mjs";
 import { waitForDice } from "../../../core/dice.js";
-import { tipFor, onTurnStart } from "./tips.mjs";
+import { tipsFor, onTurnStart, onAttack, onDamage, onHitPoints, onAttackMessage, onDamageMessage } from "./tips.mjs";
+import { attackRows } from "../attack-rows.mjs";
+import { levelsFor, LEVELS as AUTO_LEVELS } from "../power-levels.mjs";
+import { setting as dnd4eOption } from "../utils.mjs";
 
 /*
  * D&D 4e HUD (phase 39, docs/PLAN.md §17; mockup docs/mockups/hud-4e-sheet.html, take C):
@@ -92,6 +95,17 @@ export function mountHud(feature) {
 	}
 	// New Player Tips: a ping on a ranger's prey as its turn starts (its players and the GM).
 	feature.on("updateCombat", (combat, change) => { if ("turn" in (change ?? {}) || "round" in (change ?? {})) onTurnStart(combat); });
+	// After-a-roll tips (Furious Assault, Elven Accuracy, Swift Charge, Fox's Cunning).
+	const safe = (fn) => (...args) => { try { fn(...args); } catch (err) { console.error("lucd20-automations | 4e tips", err); } };
+	feature.on("dnd4e.rollAttack", safe(onAttack));
+	feature.on("dnd4e.rollDamage", safe(onDamage));
+	feature.on("updateActor", safe(onHitPoints));
+	feature.on("createChatMessage", safe((message) => {
+		const rows = attackRows(message);
+		if (rows.length) onAttackMessage(message, rows);
+		else onDamageMessage(message);
+	}));
+	feature.on("lucd20.tipsChanged", redraw);
 	for (const hook of ["renderHotbar", "renderPlayers", "renderPlayerList", "collapseSidebar", "renderSidebar", "renderChatLog"]) feature.on(hook, () => setTimeout(placeAll, 0));
 	const onResize = () => place();
 	window.addEventListener("resize", onResize);
@@ -255,21 +269,25 @@ function showTip(root, actor) {
 		strip.className = "h4-tip";
 		root.prepend(strip);
 	}
-	let tip = null;
-	try { tip = tipFor(actor); } catch (err) { tip = null; }
+	let tips = [];
+	try { tips = tipsFor(actor); } catch (err) { tips = []; }
 	const c = game.combat;
 	const turnKey = `${c?.id}:${c?.round}:${c?.turn}`;
-	if (!tip || st.tipHidden === `${turnKey}:${tip.key}`) {
+	st.tipHidden ??= new Set();
+	tips = tips.filter((t) => !st.tipHidden.has(`${turnKey}:${t.key}`));
+	if (!tips.length) {
 		strip.hidden = true;
 		strip.innerHTML = "";
 		return;
 	}
 	strip.hidden = false;
-	strip.dataset.key = `${turnKey}:${tip.key}`;
-	strip.innerHTML = `<i class="fa-solid fa-lightbulb"></i><span>${esc(tip.text)}</span><button type="button" data-h4="tipClose" aria-label="×"><i class="fa-solid fa-xmark"></i></button>`;
-	if (tip.blink) {
-		root.querySelector(`.h4-tabs [data-tab="${tip.blink.tab}"]:not(.act)`)?.classList.add("h4-blink");
-		for (const id of tip.blink.powers ?? []) root.querySelector(`.h4-pw[data-power="${id}"]`)?.classList.add("h4-blink");
+	strip.dataset.keys = tips.map((t) => `${turnKey}:${t.key}`).join("|");
+	strip.innerHTML = `<i class="fa-solid fa-lightbulb"></i><div class="h4-tip-lines">${tips.map((t) => `<span>${esc(t.text)}</span>`).join("")}</div><button type="button" data-h4="tipClose" aria-label="×"><i class="fa-solid fa-xmark"></i></button>`;
+	for (const t of tips) {
+		if (!t.blink) continue;
+		if (t.blink.tab) root.querySelector(`.h4-tabs [data-tab="${t.blink.tab}"]:not(.act)`)?.classList.add("h4-blink");
+		for (const id of t.blink.powers ?? []) root.querySelector(`.h4-pw[data-power="${id}"]`)?.classList.add("h4-blink");
+		for (const key of t.blink.basics ?? []) root.querySelector(`.h4-pw[data-basic="${key}"]`)?.classList.add("h4-blink");
 	}
 }
 
@@ -412,6 +430,17 @@ function rangeHTML(r) {
 	return `${icon}${second}${r.text ? ` ${esc(r.text)}` : ""}`;
 }
 
+/** The ◆ automation symbol of a power (owner, Q261: on the HUD, for PCs and NPCs), as on the sheets. */
+function autoMark(id) {
+	if (!dnd4eOption("powerLevels")) return "";
+	const item = st.actor?.items?.get?.(id);
+	if (!item) return "";
+	let level = null;
+	try { level = levelsFor(item).auto.level; } catch { level = null; }
+	if (!Number.isInteger(level)) return "";
+	return `<span class="d4ea-lvl auto lvl-${AUTO_LEVELS[level]} h4-auto" aria-label="${esc(L(`Levels.Name${level}`))}"></span>`;
+}
+
 function powerChip(p) {
 	const pips = p.uses && p.uses.max > 1 ? `<span class="h4-uses">${Array.from({ length: p.uses.max }, (_, i) => `<i class="${i < p.uses.left ? "full" : ""}"></i>`).join("")}</span>` : "";
 	// Q156: a recharge power shows its dice (or condition); used, a Roll button.
@@ -420,7 +449,7 @@ function powerChip(p) {
 	const cond = rc?.cond ? `<span class="h4-rc cond">${esc(rc.cond)}</span>` : "";
 	const right = p.used && rc?.roll ? `<button type="button" class="h4-roll" data-recharge="${p.id}">${H("Roll")} ${dice}</button>` : `<span class="at">${esc(p.attack)}</span>`;
 	return `<div class="h4-pw u-${p.row}${p.used ? " used" : ""}${rc ? " rech" : ""}" data-power="${p.id}">
-		<div class="h4-h fit">${esc(p.name)}${pips}${p.used && rc?.roll ? "" : dice}${cond}</div><div class="h4-k"><span class="rg fit">${rangeHTML(p.range)}</span>${right}</div></div>`;
+		<div class="h4-h fit">${autoMark(p.id)}${esc(p.name)}${pips}${p.used && rc?.roll ? "" : dice}${cond}</div><div class="h4-k"><span class="rg fit">${rangeHTML(p.range)}</span>${right}</div></div>`;
 }
 
 function traitCard(p) {
@@ -489,7 +518,7 @@ async function onClick(event) {
 	const pick = event.target.closest("[data-focus]");
 	if (pick) { event.preventDefault(); st.focus = pick.dataset.focus; return schedule(0); }
 	const tipClose = event.target.closest('[data-h4="tipClose"]');
-	if (tipClose) { event.preventDefault(); event.stopPropagation(); st.tipHidden = tipClose.closest(".h4-tip")?.dataset.key; return showTip(st.root, st.actor); }
+	if (tipClose) { event.preventDefault(); event.stopPropagation(); st.tipHidden ??= new Set(); for (const k of (tipClose.closest(".h4-tip")?.dataset.keys ?? "").split("|")) if (k) st.tipHidden.add(k); return showTip(st.root, st.actor); }
 	const cond = event.target.closest("[data-cond]");
 	if (cond) { event.preventDefault(); event.stopPropagation(); st.condOpen = !st.condOpen; return conditionList(st.model); }
 	const rech = event.target.closest("[data-recharge]");

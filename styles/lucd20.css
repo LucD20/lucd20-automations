@@ -2646,8 +2646,15 @@ li:has(> .lucd20-scene-nav) {
 .chat-message:has(.lucd20-pf2e-card) > .message-header { display: none; }
 .chat-message:has(.lucd20-pf2e-card) .message-content { margin-top: 0; }
 /* v0.51.1 (owner): one line per target, like the PF2e Flat Check module: the die, a green or red background. */
-.lucd20-cc-icon { font-size: .85em; opacity: .7; cursor: pointer; }
-.lucd20-cc-icon:hover { opacity: 1; }
+/* v0.53.0 (owner): the hand is a small button covering the link's right end, easy to hit. */
+.lucd20-cc-hit { display: inline-block; margin: -2px -4px -2px 3px; padding: 2px 6px 2px 5px; border-left: 1px solid rgba(0, 0, 0, .2); cursor: pointer; border-radius: 0 3px 3px 0; }
+.lucd20-cc-hit:hover { background: rgba(0, 0, 0, .12); }
+.lucd20-cc-hit i { font-size: .7em; opacity: .7; vertical-align: 1px; }
+.lucd20-cc-hit:hover i { opacity: 1; }
+.lucd20-sus-card .lucd20-sus-row { display: flex; align-items: center; gap: 4px; margin: 1px 0; }
+.lucd20-sus-card .lucd20-sus-row img { width: 20px; height: 20px; border: 0; flex: 0 0 auto; }
+.lucd20-sus-card .lucd20-sus-row span { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lucd20-sus-card .lucd20-sus-row button { flex: 0 0 auto; width: auto; height: 22px; line-height: 20px; padding: 0 6px; margin: 0; font-size: .8em; }
 .lucd20-fc-card .lucd20-fc-line { display: flex; align-items: center; gap: 6px; margin: 1px 0; padding: 1px 6px 1px 2px; border-radius: 3px; color: #fff; line-height: 20px; }
 .lucd20-fc-card .lucd20-fc-ok { background: #2e7d32; }
 .lucd20-fc-card .lucd20-fc-fail { background: #b71c1c; }

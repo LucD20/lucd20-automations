@@ -792,6 +792,10 @@
           "icon": { "Name": "Hand icon", "Hint": "A small hand after each link that can be applied; clicking it applies the link like a Ctrl-click." }
         }
       },
+      "pf2eSustain": {
+        "Name": "Sustained Spells",
+        "Hint": "Casting a sustained spell puts \"Sustaining: X\" on the caster (one per cast, lasting the spell's limit). At the start of the caster's turn a small card lists them with Sustain and End; at the end of the turn, for any not sustained, it asks \"Was X sustained?\" (No ends it). Using the Sustain action from the sheet counts. Replaces PF2e Sustain Reminder (switch that one off)."
+      },
       "pf2ePunishingShove": {
         "Name": "Punishing Shove (Guardian)",
         "Hint": "When a creature with Punishing Shove succeeds at a Shove, after the dice the shoved creature's bludgeoning damage is rolled (Strength modifier, +2 / +6 / +12 at expert / master / legendary Athletics; doubled on a critical success), to apply with PF2e's own buttons."
@@ -1779,6 +1783,17 @@
         "Give": "Give",
         "NoOne": "No one",
         "Replaced": "Replaced by a new signal."
+      },
+      "Sustain": {
+        "Effect": "Sustaining: {spell}",
+        "SustainButton": "Sustain",
+        "End": "End",
+        "Ask": "Was {name} sustained?",
+        "Yes": "Yes",
+        "No": "No",
+        "Ended": "{name} ended.",
+        "NotSustained": "{name} ended (not sustained).",
+        "Expired": "{name} ended (its duration ran out)."
       },
       "CtrlClick": {
         "Tip": "Apply to the selected tokens (Ctrl-click the link does the same)",

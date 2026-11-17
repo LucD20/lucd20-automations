@@ -120,7 +120,7 @@ defineFeature({
 			for (const a of html.querySelectorAll?.("a.content-link, a.inline-roll") ?? []) {
 				const kind = linkKind(a);
 				if (!kind || a.querySelector(`[${MARK}]`)) continue;
-				if (feature.get("icon")) a.insertAdjacentHTML("beforeend", ` <i class="fa-solid fa-hand-sparkles lucd20-cc-icon" ${MARK} title="${Handlebars.escapeExpression(L("Tip"))}"></i>`);
+				if (feature.get("icon")) a.insertAdjacentHTML("beforeend", `<span class="lucd20-cc-hit" ${MARK} title="${Handlebars.escapeExpression(L("Tip"))}"><i class="fa-solid fa-hand-sparkles"></i></span>`);
 				a.addEventListener("click", (event) => {
 					if (!feature.active) return;
 					if (!(event.ctrlKey || event.metaKey || event.target.closest?.(`[${MARK}]`))) return;

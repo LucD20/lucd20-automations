@@ -21,7 +21,8 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 | 10 | Animist: Roaring Heart | built v0.49.2 | `pf2eRoaringHeart` |
 | 11 | Guardian: Punishing Shove | built v0.50.1 | `pf2ePunishingShove` |
 | 12 | Flat checks (replaces PF2e Flat Check) | built v0.51.1 | `pf2eFlatCheck` |
-| 13 | Ctrl-click effects (replaces PF2e Ctrl Click Effects) | built v0.52.0 | `pf2eCtrlClick` |
+| 13 | Ctrl-click effects (replaces PF2e Ctrl Click Effects) | built v0.53.0 | `pf2eCtrlClick` |
+| 14 | Sustained spells (replaces PF2e Sustain Reminder) | built v0.53.0 | `pf2eSustain` |
 
 Commander (Battlecry!): research notes in `docs/pf2e-commander.md`; rules to
 automate come from the owner, one at a time.
@@ -482,6 +483,37 @@ one that leaves fewer squares next to enemies (see PLAN).
   clicker ("Frightened 2 → Goblin, Orc"; hidden NPC names: "a creature"),
   nothing in chat. A plain click still opens the link.
 - Switch off "PF2e Ctrl Click Effects" (both would apply).
+- v0.53.0 (owner: "Make the whole right side a button, so I dont have to
+  actually aim for the hand. And it can likely be a bit smaller too"): the
+  hand is a small split button at the link's right end, the whole end
+  clickable.
 - (verify) `increaseCondition(slug, { value })` setting the value; the
   compendium index carrying `type` for the links; Ctrl-click on Foundry's
   links not also opening the sheet.
+
+## 14. Sustained spells
+
+- The original: an effect "Sustaining: X" on any message of a sustained
+  spell (posted ones too), a reminder at turn start, never removed; wrong
+  durations (always unlimited), duplicate reminders, the cast rank ignored.
+- Decided (Q202–Q206 as recommended; Q205 changed: "Before removing it, at
+  the end of the turn if they didnt sustain it, ask 'was X sustained?', just
+  in case"):
+  - Only a real cast (`flags.pf2e.casting`) of a spell with
+    `duration.sustained`: an effect "Sustaining: X" on the caster (the
+    spell's icon and text, the cast rank), one per cast; its limit from the
+    duration ("1 minute" = 10 rounds, "10 minutes" = 100) or none.
+  - The turn it was cast needs no Sustain. At the start of each of the
+    caster's turns: a compact card, one line per spell, Sustain / End, to the
+    caster's players and the GM (the GM only for an NPC or a hidden token).
+  - At the end of the caster's turn, each spell not sustained: "Was X
+    sustained?" Yes / No; No ends it. An unanswered question goes at the next
+    turn start (the spell kept). The Sustain action used from the sheet
+    sustains the only spell waiting (several: use the card).
+  - The limit reached (at the caster's turn start): it ends. A short line
+    says each ending ("X ended.", "(not sustained)", "(its duration ran out)").
+  - Answered lines go; a card with none left is deleted.
+- Switch off "PF2e Sustain Reminder".
+- (verify) `flags.pf2e.casting` and `system.duration.sustained` in 8.7; the
+  Sustain action's slug "sustain"; PF2e removing the effect by its own
+  duration at the same moment (harmless).

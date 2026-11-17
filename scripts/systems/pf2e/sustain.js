@@ -1,0 +1,190 @@
+import { MODULE_ID, error, localize } from "../../core/constants.js";
+import { defineFeature } from "../../core/registry.js";
+import { executeAsGM, onGMRequest } from "../../core/socket.js";
+import { onTurns } from "./rules.js";
+import { nameForPlayers } from "./card.js";
+
+/**
+ * Merge 3 (docs/pf2e-rules.md §14): sustained spells, replacing "PF2e Sustain Reminder" (owner, Q202–Q206):
+ * - A sustained spell actually cast (flags.pf2e.casting): an effect "Sustaining: X" on the caster, one per
+ *   cast, lasting the spell's limit ("1 minute" = 10 rounds) or until it ends.
+ * - The start of the caster's turn: a compact card, one line per spell, Sustain and End (to the caster's
+ *   players and the GM; the GM only for a hidden token). The limit reached: the effect ends, one line says so.
+ * - The end of the caster's turn, a spell not sustained: "Was X sustained?" Yes / No (owner, Q205: ask before
+ *   removing). No ends it. Using the Sustain action from the sheet sustains the only spell waiting.
+ * The cards go once every line is answered. On the active GM's client.
+ */
+
+const L = (key, data) => localize(`LUCD20.PF2eRules.Sustain.${key}`, data);
+const esc = (v) => Handlebars.escapeExpression(String(v ?? ""));
+const FLAG = "sustain";
+const CARD = "sustainCard";
+const UNIT_ROUNDS = { round: 1, minute: 10, hour: 600, day: 14400 };
+
+const gmIds = () => game.users.filter((u) => u.isGM).map((u) => u.id);
+const ownersOf = (actor) => (actor?.hasPlayerOwner ? game.users.filter((u) => !u.isGM && u.active && actor.testUserPermission?.(u, "OWNER")).map((u) => u.id) : []);
+
+/** A spell's limit in rounds ("1 minute" → 10), or null (no limit). */
+export function limitRounds(text) {
+	const m = String(text ?? "").toLowerCase().match(/(\d+)\s*(round|minute|hour|day)/);
+	return m ? Number(m[1]) * UNIT_ROUNDS[m[2]] : null;
+}
+
+const sustained = (actor) => (actor?.itemTypes?.effect ?? []).filter((e) => e.getFlag?.(MODULE_ID, FLAG));
+
+/** A sustained spell was cast: its effect on the caster. */
+async function onCast(message) {
+	const spell = message.item;
+	if (!message.flags?.pf2e?.casting || spell?.type !== "spell" || !spell.system?.duration?.sustained) return;
+	const actor = message.actor;
+	if (!actor) return;
+	const limit = limitRounds(spell.system.duration.value);
+	const round = game.combat?.started ? game.combat.round : null;
+	await actor.createEmbeddedDocuments("Item", [{
+		type: "effect",
+		name: L("Effect", { spell: spell.name }),
+		img: spell.img,
+		system: {
+			slug: `sustaining-${spell.slug ?? spell.system?.slug ?? "spell"}`,
+			description: { value: spell.system?.description?.value ?? "" },
+			duration: limit ? { value: limit, unit: "rounds", expiry: "turn-start", sustained: true } : { value: -1, unit: "unlimited", expiry: null, sustained: true },
+			level: { value: message.flags?.pf2e?.origin?.castRank ?? spell.rank ?? 1 },
+			tokenIcon: { show: true }
+		},
+		// sustained: this turn (the turn it was cast needs no Sustain).
+		flags: { [MODULE_ID]: { [FLAG]: { spell: spell.uuid, name: spell.name, ends: limit && round !== null ? round + limit : null, sustained: true } } }
+	}]);
+}
+
+/** The Sustain action used from the sheet: the only spell waiting is sustained. */
+async function onSustainAction(message) {
+	const item = message.item;
+	if ((item?.slug ?? item?.system?.slug) !== "sustain" || item?.type !== "action") return;
+	const waiting = sustained(message.actor).filter((e) => !e.getFlag(MODULE_ID, FLAG).sustained);
+	if (waiting.length === 1) await markSustained(waiting[0]);
+}
+
+async function markSustained(effect) {
+	await effect.setFlag(MODULE_ID, FLAG, { ...effect.getFlag(MODULE_ID, FLAG), sustained: true });
+	await dropLine(effect.uuid);
+}
+
+async function endSpell(effect, why) {
+	const actor = effect.parent;
+	const token = actor?.getActiveTokens?.()?.[0]?.document ?? null;
+	const name = effect.getFlag(MODULE_ID, FLAG)?.name ?? effect.name;
+	await effect.delete();
+	await dropLine(effect.uuid);
+	await ChatMessage.create({
+		content: `<p class="lucd20-rule-note"><i class="fa-solid fa-hourglass-end"></i> ${L(why, { name: `<strong>${esc(name)}</strong>`, caster: esc(nameForPlayers(token, actor?.name ?? "")) })}</p>`,
+		speaker: { alias: localize("LUCD20.PF2eRules.Speaker") },
+		...privacy(actor, token)
+	});
+}
+
+/** The caster's players and the GMs; the GMs only for a hidden token or an NPC. */
+function privacy(actor, token) {
+	const gms = gmIds();
+	if (token?.hidden || !actor?.hasPlayerOwner) return { whisper: gms };
+	return { whisper: [...new Set([...ownersOf(actor), ...gms])] };
+}
+
+/* -------------------------------------------- */
+/*  The cards                                   */
+/* -------------------------------------------- */
+
+function row(effect, kind) {
+	const data = effect.getFlag(MODULE_ID, FLAG);
+	const buttons = kind === "ask"
+		? [["yes", "fa-check", L("Yes")], ["no", "fa-xmark", L("No")]]
+		: [["sustain", "fa-hourglass-half", L("SustainButton")], ["end", "fa-xmark", L("End")]];
+	return `<div class="lucd20-sus-row" data-lucd20-sus-row="${esc(effect.uuid)}"><img src="${esc(effect.img)}" alt="" /><span>${esc(kind === "ask" ? L("Ask", { name: data.name }) : data.name)}</span>${buttons.map(([v, icon, label]) => `<button type="button" data-lucd20-sus="${v}" data-effect="${esc(effect.uuid)}"><i class="fa-solid ${icon}"></i> ${esc(label)}</button>`).join("")}</div>`;
+}
+
+async function postCard(combatant, effects, kind) {
+	if (!effects.length) return;
+	const token = combatant.token ?? combatant.actor?.getActiveTokens?.()?.[0]?.document;
+	await ChatMessage.create({
+		content: `<div class="lucd20-pf2e-card lucd20-sus-card">${effects.map((e) => row(e, kind)).join("")}</div>`,
+		speaker: { alias: token?.name ?? combatant.actor.name },
+		...privacy(combatant.actor, token),
+		flags: { [MODULE_ID]: { [CARD]: { kind, effects: effects.map((e) => e.uuid) } } }
+	});
+}
+
+/** A line answered: it goes; a card with no line left goes too. */
+async function dropLine(uuid) {
+	for (const m of game.messages.filter((x) => x.getFlag?.(MODULE_ID, CARD)?.effects?.includes(uuid))) {
+		const data = m.getFlag(MODULE_ID, CARD);
+		const left = data.effects.filter((u) => u !== uuid);
+		if (!left.length) { await m.delete(); continue; }
+		const content = m.content.replace(new RegExp(`<div class="lucd20-sus-row" data-lucd20-sus-row="${uuid.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}">[\\s\\S]*?</div>`), "");
+		await m.update({ content, [`flags.${MODULE_ID}.${CARD}.effects`]: left });
+	}
+}
+
+async function onTurnStart(combatant) {
+	const effects = sustained(combatant.actor);
+	const live = [];
+	for (const e of effects) {
+		await dropLine(e.uuid); // an earlier card's line, unanswered, goes: this turn's card takes over
+		const data = e.getFlag(MODULE_ID, FLAG);
+		if (data.ends !== null && data.ends !== undefined && (game.combat?.round ?? 0) >= data.ends) { await endSpell(e, "Expired"); continue; }
+		await e.setFlag(MODULE_ID, FLAG, { ...data, sustained: false });
+		live.push(e);
+	}
+	await postCard(combatant, live, "remind");
+}
+
+async function onTurnEnd(combatant) {
+	const waiting = sustained(combatant.actor).filter((e) => !e.getFlag(MODULE_ID, FLAG).sustained);
+	// The turn's reminder goes: its question takes over.
+	for (const e of waiting) await dropLine(e.uuid);
+	await postCard(combatant, waiting, "ask");
+}
+
+/** GM: a button. */
+async function answer({ effect, value }, senderId) {
+	const fx = fromUuidSync(effect);
+	if (!fx) return dropLine(effect);
+	const sender = game.users.get(senderId);
+	if (sender && !sender.isGM && !fx.parent?.testUserPermission?.(sender, "OWNER")) return false;
+	if (value === "sustain" || value === "yes") return markSustained(fx);
+	if (value === "end") return endSpell(fx, "Ended");
+	if (value === "no") return endSpell(fx, "NotSustained");
+	return false;
+}
+
+defineFeature({
+	id: "pf2eSustain",
+	category: "pf2e",
+	systems: ["pf2e"],
+	scope: "world",
+	gmOnly: true,
+	defaultEnabled: true,
+
+	init(feature) {
+		onGMRequest("pf2eSustain.answer", (payload, senderId) => (feature.active ? answer(payload, senderId) : false));
+	},
+
+	enable(feature) {
+		feature.on("createChatMessage", (message) => {
+			if (!game.user.isActiveGM) return;
+			Promise.all([onCast(message), onSustainAction(message)]).catch((err) => error("Sustain failed.", err));
+		});
+		onTurns(feature, { start: onTurnStart, end: onTurnEnd });
+		feature.on("renderChatMessageHTML", (message, html) => {
+			if (!message.getFlag?.(MODULE_ID, CARD)) return;
+			for (const button of html.querySelectorAll?.("[data-lucd20-sus]") ?? []) {
+				button.addEventListener("click", (event) => {
+					event.preventDefault();
+					if (!feature.active) return;
+					button.disabled = true;
+					executeAsGM("pf2eSustain.answer", { effect: button.dataset.effect, value: button.dataset.lucd20Sus }).catch((err) => error("Sustain failed.", err));
+				});
+			}
+		});
+	}
+});
+
+export const _test = { limitRounds, onCast, onSustainAction, onTurnStart, onTurnEnd, answer };

@@ -1916,3 +1916,7 @@ Check; the merge order of the owner's other modules is in the ledger
 
 **v0.52.0 (phase 48): Ctrl-click effects** (`pf2eCtrlClick`,
 `scripts/systems/pf2e/ctrl-click.js`, `test47.js`); ledger §13.
+
+**v0.53.0 (phase 49): sustained spells** (`pf2eSustain`,
+`scripts/systems/pf2e/sustain.js`, `test48.js`); ledger §14. The Ctrl-click
+hand became a split button.

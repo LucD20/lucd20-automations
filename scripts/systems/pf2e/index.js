@@ -17,3 +17,4 @@ import "./roaring-heart.js";
 import "./punishing-shove.js";
 import "./flat-check.js";
 import "./ctrl-click.js";
+import "./sustain.js";

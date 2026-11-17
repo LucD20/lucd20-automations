@@ -54,6 +54,9 @@ const assert = require("assert");
     // Hover: a line to each creature in the area you can see, with its cover.
     canvas.walls = { placeables: [wall(250, 150, 250, 260)] };
     out.hover = ar._test.hoverLines(region).map(l => `${l.token.id}:${l.level}`);
+    // The pointer over the area (no hoverRegion needed): the area under it is found.
+    canvas.regions = { placeables: [{ document: { ...region, object: { visible: true } }, visible: true }] };
+    out.at = [!!ar._test.areaAt({ x: 350, y: 350 }), ar._test.areaAt({ x: 900, y: 900 })];
     return out;
   });
   console.log(JSON.stringify(r));
@@ -69,6 +72,7 @@ const assert = require("assert");
   assert.strictEqual(r.deleted, true, "remove the area after");
   assert.ok(r.hover.includes("gob:greater") || r.hover.includes("gob:standard"), "hover: the goblin behind the wall has cover");
   assert.ok(r.hover.includes("ally:none") && !r.hover.some(h => h.startsWith("ghost")), "the ally in the open has none; the hidden one isn't shown");
+  assert.deepStrictEqual(r.at, [true, null], "the area under the pointer");
   assert.deepStrictEqual(errors, []);
   console.log("PHASE 55 CHECKS PASSED");
   await browser.close();

@@ -28,7 +28,7 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 | 17 | Modifiers Matter, PF2e and 4e (replaces PF2e Modifiers Matter) | built v0.56.0 | `modifiersMatter` |
 | 18 | Damage Estimate, PF2e and 4e (replaces PF2e Damage Estimate) | built v0.57.0 | `damageEstimate` |
 | 19 | Cover for attack rolls and area saves; areas reach past wall ends | built v0.61.0 | `pf2eCover` |
-| 20 | Effect areas: targeting window, hover cover, exact reach | built v0.61.1 | `pf2eAreas` |
+| 20 | Effect areas: targeting window, hover cover, exact reach | built v0.61.2 | `pf2eAreas` |
 
 Commander (Battlecry!): research notes in `docs/pf2e-commander.md`; rules to
 automate come from the owner, one at a time.
@@ -749,3 +749,8 @@ one that leaves fewer squares next to enemies (see PLAN).
   only "Template Helper" off; our window then fills the message's targets and
   Toolbelt shows its rows. A full copy of Target Helper only if the owner
   still wants it.
+- v0.61.2 (owner: "hovering over the area doesnt show the lines of cover"):
+  Foundry's `hoverRegion` only fires with the Regions tool active; the
+  pointer is now followed on the canvas (pointermove, throttled): the topmost
+  effect area under `canvas.mousePosition` (its shape) gets the lines, which
+  follow tokens moving and walls changing; leaving it clears them.

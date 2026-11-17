@@ -1,6 +1,6 @@
 import { MODULE_ID, error, localize } from "../../core/constants.js";
 import { defineFeature } from "../../core/registry.js";
-import { areaPoint, coverFromPoint, rectOf, LEVELS } from "./cover.js";
+import { areaPoint, coverFromPoint, inShape, LEVELS } from "./cover.js";
 
 /**
  * Rule 20 (docs/pf2e-rules.md): PF2e effect areas (owner, Q237–Q240, as recommended).
@@ -183,6 +183,28 @@ function drawReach() {
 	}
 }
 
+/**
+ * The pointer over an area (owner, v0.61.2: Foundry's hoverRegion only fires with the Regions tool active):
+ * the topmost effect area under the pointer, checked as the pointer moves.
+ */
+export function areaAt(point) {
+	const areas = (canvas.regions?.placeables ?? []).map((r) => r.document ?? r).filter((d) => isArea(d) && d.object?.visible !== false);
+	return areas.filter((d) => { try { return inShape(d, point); } catch { return false; } }).at(-1) ?? null;
+}
+
+let hovered = null, lastMove = 0;
+function onPointerMove(feature) {
+	const now = Date.now();
+	if (now - lastMove < 60) return;
+	lastMove = now;
+	if (!canvas?.ready || !feature.get("hover")) return;
+	const p = canvas.mousePosition;
+	const region = p ? areaAt(p) : null;
+	if (region === hovered) return;
+	hovered = region;
+	drawHover(region, !!region);
+}
+
 let timer = null;
 const redraw = () => { clearTimeout(timer); timer = setTimeout(() => { try { drawReach(); } catch (err) { error("Area overlay failed.", err); } }, 80); };
 
@@ -200,7 +222,26 @@ defineFeature({
 
 	enable(feature) {
 		feature.on("createRegion", (region, options, userId) => onCreateRegion(feature, region, options, userId).catch((err) => error("Area targeting failed.", err)));
-		feature.on("hoverRegion", (region, hovered) => { if (feature.get("hover")) drawHover(region.document ?? region, hovered); });
+		feature.on("hoverRegion", (region, over) => { if (feature.get("hover")) { hovered = over ? (region.document ?? region) : null; drawHover(hovered, over); } });
+		const move = () => onPointerMove(feature);
+		const attach = () => canvas.app?.view?.addEventListener?.("pointermove", move, { passive: true });
+		const detach = () => canvas.app?.view?.removeEventListener?.("pointermove", move);
+		attach();
+		feature.on("canvasReady", () => { detach(); attach(); });
+		feature.on("canvasTearDown", () => { hovered = null; clear(hoverLayer); });
+		// The lines follow while things move (a token stepping into the area, a wall drawn).
+		let again = null;
+		const follow = () => {
+			if (!hovered) return;
+			clearTimeout(again);
+			again = setTimeout(() => {
+				const live = (canvas.regions?.placeables ?? []).some((r) => (r.document ?? r) === hovered);
+				if (!live) hovered = null;
+				drawHover(hovered, !!hovered);
+			}, 60);
+		};
+		for (const hook of ["refreshToken", "updateRegion", "deleteRegion", "updateWall"]) feature.on(hook, follow);
+		feature.onCleanup(detach);
 		for (const hook of ["canvasReady", "createRegion", "updateRegion", "deleteRegion", "createWall", "updateWall", "deleteWall"]) {
 			feature.on(hook, () => (feature.get("reach") ? redraw() : clear(reachLayer)));
 		}
@@ -213,4 +254,4 @@ defineFeature({
 	}
 });
 
-export const _test = { tokensInArea, chooseTargets, hoverLines, onCreateRegion, applyTargets, LEVELS };
+export const _test = { areaAt, onPointerMove, tokensInArea, chooseTargets, hoverLines, onCreateRegion, applyTargets, LEVELS };

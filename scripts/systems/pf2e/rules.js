@@ -340,7 +340,8 @@ async function shoveMove({ messageId, x, y }) {
   if (!square) throw new Error(L("ShoveStale"));
   const target = tokenOf(contextOf(message).target.token);
   await message.setFlag(MODULE_ID, "shoved", true);
-  await target.update({ x, y });
+  // Forced movement: Reactive Strike (rule 7) does not react to it.
+  await target.update({ x, y }, { [MODULE_ID]: { forced: true } });
   return true;
 }
 

@@ -15,6 +15,8 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 | 4 | Trip: conditions and damage by degree of success | built v0.41.0 | `pf2eTrip` |
 | 5 | Temporal Distortion: d4 for the condition after the save | built v0.42.0 | `pf2eTemporalDistortion` |
 | 6 | Reactions: track their use, as the PF2e Reaction module does | built v0.45.0 | `pf2eReactions` |
+| 7 | Reactive Strike: prompt when it can be used | built v0.46.0 | `pf2eReactiveStrike` |
+| 8 | Shield Block: prompt when it can be used | planned | |
 
 Commander (Battlecry!): research notes in `docs/pf2e-commander.md`; rules to
 automate come from the owner, one at a time.
@@ -188,3 +190,42 @@ Standing decisions:
   `system.time.value === "reaction"`; the "R" of the `Pathfinder2eActions`
   font drawing the reaction symbol on the badge; the Combat Tracker row
   (`[data-combatant-id]` with `.token-name`).
+
+## 7. Reactive Strike
+
+- Owner: "Start with Reactive Strike, then Shield Block" (the PF2e prompts
+  the PF2e Reaction module gives; 4e had them, PF2e did not).
+- The rule (PF2e system / AoN): trigger "a creature within your reach uses a
+  manipulate action or a move action, makes a ranged attack, or leaves a
+  square during a move action it's using"; a melee Strike with no multiple
+  attack penalty; a critical hit against a manipulate action disrupts it.
+  Step never triggers it.
+- Decided (Q164–Q168):
+  - **Q164** every move that leaves a square in reach prompts; the card says
+    "not if it was a Step" (Foundry can't tell a Step from a 5-ft Stride).
+  - **Q165** the card goes to the reactor's player(s) and the GM; a monster's
+    card to the GM only (players never learn which monsters have it).
+  - **Q166** while a token is dragged in combat, **everyone** sees which
+    enemies' reach the move leaves, **any enemy** (reach only, no ability).
+  - **Q167–168** one button per melee Strike + Skip; all four triggers.
+- Built (v0.46.0):
+  - Reactors: creatures with the Reactive Strike action (or the old Attack of
+    Opportunity), their reaction left (rule 6), hostile to the trigger, not
+    unconscious / dying / paralysed / stunned / restrained.
+  - Reach: `actor.getReach({ action: "attack" })`, else 5 ft; PF2e counting,
+    and a 10-ft reach takes two squares diagonally.
+  - Moves: every square left during the move (teleports and forced movement,
+    such as Shove's push, don't count; undo doesn't either).
+  - Chat: a ranged attack roll; the card of an action or spell with the
+    manipulate trait; the card of a move action other than Step and Stride.
+  - One card per reactor, trigger and kind within 15 s.
+  - The button targets the trigger, rolls the Strike's first variant (no
+    multiple attack penalty), marks the card answered; the off-turn Strike
+    spends the reaction (rule 6). A critical hit on a manipulate trigger:
+    a GM-only note "X's <action> is disrupted".
+  - The drag marks: an arrow from each enemy to the square left and a "!" on
+    it; players only see enemies they can see; cleared when the drag ends.
+- (verify) in PF2e 8.7: `actor.getReach`; `actor.system.actions` strikes
+  with `item.isMelee` and `variants[0].roll()` returning the degree; spells
+  carrying the manipulate trait; `Token#setTarget`; the movement action names
+  ("blink", "displace") for teleport and forced movement.

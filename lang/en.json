@@ -753,6 +753,10 @@
       "pf2eReactions": {
         "Name": "Reactions",
         "Hint": "Tracks each creature's reaction in combat: none before its first turn of the encounter (guardians excepted), refilled at the start of each of its turns, spent by a reaction's card (Shield Block, Reactive Strike, Nimble Dodge…) or a Strike made outside its own turn. A badge on the token and a mark in the Combat Tracker show it (gold = available, grey = spent); owners and the GM click either to toggle it. Using one with none left warns the GM and the owners."
+      },
+      "pf2eReactiveStrike": {
+        "Name": "Reactive Strike",
+        "Hint": "When a creature within reach of an enemy with Reactive Strike (and its reaction left) leaves a square while moving, makes a ranged attack, or uses a manipulate or move action, that enemy's owner gets a card with its melee Strikes (no multiple attack penalty) and Skip; a monster's card goes to the GM only. While a token is dragged in combat, everyone sees which enemies' reach the move would leave."
       }
     },
     "ForceSettings": {
@@ -1685,6 +1689,21 @@
         "NoneLeft": "{name} has no reaction left this round ({source}).",
         "Strike": "Strike",
         "NotYet": "No reaction before its first turn (click to give it)"
+      },
+      "Reactive": {
+        "Title": "Reactive Strike: {name}",
+        "Reason": {
+          "move": "{name} left a square within your reach.",
+          "ranged": "{name} made a ranged attack ({detail}) within your reach.",
+          "manipulate": "{name} used a manipulate action ({detail}) within your reach: a critical hit disrupts it.",
+          "moveAction": "{name} used a move action ({detail}) within your reach."
+        },
+        "NotStep": "Not if it was a Step (or other movement that doesn't trigger reactions).",
+        "Skip": "Skip",
+        "Answered": "Answered.",
+        "ACreature": "a creature",
+        "NotYours": "That is not your creature.",
+        "Disrupted": "{name}'s {detail} is disrupted (critical Reactive Strike)."
       }
     },
     "Dnd4eHud": {

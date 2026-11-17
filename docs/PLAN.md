@@ -1873,3 +1873,9 @@ reactions only (no PF2e action tracker); a badge on the token everyone who sees
 the token sees, and a mark in the Combat Tracker; spent by reaction cards,
 off-turn Strikes and (with the tactics) tactic responses; trigger prompts
 later. Details in the ledger, `docs/pf2e-rules.md` §6.
+
+**v0.45.1:** no reaction before a creature's first turn, guardians excepted
+(owner). **v0.46.0 (phase 42): PF2e rule 7, Reactive Strike** prompts and the
+drag warning (`pf2eReactiveStrike`, `scripts/systems/pf2e/reactive-strike.js`,
+`test41.js`); Q164–Q168 in the ledger §7. Shove's push is now marked as forced
+movement. Next: rule 8, Shield Block; then the Commander's Demoralizing Charge.

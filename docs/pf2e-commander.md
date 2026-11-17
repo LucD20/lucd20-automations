@@ -3,9 +3,25 @@
 Background for automating parts of the Commander (Battlecry!). Summarised in
 our own words from the PF2e system's data (`foundryvtt/pf2e`, packs
 `classes/commander.json`, `class-features/`, `actions/class/commander/`,
-checked 2026-11-17). Archives of Nethys could not be reached from the dev
-container (its host is not in the session's network allowlist). What we
-automate is decided rule by rule by the owner and goes in `pf2e-rules.md`.
+checked 2026-11-17), and the class's key terms on Archives of Nethys
+(Classes.aspx?ID=66, traits Brandish ID 857, Tactic ID 858). What we automate
+is decided rule by rule by the owner and goes in `pf2e-rules.md`.
+
+## Key terms (AoN, the class page)
+
+- **Tactic:** you signal squadmates (allies drilled at daily preparations).
+  They must perceive the signal: spoken or shouted (the tactic gains
+  **auditory**) or shown, usually by waving the banner (it gains **visual**).
+  You may use several tactics in a round, but **a character can respond to
+  only one tactic per round, from any source**. A tactic cannot be Readied.
+  Free actions a tactic grants can be used outside the squadmate's turn, like
+  reactions.
+- **Brandish:** you wave or show your banner: you must be **holding it in one
+  hand or wielding the weapon it is attached to**, and **you yourself cannot
+  use the free actions or reactions a brandish tactic grants** (unless it says
+  otherwise).
+- **Banner:** the commander's banner; its aura sets the range and area of many
+  tactics.
 
 ## The class in short
 
@@ -39,8 +55,8 @@ automate is decided rule by rule by the owner and goes in `pf2e-rules.md`.
 Almost every tactic is "**signal squadmates** (often only those **within the
 banner's aura**), who then **move / Strike / maneuver as a reaction or a free
 action**", sometimes followed by a **save against your class DC** that
-inflicts a condition. Many have the **brandish** trait (meaning not checked
-here: (verify) on AoN before relying on it).
+inflicts a condition. Many have the **brandish** trait (see Key terms: the banner must be in hand,
+and the commander does not take part in what it grants).
 
 | Tier | Tactic | Actions | What squadmates do | Then |
 |---|---|---|---|---|

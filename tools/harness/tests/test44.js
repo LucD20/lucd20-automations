@@ -49,45 +49,70 @@ const assert = require("assert");
     const item = { name: "Roaring Heart", slug: "roaring-heart", img: "rh.webp", _stats: { compendiumSource: "Compendium.pf2e.feats-srd.Item.rh" } };
     const shove = (target, outcome) => ChatMessage.create({ actor: lini.actor, token: lini.document, flags: { pf2e: { context: { type: "skill-check", options: ["action:shove"], outcome, target: { token: target.document.uuid } } } } });
     const move = () => Hooks.callAll("moveToken", lini.document, { method: "dragging", passed: { waypoints: [] } }, {});
+    const buttons = () => [...card().content.matchAll(/data-lucd20-rh="(\w+)"/g)].map(m => m[1]);
+    const click = async value => {
+      const host = document.createElement("div"); host.innerHTML = card().content; document.body.append(host);
+      Hooks.callAll("renderChatMessageHTML", card(), host);
+      host.querySelector(`[data-lucd20-rh="${value}"]`).click(); await settle(120); host.remove();
+    };
     const temps = () => [lini, amiri, valeros].map(t => t.actor.effects.find(e => e.flags?.[M]?.roaringHeart)?.system.rules[0].value ?? 0);
 
     // Used: a card to the player and the GM.
     await ChatMessage.create({ actor: lini.actor, token: lini.document, item }); await settle();
-    out.card = [txt(card().content), card().whisper];
+    out.card = [txt(card().content), card().whisper, buttons()];
+    // Shove: the system's Shove action for Lini, once a creature is targeted.
+    const used = []; let warned = 0;
+    game.pf2e = { actions: { get: slug => ({ use: o => used.push([slug, o.actors[0].id]) }) } };
+    game.actors = { get: () => null }; lini.actor.isOwner = true;
+    ui.notifications = { warn: () => warned++, info() {}, error() {} };
+    game.user.targets = new Set(); await click("shove");
+    game.user.targets = new Set([gob1]); await click("shove");
+    out.shoveButton = [warned, used];
+    await shove(gob1, "success"); await settle(); out.afterOneShove = buttons();
     // A Shove on an enemy succeeds; one on an ally doesn't count; a third Shove is ignored.
-    await shove(gob1, "success"); await shove(amiri, "success"); await shove(gob2, "criticalSuccess"); await settle();
+    await shove(amiri, "success"); await shove(gob2, "criticalSuccess"); await settle();
     out.line = txt(card().content).match(/Enemies Shoved: \d+ \(of \d+ Shoves\)/)?.[0];
-    // Two moves end it: one enemy Shoved → half the level (3), for Lini and Amiri (within 30 ft), not Valeros.
-    move(); await settle(); out.afterOne = temps(); move(); await settle(120);
+    // Moving doesn't end it; Confirm does: one enemy Shoved → half the level (3), for Lini and Amiri (within 30 ft), not Valeros.
+    out.afterTwo = buttons();
+    move(); await settle(); move(); await settle(); out.afterMoves = temps();
+    await click("confirm");
     out.first = [temps(), txt(game.messages.at(-1).content), card().whisper, card().content.includes("lucd20-card-compact")];
     // Used again: two enemies Shoved, Finish: the level (6); the earlier effects replaced.
     await ChatMessage.create({ actor: lini.actor, token: lini.document, item }); await settle();
     await shove(gob1, "success"); await shove(gob2, "criticalSuccess"); await settle();
-    const c2 = card();
-    const host = document.createElement("div"); host.innerHTML = c2.content; document.body.append(host);
-    Hooks.callAll("renderChatMessageHTML", c2, host);
-    host.querySelector("[data-lucd20-rh]").click(); await settle(120);
+    await click("confirm");
     out.second = [temps(), lini.actor.effects.length, lini.actor.effects[0].system.duration, lini.actor.effects[0].system.start.initiative];
     // The start of Lini's next turn: the temporary HP end.
     await rh._test.expire(combatants[0]);
     out.expired = temps();
-    // No enemy Shoved, the turn ends: no temporary HP.
+    // No enemy Shoved, Confirm: no temporary HP.
     await ChatMessage.create({ actor: lini.actor, token: lini.document, item }); await settle();
     await shove(gob1, "failure"); await settle();
-    Hooks.callAll("updateCombat", game.combat, { turn: 0 }, {}, "u1"); await settle(); // the encounter's position is known
     Object.assign(game.combat, { turn: 1, combatant: combatants[1] }); Hooks.callAll("updateCombat", game.combat, { turn: 1 }, {}, "u1"); await settle(120);
+    out.stillOpen = buttons();
+    await click("confirm");
     out.none = [temps(), txt(game.messages.filter(m => (m.content ?? "").includes("Roaring Heart)")).at(-1)?.content)];
+    // Cancel: two enemies Shoved, no temporary HP.
+    await ChatMessage.create({ actor: lini.actor, token: lini.document, item }); await settle();
+    await shove(gob1, "success"); await shove(gob2, "success"); await settle();
+    await click("cancel");
+    out.cancel = [temps(), txt(card().content)];
     return out;
   });
   console.log(JSON.stringify(r, null, 1));
   assert.deepStrictEqual(r.temp, [0, 3, 3, 6], "half the level (rounded down) for one, the level for two, none for none");
-  assert.deepStrictEqual(r.card, ["Roaring Heart Stride twice; Shove up to two creatures you pass adjacent to. Finish ends the movement early. Enemies Shoved: 0 (of 0 Shoves). Finish", ["p1", "u1"]], "the card to the player and the GM");
+  assert.deepStrictEqual(r.card, ["Roaring Heart Stride twice; Shove up to two creatures you pass adjacent to (target one, then Shove). Confirm when the movement ends. Enemies Shoved: 0 (of 0 Shoves). Shove Cancel", ["p1", "u1"], ["shove", "cancel"]], "the card to the player and the GM: Shove, Cancel");
+  assert.deepStrictEqual(r.shoveButton, [1, [["shove", "lini"]]], "Shove: a warning without a target, then the system's Shove for Lini");
+  assert.deepStrictEqual(r.afterOneShove, ["shove", "confirm", "cancel"], "one Shove: Shove, Confirm, Cancel");
+  assert.deepStrictEqual(r.afterTwo, ["confirm", "cancel"], "two Shoves: Confirm, Cancel");
+  assert.deepStrictEqual(r.afterMoves, [0, 0, 0], "moving doesn't end it");
+  assert.deepStrictEqual(r.stillOpen, ["shove", "confirm", "cancel"], "the turn's end leaves the card open");
+  assert.deepStrictEqual(r.cancel, [[0, 0, 0], "Roaring Heart Stride twice; Shove up to two creatures you pass adjacent to (target one, then Shove). Confirm when the movement ends. Enemies Shoved: 2 (of 2 Shoves). Cancelled."], "Cancel: none");
   assert.strictEqual(r.line, "Enemies Shoved: 1 (of 2 Shoves)", "the first two Shoves; an ally Shoved doesn't count");
-  assert.deepStrictEqual(r.afterOne, [0, 0, 0], "one move: still moving");
-  assert.deepStrictEqual(r.first, [[3, 3, 0], "Lini and 1 allies gain 3 temporary Hit Points until the start of Lini 's next turn (Roaring Heart).", [], true], "the second move ends it: 3 temporary HP for Lini and Amiri (Valeros is 35 ft away); the card shrinks");
-  assert.deepStrictEqual(r.second, [[6, 6, 0], 1, { value: 1, unit: "rounds", expiry: "turn-start", sustained: false }, 12], "two enemies, Finish: 6; replaced, not stacked; until the start of Lini's next turn");
+  assert.deepStrictEqual(r.first, [[3, 3, 0], "Lini and 1 allies gain 3 temporary Hit Points until the start of Lini 's next turn (Roaring Heart).", [], true], "Confirm: 3 temporary HP for Lini and Amiri (Valeros is 35 ft away); the card shrinks");
+  assert.deepStrictEqual(r.second, [[6, 6, 0], 1, { value: 1, unit: "rounds", expiry: "turn-start", sustained: false }, 12], "two enemies, Confirm: 6; replaced, not stacked; until the start of Lini's next turn");
   assert.deepStrictEqual(r.expired, [0, 0, 0], "the start of Lini's turn: they end");
-  assert.deepStrictEqual(r.none, [[0, 0, 0], "Lini : no enemy Shoved, no temporary Hit Points (Roaring Heart)."], "no enemy Shoved by the end of the turn: none");
+  assert.deepStrictEqual(r.none, [[0, 0, 0], "Lini : no enemy Shoved, no temporary Hit Points (Roaring Heart)."], "no enemy Shoved, Confirm: none");
   assert.deepStrictEqual(errors, []);
   console.log("PHASE 45 CHECKS PASSED");
   await browser.close();

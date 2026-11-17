@@ -1900,3 +1900,5 @@ Drilled Reactions). Details in the ledger §9.
 **v0.49.0 (phase 45): PF2e rule 10, the Animist's Roaring Heart**
 (`pf2eRoaringHeart`, `scripts/systems/pf2e/roaring-heart.js`, `test44.js`);
 details in the ledger §10.
+v0.49.1: the card's Shove / Confirm / Cancel buttons replace ending on the
+second move (owner).

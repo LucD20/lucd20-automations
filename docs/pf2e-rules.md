@@ -18,7 +18,7 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 | 7 | Reactive Strike: prompt when it can be used | built v0.46.0 | `pf2eReactiveStrike` |
 | 8 | Shield Block: prompt when it can be used | built v0.47.0 | `pf2eShieldBlock` |
 | 9 | Commander: Demoralizing Charge | built v0.48.0 | `pf2eDemoralizingCharge` |
-| 10 | Animist: Roaring Heart | built v0.49.0 | `pf2eRoaringHeart` |
+| 10 | Animist: Roaring Heart | built v0.49.1 | `pf2eRoaringHeart` |
 
 Commander (Battlecry!): research notes in `docs/pf2e-commander.md`; rules to
 automate come from the owner, one at a time.
@@ -351,5 +351,17 @@ one that leaves fewer squares next to enemies (see PLAN).
   replaces the first. Chat: "Lini and 2 allies gain 3 temporary Hit Points
   until the start of Lini's next turn". The card shrinks to the feat's name.
   Shove's own push is forced movement and doesn't count as a move.
+- Owner (v0.49.1): "It applied after i moved after shoving. Put a button
+  fixed on the chat [...] to shove (the athletics check with action:shove) or
+  cancel, after two shoves has been done, two buttons cancel or confirm,
+  confirm gives the temp HP to all within 30 ft, cancel doesnt."
+  Now: the card has **Shove** (the system's Shove action for the clicking
+  user's target; a warning with no target) and **Cancel**; after one Shove
+  also **Confirm** (so one enemy Shoved can still be confirmed); after two,
+  only Confirm and Cancel. Moving and the end of the turn no longer end it;
+  Confirm gives the temp HP from where the animist stands then; Cancel gives
+  none ("Cancelled."). Shoves rolled from the sheet still count.
+- (verify) `game.pf2e.actions.get("shove").use({actors})` (legacy
+  `game.pf2e.actions.shove` as a fallback).
 - (verify) in PF2e 8.7: the TempHP rule element granting on creation, taking
   them back when the effect is deleted, and keeping the higher of two.

@@ -12,8 +12,9 @@ import { feetBetween } from "./reactive-strike.js";
  * Points equal to half your level if you successfully Shoved at least one enemy, or equal to your level if
  * you succeeded at Shoving both. These temporary Hit Points last until the beginning of your next turn."
  * Owner's choices (Q177–Q179):
- * - Using it posts a small card (Finish) to the animist's player and the GM. The movement ends after the
- *   animist's second token move, with Finish, or at the end of their turn.
+ * - Using it posts a small card to the animist's player and the GM with Shove (the Athletics Shove check)
+ *   and Cancel; once a Shove is done, Confirm too; after two Shoves, only Confirm and Cancel (owner, v0.49.1).
+ *   Confirm gives the temporary HP from where the animist stands then; Cancel gives none. Moving doesn't end it.
  * - Shoves: the animist's Shove rolls during it, the first two; a success against an enemy counts.
  * - The temporary HP: a PF2e effect (TempHP rule) on the animist and each ally within 30 ft, ending at the
  *   start of the animist's next turn (removed then by this module too); one chat line says who got how many.
@@ -24,7 +25,7 @@ const L = (key, data) => localize(`LUCD20.PF2eRules.RoaringHeart.${key}`, data);
 const esc = (v) => Handlebars.escapeExpression(String(v ?? ""));
 const SLUG = "roaring-heart";
 const FLAG = "roaringHeart";
-const open = new Map(); // animist actor id → { token, card, moves, shoves: [{ success, enemy }], img, title, link }
+const open = new Map(); // animist actor id → { token, card, shoves: [{ success, enemy }], img, title, link }
 
 const gmIds = () => game.users.filter((u) => u.isGM).map((u) => u.id);
 const ownersOf = (actor) => (actor?.hasPlayerOwner ? game.users.filter((u) => !u.isGM && u.active && actor.testUserPermission?.(u, "OWNER")).map((u) => u.id) : []);
@@ -41,25 +42,33 @@ export function tempHPFor(level, successes) {
 	return 0;
 }
 
+const BUTTONS = {
+	shove: { icon: "fa-hand", label: "Shove" },
+	confirm: { icon: "fa-check", label: "Confirm" },
+	cancel: { icon: "fa-xmark", label: "Cancel" }
+};
+const cardContent = (state) => pf2eCard({
+	img: state.img, title: state.title, open: state.link, extraClass: "lucd20-rh-card",
+	body: `<p>${L("Do")}</p><p class="lucd20-rh-line">${lineOf(state)}</p>`,
+	buttons: [...(state.shoves.length < 2 ? ["shove"] : []), ...(state.shoves.length ? ["confirm"] : []), "cancel"]
+		.map((value) => ({ data: "lucd20-rh", value, icon: BUTTONS[value].icon, label: L(BUTTONS[value].label) }))
+});
+
 const lineOf = (s) => L("Line", { n: s.shoves.filter((x) => x.success && x.enemy).length, of: Math.min(2, s.shoves.length) });
 
 async function startFor(message) {
 	const actor = message.actor;
 	const doc = message.token ?? actor?.getActiveTokens?.()?.[0]?.document;
 	if (!actor || !doc) return;
-	await finish(actor.id, { cancelled: true }); // a second use replaces the first
+	await finish(actor.id, { replaced: true }); // a second use replaces the first
 	const item = message.item;
-	const state = { actorId: actor.id, token: doc.uuid, card: null, moves: 0, shoves: [], img: item?.img ?? null, title: item?.name ?? L("Name"), link: sourceUuid(item) };
+	const state = { actorId: actor.id, token: doc.uuid, card: null, shoves: [], img: item?.img ?? null, title: item?.name ?? L("Name"), link: sourceUuid(item) };
 	open.set(actor.id, state);
 	const card = await ChatMessage.create({
-		content: pf2eCard({
-			img: state.img, title: state.title, open: state.link, extraClass: "lucd20-rh-card",
-			body: `<p>${L("Do")}</p><p class="lucd20-rh-line">${lineOf(state)}</p>`,
-			buttons: [{ data: "lucd20-rh", value: "finish", icon: "fa-flag-checkered", label: L("Finish") }]
-		}),
+		content: cardContent(state),
 		speaker: { alias: nameForPlayers(doc, doc.name) },
 		whisper: [...new Set([...ownersOf(actor), ...gmIds()])],
-		flags: { [MODULE_ID]: { [FLAG]: { actorId: actor.id } } }
+		flags: { [MODULE_ID]: { [FLAG]: { actorId: actor.id, token: doc.uuid } } }
 	});
 	state.card = card?.id ?? null;
 }
@@ -74,19 +83,19 @@ async function onShove(message) {
 	const enemy = !!me && !!target && ((me.disposition === 1 && target.disposition === -1) || (me.disposition === -1 && target.disposition === 1));
 	state.shoves.push({ success: ["success", "criticalSuccess"].includes(context.outcome), enemy });
 	const card = state.card ? game.messages.get(state.card) : null;
-	if (card) await card.update({ content: card.content.replace(/<p class="lucd20-rh-line">[\s\S]*?<\/p>/, `<p class="lucd20-rh-line">${lineOf(state)}</p>`) });
+	if (card) await card.update({ content: cardContent(state) });
 }
 
-/** The end of the movement: the temporary HP for the animist and each ally within 30 ft. */
-export async function finish(actorId, { cancelled = false } = {}) {
+/** Confirm: the temporary HP for the animist and each ally within 30 ft; Cancel or a new use: none. */
+export async function finish(actorId, { cancelled = false, replaced = false } = {}) {
 	const state = open.get(actorId);
 	if (!state) return false;
 	open.delete(actorId);
 	const card = state.card ? game.messages.get(state.card) : null;
 	const me = fromUuidSync(state.token);
 	const actor = me?.actor;
-	if (cancelled || !actor) {
-		if (card) await card.update({ content: card.content.replace(/<div class="card-buttons lucd20-card-buttons">[\s\S]*?<\/div>\s*<\/div>\s*$/, `<p class="lucd20-card-done">${esc(L("Replaced"))}</p></div>`) });
+	if (replaced || cancelled || !actor) {
+		if (card) await card.update({ content: card.content.replace(/<div class="card-buttons lucd20-card-buttons">[\s\S]*?<\/div>\s*<\/div>\s*$/, `<p class="lucd20-card-done">${esc(L(replaced ? "Replaced" : "Cancelled"))}</p></div>`) });
 		return false;
 	}
 	const successes = state.shoves.filter((s) => s.success && s.enemy).length;
@@ -138,6 +147,17 @@ async function expire(combatant) {
 	}
 }
 
+/** The Shove button: the system's Shove action (Athletics, action:shove) for the clicking user's targets. */
+function rollShove({ actorId, token }) {
+	const actor = (token ? fromUuidSync(token)?.actor : null) ?? game.actors?.get(actorId);
+	if (!actor?.isOwner) return;
+	if (!game.user.targets?.size) return ui.notifications.warn(L("TargetFirst"));
+	// (verify) PF2e 8.7: game.pf2e.actions is a Collection of Actions ("shove" → use()), with the legacy macro as a property.
+	const action = game.pf2e?.actions?.get?.("shove");
+	const run = action?.use ? action.use({ actors: [actor] }) : game.pf2e?.actions?.shove?.({ actors: [actor] });
+	Promise.resolve(run).catch((err) => error("Roaring Heart failed.", err));
+}
+
 defineFeature({
 	id: "pf2eRoaringHeart",
 	category: "pf2e",
@@ -147,7 +167,7 @@ defineFeature({
 	defaultEnabled: true,
 
 	init(feature) {
-		onGMRequest("pf2eRules.rhFinish", ({ actorId }) => (feature.active ? finish(actorId) : false));
+		onGMRequest("pf2eRules.rhFinish", ({ actorId, cancel }) => (feature.active ? finish(actorId, { cancelled: !!cancel }) : false));
 	},
 
 	enable(feature) {
@@ -157,17 +177,8 @@ defineFeature({
 			const run = (item?.slug ?? item?.system?.slug) === SLUG && !message.flags?.pf2e?.context ? startFor(message) : onShove(message);
 			Promise.resolve(run).catch((err) => error("Roaring Heart failed.", err));
 		});
-		// The second move ends it (Shove's push is forced movement, not the animist's).
-		feature.on("moveToken", (doc, movement, operation) => {
-			if (!game.user.isActiveGM || operation?.[MODULE_ID]?.forced || ["undo", "config"].includes(movement?.method)) return;
-			const state = open.get(doc.actor?.id);
-			if (!state || state.token !== doc.uuid) return;
-			if (++state.moves >= 2) finish(state.actorId).catch((err) => error("Roaring Heart failed.", err));
-		});
-		onTurns(feature, {
-			end: (combatant) => (open.has(combatant.actor?.id) ? finish(combatant.actor.id) : null),
-			start: (combatant) => expire(combatant)
-		});
+		// The temporary HP end at the animist's next turn; an unanswered card stays open (Confirm or Cancel).
+		onTurns(feature, { start: (combatant) => expire(combatant) });
 		feature.on("renderChatMessageHTML", (message, html) => {
 			const data = message.getFlag?.(MODULE_ID, FLAG);
 			if (!data) return;
@@ -175,13 +186,16 @@ defineFeature({
 			for (const button of html.querySelectorAll?.("[data-lucd20-rh]") ?? []) {
 				button.addEventListener("click", (event) => {
 					event.preventDefault();
+					event.stopPropagation();
 					if (!feature.active) return;
+					const value = button.dataset.lucd20Rh;
+					if (value === "shove") return rollShove(data);
 					button.disabled = true;
-					executeAsGM("pf2eRules.rhFinish", { actorId: data.actorId }).catch((err) => error("Roaring Heart failed.", err));
+					executeAsGM("pf2eRules.rhFinish", { actorId: data.actorId, cancel: value === "cancel" }).catch((err) => error("Roaring Heart failed.", err));
 				});
 			}
 		});
 	}
 });
 
-export const _test = { startFor, onShove, finish, expire, open, tempHPFor };
+export const _test = { startFor, onShove, finish, expire, open, tempHPFor, rollShove };

@@ -3,7 +3,8 @@ import { defineFeature, getFeature } from "../../core/registry.js";
 import { executeAsGM, onGMRequest } from "../../core/socket.js";
 import { waitForDice } from "../../core/dice.js";
 import { hasReaction } from "./reactions.js";
-import { pf2eCard, answered, wireOpen, sourceUuid, itemBySlug } from "./card.js";
+import { pf2eCard, answered, wireOpen, sourceUuid, itemBySlug, compactCard, nameForPlayers } from "./card.js";
+import { shing } from "../../core/sound.js";
 
 /**
  * Rule 7 (docs/pf2e-rules.md): Reactive Strike prompts. Trigger (PF2e): "A creature within your reach
@@ -27,7 +28,7 @@ const NAMES = /^(reactive strike|attack of opportunity)$/i;
 const NO_REACT = ["unconscious", "dying", "dead", "paralyzed", "petrified", "stunned", "restrained", "grabbed-immobile"];
 const COLOR = 0xff5a3d;
 const recent = new Map(); // dedupe key → time
-const warn = { layer: null, serial: 0 };
+const warn = { layer: null, serial: 0, marked: new Set(), feature: null };
 
 /* -------------------------------------------- */
 /*  Geometry (PF2e: 5-10-5 diagonals; 10-ft reach takes two diagonal squares)   */
@@ -162,7 +163,7 @@ export async function postCard(reactor, trigger, kind, detail = "") {
 		speaker: ChatMessage.getSpeaker?.({ token: reactor.document }) ?? { alias: reactor.name },
 		whisper: whisperFor(reactor.actor),
 		content,
-		flags: { [MODULE_ID]: { reactiveStrike: { reactor: reactor.document.uuid, trigger: trigger.document.uuid, kind, detail } } }
+		flags: { [MODULE_ID]: { reactiveStrike: { reactor: reactor.document.uuid, trigger: trigger.document.uuid, kind, detail, img: item?.img ?? null, title: item?.name ?? L("Name"), open: sourceUuid(item) } } }
 	});
 }
 
@@ -174,7 +175,7 @@ async function onCardClick(message, button) {
 	const actor = reactorDoc?.actor;
 	if (!actor || !(game.user.isGM || actor.isOwner)) return ui.notifications.warn(L("NotYours"));
 	button.disabled = true;
-	await executeAsGM("pf2eRules.rsDone", { id: message.id }).catch(() => {});
+	await executeAsGM("pf2eRules.rsDone", { id: message.id, used: button.dataset.lucd20Rs !== "skip" }).catch(() => {});
 	if (button.dataset.lucd20Rs === "skip") return;
 	const strike = actor.system?.actions?.[Number(button.dataset.lucd20Rs)];
 	if (!strike) return;
@@ -243,6 +244,7 @@ async function onMessage(message) {
 
 function clearWarning() {
 	warn.serial++;
+	warn.marked = new Set();
 	warn.layer?.destroy({ children: true });
 	warn.layer = null;
 }
@@ -250,6 +252,10 @@ function clearWarning() {
 function drawWarning(mover, marks) {
 	warn.layer?.destroy({ children: true });
 	warn.layer = null;
+	// The "shing" when another enemy's reach would be left (per-player option, v0.47.2).
+	const before = warn.marked;
+	warn.marked = new Set(marks.keys());
+	if (warn.feature?.get("sound") && [...warn.marked].some((t) => !before.has(t))) shing();
 	if (!marks.size) return;
 	const size = canvas.grid.size;
 	const layer = new PIXI.Container();
@@ -295,19 +301,34 @@ defineFeature({
 	scope: "world",
 	gmOnly: true,
 	defaultEnabled: true,
+	settings: {
+		sound: { kind: "boolean", default: true, scope: "client" }
+	},
 
 	init(feature) {
-		onGMRequest("pf2eRules.rsDone", async ({ id }) => {
+		onGMRequest("pf2eRules.rsDone", async ({ id, used }) => {
 			const message = game.messages.get(id);
 			const data = message?.getFlag(MODULE_ID, "reactiveStrike");
 			if (!data || data.done) return false;
 			await message.setFlag(MODULE_ID, "reactiveStrike", { ...data, done: true });
-			await message.update({ content: answered(message.content, L("Answered")) });
+			if (!used) {
+				await message.update({ content: answered(message.content, L("NotUsed")) });
+				return true;
+			}
+			// v0.47.2 (owner): used, the card shows only the reaction's name and symbol, to everyone (a hidden
+			// token's stays with the GM; the speaker is named as players may see it).
+			const reactor = fromUuidSync(data.reactor);
+			const reveal = reactor && !reactor.hidden;
+			await message.update({
+				content: compactCard({ img: data.img, title: data.title, open: data.open, extraClass: "lucd20-rs-card" }),
+				...(reveal ? { whisper: [], speaker: { ...(message.speaker ?? {}), alias: nameForPlayers(reactor, L("ACreature")) } } : {})
+			});
 			return true;
 		});
 	},
 
 	enable(feature) {
+		warn.feature = feature;
 		feature.on("moveToken", onMoveToken);
 		feature.on("createChatMessage", (message) => { onMessage(message).catch((err) => error("Reactive Strike failed.", err)); });
 		feature.on("renderChatMessageHTML", (message, html) => {

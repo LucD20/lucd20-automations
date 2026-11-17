@@ -264,3 +264,13 @@ glyph; the text; buttons in one row), from one helper
 (`scripts/systems/pf2e/card.js`) that later cards reuse. A click anywhere on
 the card but a button opens the item's compendium entry
 (`_stats.compendiumSource`, else the actor's own item).
+
+**v0.47.2 (owner):** "After confirming the Reaction, reveal the message and
+make it show the name of the reaction + symbol, no descriptions, to not take
+a lot of the chat." Used (Strike / Block): the card becomes only the
+reaction's image, name and symbol, shown to everyone, its speaker named as
+players may see the creature (a hidden token's card stays with the GM). Shield
+Block's second copy (the player's or the GM's) is deleted. Skipped: "Not used"
+/ "Not blocked", still private. "Moving away overlay works, but not the
+noise": the Reactive Strike drag warning plays the same "shing" as 4e (per
+player option Sound, on); the sound is now shared (`scripts/core/sound.js`).

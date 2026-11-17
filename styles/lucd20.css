@@ -2641,3 +2641,4 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-pf2e-card .lucd20-card-buttons { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
 .lucd20-pf2e-card .lucd20-card-buttons button { flex: 1 1 0; min-width: 0; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
 .lucd20-pf2e-card .lucd20-card-done { margin: 4px 0 0; font-style: italic; opacity: .75; }
+.lucd20-pf2e-card.lucd20-card-compact .card-header { margin: 0; border-bottom: 0; }

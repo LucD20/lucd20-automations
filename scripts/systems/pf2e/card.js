@@ -44,3 +44,16 @@ export function wireOpen(html) {
 		doc?.sheet?.render(true);
 	});
 }
+
+/**
+ * An answered reaction, as everyone may see it (owner, v0.47.2): only the reaction's image, name and
+ * symbol, no text, so it takes little room in the chat.
+ */
+export function compactCard({ img, title, glyph = "R", open = null, extraClass = "" }) {
+	return `<div class="pf2e chat-card action-card lucd20-pf2e-card lucd20-card-compact ${extraClass}"${open ? ` data-lucd20-open="${esc(open)}"` : ""}>
+	<header class="card-header flexrow">${img ? `<img src="${esc(img)}" alt="" />` : ""}<h3>${esc(title)}${glyph ? ` <span class="action-glyph">${esc(glyph)}</span>` : ""}</h3></header>
+</div>`;
+}
+
+/** The name a token goes by for players (PF2e may hide an NPC's name). */
+export const nameForPlayers = (doc, fallback) => (doc?.playersCanSeeName === false ? fallback : (doc?.name ?? fallback));

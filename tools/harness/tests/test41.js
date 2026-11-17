@@ -99,11 +99,17 @@ const assert = require("assert");
     Hooks.callAll("renderChatMessageHTML", card, host);
     host.querySelector('[data-lucd20-rs="0"]').click(); await settle(80);
     const note = game.messages.filter(m => (m.content ?? "").includes("fa-ban")).at(-1);
-    out.answer = [window.__target, rolled.at(-1), card.flags[M].reactiveStrike.done, txt(card.content).includes("Answered."), txt(note?.content ?? ""), note?.whisper];
+    out.answer = [window.__target, rolled.at(-1), card.flags[M].reactiveStrike.done, txt(note?.content ?? ""), note?.whisper];
+    // Answered: only the reaction's name and symbol, shown to everyone, named as players see the creature.
+    out.compact = [txt(card.content), card.content.includes("card-content"), card.whisper, card.speaker?.alias];
 
-    // The warning while dragging: any enemy whose reach the path leaves (the goblin too), for everyone.
+    // The warning while dragging: any enemy whose reach the path leaves (the goblin too), for everyone; with the sound.
+    game.settings.settings.has("core.globalInterfaceVolume") || game.settings.register("core", "globalInterfaceVolume", { scope: "client", config: false, type: Number, default: 0.5 });
+    const sound = await import("/modules/lucd20-automations/scripts/core/sound.js");
+    const played = sound.audio.played;
     await rs._test.onPath(tAmiri, { result: [{ x: 500, y: 600 }, { x: 600, y: 600 }, { x: 700, y: 600 }, { x: 700, y: 700 }] });
     out.warning = canvas.interface.children.filter(c => c.children?.length).map(c => c.children.length / 2)[0] ?? 0;
+    out.sound = sound.audio.played - played;
     window.dispatchEvent(new Event("pointerup"));
     out.cleared = canvas.interface.children.filter(c => !c.destroyed && c.children?.length).length;
     tGob.visible = false; game.user.isGM = false;
@@ -130,8 +136,10 @@ const assert = require("assert");
   assert.strictEqual(r.manipulate, "Reactive Strike R Amiri Ogre used a manipulate action (Fear) within your reach: a critical hit disrupts it. Greataxe Skip");
   assert.strictEqual(r.moveAction, "Reactive Strike R Amiri Ogre used a move action (Stand) within your reach. Greataxe Skip");
   assert.strictEqual(r.none, 0, "Step and Stride cards don't trigger; a spent reaction gets no card");
-  assert.deepStrictEqual(r.answer, ["ogre", "Greataxe", true, true, "Ogre 's Fear is disrupted (critical Reactive Strike).", ["u1"]], "the Strike targets the trigger; the card is answered; a critical hit on a manipulate action: disrupted, to the GM");
+  assert.deepStrictEqual(r.compact, ["Reactive Strike R", false, [], "Amiri"], "answered: the reaction's name and symbol only, revealed");
+  assert.deepStrictEqual(r.answer, ["ogre", "Greataxe", true, "Ogre 's Fear is disrupted (critical Reactive Strike).", ["u1"]], "the Strike targets the trigger; the card is answered; a critical hit on a manipulate action: disrupted, to the GM");
   assert.strictEqual(r.warning, 2, "dragging: the ogre and the goblin (any enemy, reach only)");
+  assert.strictEqual(r.sound, 1, "the 'shing' when enemies' reach would be left");
   assert.strictEqual(r.cleared, 0, "the marks go when the drag ends");
   assert.strictEqual(r.playerWarning, 1, "a player sees only enemies they can see");
   assert.strictEqual(r.off, 0, "switched off without a reload");

@@ -756,7 +756,13 @@
       },
       "pf2eReactiveStrike": {
         "Name": "Reactive Strike",
-        "Hint": "When a creature within reach of an enemy with Reactive Strike (and its reaction left) leaves a square while moving, makes a ranged attack, or uses a manipulate or move action, that enemy's owner gets a card with its melee Strikes (no multiple attack penalty) and Skip; a monster's card goes to the GM only. While a token is dragged in combat, everyone sees which enemies' reach the move would leave."
+        "Hint": "When a creature within reach of an enemy with Reactive Strike (and its reaction left) leaves a square while moving, makes a ranged attack, or uses a manipulate or move action, that enemy's owner gets a card with its melee Strikes (no multiple attack penalty) and Skip; a monster's card goes to the GM only. While a token is dragged in combat, everyone sees which enemies' reach the move would leave.",
+        "Setting": {
+          "sound": {
+            "Name": "Sound",
+            "Hint": "A short metallic sound when the move you are planning would leave another enemy's reach."
+          }
+        }
       },
       "pf2eShieldBlock": {
         "Name": "Shield Block",
@@ -1708,7 +1714,8 @@
         "ACreature": "a creature",
         "NotYours": "That is not your creature.",
         "Disrupted": "{name}'s {detail} is disrupted (critical Reactive Strike).",
-        "Name": "Reactive Strike"
+        "Name": "Reactive Strike",
+        "NotUsed": "Not used."
       },
       "ShieldBlock": {
         "Title": "Shield Block",

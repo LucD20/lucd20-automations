@@ -2,7 +2,7 @@ import { MODULE_ID, error, localize } from "../../core/constants.js";
 import { defineFeature, getFeature } from "../../core/registry.js";
 import { executeAsGM, onGMRequest } from "../../core/socket.js";
 import { hasReaction, spendReaction } from "./reactions.js";
-import { pf2eCard, answered, wireOpen, sourceUuid, itemBySlug } from "./card.js";
+import { pf2eCard, answered, wireOpen, sourceUuid, itemBySlug, compactCard, nameForPlayers } from "./card.js";
 
 /**
  * Rule 8 (docs/pf2e-rules.md): Shield Block prompts. Owner's choices (Q169–Q172): damage is applied with
@@ -72,7 +72,7 @@ export async function onDamage(message) {
 			body: `<p>${line(withAmount)}</p><p>${L("Shield", { name: esc(shield.name), hardness: shield.hardness, hp: shield.hp?.value ?? 0, max: shield.hp?.max ?? 0 })}</p>`,
 			buttons: [{ data: "lucd20-sb", value: "block", icon: "fa-shield", label: L("Block") }, { data: "lucd20-sb", value: "skip", icon: "fa-xmark", label: L("Skip") }]
 		});
-		const flags = { [MODULE_ID]: { shieldBlock: { message: message.id, token: doc.uuid } } };
+		const flags = { [MODULE_ID]: { shieldBlock: { message: message.id, token: doc.uuid, img: item?.img ?? null, title: item?.name ?? L("Title"), open: sourceUuid(item) } } };
 		// Q172: the amount is shown, except to a player when the damage roll was secret.
 		if (secret && owners.length) {
 			await ChatMessage.create({ content: body(false), speaker: { alias: doc.name }, whisper: owners, flags });
@@ -106,10 +106,19 @@ async function claim({ card, damage, token, block }, senderId) {
 	const cardMsg = game.messages.get(card), dmg = game.messages.get(damage);
 	const data = cardMsg?.getFlag(MODULE_ID, "shieldBlock");
 	if (!data || data.done || !dmg) return false;
-	// Both copies of the card (player and GM) are answered.
-	for (const m of game.messages.filter((x) => x.getFlag?.(MODULE_ID, "shieldBlock")?.message === damage && x.getFlag(MODULE_ID, "shieldBlock").token === data.token)) {
+	// Both copies of the card (player and GM) are answered. v0.47.2 (owner): blocked, one card stays, showing
+	// only the reaction's name and symbol, to everyone; the other copy goes.
+	const copies = game.messages.filter((x) => x.getFlag?.(MODULE_ID, "shieldBlock")?.message === damage && x.getFlag(MODULE_ID, "shieldBlock").token === data.token);
+	const doc = fromUuidSync(data.token);
+	for (const [i, m] of copies.entries()) {
 		await m.setFlag(MODULE_ID, "shieldBlock", { ...m.getFlag(MODULE_ID, "shieldBlock"), done: true });
-		await m.update({ content: answered(m.content, L(block ? "Blocked" : "Skipped")) });
+		if (!block) { await m.update({ content: answered(m.content, L("Skipped")) }); continue; }
+		if (i > 0) { await m.delete(); continue; }
+		const reveal = doc && !doc.hidden;
+		await m.update({
+			content: compactCard({ img: data.img, title: data.title, open: data.open, extraClass: "lucd20-sb-card" }),
+			...(reveal ? { whisper: [], speaker: { ...(m.speaker ?? {}), alias: nameForPlayers(doc, doc?.name ?? "") } } : {})
+		});
 	}
 	if (block && game.modules?.get(TOOLBELT)?.active) {
 		// (verify) Target Helper keeps applied rows at flags["pf2e-toolbelt"].targetHelper.applied[tokenId][rollIndex].

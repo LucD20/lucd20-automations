@@ -16,7 +16,7 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 | 5 | Temporal Distortion: d4 for the condition after the save | built v0.42.0 | `pf2eTemporalDistortion` |
 | 6 | Reactions: track their use, as the PF2e Reaction module does | built v0.45.0 | `pf2eReactions` |
 | 7 | Reactive Strike: prompt when it can be used | built v0.46.0 | `pf2eReactiveStrike` |
-| 8 | Shield Block: prompt when it can be used | planned | |
+| 8 | Shield Block: prompt when it can be used | built v0.47.0 | `pf2eShieldBlock` |
 
 Commander (Battlecry!): research notes in `docs/pf2e-commander.md`; rules to
 automate come from the owner, one at a time.
@@ -229,3 +229,29 @@ Standing decisions:
   with `item.isMelee` and `variants[0].roll()` returning the degree; spells
   carrying the manipulate trait; `Token#setTarget`; the movement action names
   ("blink", "displace") for teleport and forced movement.
+
+## 8. Shield Block
+
+- Owner: after Reactive Strike, "then Shield Block".
+- Decided (Q169–Q172): damage is applied at the table with **PF2e Toolbelt's
+  Target Helper** (target rows on the damage card, a shield toggle per row);
+  **a card, then Block applies the damage with PF2e's shield block**; only
+  creatures that **have the Shield Block reaction**; the card **shows the
+  damage**, except to a player when the damage roll was secret.
+- Built (v0.47.0):
+  - Trigger: a damage roll (`context.type: damage-roll`) with physical damage
+    (bludgeoning, piercing, slashing) on a target (Target Helper's rows via
+    its API `getMessageTargets`, else the roll's own target) that has Shield
+    Block (feat or action), its shield raised and not broken / destroyed, and
+    its reaction left (rule 6). Targets added later with "Set Target" count.
+  - Card: to the player(s) and the GM (a monster's to the GM only): "Valeros
+    is about to take 12 physical damage (Bite). Steel Shield: Hardness 5,
+    HP 18/20." Block / Skip. A secret damage roll: the player's copy has no
+    amount, the GM's has it.
+  - Block (owner's client): `actor.applyDamage({ damage, shieldBlockRequest:
+    true, rollOptions, outcome })`, the reaction spent, the Target Helper row
+    marked applied, both copies of the card answered. Skip: nothing applied.
+- (verify) in PF2e 8.7 / Toolbelt: `DamageRoll#instances[].type`;
+  `actor.attributes.shield.raised`; Target Helper's applied rows at
+  `flags["pf2e-toolbelt"].targetHelper.applied[tokenId][rollIndex]` (the row
+  should show as applied after Block).

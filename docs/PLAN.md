@@ -1879,3 +1879,8 @@ later. Details in the ledger, `docs/pf2e-rules.md` §6.
 drag warning (`pf2eReactiveStrike`, `scripts/systems/pf2e/reactive-strike.js`,
 `test41.js`); Q164–Q168 in the ledger §7. Shove's push is now marked as forced
 movement. Next: rule 8, Shield Block; then the Commander's Demoralizing Charge.
+
+**v0.47.0 (phase 43): PF2e rule 8, Shield Block** (`pf2eShieldBlock`,
+`scripts/systems/pf2e/shield-block.js`, `test42.js`), working with PF2e
+Toolbelt's Target Helper (Q169–Q172 in the ledger §8). Next: the Commander's
+Demoralizing Charge.

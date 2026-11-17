@@ -757,6 +757,10 @@
       "pf2eReactiveStrike": {
         "Name": "Reactive Strike",
         "Hint": "When a creature within reach of an enemy with Reactive Strike (and its reaction left) leaves a square while moving, makes a ranged attack, or uses a manipulate or move action, that enemy's owner gets a card with its melee Strikes (no multiple attack penalty) and Skip; a monster's card goes to the GM only. While a token is dragged in combat, everyone sees which enemies' reach the move would leave."
+      },
+      "pf2eShieldBlock": {
+        "Name": "Shield Block",
+        "Hint": "When a creature that has Shield Block, its shield raised and its reaction left is hit by physical damage, its owner (the GM for a monster) gets a card with the damage and the shield's Hardness and HP: Block applies that damage with PF2e's shield block, spends the reaction and marks Target Helper's row applied; Skip closes the card."
       }
     },
     "ForceSettings": {
@@ -1704,6 +1708,17 @@
         "ACreature": "a creature",
         "NotYours": "That is not your creature.",
         "Disrupted": "{name}'s {detail} is disrupted (critical Reactive Strike)."
+      },
+      "ShieldBlock": {
+        "Title": "Shield Block",
+        "Incoming": "{name} is about to take {amount} physical damage ({source}).",
+        "IncomingSecret": "{name} is about to take physical damage.",
+        "Shield": "{name}: Hardness {hardness}, HP {hp}/{max}.",
+        "Block": "Block",
+        "Skip": "Skip",
+        "Blocked": "Blocked: the damage was applied with Shield Block.",
+        "Skipped": "Not blocked.",
+        "NotYours": "That is not your creature."
       }
     },
     "Dnd4eHud": {

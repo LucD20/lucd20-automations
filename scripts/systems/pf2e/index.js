@@ -11,3 +11,4 @@ import "./search.js";
 import "./rules.js";
 import "./reactions.js";
 import "./reactive-strike.js";
+import "./shield-block.js";

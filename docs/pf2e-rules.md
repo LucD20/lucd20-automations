@@ -18,7 +18,7 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 | 7 | Reactive Strike: prompt when it can be used | built v0.46.0 | `pf2eReactiveStrike` |
 | 8 | Shield Block: prompt when it can be used | built v0.47.0 | `pf2eShieldBlock` |
 | 9 | Commander: Demoralizing Charge | built v0.48.0 | `pf2eDemoralizingCharge` |
-| 10 | Animist: Roaring Heart | built v0.49.1 | `pf2eRoaringHeart` |
+| 10 | Animist: Roaring Heart | built v0.49.2 | `pf2eRoaringHeart` |
 
 Commander (Battlecry!): research notes in `docs/pf2e-commander.md`; rules to
 automate come from the owner, one at a time.
@@ -361,6 +361,14 @@ one that leaves fewer squares next to enemies (see PLAN).
   only Confirm and Cancel. Moving and the end of the turn no longer end it;
   Confirm gives the temp HP from where the animist stands then; Cancel gives
   none ("Cancelled."). Shoves rolled from the sheet still count.
+- Owner (v0.49.2): "the message goes all the way up, you need to reprint
+  after each shove. and make all buttons side by side, less vertical clutter.
+  We should focus on the smallest amount of vertical chat clutter." Now: the
+  card is reprinted at the bottom after each Shove (after the dice); it is
+  only the header and one row of buttons, with "Shoves: 1 of 2. Enemies
+  Shoved: 1." once a Shove is rolled; Cancel (or a new use) deletes it;
+  Confirm leaves one message: the feat's name and the result under it. All
+  our PF2e cards' buttons are one short row now.
 - (verify) `game.pf2e.actions.get("shove").use({actors})` (legacy
   `game.pf2e.actions.shove` as a fallback).
 - (verify) in PF2e 8.7: the TempHP rule element granting on creation, taking

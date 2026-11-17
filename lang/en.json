@@ -1762,17 +1762,16 @@
       },
       "RoaringHeart": {
         "Name": "Roaring Heart",
-        "Do": "Stride twice; Shove up to two creatures you pass adjacent to (target one, then Shove). Confirm when the movement ends.",
-        "Line": "Enemies Shoved: {n} (of {of} Shoves).",
+        "Line": "Shoves: {of} of 2. Enemies Shoved: {n}.",
         "Shove": "Shove",
         "Confirm": "Confirm",
         "Cancel": "Cancel",
         "Cancelled": "Cancelled.",
         "TargetFirst": "Target the creature to Shove first.",
         "Replaced": "Replaced by a new use.",
-        "None": "{name}: no enemy Shoved, no temporary Hit Points (Roaring Heart).",
-        "Result": "{name} and {others} allies gain {value} temporary Hit Points until the start of {name}'s next turn (Roaring Heart).",
-        "ResultAlone": "{name} gains {value} temporary Hit Points until the start of their next turn (Roaring Heart).",
+        "None": "No enemy Shoved: no temporary HP.",
+        "Result": "{name} and {others} allies: {value} temporary HP until {name}'s next turn.",
+        "ResultAlone": "{name}: {value} temporary HP until their next turn.",
         "Effect": "Roaring Heart ({value} temp HP)",
         "EffectText": "{value} temporary Hit Points from {name}'s Roaring Heart, until the start of {name}'s next turn."
       }

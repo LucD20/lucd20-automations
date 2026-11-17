@@ -1,6 +1,7 @@
 import { MODULE_ID, error, localize } from "../../core/constants.js";
 import { defineFeature } from "../../core/registry.js";
 import { executeAsGM, onGMRequest } from "../../core/socket.js";
+import { waitForDice } from "../../core/dice.js";
 import { pf2eCard, wireOpen, sourceUuid, compactCard, nameForPlayers } from "./card.js";
 import { onTurns, audience } from "./rules.js";
 import { feetBetween } from "./reactive-strike.js";
@@ -49,12 +50,34 @@ const BUTTONS = {
 };
 const cardContent = (state) => pf2eCard({
 	img: state.img, title: state.title, open: state.link, extraClass: "lucd20-rh-card",
-	body: `<p>${L("Do")}</p><p class="lucd20-rh-line">${lineOf(state)}</p>`,
+	body: state.shoves.length ? `<p class="lucd20-rh-line">${lineOf(state)}</p>` : "",
 	buttons: [...(state.shoves.length < 2 ? ["shove"] : []), ...(state.shoves.length ? ["confirm"] : []), "cancel"]
 		.map((value) => ({ data: "lucd20-rh", value, icon: BUTTONS[value].icon, label: L(BUTTONS[value].label) }))
 });
 
 const lineOf = (s) => L("Line", { n: s.shoves.filter((x) => x.success && x.enemy).length, of: Math.min(2, s.shoves.length) });
+
+/** The card is reprinted at the bottom of the chat after each step (owner, v0.49.2): the old one goes. */
+let queue = Promise.resolve(); // one card change at a time (two rolls close together)
+const serial = (fn) => (queue = queue.then(fn, fn));
+const dropCard = (state) => serial(() => dropNow(state));
+async function dropNow(state) {
+	const old = state.card ? game.messages.get(state.card) : null;
+	state.card = null;
+	if (old) await old.delete().catch(() => {});
+}
+const postCard = (state, options) => serial(() => postNow(state, options));
+async function postNow(state, { content, done = false } = {}) {
+	await dropNow(state);
+	const me = fromUuidSync(state.token);
+	const card = await ChatMessage.create({
+		content: content ?? cardContent(state),
+		speaker: { alias: nameForPlayers(me, me?.name) },
+		...(done ? audience(me?.combatant ?? { token: me, hidden: me?.hidden }) : { whisper: [...new Set([...ownersOf(me?.actor), ...gmIds()])] }),
+		flags: { [MODULE_ID]: { [FLAG]: { actorId: state.actorId, token: state.token, done } } }
+	});
+	state.card = card?.id ?? null;
+}
 
 async function startFor(message) {
 	const actor = message.actor;
@@ -64,13 +87,7 @@ async function startFor(message) {
 	const item = message.item;
 	const state = { actorId: actor.id, token: doc.uuid, card: null, shoves: [], img: item?.img ?? null, title: item?.name ?? L("Name"), link: sourceUuid(item) };
 	open.set(actor.id, state);
-	const card = await ChatMessage.create({
-		content: cardContent(state),
-		speaker: { alias: nameForPlayers(doc, doc.name) },
-		whisper: [...new Set([...ownersOf(actor), ...gmIds()])],
-		flags: { [MODULE_ID]: { [FLAG]: { actorId: actor.id, token: doc.uuid } } }
-	});
-	state.card = card?.id ?? null;
+	await postCard(state);
 }
 
 /** The animist's Shoves during Roaring Heart: the first two count; a success against an enemy is a hit. */
@@ -82,8 +99,8 @@ async function onShove(message) {
 	const me = fromUuidSync(state.token), target = context.target?.token ? fromUuidSync(context.target.token) : null;
 	const enemy = !!me && !!target && ((me.disposition === 1 && target.disposition === -1) || (me.disposition === -1 && target.disposition === 1));
 	state.shoves.push({ success: ["success", "criticalSuccess"].includes(context.outcome), enemy });
-	const card = state.card ? game.messages.get(state.card) : null;
-	if (card) await card.update({ content: cardContent(state) });
+	await waitForDice(message.id);
+	if (open.get(state.actorId) === state) await postCard(state);
 }
 
 /** Confirm: the temporary HP for the animist and each ally within 30 ft; Cancel or a new use: none. */
@@ -91,18 +108,19 @@ export async function finish(actorId, { cancelled = false, replaced = false } = 
 	const state = open.get(actorId);
 	if (!state) return false;
 	open.delete(actorId);
-	const card = state.card ? game.messages.get(state.card) : null;
 	const me = fromUuidSync(state.token);
 	const actor = me?.actor;
 	if (replaced || cancelled || !actor) {
-		if (card) await card.update({ content: card.content.replace(/<div class="card-buttons lucd20-card-buttons">[\s\S]*?<\/div>\s*<\/div>\s*$/, `<p class="lucd20-card-done">${esc(L(replaced ? "Replaced" : "Cancelled"))}</p></div>`) });
+		await dropCard(state); // nothing happened: no trace in the chat
 		return false;
 	}
 	const successes = state.shoves.filter((s) => s.success && s.enemy).length;
 	const value = tempHPFor(actor.level ?? actor.system?.details?.level?.value, successes);
-	if (card) await card.update({ content: compactCard({ img: state.img, title: state.title, open: state.link, extraClass: "lucd20-rh-card" }), whisper: [] });
+	// One message at the end: the feat's name and the result under it.
+	const done = (text) => postCard(state, { done: true, content: compactCard({ img: state.img, title: state.title, open: state.link, extraClass: "lucd20-rh-card" }).replace(/<\/div>\s*$/, `<p class="lucd20-card-done">${text}</p></div>`) });
+	const who = `<strong>${esc(nameForPlayers(me, me.name))}</strong>`;
 	if (!value) {
-		await ChatMessage.create({ content: `<p class="lucd20-rule-note"><i class="fa-solid fa-mountain"></i> ${L("None", { name: `<strong>${esc(nameForPlayers(me, me.name))}</strong>` })}</p>`, speaker: { alias: localize("LUCD20.PF2eRules.Speaker") }, ...audience(me.combatant ?? { token: me, hidden: me.hidden }) });
+		await done(L("None", { name: who }));
 		return true;
 	}
 	const mine = cellsOf(me);
@@ -129,11 +147,7 @@ export async function finish(actorId, { cancelled = false, replaced = false } = 
 		}]);
 	}
 	const others = allies.filter((d) => d !== me).length;
-	await ChatMessage.create({
-		content: `<p class="lucd20-rule-note"><i class="fa-solid fa-mountain"></i> ${L(others ? "Result" : "ResultAlone", { name: `<strong>${esc(nameForPlayers(me, me.name))}</strong>`, others, value })}</p>`,
-		speaker: { alias: localize("LUCD20.PF2eRules.Speaker") },
-		...audience(me.combatant ?? { token: me, hidden: me.hidden })
-	});
+	await done(L(others ? "Result" : "ResultAlone", { name: who, others, value }));
 	return true;
 }
 

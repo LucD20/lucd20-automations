@@ -2653,8 +2653,10 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-cc-hit:hover i { opacity: 1; }
 .lucd20-sus-card .lucd20-sus-row { display: flex; align-items: center; gap: 4px; margin: 1px 0; }
 .lucd20-sus-card .lucd20-sus-row img { width: 20px; height: 20px; border: 0; flex: 0 0 auto; }
-.lucd20-sus-card .lucd20-sus-row span { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.lucd20-sus-card .lucd20-sus-row button { flex: 0 0 auto; width: auto; height: 22px; line-height: 20px; padding: 0 6px; margin: 0; font-size: .8em; }
+/* v0.54.0 (owner): the text on up to two smaller lines, thin buttons. */
+.lucd20-sus-card .lucd20-sus-row span { flex: 1 1 auto; min-width: 0; font-size: .82em; line-height: 1.15; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.lucd20-sus-card .lucd20-sus-row button { flex: 0 0 auto; width: auto; height: 20px; line-height: 18px; padding: 0 5px; margin: 0; font-size: .75em; }
+.lucd20-sus-card .lucd20-sus-row button i { margin-right: 2px; }
 .lucd20-fc-card .lucd20-fc-line { display: flex; align-items: center; gap: 6px; margin: 1px 0; padding: 1px 6px 1px 2px; border-radius: 3px; color: #fff; line-height: 20px; }
 .lucd20-fc-card .lucd20-fc-ok { background: #2e7d32; }
 .lucd20-fc-card .lucd20-fc-fail { background: #b71c1c; }

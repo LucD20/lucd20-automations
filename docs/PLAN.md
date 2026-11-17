@@ -1920,3 +1920,7 @@ Check; the merge order of the owner's other modules is in the ledger
 **v0.53.0 (phase 49): sustained spells** (`pf2eSustain`,
 `scripts/systems/pf2e/sustain.js`, `test48.js`); ledger §14. The Ctrl-click
 hand became a split button.
+
+**v0.54.0 (phase 50): hand reminders** (`pf2eHands`,
+`scripts/systems/pf2e/hands.js`, `test49.js`); ledger §15. Sustain card lines
+smaller.

@@ -22,7 +22,8 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 | 11 | Guardian: Punishing Shove | built v0.50.1 | `pf2ePunishingShove` |
 | 12 | Flat checks (replaces PF2e Flat Check) | built v0.51.1 | `pf2eFlatCheck` |
 | 13 | Ctrl-click effects (replaces PF2e Ctrl Click Effects) | built v0.53.0 | `pf2eCtrlClick` |
-| 14 | Sustained spells (replaces PF2e Sustain Reminder) | built v0.53.0 | `pf2eSustain` |
+| 14 | Sustained spells (replaces PF2e Sustain Reminder) | built v0.54.0 | `pf2eSustain` |
+| 15 | Hand reminders (replaces PF2e Hands Management) | built v0.54.0 | `pf2eHands` |
 
 Commander (Battlecry!): research notes in `docs/pf2e-commander.md`; rules to
 automate come from the owner, one at a time.
@@ -514,6 +515,31 @@ one that leaves fewer squares next to enemies (see PLAN).
     says each ending ("X ended.", "(not sustained)", "(its duration ran out)").
   - Answered lines go; a card with none left is deleted.
 - Switch off "PF2e Sustain Reminder".
+- v0.54.0 (owner: "Text need to have font reduced, or fit two lines in that
+  same size. or one line and two thin buttons"): the line's text smaller, on
+  up to two lines; thin buttons.
 - (verify) `flags.pf2e.casting` and `system.duration.sustained` in 8.7; the
   Sustain action's slug "sustain"; PF2e removing the effect by its own
   duration at the same moment (harmless).
+
+## 15. Hand reminders
+
+- The original: notices for more than two hands, Strikes with a weapon not
+  held or held wrong, manipulate spells while Restrained, a material
+  component check (dead since the remaster), concentrate actions while
+  raging, impulses without a free hand, Raise a Shield with a buckler; its
+  turn-start hand check never ran (its condition was inverted).
+- Decided (Q207, Q209–Q211 as recommended; Q208: "no, no free handed needed
+  for that"): warnings only, as a notice (no chat) to whoever acted and the
+  GMs:
+  - more than two hands in use, whenever a grip changes (a buckler on the arm
+    and shield-attached weapons take none);
+  - in an encounter: a Strike with a weapon not held, or a two-hand weapon
+    in one hand (characters; not unarmed, not rerolls); a manipulate spell
+    cast while Restrained; a concentrate action while raging (not Seek, not
+    rage actions); Raise a Shield with a buckler while both hands are busy
+    and neither holds a light item.
+  - No free-hand check for spells or impulses.
+- Switch off "PF2e Hands Management".
+- (verify) "Effect: Rage" found by its compendium source; `handsHeld`,
+  `hands`, `isHeld` on 8.7 weapons.

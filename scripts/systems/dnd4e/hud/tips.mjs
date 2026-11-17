@@ -26,7 +26,12 @@ const POWERS = {
 	nimbleStrike: { ids: ["ranger-01-nimble-strike"], names: /nimble strike|golpe [áa]gil/i },
 	twinStrike: { ids: ["ranger-01-twin-strike"], names: /twin strike|golpe duplo|ataque duplo/i },
 	greatCleave: { ids: ["barbarian-01-great-cleave"], names: /great cleave|grande (?:trespassar|golpe)|clivagem/i },
-	elvenAccuracy: { ids: ["elf-power-elven-accuracy", "elven-accuracy"], names: /elven accuracy|precis[ãa]o [ée]lfica/i },
+	elvenAccuracy: { ids: ["elf-power-elven-accuracy", "elven-accuracy", "precisao-elfica"], names: /elven accuracy|precis[ãa]o [ée]lfica/i },
+	majesticWord: { ids: ["bard-majestic-word", "majestic-word"], names: /majestic word|palavra majestosa/i },
+	blunder: { ids: ["bard-01-blunder"], names: /blunder|trapalhada|trope[çc]o/i },
+	misdirectedMark: { ids: ["bard-01-misdirected-mark"], names: /misdirected mark|marca (?:indireta|enganosa|desviada)/i },
+	viciousMockery: { ids: ["bard-01-vicious-mockery"], names: /vicious mockery|zombaria (?:cruel|perversa)|esc[áa]rnio/i },
+	stirringShout: { ids: ["bard-01-stirring-shout"], names: /stirring shout|grito inspirador/i },
 	foxsCunning: { ids: ["ranger-01-foxs-cunning", "foxs-cunning"], names: /fox'?s cunning|ast[úu]cia da raposa/i },
 	swiftCharge: { ids: ["swift-charge", "barbarian-swift-charge"], names: /swift charge|investida (?:veloz|r[áa]pida)/i }
 };
@@ -43,7 +48,11 @@ const myTurn = (actor) => {
 };
 const turnKey = () => `${game.combat?.id}:${game.combat?.round}:${game.combat?.turn}`;
 
-const item = (actor, matcher) => actor?.items?.find?.((i) => matches(i, matcher)) ?? null;
+/** The item a tip points to: a power first (a sheet can hold a feature of the same name). */
+const item = (actor, matcher) => {
+	const all = actor?.items?.filter?.((i) => matches(i, matcher)) ?? [];
+	return all.find((i) => i.type === "power") ?? all[0] ?? null;
+};
 /** A power with a use left (at-will powers always). */
 function usable(actor, matcher) {
 	const it = item(actor, matcher);
@@ -77,6 +86,17 @@ export function squares(a, b) {
 	const dx = Math.max(0, B.x0 - A.x1, A.x0 - B.x1), dy = Math.max(0, B.y0 - A.y1, A.y0 - B.y1);
 	return Math.max(dx, dy);
 }
+function allies(token) {
+	const mine = token.document?.disposition;
+	return (canvas.tokens?.placeables ?? []).filter((t) => t.actor && !t.document?.hidden && t.visible !== false && t.document?.disposition === mine);
+}
+const hpOf = (actor) => actor?.system?.attributes?.hp ?? {};
+const bloodied = (actor) => { const hp = hpOf(actor); return Number(hp.max) > 0 && Number(hp.value) <= Number(hp.max) / 2; };
+const tough = (me, them) => {
+	const d = them?.system?.details ?? {};
+	return ["elite", "solo"].includes(d.role?.secondary) || Number(d.level) >= Number(me?.system?.details?.level) + 2;
+};
+
 function enemies(token) {
 	const mine = token.document?.disposition;
 	return (canvas.tokens?.placeables ?? []).filter((t) => t !== token && t.actor && !t.document?.hidden && t.visible !== false
@@ -122,6 +142,32 @@ function turnTips(actor) {
 		if (adjacent.length >= 2 && cleave) out.push(tip("barb-cleave", T("Barbarian.Cleave", { power: cleave.name, n: adjacent.length }), [cleave], "standard"));
 		else if (pressing && near.length && !adjacent.length) out.push(tip("barb-pressing", T("Barbarian.Pressing", { power: pressing.name }), [pressing], "standard"));
 		else if (pressing || cleave) out.push(tip("barb-charge", T("Barbarian.Charge", { power: (pressing ?? cleave).name }), pressing ? [pressing] : [], "standard", ["charge"]));
+	}
+	if (enabled("bard") && token) {
+		// Majestic Word: you or an ally within 5 squares bloodied or dying (the dying first).
+		const word = usable(actor, POWERS.majesticWord);
+		if (word) {
+			const hurt = allies(token).filter((t) => squares(token, t) <= 5 && bloodied(t.actor))
+				.sort((a, b) => Number(hpOf(a.actor).value) - Number(hpOf(b.actor).value));
+			if (hurt.length) {
+				const who = hurt[0];
+				const key = Number(hpOf(who.actor).value) <= 0 ? "Bard.WordDying" : "Bard.Word";
+				out.push(tip("bard-word", T(key, { name: who.name, power: word.name }), [word], "minor"));
+			}
+		}
+		// The attack: Blunder (an ally within 2 squares of a foe within 5), Misdirected Mark (a foe next to an
+		// ally within 5 squares of you), else Vicious Mockery; Stirring Shout against a tough foe.
+		const friends = allies(token).filter((t) => t !== token);
+		const inRange = (n) => foes.filter((t) => squares(token, t) <= n);
+		const blunder = usable(actor, POWERS.blunder), mark = usable(actor, POWERS.misdirectedMark), mock = usable(actor, POWERS.viciousMockery);
+		const blunderFoe = blunder ? inRange(5).find((f) => friends.some((a) => squares(a, f) <= 2)) : null;
+		const markFoe = mark ? inRange(10).find((f) => friends.some((a) => squares(token, a) <= 5 && squares(a, f) <= 1)) : null;
+		if (blunderFoe) out.push(tip("bard-blunder", T("Bard.Blunder", { name: blunderFoe.name, power: blunder.name }), [blunder], "standard"));
+		else if (markFoe) out.push(tip("bard-mark", T("Bard.Mark", { name: markFoe.name, power: mark.name }), [mark], "standard"));
+		else if (mock && inRange(10).length) out.push(tip("bard-mock", T("Bard.Mockery", { power: mock.name }), [mock], "standard"));
+		const shout = usable(actor, POWERS.stirringShout);
+		const big = shout ? inRange(10).find((f) => tough(actor, f.actor)) : null;
+		if (big) out.push(tip("bard-shout", T("Bard.Shout", { name: big.name, power: shout.name }), [shout], "standard"));
 	}
 	return out;
 }

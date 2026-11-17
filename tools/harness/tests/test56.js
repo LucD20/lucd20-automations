@@ -115,6 +115,30 @@ const assert = require("assert");
       out.fox = tips.tipsFor(ranger2).map(t => t.key);
       tips.onDamageMessage({ rolls: [{ options: { hitTypeDamage: "normal" } }] });
       out.foxGone = tips.tipsFor(ranger2).map(t => t.key).includes("evt-fox");
+      // --- v0.67.0: the owner's bard (Elf Bard 1, Virtue of Valor): names and ids from the uploaded sheet ---
+      const bp = (id, name, identifier, extra = {}) => ({ id, name, type: extra.type ?? "power", system: { identifier, uses: { max: extra.max ?? "", value: extra.value ?? null } } });
+      const bard = pc("bd", "Linkedin Eng", [
+        bp("ea-feat", "Elven Accuracy", "elven-accuracy", { type: "feature" }), bp("ea", "Precisão Élfica", "precisao-elfica", { max: "1", value: 1 }),
+        bp("mw", "Bard-Majestic Word", "bard-majestic-word", { max: "2", value: 1 }), bp("vm", "Bard 01-Vicious Mockery", "bard-01-vicious-mockery"),
+        bp("mm", "Bard 01-Misdirected Mark", "bard-01-misdirected-mark"), bp("bl", "Bard 01-Blunder", "bard-01-blunder", { max: "1", value: 1 }),
+        bp("ss", "Bard 01-Stirring Shout", "bard-01-stirring-shout", { max: "1", value: 1 })
+      ], 1);
+      game.actors = Object.assign([bard, ogre], { get(id) { return this.find(a => a.id === id); } });
+      game.combat.combatant = { actor: bard };
+      const ally = pc("al", "Barbarian", [], 1); ally.system.attributes.hp = { value: 10, max: 30 };
+      const keys = () => tips.tipsFor(bard).map(t => t.key);
+      // A bloodied ally 3 squares away, a foe next to it (Blunder: an ally within 2 of a foe within 5).
+      canvas.tokens.placeables = [tok(bard, 0, 0, 1), tok(ally, 3, 0, 1), tok(ogre, 4, 0, -1)];
+      out.bard1 = tips.tipsFor(bard).map(t => [t.key, t.blink?.powers]);
+      // Blunder used up: the foe is next to an ally → Misdirected Mark.
+      bard.items.find(i => i.id === "bl").system.uses.value = 0;
+      out.bard2 = keys();
+      // No ally near the foe: Vicious Mockery; a tough foe (level 3+, the bard is 1): Stirring Shout too.
+      canvas.tokens.placeables = [tok(bard, 0, 0, 1), tok(ally, 0, 9, 1), tok(ogre, 6, 0, -1)];
+      out.bard3 = keys();
+      // Elven Accuracy: the power, not the feature of the same name.
+      tips.onAttack({}, { targetHit: [], targetMissed: [{ name: "Ogre", actor: ogre }] }, { actor: "bd" });
+      out.bardElf = tips.tipsFor(bard)[0]?.blink?.powers;
       return out;
     });
   };
@@ -142,6 +166,10 @@ const assert = require("assert");
   assert.strictEqual(en.elf, "You missed Ogre: Elven Accuracy (free action) lets you reroll the attack.");
   assert.ok(en.fox.includes("evt-fox"), "attacked: Fox's Cunning");
   assert.strictEqual(en.foxGone, false, "gone once the damage is rolled");
+  assert.deepStrictEqual(en.bard1, [["bard-word", ["mw"]], ["bard-blunder", ["bl"]], ["bard-shout", ["ss"]]], "Majestic Word for the bloodied ally; Blunder; Stirring Shout on a level-4 ogre");
+  assert.deepStrictEqual(en.bard2, ["bard-word", "bard-mark", "bard-shout"], "Blunder used: Misdirected Mark (the foe is next to an ally)");
+  assert.deepStrictEqual(en.bard3, ["bard-mock", "bard-shout"], "no ally near: Vicious Mockery; the ally out of 5 squares: no Majestic Word");
+  assert.deepStrictEqual(en.bardElf, ["ea"], "Elven Accuracy points to the power (Precisão Élfica), not the feature");
   assert.deepStrictEqual(errors, []);
   console.log("PHASE 58 CHECKS PASSED");
   await browser.close();

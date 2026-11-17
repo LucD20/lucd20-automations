@@ -2024,3 +2024,17 @@ Cunning, and "Add automation symbols to NPCs too"; Q256–Q261 as recommended.
 - Q261: the ◆ automation symbol on the HUD's power buttons (PCs and NPCs);
   the symbols on sheets were already meant for NPC sheets too (the owner's
   NPC sheet to confirm). Grab riders count as automated in the guess.
+
+### 17.5 Bard tips (v0.67.0)
+
+Owner: "Now this bard" (an uploaded Elf Bard 1, Virtue of Valor); Q262–Q265
+as recommended. Virtue of Valor, Misdirected Mark and Blunder's slide were
+already automated. Turn tips: Majestic Word when you or an ally within 5
+squares is bloodied or dying (the dying first; a use left); the attack:
+Blunder (a foe within 5 squares with an ally within 2 squares of it), else
+Misdirected Mark (a foe next to an ally within 5 squares of you), else
+Vicious Mockery; Stirring Shout against an elite, a solo, or a creature 2+
+levels above. No tip for Words of Friendship. Fix found on the sheet: a
+"feature" and a "power" can share a name (Elven Accuracy / Precisão
+Élfica): tips point to the power. (Majestic Word's once-per-round limit is
+not tracked.)

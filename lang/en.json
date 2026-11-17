@@ -721,12 +721,13 @@
       },
       "dnd4eTips": {
         "Name": "New Player Tips",
-        "Hint": "Suggestions on top of the 4e HUD, with the power they point to blinking (up to 3 at once): during your turn, and after a roll when a power is worth using (not against minions or creatures more than 2 levels below). Ranger, Warlock, Barbarian, Elf. Needs the 4e HUD.",
+        "Hint": "Suggestions on top of the 4e HUD, with the power they point to blinking (up to 3 at once): during your turn, and after a roll when a power is worth using (not against minions or creatures more than 2 levels below). Ranger, Warlock, Barbarian, Elf, Bard. Needs the 4e HUD.",
         "Setting": {
           "ranger": { "Name": "Ranger", "Hint": "Hunter's Quarry, Nimble Strike or Twin Strike, Fox's Cunning when attacked." },
           "warlock": { "Name": "Warlock", "Hint": "Warlock's Curse: nobody cursed yet, or who is cursed." },
           "barbarian": { "Name": "Barbarian", "Hint": "Great Cleave, Pressing Strike or a charge; Furious Assault after a hit; Swift Charge after a kill." },
-          "elf": { "Name": "Elf", "Hint": "Elven Accuracy after a miss." }
+          "elf": { "Name": "Elf", "Hint": "Elven Accuracy after a miss." },
+          "bard": { "Name": "Bard", "Hint": "Majestic Word for a bloodied or dying ally; Blunder, Misdirected Mark or Vicious Mockery; Stirring Shout against a tough enemy." }
         }
       },
       "dnd4eGameLanguage": {
@@ -1979,6 +1980,14 @@
       },
       "Elf": {
         "Accuracy": "You missed {name}: {power} (free action) lets you reroll the attack."
+      },
+      "Bard": {
+        "Word": "{name} is bloodied: {power} (minor action) lets them spend a healing surge and regain extra hit points, and slides them 1 square.",
+        "WordDying": "{name} is dying: {power} (minor action) lets them spend a healing surge and get back up.",
+        "Blunder": "{name} is near an ally: {power} slides it 2 squares and that ally gets a melee basic attack with +2.",
+        "Mark": "{name} is next to an ally: {power} marks it for that ally (−2 against everyone else).",
+        "Mockery": "{power}: the target takes −2 to its attacks until the end of your next turn.",
+        "Shout": "{name} is tough: {power} (daily): your allies regain hit points each time they hit it."
       }
     },
     "Dnd4eHud": {

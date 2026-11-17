@@ -571,7 +571,7 @@
       },
       "dnd4eTips": {
         "Name": "Dicas para Novos Jogadores",
-        "Hint": "Sugestões acima do HUD de 4e, com o poder indicado piscando (até 3 de uma vez): durante o seu turno, e depois de uma rolagem quando vale a pena usar um poder (não contra lacaios ou criaturas mais de 2 níveis abaixo). Patrulheiro, Bruxo, Bárbaro, Elfo. Precisa do HUD de 4e.",
+        "Hint": "Sugestões acima do HUD de 4e, com o poder indicado piscando (até 3 de uma vez): durante o seu turno, e depois de uma rolagem quando vale a pena usar um poder (não contra lacaios ou criaturas mais de 2 níveis abaixo). Patrulheiro, Bruxo, Bárbaro, Elfo, Bardo. Precisa do HUD de 4e.",
         "Setting": {
           "ranger": {
             "Name": "Patrulheiro",
@@ -588,6 +588,10 @@
           "elf": {
             "Name": "Elfo",
             "Hint": "Precisão Élfica após um erro."
+          },
+          "bard": {
+            "Name": "Bardo",
+            "Hint": "Palavra Majestosa para um aliado sangrando ou morrendo; Trapalhada, Marca Enganosa ou Zombaria Cruel; Grito Inspirador contra um inimigo perigoso."
           }
         }
       }
@@ -905,6 +909,14 @@
       },
       "Elf": {
         "Accuracy": "Você errou {name}: {power} (ação livre) permite rolar o ataque de novo."
+      },
+      "Bard": {
+        "Word": "{name} está sangrando: {power} (ação mínima) permite gastar um pulso de cura e recuperar pontos de vida extras, e o conduz 1 quadrado.",
+        "WordDying": "{name} está morrendo: {power} (ação mínima) permite gastar um pulso de cura e se levantar.",
+        "Blunder": "{name} está perto de um aliado: {power} o conduz 2 quadrados e esse aliado faz um ataque básico corpo a corpo com +2.",
+        "Mark": "{name} está ao lado de um aliado: {power} o marca por esse aliado (−2 contra todos os outros).",
+        "Mockery": "{power}: o alvo sofre −2 nos ataques até o fim do seu próximo turno.",
+        "Shout": "{name} é perigoso: {power} (diário): seus aliados recuperam pontos de vida cada vez que o atingem."
       }
     }
   },

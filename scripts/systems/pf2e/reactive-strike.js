@@ -3,6 +3,7 @@ import { defineFeature, getFeature } from "../../core/registry.js";
 import { executeAsGM, onGMRequest } from "../../core/socket.js";
 import { waitForDice } from "../../core/dice.js";
 import { hasReaction } from "./reactions.js";
+import { pf2eCard, answered, wireOpen, sourceUuid, itemBySlug } from "./card.js";
 
 /**
  * Rule 7 (docs/pf2e-rules.md): Reactive Strike prompts. Trigger (PF2e): "A creature within your reach
@@ -150,11 +151,13 @@ export async function postCard(reactor, trigger, kind, detail = "") {
 	const strikes = meleeStrikes(reactor.actor);
 	const name = `<strong>${esc(shownName(trigger))}</strong>`;
 	const reason = L(`Reason.${kind}`, { name, detail: esc(detail) });
-	const content = `<div class="lucd20-rs-card">
-		<h3><i class="fa-solid fa-rotate-left"></i> ${L("Title", { name: esc(reactor.name) })}</h3>
-		<p>${reason}</p>${kind === "move" ? `<p class="lucd20-rs-note">${L("NotStep")}</p>` : ""}
-		<div class="lucd20-rs-buttons">${strikes.map((s) => `<button type="button" data-lucd20-rs="${s.index}"><i class="fa-solid fa-hand-fist"></i> ${esc(s.label)}</button>`).join("")}
-			<button type="button" data-lucd20-rs="skip"><i class="fa-solid fa-xmark"></i> ${L("Skip")}</button></div></div>`;
+	const item = itemBySlug(reactor.actor, [...SLUGS], NAMES);
+	// v0.47.1 (owner): PF2e's card style, buttons side by side, a click on the card opens the entry.
+	const content = pf2eCard({
+		img: item?.img, title: item?.name ?? L("Name"), glyph: "R", open: sourceUuid(item), extraClass: "lucd20-rs-card",
+		body: `<p class="lucd20-card-who">${esc(reactor.name)}</p><p>${reason}</p>${kind === "move" ? `<p class="lucd20-card-note">${L("NotStep")}</p>` : ""}`,
+		buttons: [...strikes.map((s) => ({ data: "lucd20-rs", value: s.index, icon: "fa-hand-fist", label: s.label })), { data: "lucd20-rs", value: "skip", icon: "fa-xmark", label: L("Skip") }]
+	});
 	return ChatMessage.create({
 		speaker: ChatMessage.getSpeaker?.({ token: reactor.document }) ?? { alias: reactor.name },
 		whisper: whisperFor(reactor.actor),
@@ -299,7 +302,7 @@ defineFeature({
 			const data = message?.getFlag(MODULE_ID, "reactiveStrike");
 			if (!data || data.done) return false;
 			await message.setFlag(MODULE_ID, "reactiveStrike", { ...data, done: true });
-			await message.update({ content: message.content.replace(/<div class="lucd20-rs-buttons">[\s\S]*<\/div><\/div>$/, `<p class="lucd20-rs-done">${L("Answered")}</p></div>`) });
+			await message.update({ content: answered(message.content, L("Answered")) });
 			return true;
 		});
 	},
@@ -309,6 +312,7 @@ defineFeature({
 		feature.on("createChatMessage", (message) => { onMessage(message).catch((err) => error("Reactive Strike failed.", err)); });
 		feature.on("renderChatMessageHTML", (message, html) => {
 			const data = message.getFlag?.(MODULE_ID, "reactiveStrike");
+			if (data) wireOpen(html);
 			for (const button of html.querySelectorAll?.("[data-lucd20-rs]") ?? []) {
 				if (data?.done) { button.disabled = true; continue; }
 				button.addEventListener("click", (event) => {

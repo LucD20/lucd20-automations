@@ -1707,7 +1707,8 @@
         "Answered": "Answered.",
         "ACreature": "a creature",
         "NotYours": "That is not your creature.",
-        "Disrupted": "{name}'s {detail} is disrupted (critical Reactive Strike)."
+        "Disrupted": "{name}'s {detail} is disrupted (critical Reactive Strike).",
+        "Name": "Reactive Strike"
       },
       "ShieldBlock": {
         "Title": "Shield Block",

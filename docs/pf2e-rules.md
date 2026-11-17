@@ -255,3 +255,12 @@ Standing decisions:
   `actor.attributes.shield.raised`; Target Helper's applied rows at
   `flags["pf2e-toolbelt"].targetHelper.applied[tokenId][rollIndex]` (the row
   should show as applied after Block).
+
+**Cards, v0.47.1 (owner):** "It needs to fit PF2e sheet style, buttons side by
+side, clicking somewhere on the card should open the compendium entry". The
+Reactive Strike and Shield Block cards now use PF2e's own action-card markup
+(`pf2e chat-card action-card`: header with the item's image, name and reaction
+glyph; the text; buttons in one row), from one helper
+(`scripts/systems/pf2e/card.js`) that later cards reuse. A click anywhere on
+the card but a button opens the item's compendium entry
+(`_stats.compendiumSource`, else the actor's own item).

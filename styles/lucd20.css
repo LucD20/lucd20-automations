@@ -2633,3 +2633,11 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-rs-card .lucd20-rs-note { font-size: .85em; opacity: .75; font-style: italic; }
 .lucd20-rs-card .lucd20-rs-buttons { display: flex; flex-wrap: wrap; gap: 4px; } .lucd20-rs-card .lucd20-rs-buttons button { flex: 1 1 45%; }
 .lucd20-rs-card .lucd20-rs-done { font-style: italic; opacity: .75; margin: 0; }
+/* PF2e-style cards (v0.47.1): buttons side by side; the card opens its compendium entry. */
+.lucd20-pf2e-card[data-lucd20-open] { cursor: pointer; }
+.lucd20-pf2e-card .card-content p { margin: 0 0 4px; }
+.lucd20-pf2e-card .lucd20-card-who { font-weight: 700; }
+.lucd20-pf2e-card .lucd20-card-note { font-size: .85em; opacity: .75; font-style: italic; }
+.lucd20-pf2e-card .lucd20-card-buttons { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.lucd20-pf2e-card .lucd20-card-buttons button { flex: 1 1 0; min-width: 0; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+.lucd20-pf2e-card .lucd20-card-done { margin: 4px 0 0; font-style: italic; opacity: .75; }

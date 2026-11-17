@@ -54,7 +54,15 @@ const assert = require("assert");
     // Amiri walks away from the ogre: the ogre's card, to the GM only (a monster).
     rs._test.onMoveToken(tAmiri.document, { origin: { x: 500, y: 600 }, passed: { waypoints: [{ x: 500, y: 700, action: "walk" }, { x: 500, y: 800, action: "walk" }] } }, {}); await settle();
     const c1 = cards().at(-1);
+    // PF2e's card layout; a click on the card (not a button) opens the item's compendium entry.
+    ogreA.items[0]._stats = { compendiumSource: "Compendium.pf2e.actionspf2e.Item.rs" };
+    window.fromUuid = async uuid => ({ sheet: { render() { window.__opened = uuid; } } });
+    out.layout = [!!c1.content.includes('class="pf2e chat-card action-card'), !!c1.content.match(/<div class="card-buttons lucd20-card-buttons">.*data-lucd20-rs="0".*data-lucd20-rs="skip"/s)];
     out.moveCard = [cards().length, c1.whisper, txt(c1.content), [...c1.content.matchAll(/data-lucd20-rs="([^"]+)"/g)].map(m => m[1])];
+    rs._test.recent.clear(); game.messages.length = 0;
+    rs._test.onMoveToken(tAmiri.document, { origin: { x: 500, y: 600 }, passed: { waypoints: [{ x: 500, y: 700, action: "walk" }, { x: 500, y: 800, action: "walk" }] } }, {}); await settle();
+    { const c = cards().at(-1); const h = document.createElement("div"); h.innerHTML = c.content; document.body.append(h); Hooks.callAll("renderChatMessageHTML", c, h);
+      h.querySelector(".card-content").click(); await settle(); out.opened = window.__opened; h.remove(); }
     // Again within 15 s: no second card. Forced movement and teleports: none. Starting out of reach: none.
     rs._test.onMoveToken(tAmiri.document, { origin: { x: 500, y: 600 }, passed: { waypoints: [{ x: 500, y: 800, action: "walk" }] } }, {}); await settle();
     rs._test.recent.clear();
@@ -114,11 +122,13 @@ const assert = require("assert");
   });
   console.log(JSON.stringify(r, null, 1));
   assert.deepStrictEqual(r.geometry, [5, 15, true, false, false], "PF2e distances; 10-ft reach takes two diagonal squares");
-  assert.deepStrictEqual(r.moveCard, [1, ["u1"], "Reactive Strike: Ogre Amiri left a square within your reach. Not if it was a Step (or other movement that doesn't trigger reactions). Club Skip", ["0", "skip"]], "leaving reach: the monster's card to the GM, melee Strikes only, the Step reminder");
+  assert.deepStrictEqual(r.moveCard, [1, ["u1"], "Reactive Strike R Ogre Amiri left a square within your reach. Not if it was a Step (or other movement that doesn't trigger reactions). Club Skip", ["0", "skip"]], "leaving reach: the monster's card to the GM, melee Strikes only, the Step reminder");
+  assert.deepStrictEqual(r.layout, [true, true], "PF2e's card layout, buttons side by side");
+  assert.strictEqual(r.opened, "Compendium.pf2e.actionspf2e.Item.rs", "a click on the card opens the compendium entry");
   assert.strictEqual(r.noCards, 1, "no repeat within 15 s; forced movement, teleport and moves out of reach don't trigger");
-  assert.deepStrictEqual(r.ranged, [2, ["p1", "u1"], "Reactive Strike: Amiri Ogre made a ranged attack (Javelin) within your reach. Greataxe Skip"], "a ranged attack in reach: the PC's card to her player and the GM");
-  assert.strictEqual(r.manipulate, "Reactive Strike: Amiri Ogre used a manipulate action (Fear) within your reach: a critical hit disrupts it. Greataxe Skip");
-  assert.strictEqual(r.moveAction, "Reactive Strike: Amiri Ogre used a move action (Stand) within your reach. Greataxe Skip");
+  assert.deepStrictEqual(r.ranged, [2, ["p1", "u1"], "Reactive Strike R Amiri Ogre made a ranged attack (Javelin) within your reach. Greataxe Skip"], "a ranged attack in reach: the PC's card to her player and the GM");
+  assert.strictEqual(r.manipulate, "Reactive Strike R Amiri Ogre used a manipulate action (Fear) within your reach: a critical hit disrupts it. Greataxe Skip");
+  assert.strictEqual(r.moveAction, "Reactive Strike R Amiri Ogre used a move action (Stand) within your reach. Greataxe Skip");
   assert.strictEqual(r.none, 0, "Step and Stride cards don't trigger; a spent reaction gets no card");
   assert.deepStrictEqual(r.answer, ["ogre", "Greataxe", true, true, "Ogre 's Fear is disrupted (critical Reactive Strike).", ["u1"]], "the Strike targets the trigger; the card is answered; a critical hit on a manipulate action: disrupted, to the GM");
   assert.strictEqual(r.warning, 2, "dragging: the ogre and the goblin (any enemy, reach only)");

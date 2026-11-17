@@ -2,6 +2,7 @@ import { MODULE_ID, error, localize } from "../../core/constants.js";
 import { defineFeature, getFeature } from "../../core/registry.js";
 import { executeAsGM, onGMRequest } from "../../core/socket.js";
 import { hasReaction, spendReaction } from "./reactions.js";
+import { pf2eCard, answered, wireOpen, sourceUuid, itemBySlug } from "./card.js";
 
 /**
  * Rule 8 (docs/pf2e-rules.md): Shield Block prompts. Owner's choices (Q169–Q172): damage is applied with
@@ -64,10 +65,13 @@ export async function onDamage(message) {
 		const gms = game.users.filter((u) => u.isGM).map((u) => u.id);
 		const owners = actor.hasPlayerOwner ? game.users.filter((u) => !u.isGM && u.active && actor.testUserPermission?.(u, "OWNER")).map((u) => u.id) : [];
 		const line = (withAmount) => L(withAmount ? "Incoming" : "IncomingSecret", { name: `<strong>${esc(doc.name)}</strong>`, amount: roll.total, source: esc(message.item?.name ?? "") });
-		const body = (withAmount) => `<div class="lucd20-sb-card"><h3><i class="fa-solid fa-shield"></i> ${L("Title")}</h3><p>${line(withAmount)}</p>
-			<p>${L("Shield", { name: esc(shield.name), hardness: shield.hardness, hp: shield.hp?.value ?? 0, max: shield.hp?.max ?? 0 })}</p>
-			<div class="lucd20-rs-buttons"><button type="button" data-lucd20-sb="block"><i class="fa-solid fa-shield"></i> ${L("Block")}</button>
-			<button type="button" data-lucd20-sb="skip"><i class="fa-solid fa-xmark"></i> ${L("Skip")}</button></div></div>`;
+		const item = itemBySlug(actor, ["shield-block"], /^shield block$/i);
+		// v0.47.1 (owner): PF2e's card style, buttons side by side, a click on the card opens the entry.
+		const body = (withAmount) => pf2eCard({
+			img: item?.img, title: item?.name ?? L("Title"), glyph: "R", open: sourceUuid(item), extraClass: "lucd20-sb-card",
+			body: `<p>${line(withAmount)}</p><p>${L("Shield", { name: esc(shield.name), hardness: shield.hardness, hp: shield.hp?.value ?? 0, max: shield.hp?.max ?? 0 })}</p>`,
+			buttons: [{ data: "lucd20-sb", value: "block", icon: "fa-shield", label: L("Block") }, { data: "lucd20-sb", value: "skip", icon: "fa-xmark", label: L("Skip") }]
+		});
 		const flags = { [MODULE_ID]: { shieldBlock: { message: message.id, token: doc.uuid } } };
 		// Q172: the amount is shown, except to a player when the damage roll was secret.
 		if (secret && owners.length) {
@@ -105,7 +109,7 @@ async function claim({ card, damage, token, block }, senderId) {
 	// Both copies of the card (player and GM) are answered.
 	for (const m of game.messages.filter((x) => x.getFlag?.(MODULE_ID, "shieldBlock")?.message === damage && x.getFlag(MODULE_ID, "shieldBlock").token === data.token)) {
 		await m.setFlag(MODULE_ID, "shieldBlock", { ...m.getFlag(MODULE_ID, "shieldBlock"), done: true });
-		await m.update({ content: m.content.replace(/<div class="lucd20-rs-buttons">[\s\S]*<\/div><\/div>$/, `<p class="lucd20-rs-done">${L(block ? "Blocked" : "Skipped")}</p></div>`) });
+		await m.update({ content: answered(m.content, L(block ? "Blocked" : "Skipped")) });
 	}
 	if (block && game.modules?.get(TOOLBELT)?.active) {
 		// (verify) Target Helper keeps applied rows at flags["pf2e-toolbelt"].targetHelper.applied[tokenId][rollIndex].
@@ -134,6 +138,7 @@ defineFeature({
 		});
 		feature.on("renderChatMessageHTML", (message, html) => {
 			const data = message.getFlag?.(MODULE_ID, "shieldBlock");
+			if (data) wireOpen(html);
 			for (const button of html.querySelectorAll?.("[data-lucd20-sb]") ?? []) {
 				if (data?.done) { button.disabled = true; continue; }
 				button.addEventListener("click", (event) => {

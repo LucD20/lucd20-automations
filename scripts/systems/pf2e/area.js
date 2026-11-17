@@ -146,6 +146,21 @@ function drawHover(region, hovered) {
 	clear(hoverLayer);
 	if (!hovered || !isArea(region)) return;
 	hoverLayer = ensure(hoverLayer, canvas.controls ?? canvas.interface);
+	// What the area really covers, above the tokens (owner, v0.61.3: under them it was hard to see).
+	const reach = new PIXI.Graphics();
+	let poly = null;
+	try { poly = reachPolygon(region); } catch { poly = null; }
+	if (poly?.points?.length) {
+		reach.beginFill(0xffe082, 0.22).lineStyle(3, 0xffc107, 0.95).drawPolygon(poly.points).endFill();
+	} else {
+		const coverage = region.getCoverage?.();
+		const size = canvas.grid.size;
+		for (const o of coverage?.covered ?? []) {
+			const { x, y } = canvas.grid.getTopLeftPoint(o);
+			reach.beginFill(0xffe082, 0.18).lineStyle(2, 0xffc107, 0.9).drawRect(x, y, size, size).endFill();
+		}
+	}
+	hoverLayer.addChild(reach);
 	for (const line of hoverLines(region)) {
 		const g = new PIXI.Graphics();
 		g.lineStyle(3, COLORS[line.level], 0.9).moveTo(line.from.x, line.from.y).lineTo(line.to.x, line.to.y);

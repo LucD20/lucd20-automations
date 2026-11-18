@@ -309,6 +309,28 @@ async function setup(page) {
   });
   assert.deepStrictEqual(gone, { coins: 0, fresh: true, bars: true }, "their reactions end; the new drawing is left alone");
 
+  /* ---- v0.74.2: a dynamic-ring token keeps its border on the coin (a snapshot of the mesh as drawn) ---- */
+  const ring = await page.evaluate(async () => {
+    const e = __tok("valeros"), m = e.mesh;
+    // stand-in for the ring the shader draws: a bordered sprite as the mesh
+    e.hasDynamicRing = true;
+    const before = { rot: m.rotation, sx: m.scale.x, sy: m.scale.y, x: m.position.x, renderable: m.renderable, alpha: m.alpha };
+    __show({ scene: "s1", token: "valeros", type: "force", crit: false, kill: false, share: 0.5, amount: 1 });
+    await __sleep(60);
+    const coin = __eng.engineState.coins.get("valeros");
+    const out = { snap: !!coin?.snap, texIsSnap: coin?.tex === coin?.snap, notOwnTex: coin?.tex !== m.texture,
+      size: coin?.snap ? [Math.round(coin.snap.width), Math.round(coin.snap.height)] : null,
+      kept: { rot: m.rotation, sx: m.scale.x, sy: m.scale.y, x: m.position.x, alpha: m.alpha }, before };
+    e.hasDynamicRing = false;
+    await new Promise(r => { const t = setInterval(() => { if (!__eng.engineState.coins.has("valeros")) { clearInterval(t); r(); } }, 50); });
+    out.freed = coin.snap.destroyed !== false || !coin.snap.baseTexture;
+    return out;
+  });
+  assert.deepStrictEqual([ring.snap, ring.texIsSnap, ring.notOwnTex], [true, true, true], "a ring token's coin uses the snapshot, border included");
+  assert.deepStrictEqual(ring.size, [100, 100]);
+  assert.deepStrictEqual(ring.kept, { rot: ring.before.rot, sx: ring.before.sx, sy: ring.before.sy, x: ring.before.x, alpha: ring.before.alpha }, "the mesh is left exactly as it was");
+  assert.ok(ring.freed, "the snapshot is freed with the coin");
+
   /* ---- the feature is switched off mid-animation ---- */
   const off = await page.evaluate(async () => {
     __show({ scene: "s1", token: "ogre", type: "void", crit: true, kill: true, share: 0.8, amount: 80, attacker: "valeros" });

@@ -335,6 +335,36 @@ function silhouette(tex) {
   }
 }
 
+/**
+ * The token exactly as Foundry draws it, as a texture (owner, v0.74.2: a dynamic-ring token's texture is only the
+ * subject; its ring is drawn by the mesh's shader, so the coin lost its border). Drawn unrotated and unmirrored
+ * (the coin applies both itself, as for a plain texture); null on any trouble, and the coin falls back to the plain texture.
+ */
+function snapshot(mesh) {
+  const renderer = canvas.app?.renderer;
+  if (!renderer || !mesh || mesh.destroyed) return null;
+  const w = Math.ceil(Math.abs(mesh.width)), h = Math.ceil(Math.abs(mesh.height));
+  if (!(w > 1 && h > 1)) return null;
+  const keep = { rot: mesh.rotation, sx: mesh.scale.x, sy: mesh.scale.y, px: mesh.pivot?.x ?? 0, py: mesh.pivot?.y ?? 0,
+    r: mesh.renderable, v: mesh.visible, a: mesh.alpha };
+  let rt = null;
+  try {
+    mesh.rotation = 0; mesh.scale.set(Math.abs(keep.sx), Math.abs(keep.sy)); mesh.pivot?.set?.(0, 0);
+    mesh.renderable = true; mesh.visible = true; mesh.alpha = 1;
+    const ax = mesh.anchor?.x ?? .5, ay = mesh.anchor?.y ?? .5;
+    rt = PIXI.RenderTexture.create({ width: w, height: h, resolution: Math.min(2, renderer.resolution || 1) });
+    const transform = new PIXI.Matrix().translate(-(mesh.position.x - ax * w), -(mesh.position.y - ay * h));
+    renderer.render(mesh, { renderTexture: rt, clear: true, transform });
+    return rt;
+  } catch {
+    try { rt?.destroy(true); } catch { /* nothing */ }
+    return null;
+  } finally {
+    mesh.rotation = keep.rot; mesh.scale.set(keep.sx, keep.sy); mesh.pivot?.set?.(keep.px, keep.py);
+    mesh.renderable = keep.r; mesh.visible = keep.v; mesh.alpha = keep.a;
+  }
+}
+
 class Coin {
   constructor(token) {
     this.token = token;
@@ -355,7 +385,9 @@ class Coin {
     this.tint = hex3(Number.isFinite(tint) ? tint : 0xffffff);
     this.alpha0 = typeof mesh.alpha === "number" ? mesh.alpha : 1;
     this.baseSort = mesh.sort ?? doc.sort ?? 0;
-    this.tex = mesh.texture;
+    const ring = !!(token.hasDynamicRing ?? doc.ring?.enabled);
+    this.snap = ring ? snapshot(mesh) : null; // (verify) the ring renders through renderer.render on its own
+    this.tex = this.snap ?? mesh.texture;
     this.sil = silhouette(this.tex);
     const uv = new Float32Array(baseUV);
     if ((mesh.scale?.x ?? 1) < 0) for (let i = 0; i < VN; i++) uv[i * 2] = 1 - uv[i * 2];
@@ -558,6 +590,7 @@ class Coin {
       try { if (!o.destroyed) o.destroy({ children: true, texture: false, baseTexture: false }); } catch { /* torn down with the canvas */ }
     }
     try { if (this.sil && !this.sil.destroyed) this.sil.destroy(true); } catch { /* same */ }
+    try { if (this.snap && !this.snap.destroyed) this.snap.destroy(true); } catch { /* same */ }
     this.sil = null;
     this.done = true;
   }

@@ -2562,3 +2562,13 @@ PF2e reader `scripts/systems/pf2e/signature-spells.js`; test `test62.js`).
     the board's `getBoundingClientRect`) matches DSN's viewport pixels.
   - A token's reaction reads right when it starts as the bolt arrives while
     the dice are still on screen.
+
+**v0.74.2 (owner):** "The dice going up is way too laggy and didn't look good,
+revert back": v0.74.1 (dice jump and vanish) reverted; Chain Lightning is as in
+v0.74.0. "When the token is just Subject Texture, it doesn't have a token
+border": a dynamic-ring token's texture is only the subject (the ring is drawn
+by the mesh's shader), so the coin now takes a snapshot of the token's mesh as
+Foundry draws it (unrotated, unmirrored, then the coin's own rotation and
+mirroring apply as before) and frees it with the coin; any trouble falls back
+to the plain texture. (verify) the ring shader renders through
+`renderer.render(mesh, { renderTexture, transform })`.

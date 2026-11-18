@@ -357,10 +357,10 @@
       },
       "shortcuts": {
         "Name": "Shortcuts",
-        "Hint": "Keys for tokens and the system, set in Foundry's Configure Controls (under LucD20 Automations); most start unbound. They act on the token under the mouse, else the selected ones, else your character's; players only on what they own. Elevation: PageUp / PageDown (Shift: the large step), or the mouse wheel over the Token HUD's elevation. PF2e: O toggles Off-Guard, plus every condition and action. 4e: O toggles grants combat advantage, plus the basic actions. Replaces F is for Flatfooted and Token Elevator (switch those off; your keys from them are copied over).",
+        "Hint": "Keys for tokens and the system, set in Foundry's Configure Controls (under LucD20 Automations); most start unbound. They act on the token under the mouse, else the selected ones, else your character's; players only on what they own. Elevation: Shift+= raises, Shift+− lowers, − puts it back at 0, or the mouse wheel over the Token HUD's elevation. PF2e: O toggles Off-Guard, plus every condition and action. 4e: O toggles grants combat advantage, plus the basic actions. Replaces F is for Flatfooted and Token Elevator (switch those off; your keys from them are copied over).",
         "Setting": {
-          "step": { "Name": "Elevation step (squares)", "Hint": "How far PageUp / PageDown raise or lower a token, in squares of the scene (1 = 5 ft)." },
-          "largeStep": { "Name": "Large step (squares)", "Hint": "With Shift." },
+          "step": { "Name": "Elevation step (squares)", "Hint": "How far Shift+= / Shift+− raise or lower a token, in squares of the scene (1 = 5 ft)." },
+          "largeStep": { "Name": "Large step (squares)", "Hint": "For the large-step shortcuts (no key until you give them one) and Shift with the mouse wheel." },
           "hudWheel": { "Name": "Mouse wheel on the HUD's elevation", "Hint": "Scroll over the elevation in the Token HUD to raise or lower the token (and the other selected ones); Shift for the large step." }
         }
       },

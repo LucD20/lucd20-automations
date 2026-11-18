@@ -8,13 +8,15 @@ import { defineFeature } from "../core/registry.js";
  *   (or your character, for conditions). A hovered token you don't own stops it: it never falls through to
  *   your own token by surprise. Players only change what they own.
  * - Actions (PF2e actions, 4e basic actions) are taken by your token: the selected one, else your character.
- * - Elevation: PageUp / PageDown by one square's distance, Shift for the large step; the mouse wheel over the
- *   Token HUD's elevation box; below 0 allowed. Generic: hide / reveal, end turn, defeated, token / actor art,
+ * - Elevation: Shift+= / Shift+− by one square's distance, − back to 0 (the owner's Token Elevator keys; PageUp is
+ *   Foundry's Zoom In), the large step unbound; the mouse wheel over the Token HUD's elevation box; below 0 allowed. Generic: hide / reveal, end turn, defeated, token / actor art,
  *   a toggle for each of the system's status effects (PF2e uses its conditions instead).
  * - Systems add theirs through `registerShortcuts` (scripts/systems/<id>/shortcuts.*), at `setup`.
  * - Keybindings can only be registered before the game starts, so they always exist; while the feature is
  *   off, or while the module a shortcut came from is still on (both would answer), the key does nothing here.
- * - Each browser copies, once, the keys it had set in F is for Flatfooted and Token Elevator.
+ * - Each browser copies, once per shortcut, the keys it had set in F is for Flatfooted and Token Elevator. Foundry
+ *   keeps keys per browser, not per world, so the list of shortcuts already looked at is kept per shortcut: a
+ *   PF2e world opened after a 4e one still gets its PF2e keys.
  */
 
 /** The modules these shortcuts replace: their keybinding namespace and their default keys. */
@@ -32,7 +34,7 @@ export const ORIGINALS = {
   }
 };
 
-const COPIED_KEY = "shortcuts_copied";
+const COPIED_KEY = "shortcuts_copiedIds";
 const adapters = [];
 /** Every shortcut we registered: our action id → { from: { module, id } }. */
 const registeredShortcuts = new Map();
@@ -224,11 +226,11 @@ function registerGeneric() {
   const step = () => feature?.get("step") ?? 1;
   const large = () => feature?.get("largeStep") ?? 2;
   const te = (id) => ({ module: "token-elevator", id });
-  add("elevationUp", { name: "LUCD20.Shortcuts.ElevationUp", hint: "LUCD20.Shortcuts.ElevationHint", keys: [{ key: "PageUp", modifiers: [] }], run: () => elevation(step())(), from: te("te-1") });
-  add("elevationDown", { name: "LUCD20.Shortcuts.ElevationDown", hint: "LUCD20.Shortcuts.ElevationHint", keys: [{ key: "PageDown", modifiers: [] }], run: () => elevation(-step())(), from: te("te--1") });
-  add("elevationUpLarge", { name: "LUCD20.Shortcuts.ElevationUpLarge", hint: "LUCD20.Shortcuts.ElevationHint", keys: [{ key: "PageUp", modifiers: ["Shift"] }], run: () => elevation(large())(), from: te("te-2") });
-  add("elevationDownLarge", { name: "LUCD20.Shortcuts.ElevationDownLarge", hint: "LUCD20.Shortcuts.ElevationHint", keys: [{ key: "PageDown", modifiers: ["Shift"] }], run: () => elevation(-large())(), from: te("te--2") });
-  add("elevationReset", { name: "LUCD20.Shortcuts.ElevationReset", hint: "LUCD20.Shortcuts.ElevationHint", run: elevation(null), from: te("te-0") });
+  add("elevationUp", { name: "LUCD20.Shortcuts.ElevationUp", hint: "LUCD20.Shortcuts.ElevationHint", keys: [{ key: "Equal", modifiers: ["Shift"] }], run: () => elevation(step())(), from: te("te-1") });
+  add("elevationDown", { name: "LUCD20.Shortcuts.ElevationDown", hint: "LUCD20.Shortcuts.ElevationHint", keys: [{ key: "Minus", modifiers: ["Shift"] }], run: () => elevation(-step())(), from: te("te--1") });
+  add("elevationUpLarge", { name: "LUCD20.Shortcuts.ElevationUpLarge", hint: "LUCD20.Shortcuts.ElevationHint", run: () => elevation(large())(), from: te("te-2") });
+  add("elevationDownLarge", { name: "LUCD20.Shortcuts.ElevationDownLarge", hint: "LUCD20.Shortcuts.ElevationHint", run: () => elevation(-large())(), from: te("te--2") });
+  add("elevationReset", { name: "LUCD20.Shortcuts.ElevationReset", hint: "LUCD20.Shortcuts.ElevationHint", keys: [{ key: "Minus", modifiers: [] }], run: elevation(null), from: te("te-0") });
   const ff = (id) => ({ module: "pf2e-f-is-for-flatfooted", id });
   add("visibility", { name: "LUCD20.Shortcuts.Visibility", hint: "LUCD20.Shortcuts.VisibilityHint", restricted: true, run: toggleVisibility, from: ff("visibility") });
   add("endTurn", { name: "LUCD20.Shortcuts.EndTurn", hint: "LUCD20.Shortcuts.EndTurnHint", run: endTurn, from: ff("endTurn") });
@@ -259,13 +261,13 @@ function registerStatuses() {
  * Foundry even with the module off), else that module's defaults while it is still on. Ours that this browser
  * already changed are left alone. Returns how many were copied.
  */
-export async function copyOriginalKeys({ force = false } = {}) {
+export async function copyOriginalKeys({ force = false, skip = null } = {}) {
   let stored = {};
   try { stored = game.settings.get("core", "keybindings") ?? {}; } catch { /* no stored keys */ }
   let count = 0;
   const modules = new Set();
   for (const [action, { from }] of registeredShortcuts) {
-    if (!from) continue;
+    if (!from || skip?.[action]) continue;
     if (!force && `${MODULE_ID}.${action}` in stored) continue;
     const original = ORIGINALS[from.module];
     let bindings = stored[`${from.module}.${from.id}`];
@@ -308,7 +310,7 @@ defineFeature({
 
   init(f) {
     feature = f;
-    game.settings.register(MODULE_ID, COPIED_KEY, { scope: "client", config: false, type: Boolean, default: false });
+    game.settings.register(MODULE_ID, COPIED_KEY, { scope: "client", config: false, type: Object, default: {} });
     registerGeneric();
     // System shortcuts need the system's data and our texts: at `setup`, still before keybindings are fixed.
     Hooks.once("setup", () => {
@@ -324,9 +326,14 @@ defineFeature({
   enable(f) {
     document.addEventListener("wheel", onWheel, { capture: true, passive: false });
     f.onCleanup(() => document.removeEventListener("wheel", onWheel, { capture: true }));
-    // Once per browser: bring over the keys of the modules these replace.
-    if (!game.settings.get(MODULE_ID, COPIED_KEY)) {
-      copyOriginalKeys().finally(() => game.settings.set(MODULE_ID, COPIED_KEY, true));
+    // Once per shortcut and browser: bring over the keys of the modules these replace.
+    const done = { ...(game.settings.get(MODULE_ID, COPIED_KEY) ?? {}) };
+    const fresh = [...registeredShortcuts].filter(([action, { from }]) => from && !done[action]).map(([action]) => action);
+    if (fresh.length) {
+      copyOriginalKeys({ skip: done }).finally(() => {
+        for (const action of fresh) done[action] = true;
+        return game.settings.set(MODULE_ID, COPIED_KEY, done);
+      });
     }
     if (game.user.isGM) {
       const on = Object.entries(ORIGINALS).filter(([id]) => game.modules.get(id)?.active).map(([, o]) => o.title);

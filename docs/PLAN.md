@@ -2160,8 +2160,24 @@ and `systems/dnd4e/shortcuts.mjs`, `test57.js`):
   to switch it off.
 - Owner's keybinding export: `tools/export-keybindings.js` (console or macro)
   writes every bound action with its current and default key.
-- (verify) in V14 / PF2e 8.7: PageUp / PageDown free; registering in `setup`;
+- (verify) in V14 / PF2e 8.7: registering in `setup`;
   `canvas.tokens.hover`; the Token HUD's `#token-hud [name=elevation]`;
   `foundry.applications.apps.ImagePopout` options and `shareImage`;
   `ControlsConfig` path; `game.pf2e.actions` entries and `variants`; the Cover
   effect's UUID; dnd4e's `grantingCA` status.
+
+**v0.69.1 (the owner's keybinding exports, PF2e and 4e):**
+- PageUp is Foundry's Zoom In, so elevation now defaults to the owner's
+  Token Elevator keys: Shift+= raise, Shift+− lower, − back to 0; the large
+  steps are unbound (as the owner had them).
+- O is the owner's Focus Chat; their Off-Guard is F. The 4e "grants combat
+  advantage" shortcut now takes the key the browser gave Off-Guard in F is
+  for Flatfooted (O stays the default for anyone without one).
+- Foundry keeps keybindings per browser, shared by every world (the two
+  exports had the same stored keys), so "copied already" is kept per
+  shortcut (`shortcuts_copiedIds`): a PF2e world opened after a 4e one still
+  gets its PF2e keys. Tested with the owner's real keys: Off-Guard F,
+  Frightened +1 S, Blinded B, Trip Shift+A, Cover Shift+C, art Shift+Z /
+  Shift+X; 4e combat advantage F.
+- LucD20 Automations was not on in the owner's PF2e world at the export;
+  its F is for Flatfooted keys are copied when it is switched on there.

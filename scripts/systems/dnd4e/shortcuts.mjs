@@ -5,7 +5,7 @@ import { L } from "./utils.mjs";
 
 /**
  * D&D 4e for Shortcuts (Q271): O toggles "grants combat advantage" on the hovered token (the 4e Off-Guard),
- * when the system has that status; unbound: each basic action (Second Wind, Spend Action Point, Charge,
+ * when the system has that status (with the key this browser gave Off-Guard in F is for Flatfooted, if any); unbound: each basic action (Second Wind, Spend Action Point, Charge,
  * Total Defense ...) and the death saving throw. The 4e conditions come from the generic status toggles.
  * In combat a basic action spends its action through the Action Tracker, as the HUD's buttons do.
  */
@@ -27,7 +27,9 @@ registerShortcuts({
     if (ca) {
       add("dnd4e-ca", {
         name: t("Dnd4e.CombatAdvantage"), hint: t("Dnd4e.CombatAdvantageHint"), keys: [{ key: "KeyO", modifiers: [] }],
-        run: async () => { for (const actor of targetActors()) await actor.toggleStatusEffect?.(ca.id); }
+        run: async () => { for (const actor of targetActors()) await actor.toggleStatusEffect?.(ca.id); },
+        // The 4e Off-Guard: it takes the key the browser gave PF2e's Off-Guard in F is for Flatfooted.
+        from: { module: "pf2e-f-is-for-flatfooted", id: "flatfooted" }
       });
     }
 

@@ -1,6 +1,17 @@
 const { chromium } = require("playwright");
 const assert = require("assert");
 
+/** The owner's stored keys from their export (2026-11-18): F is for Flatfooted and Token Elevator. */
+const OWNER = {
+  "pf2e-f-is-for-flatfooted.flatfooted": [["KeyF"]], "pf2e-f-is-for-flatfooted.raiseAShield": [["KeyS", "Shift"]],
+  "pf2e-f-is-for-flatfooted.takeCover": [["KeyC", "Shift"]], "pf2e-f-is-for-flatfooted.showTokenArt": [["KeyZ", "Shift"]],
+  "pf2e-f-is-for-flatfooted.showActorArt": [["KeyX", "Shift"]], "pf2e-f-is-for-flatfooted.blinded": [["KeyB"]],
+  "pf2e-f-is-for-flatfooted.frightened-increase": [["KeyS"]], "pf2e-f-is-for-flatfooted.trip": [["KeyA", "Shift"]],
+  "token-elevator.te-0": [["Minus"]], "token-elevator.te-1": [["Equal", "Shift"]], "token-elevator.te--1": [["Minus", "Shift"]],
+  "token-elevator.te-2": [], "token-elevator.te--2": []
+};
+const ownerStored = Object.fromEntries(Object.entries(OWNER).map(([k, v]) => [k, v.map(([key, ...modifiers]) => ({ key, modifiers }))]));
+
 /** Phase 59: Shortcuts (F is for Flatfooted + Token Elevator): keys, who they act on, the HUD wheel, copying old keys. */
 (async () => {
   const browser = await chromium.launch();
@@ -15,7 +26,7 @@ const assert = require("assert");
   };
 
   // ---------- PF2e ----------
-  const pf2e = await (await open("pf2e")).evaluate(async () => {
+  const pf2e = await (await open("pf2e")).evaluate(async (ownerStored) => {
     const M = "lucd20-automations";
     const sc = await import("/modules/lucd20-automations/scripts/features/shortcuts.js");
     const out = {};
@@ -115,17 +126,34 @@ const assert = require("assert");
     game.keybindings.bindings = new Map([[`${M}.sc-pf2e-offGuard`, [{ key: "KeyO", modifiers: [] }]]]);
     game.keybindings.set = async (ns, action, b) => set.push([action, b.map(x => [...x.modifiers, x.key].join("+")).join(",")]);
     out.copied = await sc.copyOriginalKeys();
-    out.copiedKeys = set.sort();
+    out.copiedKeys = [...set].sort();
     out.copiedInfo = window.__infos?.at(-1);
     game.modules.delete("token-elevator");
+
+    // The owner's real keys, through the once-per-shortcut copy when the feature starts (F is for Flatfooted on, as in their PF2e world).
+    await game.settings.set("core", "keybindings", ownerStored);
+    await game.settings.set(M, "shortcuts_copiedIds", {});
+    game.modules.set("pf2e-f-is-for-flatfooted", { active: true, title: "F is for Flatfooted" });
+    game.keybindings.bindings = new Map(Object.entries(window.__keybindings).filter(([k]) => k.startsWith(M)).map(([k, cfg]) => [k, cfg.editable ?? []]));
+    set.length = 0;
+    await game.settings.set(M, "shortcuts_enabled", false);
+    await game.settings.set(M, "shortcuts_enabled", true);
+    await new Promise(r => setTimeout(r, 50));
+    out.ownerCopied = set.splice(0).sort();
+    await game.settings.set(M, "shortcuts_enabled", false);
+    await game.settings.set(M, "shortcuts_enabled", true);
+    await new Promise(r => setTimeout(r, 50));
+    out.secondStart = set.splice(0);
+    out.doneCount = Object.keys(game.settings.get(M, "shortcuts_copiedIds")).length;
+    game.modules.delete("pf2e-f-is-for-flatfooted");
     out.errors = warns.filter(w => /failed/i.test(w));
     return out;
-  });
+  }, ownerStored);
   console.log(JSON.stringify(pf2e));
 
-  assert.deepStrictEqual(pf2e.defaults.up, [{ key: "PageUp", modifiers: [] }]);
-  assert.deepStrictEqual(pf2e.defaults.upLarge, [{ key: "PageUp", modifiers: ["Shift"] }]);
-  assert.deepStrictEqual(pf2e.defaults.reset, []);
+  assert.deepStrictEqual(pf2e.defaults.up, [{ key: "Equal", modifiers: ["Shift"] }], "PageUp is Foundry's Zoom In");
+  assert.deepStrictEqual(pf2e.defaults.upLarge, []);
+  assert.deepStrictEqual(pf2e.defaults.reset, [{ key: "Minus", modifiers: [] }]);
   assert.deepStrictEqual(pf2e.defaults.offGuard, [{ key: "KeyO", modifiers: [] }]);
   assert.strictEqual(pf2e.defaults.visibility, true, "hide / reveal is GM only");
   for (const id of ["pf2e-c-frightened", "pf2e-c-frightened-up", "pf2e-c-frightened-down", "pf2e-c-blinded", "pf2e-a-trip", "pf2e-a-seek", "pf2e-a-administer-first-aid-stabilize", "pf2e-a-administer-first-aid-stop-bleeding", "pf2e-cover", "pf2e-browser", "pf2e-alliance"])
@@ -155,10 +183,16 @@ const assert = require("assert");
   ], "stored keys and Token Elevator's defaults; Off-Guard already O; Blinded already changed here");
   assert.strictEqual(pf2e.copied, 6);
   assert.match(pf2e.copiedInfo, /6 keys copied/);
+  assert.deepStrictEqual(pf2e.ownerCopied, [
+    ["sc-actorArt", "Shift+KeyX"], ["sc-pf2e-a-trip", "Shift+KeyA"], ["sc-pf2e-c-blinded", "KeyB"], ["sc-pf2e-c-frightened-up", "KeyS"],
+    ["sc-pf2e-cover", "Shift+KeyC"], ["sc-pf2e-offGuard", "KeyF"], ["sc-tokenArt", "Shift+KeyZ"]
+  ], "the owner's keys; elevation already matches the new defaults; unbound large steps stay unbound");
+  assert.deepStrictEqual(pf2e.secondStart, [], "copied once per shortcut");
+  assert.ok(pf2e.doneCount > 10);
   assert.deepStrictEqual(pf2e.errors, []);
 
   // ---------- D&D 4e ----------
-  const dnd = await (await open("dnd4e")).evaluate(async () => {
+  const dnd = await (await open("dnd4e")).evaluate(async (ownerStored) => {
     const M = "lucd20-automations";
     const out = {};
     const warns = []; ui.notifications.warn = m => warns.push(m);
@@ -179,8 +213,17 @@ const assert = require("assert");
     kb("dnd4e-basic-charge").onDown({}); kb("dnd4e-basic-secondWind").onDown({});
     await new Promise(r => setTimeout(r, 30));
     out.toggled = toggled; out.secondWind = sw; out.chargeWarn = warns.at(-1);
+    // Copying in the 4e world: the CA key from Off-Guard's; F is for Flatfooted isn't on here.
+    const sc = await import("/modules/lucd20-automations/scripts/features/shortcuts.js");
+    game.settings.register("core", "keybindings", { scope: "client", type: Object, default: {} });
+    await game.settings.set("core", "keybindings", ownerStored);
+    const set = [];
+    game.keybindings.bindings = new Map(Object.entries(window.__keybindings).filter(([k]) => k.startsWith(M)).map(([k, cfg]) => [k, cfg.editable ?? []]));
+    game.keybindings.set = async (ns, action, b) => set.push([action, b.map(x => [...x.modifiers, x.key].join("+")).join(",")]);
+    await sc.copyOriginalKeys();
+    out.copied = set.sort();
     return out;
-  });
+  }, ownerStored);
   console.log(JSON.stringify(dnd));
   assert.deepStrictEqual(dnd.ca, [{ key: "KeyO", modifiers: [] }]);
   for (const id of ["status-prone", "status-dazed", "dnd4e-basic-secondWind", "dnd4e-basic-actionPoint", "dnd4e-basic-charge", "dnd4e-deathSave", "elevationUp"])
@@ -189,6 +232,7 @@ const assert = require("assert");
   assert.deepStrictEqual(dnd.toggled, ["grantingCA", "prone"]);
   assert.strictEqual(dnd.secondWind, 1);
   assert.match(dnd.chargeWarn, /only in combat/);
+  assert.deepStrictEqual(dnd.copied, [["sc-actorArt", "Shift+KeyX"], ["sc-dnd4e-ca", "KeyF"], ["sc-tokenArt", "Shift+KeyZ"]], "4e: combat advantage on the Off-Guard key (O is the owner's Focus Chat)");
 
   assert.deepStrictEqual(errors, []);
   console.log("PHASE 59 CHECKS PASSED");

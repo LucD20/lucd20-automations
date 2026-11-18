@@ -1,5 +1,5 @@
 import { canSee, claimReaction, playOn, reactionOptions } from "../token-reactions/token-reactions.js";
-import { flushDice, grabDie, overlayZ, releaseDice } from "./dsn.js";
+import { overlayZ } from "./dsn.js";
 
 /**
  * Signature Spells: drawing (docs/PLAN.md §20).
@@ -165,7 +165,6 @@ function frame(now) {
   const dt = Math.min(.05, (now - S.last) / 1000);
   S.last = now;
   for (const fn of [...S.frames]) { try { fn(dt, now); } catch (err) { console.error(err); S.frames.delete(fn); } }
-  flushDice();
   S.bolts = S.bolts.filter(b => now - b.born < b.life);
   S.glows = S.glows.filter(g => now - g.born < g.life);
   try { draw(now); } catch (err) { console.error(err); S.bolts = []; S.glows = []; }
@@ -245,28 +244,11 @@ export function clearEffects() {
   if (S.raf != null) cancelAnimationFrame(S.raf);
   S.raf = null;
   removeSurfaces();
-  releaseDice();
 }
 
 /* -------------------------------------------- */
 /*  The toolkit a signature draws with          */
 /* -------------------------------------------- */
-
-/** Move one of Dice So Nice's dice for `ms`, then take it off the table. Without a handle: only the wait. */
-function diceMove(die, ms, step) {
-  const handle = grabDie(die.mesh), t0 = performance.now();
-  return new Promise(resolve => {
-    const stop = onFrame((dt, now) => {
-      const u = Math.min(1, (now - t0) / ms);
-      if (handle) step(handle, u);
-      die.at();
-      if (u < 1) return;
-      stop();
-      handle?.remove();
-      resolve(!!handle);
-    });
-  });
-}
 
 /**
  * `run`: { dead, claim } — a run that was stopped throws ABORT at its next `wait` (the caller catches it).
@@ -277,9 +259,6 @@ function diceMove(die, ms, step) {
  * fx.screenBolt(a, b, o)          a, b: viewport points or functions returning one;
  * fx.worldBolt(a, b, o)           o: { life, grow, flicker, forks, width, col, jag, seg } (ms, pixels)
  * fx.screenGlow(p, o), fx.worldGlow(p, o)   o: { r, life, col, alpha }
- * fx.diceJump(die, o)             the 3D die jumps towards the camera for `o.rise` ms and is gone at the top;
- *                                 resolves then (true when the die really moved; false: it stays as it is)
- * fx.diceFade(dice, ms)           the dice shrink away, no jump (Less motion)
  * fx.canSee(token)
  * fx.strike(from, token, o)       a bolt from a die's screen point ({ screen: true }), a token, or the sky
  *                                 (null) to the token; when it arrives the token plays the look `o.look`
@@ -294,9 +273,6 @@ export function makeFx(run) {
     worldBolt: (a, b, o) => addBolt("world", a, b, o, less),
     screenGlow: (p, o) => addGlow("screen", p, o),
     worldGlow: (p, o) => addGlow("world", p, o),
-
-    diceJump: (die, { rise = 240 } = {}) => diceMove(die, rise, (h, u) => h.lift(1 - (1 - u) ** 2)),
-    diceFade: (dice, ms = 250) => Promise.all(dice.map(die => diceMove(die, ms, (h, u) => h.shrink(u)))),
 
     async strike(from, token, { look = "default", col, travel = 120, linger = 260, share = 0.3 } = {}) {
       const target = () => (token.destroyed ? null : centerOf(token));

@@ -2267,3 +2267,29 @@ Statistics with its MIT notice, credited in the README; `test60.js`):
 - Switch off pF2e See Simple Scale Statistics.
 - (verify) in PF2e 8.7: the NPC sheet still fires `renderActorSheetPF2e` with
   the original's selectors; `data-tooltip-html` on inputs and buttons.
+
+---
+
+## 19. Token Reactions (owner, 2026-11-18) — proposed, awaiting answers
+
+Owner: instead of (only) animations flying from token to token, the hit token
+*reacts*, as in Hearthstone / MTG Arena: a lightning bolt hits the card and it
+jumps, particles fly, the ground cracks and fades. Not for every attack.
+"A simple 3D token" may be needed. The owner has JB2A (Patreon, a few GB);
+Sequencer and Automated Animations are on in the PF2e world.
+
+Idea: only the drawing reacts (as Token Scatter / Flying Tokens): the token's
+art is lifted like a card (bigger, a shadow under it), tilted in fake 3D (the
+art drawn on a subdivided mesh so it can lean in perspective), shaken and
+knocked back away from the attacker, then settles. Under it, a ground decal
+(cracks, scorch, frost) that fades; around it, particles and a flash in the
+damage type's colours. The token document never moves.
+
+| # | Question | Recommendation |
+|---|---|---|
+| Q276 | When: critical hits, kills (to 0 HP), and big hits (≥ ¼ of max HP); each a world option. | Yes |
+| Q277 | Who sees it: everyone who can see the target (never hidden tokens); per player on/off and "less motion". | Yes |
+| Q278 | Looks by damage type (PF2e types, 4e keywords): bludgeoning cracks + dust, slashing streak, piercing burst, fire embers + scorch, cold shards + frost, electricity bolt from above + jitter, acid splash, sonic ring, force/mental/spirit/vitality/void glows; strength scales with the hit. | Yes |
+| Q279 | JB2A: our own drawn effects always work; if JB2A is installed, a matching JB2A impact clip is played on top (files read directly, no Sequencer needed). | Yes |
+| Q280 | Systems: PF2e first (type and crit from the damage message), then 4e; elsewhere, HP drops only. | Yes |
+| Q281 | First a mockup: a page with a token and a button per damage type, to tune the feel before building it into Foundry. | Yes |

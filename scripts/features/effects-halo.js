@@ -16,6 +16,10 @@ import { defineFeature } from "../core/registry.js";
  */
 
 let feature = null;
+/** The badges' sort: under every token at their elevation. The Turn Markers go just under this (owner, v0.70.1). */
+export const HALO_SORT = -1e6;
+/** Whether this user's halo is on (the Turn Markers then sort under it). */
+export const haloActive = () => !!feature?.active;
 /** token id → { token, sprites: PIXI sprites, key } */
 const entries = new Map();
 /** "src|tint|bg|border" → round badge texture */
@@ -196,7 +200,7 @@ function place(entry) {
     if ("elevation" in s && s.elevation !== elevation) s.elevation = elevation;
     if ("sortLayer" in s) s.sortLayer = mesh?.sortLayer ?? TOKENS_LAYER();
     // Below every token at this elevation (they all sort above this).
-    if ("sort" in s && s.sort !== -1e6) s.sort = -1e6;
+    if ("sort" in s && s.sort !== HALO_SORT) s.sort = HALO_SORT;
   });
 }
 

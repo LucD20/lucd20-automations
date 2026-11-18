@@ -374,6 +374,10 @@
           "border": { "Name": "Border colour" }
         }
       },
+      "quickTeleport": {
+        "Name": "Quick Teleport",
+        "Hint": "A Place stairs tool in the Regions controls: click (one square) or drag for the first end, then the other end, on this scene or another one. Two linked regions are made at once, each with Foundry's Teleport Token behaviour; players are asked before they teleport, and only the GM sees the regions. One-way on the tool's bar gives only the first end a teleport. Replaces Stairways (old stairs keep working there)."
+      },
       "settingsMarkers": {
         "Name": "Settings Markers",
         "Hint": "In Foundry's Configure Settings, a small mark before each setting: the world (the GM sets it for everyone), each user, or this device. Replaces Settings Markers (switch that one off)."
@@ -2009,6 +2013,19 @@
         "Mockery": "{power}: the target takes −2 to its attacks until the end of your next turn.",
         "Shout": "{name} is tough: {power} (daily): your allies regain hit points each time they hit it."
       }
+    },
+    "QuickTeleport": {
+      "Tool": "Place stairs (two linked teleports)",
+      "PlaceFirst": "Stairs: click or drag the first end. Esc or right-click to stop.",
+      "PlaceSecond": "Stairs {n}: now the other end, on this scene or another one.",
+      "OneWay": "One-way",
+      "OneWayHint": "Only the first end teleports (to the second).",
+      "Cancel": "Cancel",
+      "RegionName": "Stairs {n} · {end}",
+      "BehaviorName": "Teleport",
+      "Placed": "Stairs {n} placed: each end teleports to the other.",
+      "PlacedOneWay": "Stairs {n} placed: the first end teleports to the second.",
+      "Failed": "The stairs could not be placed (see the console)."
     },
     "Shortcuts": {
       "ElevationUp": "Elevation: raise",

@@ -94,6 +94,7 @@ sets `game.system.id`.
 | `test56.js` | 4e grab riders; New Player Tips: the ranger's prey reminder, ping, Portuguese (58) |
 | `test57.js` | Shortcuts: default keys, hovered → selected → character, elevation, PF2e conditions and actions, 4e, the HUD wheel, copying the old modules' keys (59) |
 | `test58.js` | Effects Halo: rings around the footprint, a second ring, under tokens, unseen tokens, overlay kept, options, primary layer, off (60) |
+| `test59.js` | Quick Teleport: the stairs tool, two linked regions (the second end on another scene), one-way, cancel (61) |
 | `test39.js` | D&D 4e HUD: data from the owner's sheets, columns and tabs, dock, clicks, dying, condition icons, party and selection cards, window sizes, players list and hotbar moved and put back (39); the monster HUD: role block, resistances, recharge roll, traits (40) |
 
 For a new feature, copy the closest test, keep its mock setup and replace the

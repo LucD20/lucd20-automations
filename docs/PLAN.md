@@ -2204,3 +2204,26 @@ player, on by default; `scripts/features/effects-halo.js`, `test58.js`):
 - (verify) in V14: `token.effects.bg` / `.overlay`; the `redrawEffects`
   render flag; primary sorting by elevation → sort layer → sort; PF2e 8.7
   drawing its effects into `token.effects`.
+
+**v0.71.0:**
+- Owner: "Put turn marker below it" (the halo): with Effects Halo on, the
+  Turn / Next-Turn Markers sort at −1 000 001, under the halo's badges (and so
+  under every token at that elevation); with the halo off, as before (just
+  under their token).
+- **Built (phase 61): Quick Teleport** (`quickTeleport`, Scenes & Windows
+  page, GM only, on by default; `scripts/features/quick-teleport.js`,
+  `test59.js`): a "Place stairs" tool (fa-stairs) in the Regions controls.
+  Click (one square) or drag (a rectangle, snapped to the grid) for the first
+  end: a GM-only region "Stairs N · A" is made at once (flag
+  `quickTeleport: { pair, end }`, one colour per pair, N counted over every
+  scene). A bar says to place the other end, on this scene or after switching
+  scenes (the tool keeps listening; the preview is redrawn on the new canvas),
+  with a One-way box and Cancel. The second end "Stairs N · B" gets Foundry's
+  Teleport Token behaviour to A (`destination` = A's UUID, `choice: true`, so
+  the player is asked), and A gets one to B; One-way: only A → B. Cancel, Esc
+  or right-click after the first end deletes it.
+- Switch off Stairways when its old stairs aren't needed (they aren't
+  converted).
+- (verify) in V14: the `teleportToken` behaviour's `destination` / `choice`
+  fields; a token arriving in B not being sent straight back by B's own
+  teleport; `controls.regions.tools`; the `fa-stairs` icon.

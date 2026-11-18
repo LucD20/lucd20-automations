@@ -43,3 +43,4 @@ import "./settings-markers.js";
 import "./instant-range.js";
 import "./shortcuts.js";
 import "./effects-halo.js";
+import "./quick-teleport.js";

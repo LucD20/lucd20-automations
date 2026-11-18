@@ -1,5 +1,6 @@
 import { MODULE_ID, error } from "../core/constants.js";
 import { defineFeature } from "../core/registry.js";
+import { HALO_SORT, haloActive } from "./effects-halo.js";
 
 /**
  * Turn Marker and Next-Turn Marker (replace Combat Booster's markers).
@@ -10,7 +11,7 @@ import { defineFeature } from "../core/registry.js";
  *   token of that size. "Follow token art scale" (on by default) also multiplies
  *   by the art scale, so art drawn bigger (e.g. PF2e Scale 2) gets a bigger marker.
  * - Drawn on the same layer as token art, just below the token, at the
- *   token's elevation. "Draw above tokens" attaches it to the token instead.
+ *   token's elevation; with Effects Halo on, below the halo's badges (and so below every token there). "Draw above tokens" attaches it to the token instead.
  * - Only visible while combat is running and only when the token itself is
  *   visible to this user (never reveals hidden tokens to players).
  * - Next-Turn Marker skips defeated combatants. Its image defaults to the
@@ -213,7 +214,8 @@ class MarkerRenderer {
       if (mesh) {
         if (sprite.elevation !== mesh.elevation) sprite.elevation = mesh.elevation;
         if (sprite.sortLayer !== mesh.sortLayer) sprite.sortLayer = mesh.sortLayer;
-        const sort = (mesh.sort ?? 0) - 0.5;
+        // Under its token; with Effects Halo on, under the halo's badges too (owner, v0.70.1).
+        const sort = haloActive() ? HALO_SORT - 1 : (mesh.sort ?? 0) - 0.5;
         if (sprite.sort !== sort) sprite.sort = sort;
       }
     }

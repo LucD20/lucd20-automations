@@ -63,6 +63,7 @@ export const FEATURE_ORDER = [
   { id: "scenePalette", category: "scenes", phase: 16 },
   { id: "hiddenTrackNames", category: "scenes", phase: 17 },
   { id: "sceneAudit", category: "scenes", phase: 31 },
+  { id: "quickTeleport", category: "scenes", phase: 61 },
   { id: "diceStats", category: "statistics", phase: 8 },
   { id: "forceSettings", category: "playerSettings", phase: 2 },
   { id: "settingsMarkers", category: "playerSettings", phase: 56 },

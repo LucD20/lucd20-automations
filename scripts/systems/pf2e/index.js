@@ -25,3 +25,4 @@ import "./damage-estimate.js";
 import "./cover.js";
 import "./area.js";
 import "./shortcuts.js";
+import "./creature-scale.js";

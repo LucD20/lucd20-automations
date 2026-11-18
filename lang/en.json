@@ -378,6 +378,13 @@
         "Name": "Quick Teleport",
         "Hint": "A Place stairs tool in the Regions controls: click (one square) or drag for the first end, then the other end, on this scene or another one. Two linked regions are made at once, each with Foundry's Teleport Token behaviour; players are asked before they teleport, and only the GM sees the regions. One-way on the tool's bar gives only the first end a teleport. Replaces Stairways (old stairs keep working there)."
       },
+      "pf2eCreatureScale": {
+        "Name": "Creature Scale",
+        "Hint": "On an NPC's sheet (GM only), each number GM Core's Building Creatures rates is coloured by where it sits for the creature's level: Terrible red, Low orange, Moderate yellow, High green, Extreme blue (AC, HP, Perception, saves, attributes, skills, weaknesses, resistances, Strikes, spellcasting). Hover one for the table rows. The Scale switch in the sheet's header turns it on and off. Elite / Weak sheets are left alone. Replaces pF2e See Simple Scale Statistics (switch that one off).",
+        "Setting": {
+          "show": { "Name": "Show on NPC sheets", "Hint": "The same as the Scale switch in an NPC sheet's header (yours only)." }
+        }
+      },
       "settingsMarkers": {
         "Name": "Settings Markers",
         "Hint": "In Foundry's Configure Settings, a small mark before each setting: the world (the GM sets it for everyone), each user, or this device. Replaces Settings Markers (switch that one off)."
@@ -2013,6 +2020,23 @@
         "Mockery": "{power}: the target takes −2 to its attacks until the end of your next turn.",
         "Shout": "{name} is tough: {power} (daily): your allies regain hit points each time they hit it."
       }
+    },
+    "CreatureScale": {
+      "Scale": { "Terrible": "Terrible", "Low": "Low", "Moderate": "Moderate", "High": "High", "Extreme": "Extreme" },
+      "Stat": {
+        "ac": "AC", "hp": "HP", "perception": "Perception", "fortitude": "Fortitude", "reflex": "Reflex", "will": "Will",
+        "str": "Strength", "dex": "Dexterity", "con": "Constitution", "int": "Intelligence", "wis": "Wisdom", "cha": "Charisma",
+        "skill": "skill", "weakness": "weakness", "resistance": "resistance", "strikeAttack": "Strike attack bonus",
+        "strikeDamage": "Strike average damage", "spellAttack": "spell attack bonus", "spellDc": "spell DC"
+      },
+      "Exactly": "{value} {name} is exactly {scale}.",
+      "Above": "{value} {name} is {scale} ({delta} above {reference}).",
+      "Below": "{value} {name} is {scale} ({delta} below {reference}).",
+      "Level": "Level {level}",
+      "Switch": "Scale",
+      "SwitchOn": "Creature Scale: colour this creature's numbers by GM Core's Building Creatures tables.",
+      "SwitchOff": "Creature Scale is on: click to hide the colours.",
+      "Adjusted": "Creature Scale leaves Elite and Weak creatures alone (their numbers are adjusted)."
     },
     "QuickTeleport": {
       "Tool": "Place stairs (two linked teleports)",

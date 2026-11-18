@@ -20,6 +20,10 @@ Turn marker images in `assets/markers/` come from
 [Combat Booster](https://github.com/theripper93/Combat-Booster) by theripper93
 (MIT License, see `assets/markers/LICENSE-combat-booster.txt`).
 
+Creature Scale's creature-building tables come from
+[pF2e See Simple Scale Statistics](https://github.com/shemetz/pf2e-see-simple-scale-statistics) by itamarcu/shemetz
+(MIT License, notice in `scripts/systems/pf2e/creature-scale-tables.js`).
+
 ## Install
 
 In Foundry: **Add-on Modules → Install Module → Manifest URL**:

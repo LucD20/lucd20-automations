@@ -2242,3 +2242,28 @@ region; what follows starts there and anything skipped over is dropped. If
 the token would leave before that square (grazing a corner), Foundry's own
 segments are kept. The walk now records whole squares and the teleport 0.
 Docs read at foundryvtt.com/api/v14 (reachable from the container now).
+
+**Built v0.72.0 (phase 62): Creature Scale** (`pf2eCreatureScale`, PF2e Core
+Rules → Tools, GM only, on by default; `scripts/systems/pf2e/creature-scale.js`,
+tables `creature-scale-tables.js` copied unchanged from pF2e See Simple Scale
+Statistics with its MIT notice, credited in the README; `test60.js`):
+- On `renderActorSheetPF2e` for an NPC (not the simple sheet), for the GM:
+  AC, HP, Perception, saves, attribute modifiers (inputs: a coloured glow),
+  skills, weaknesses and resistances, each Strike's first attack button and
+  damage button, each spellcasting entry's attack and DC (coloured text), by
+  the original's selectors. Terrible red, Low orange, Moderate yellow, High
+  green, Extreme blue (the original's colours).
+- As the original: ties go to the middle; physical / all-damage IWR count
+  double; persistent ×1.5, splash ×2; levels clamp to −1…24; Elite / Weak
+  sheets are left alone (the switch says why). Average damage is worked out
+  by a small arithmetic parser (dice → their average), not `eval`; anything
+  else in a formula skips that Strike.
+- Hover: "+17 Perception is Extreme." and the table rows for the level
+  below, the level and above (HP and Strike damage as the book's ranges).
+- A "Scale" switch with a colour legend before the Elite button turns it on
+  and off for this GM (client setting `show`), re-drawing open NPC sheets.
+- Not included (Q274): the ⚠️ creature-building warnings, the PF2e HUD
+  integration, borders for colour-blindness.
+- Switch off pF2e See Simple Scale Statistics.
+- (verify) in PF2e 8.7: the NPC sheet still fires `renderActorSheetPF2e` with
+  the original's selectors; `data-tooltip-html` on inputs and buttons.

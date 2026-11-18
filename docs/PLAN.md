@@ -2227,3 +2227,18 @@ player, on by default; `scripts/features/effects-halo.js`, `test58.js`):
 - (verify) in V14: the `teleportToken` behaviour's `destination` / `choice`
   fields; a token arriving in B not being sent straight back by B's own
   teleport; `controls.regions.tools`; the `fa-stairs` icon.
+
+**v0.71.1 (owner: "the distance when teleporting gets all messed up", a ruler
+label of "85.1 + 4.900000000000006 ft"):** the owner's movement record showed
+a walk of one square, then a step to y 2351 (half a square, off the grid: where
+the token's centre crossed the stairs region's edge), then the teleport
+(`action: "displace"`, cost 0). That half step was charged 5 but measured as a
+part of a square, so every later number had a fraction. Fix (Quick Teleport,
+on every client): V14's `TokenDocument#segmentizeRegionMovementPath` (meant to
+be overridden; its rules are kept) is wrapped so that, for any region with an
+enabled Teleport Token behaviour on a square grid, the ENTER point moves
+forward along the same path to the first grid square that is inside the
+region; what follows starts there and anything skipped over is dropped. If
+the token would leave before that square (grazing a corner), Foundry's own
+segments are kept. The walk now records whole squares and the teleport 0.
+Docs read at foundryvtt.com/api/v14 (reachable from the container now).

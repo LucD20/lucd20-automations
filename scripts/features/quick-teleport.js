@@ -11,6 +11,11 @@ import { defineFeature } from "../core/registry.js";
  * - The player is asked before teleporting (the behaviour's "choice"), so a drag or a route across the stairs
  *   doesn't teleport by surprise. The regions are seen by the GM only: the map art shows the stairs.
  * - Esc, right-click or Cancel stops; after the first end, Cancel deletes it.
+ * - v0.71.1 (owner's movement record: the token stopped at y 2351, half a square into the stairs, then teleported, so the
+ *   walk showed fractions like "85.1 + 4.9000…06 ft"): for any region with a Teleport Token behaviour, a token enters it
+ *   at the first grid square of its path that is inside, not where its centre crosses the edge. Done through V14's
+ *   `TokenDocument#segmentizeRegionMovementPath` (made to be overridden): only the ENTER point moves forward along the
+ *   same path, to a snapped position inside the region, so the walk counts whole squares and the teleport costs 0.
  */
 
 const FLAG = "quickTeleport";
@@ -222,6 +227,94 @@ export class StairsPlacer {
 }
 
 /* -------------------------------------------- */
+/*  Entering teleport regions on the grid       */
+/* -------------------------------------------- */
+
+const SEG = () => CONST.REGION_MOVEMENT_SEGMENTS ?? { EXIT: -1, MOVE: 0, ENTER: 1 };
+const dist = (a, b) => Math.hypot(b.x - a.x, b.y - a.y);
+
+/** Whether a position is a token's top-left on the grid (square grids only). */
+function onGrid(grid, p) {
+  if (!grid?.getOffset || !grid?.getTopLeftPoint) return false;
+  const tl = grid.getTopLeftPoint(grid.getOffset({ x: p.x + 0.5, y: p.y + 0.5 }));
+  return Math.abs(tl.x - p.x) < 0.5 && Math.abs(tl.y - p.y) < 0.5;
+}
+
+/** Distance along the waypoints' path to a point on it (NaN when it isn't on it). */
+function progressOn(waypoints) {
+  const cum = [0];
+  for (let k = 1; k < waypoints.length; k++) cum[k] = cum[k - 1] + dist(waypoints[k - 1], waypoints[k]);
+  return (p) => {
+    for (let k = 1; k < waypoints.length; k++) {
+      const a = waypoints[k - 1], b = waypoints[k], len = dist(a, b);
+      if (!len) continue;
+      const cross = Math.abs((b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x)) / len;
+      const along = ((p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y)) / len;
+      if (cross <= 1.5 && along >= -1.5 && along <= len + 1.5) return cum[k - 1] + Math.max(0, Math.min(len, along));
+    }
+    return Number.NaN;
+  };
+}
+
+/** The first grid position on the path at or after `p` that is inside the region, with its progress. */
+function firstSquareInside(token, region, waypoints, p, progress, grid) {
+  const start = progress(p);
+  if (!Number.isFinite(start)) return null;
+  const size = grid.size ?? canvas.dimensions?.size ?? 100;
+  let cum = 0;
+  for (let k = 1; k < waypoints.length; k++) {
+    const a = waypoints[k - 1], b = waypoints[k], len = dist(a, b);
+    const steps = Math.max(1, Math.round(Math.max(Math.abs(b.x - a.x), Math.abs(b.y - a.y)) / size));
+    for (let i = 1; i <= steps; i++) {
+      const at = cum + (len * i) / steps;
+      if (at < start - 0.5) continue;
+      const q = { ...b, x: Math.round(a.x + ((b.x - a.x) * i) / steps), y: Math.round(a.y + ((b.y - a.y) * i) / steps) };
+      if (!onGrid(grid, q)) continue;
+      if (token.testInsideRegion?.(region, q)) return { point: q, at };
+      return null; // the first square after the crossing isn't inside: leave Foundry's segments alone
+    }
+    cum += len;
+  }
+  return null;
+}
+
+/**
+ * Move each ENTER of a teleport region from the edge crossing to the first square inside, and start what follows from
+ * there (segments it skips over are dropped). Any doubt: Foundry's own segments.
+ */
+export function snapTeleportEntries(token, region, waypoints, segments) {
+  const teleports = [...(region?.behaviors ?? [])].some(b => b.type === "teleportToken" && !b.disabled);
+  const grid = token?.parent?.grid ?? canvas.grid;
+  const square = grid && (grid.isSquare ?? grid.type === (CONST.GRID_TYPES?.SQUARE ?? 1));
+  if (!teleports || !square || !Array.isArray(segments) || !Array.isArray(waypoints) || waypoints.length < 2) return segments;
+  const { ENTER, EXIT } = SEG();
+  const progress = progressOn(waypoints);
+  const out = [];
+  for (let n = 0; n < segments.length; n++) {
+    const seg = segments[n];
+    if (seg.type !== ENTER || onGrid(grid, seg.to)) { out.push(seg); continue; }
+    const found = firstSquareInside(token, region, waypoints, seg.to, progress, grid);
+    if (!found) { out.push(seg); continue; }
+    const to = { ...seg.to, x: found.point.x, y: found.point.y };
+    const rest = [];
+    let m = n + 1;
+    for (; m < segments.length; m++) {
+      const next = segments[m], at = progress(next.to);
+      if (!Number.isFinite(at)) return segments;
+      if (at <= found.at + 0.5) {
+        if (next.type === EXIT) return segments; // it leaves before that square: keep Foundry's
+        continue; // skipped over
+      }
+      rest.push({ ...next, from: to });
+      break;
+    }
+    out.push({ ...seg, to, snapped: true }, ...rest);
+    n = m; // segments after `m` follow unchanged
+  }
+  return out;
+}
+
+/* -------------------------------------------- */
 /*  The tool                                    */
 /* -------------------------------------------- */
 
@@ -262,6 +355,18 @@ defineFeature({
 
   enable(f) {
     f.on("getSceneControlButtons", onSceneControls);
+    const TokenDoc = CONFIG.Token?.documentClass;
+    if (typeof TokenDoc?.prototype?.segmentizeRegionMovementPath === "function") {
+      f.wrap(TokenDoc.prototype, "segmentizeRegionMovementPath", function (original, region, waypoints) {
+        const segments = original(region, waypoints);
+        try {
+          return snapTeleportEntries(this, region, waypoints, segments);
+        } catch (err) {
+          error("Quick Teleport: entering a teleport region on the grid failed.", err);
+          return segments;
+        }
+      });
+    }
     refreshControls();
     f.onCleanup(() => {
       StairsPlacer.active?.stop();

@@ -87,6 +87,35 @@ const assert = require("assert");
     out.afterCancel = s2.regions.length;
     out.barAfterCancel = bar();
 
+    // v0.71.1: entering a teleport region on the grid (the owner's record: stopped at y 2351, then displaced).
+    const grid = { size: 100, isSquare: true, getOffset: ({ x, y }) => ({ i: Math.floor(y / 100), j: Math.floor(x / 100) }), getTopLeftPoint: ({ i, j }) => ({ x: j * 100, y: i * 100 }) };
+    const stairs = { behaviors: [{ type: "teleportToken", disabled: false }], rect: { x: 3700, y: 2400, w: 100, h: 100 } };
+    const inside = (region, p) => { const cx = p.x + 50, cy = p.y + 50, r = region.rect; return cx > r.x && cx < r.x + r.w && cy > r.y && cy < r.y + r.h; };
+    const token = { parent: { grid }, testInsideRegion: inside };
+    const W = (x, y) => ({ x, y, elevation: 0, width: 1, height: 1, action: "walk" });
+    const S = (type, from, to) => ({ type, action: "walk", snapped: false, terrain: null, from, to });
+    const { snapTeleportEntries } = await import("/modules/lucd20-automations/scripts/features/quick-teleport.js");
+    const show = (segs) => segs.map(x => [x.type, x.from.y, x.to.y, !!x.snapped]);
+    // 1. Walk 2 squares down onto the stairs: the entry moves from 2351 to the stairs square (2400).
+    out.walkOn = show(snapTeleportEntries(token, stairs, [W(3700, 2200), W(3700, 2300), W(3700, 2400)],
+      [S(1, W(3700, 2350), W(3700, 2351)), S(0, W(3700, 2351), W(3700, 2400))]));
+    // 2. A straight drag through the stairs and beyond: entry at the stairs square, the rest starts there.
+    out.passThrough = show(snapTeleportEntries(token, stairs, [W(3700, 2200), W(3700, 2700)],
+      [S(1, W(3700, 2350), W(3700, 2351)), S(0, W(3700, 2351), W(3700, 2449)), S(-1, W(3700, 2449), W(3700, 2450))]));
+    // 3. Only grazing it (the first square after the crossing is outside): Foundry's segments unchanged.
+    const graze = [S(1, W(3651, 2350), W(3652, 2351)), S(-1, W(3652, 2351), W(3653, 2352))];
+    out.graze = snapTeleportEntries(token, stairs, [W(3600, 2300), W(3700, 2400)], graze) === graze || show(snapTeleportEntries(token, stairs, [W(3600, 2300), W(3700, 2400)], graze));
+    // 4. A region without a teleport: untouched.
+    const plain = [S(1, W(3700, 2350), W(3700, 2351))];
+    out.plain = snapTeleportEntries(token, { behaviors: [{ type: "modifyMovementCost" }], rect: stairs.rect }, [W(3700, 2200), W(3700, 2400)], plain) === plain;
+    // 5. Through Foundry's method while the feature is on.
+    class TokenDoc { segmentizeRegionMovementPath() { return [S(1, W(3700, 2350), W(3700, 2351)), S(0, W(3700, 2351), W(3700, 2400))]; } }
+    Object.assign(TokenDoc.prototype, { parent: { grid }, testInsideRegion: inside });
+    CONFIG.Token.documentClass = TokenDoc;
+    await game.settings.set(M, "quickTeleport_enabled", false);
+    await game.settings.set(M, "quickTeleport_enabled", true);
+    out.wrapped = show(new TokenDoc().segmentizeRegionMovementPath(stairs, [W(3700, 2200), W(3700, 2300), W(3700, 2400)]));
+
     // Feature off: no tool.
     await game.settings.set(M, "quickTeleport_enabled", false);
     const controls2 = { regions: { tools: {} } };
@@ -113,6 +142,11 @@ const assert = require("assert");
   assert.strictEqual(result.afterCancel, 3, "cancel deletes the first end");
   assert.strictEqual(result.barAfterCancel, null);
   assert.strictEqual(result.offTool, false);
+  assert.deepStrictEqual(result.walkOn, [[1, 2350, 2400, true]], "the token enters on the stairs square, not half a square early");
+  assert.deepStrictEqual(result.passThrough, [[1, 2350, 2400, true], [0, 2400, 2449, false], [-1, 2449, 2450, false]]);
+  assert.strictEqual(result.graze, true, "grazing a corner: Foundry's own segments");
+  assert.strictEqual(result.plain, true, "no teleport: untouched");
+  assert.deepStrictEqual(result.wrapped, [[1, 2350, 2400, true]], "Foundry's method wrapped while on");
   assert.deepStrictEqual(errors, []);
   console.log("PHASE 61 CHECKS PASSED");
   await browser.close();

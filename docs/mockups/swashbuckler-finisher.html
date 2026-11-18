@@ -1,0 +1,1164 @@
+<title>Swashbuckler Finisher</title>
+<style>
+  @import url("https://fonts.googleapis.com/css2?family=Anton&family=Kaushan+Script&display=swap");
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: #14110e; color: #e9e0d0;
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 15px; line-height: 1.45; overflow-x: hidden;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 20px 16px 40px; }
+  h1 { font-family: Georgia, "Times New Roman", serif; font-size: 26px; font-weight: 700; margin: 0 0 6px; color: #f3e6c8; letter-spacing: .01em; }
+  .note { margin: 0 0 14px; color: #b9ad98; max-width: 78ch; }
+  .note b { color: #e9e0d0; font-weight: 600; }
+  .stage {
+    width: 100%; aspect-ratio: 16 / 9; background: #0e0c0a; border: 1px solid #3a3128;
+    border-radius: 8px; overflow: hidden; position: relative; box-shadow: 0 8px 30px #0009;
+  }
+  .stage canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+  .hint { font-size: 13px; color: #8d8272; margin: 8px 0 16px; }
+  .panel { background: #1c1814; border: 1px solid #332b23; border-radius: 8px; padding: 14px; margin-top: 12px; }
+  .panel h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .09em; color: #9c8f7a; margin: 0 0 10px; font-weight: 600; }
+  .types { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 8px; }
+  button {
+    font: inherit; color: #efe6d6; background: #2a241d; border: 1px solid #4a3f33; border-radius: 6px;
+    padding: 9px 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; min-height: 40px; text-align: left;
+  }
+  button:hover { background: #352d24; border-color: #6a5a47; }
+  button:active { transform: translateY(1px); }
+  button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #f0c060; outline-offset: 2px; }
+  button .dot { width: 12px; height: 12px; border-radius: 50%; flex: none; box-shadow: 0 0 8px currentColor; background: currentColor; }
+  button[aria-pressed="true"] { background: #3d3020; border-color: #d79a35; color: #ffe9bd; }
+  button.plain { justify-content: center; text-align: center; }
+  button.primary { background: #5a3d17; border-color: #a9772a; color: #ffe9bd; font-weight: 600; }
+  button.primary:hover { background: #6c4a1b; }
+  .opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px 18px; align-items: center; }
+  label.chk { display: flex; align-items: center; gap: 9px; cursor: pointer; min-height: 32px; }
+  label.chk input { width: 18px; height: 18px; accent-color: #d79a35; flex: none; }
+  .parts { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 6px 22px; }
+  .part { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px 12px; padding: 6px 0; border-top: 1px solid #2a231c; }
+  .part label.chk { align-items: flex-start; flex: 1 1 220px; min-width: 0; }
+  .part label.chk input { margin-top: 2px; }
+  .part .tx { display: block; min-width: 0; }
+  .part .tx b { display: block; color: #f1e6cf; font-weight: 600; }
+  .part .tx small { display: block; color: #9c8f7a; font-size: 12.5px; line-height: 1.35; }
+  .part .key { display: inline-block; min-width: 1.5em; text-align: center; margin-right: 6px; padding: 0 4px; border-radius: 4px; background: #5a3d17; color: #ffe2a6; font-size: 12px; }
+  .part .extra { color: #8d8272; font-weight: 400; font-size: 12px; margin-left: 6px; }
+  select {
+    font: inherit; color: #efe6d6; background: #2a241d; border: 1px solid #4a3f33; border-radius: 6px; padding: 6px 8px; min-height: 34px; max-width: 100%;
+  }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .row button { flex: 1 1 140px; }
+  .last { font-size: 13px; color: #9c8f7a; margin-top: 10px; min-height: 1.4em; font-variant-numeric: tabular-nums; }
+</style>
+
+<main class="wrap">
+  <h1>Swashbuckler Finisher</h1>
+  <p class="note">
+    A study for a <b>signature animation</b>: it plays once, when the <b>damage of a Strike made with a finisher</b> is rolled.
+    The dice flourish, a cut-in strip names the finisher, the blade carves a mark on the target, the screen freezes into a
+    black-and-white impact frame, and then the target's token art is thrown like a coin, as in Token Reactions.
+    Each part can be switched off below, so you can pick the mix you like.
+  </p>
+  <div class="stage" id="stage"></div>
+  <p class="hint">Drag the swashbuckler or a target to another square. Where they stand decides which way the target is thrown.</p>
+
+  <section class="panel" aria-label="Finisher">
+    <h2>Finisher</h2>
+    <div class="types" id="fins"></div>
+    <div class="row">
+      <button class="plain primary" id="btnPlay" type="button">Play</button>
+      <button class="plain" id="btnRandom" type="button">Random</button>
+      <button class="plain" id="btnReset" type="button">Reset</button>
+    </div>
+    <div class="last" id="last" aria-live="polite"></div>
+  </section>
+
+  <section class="panel" aria-label="Parts of the sequence">
+    <h2>Parts of the sequence</h2>
+    <div class="parts">
+      <div class="part"><label class="chk"><input type="checkbox" id="pE" checked><span class="tx"><b><span class="key">E</span>Dice flourish</b><small>The damage dice spin up into a gold blur, settle, a blade glint crosses them and the total flashes.</small></span></label></div>
+      <div class="part"><label class="chk"><input type="checkbox" id="pA" checked><span class="tx"><b><span class="key">A</span>Cut-in strip</b><small>A slanted band slams across the screen with the portrait and the finisher's name.</small></span></label></div>
+      <div class="part"><label class="chk"><input type="checkbox" id="pD" checked><span class="tx"><b><span class="key">D</span>Signature mark</b><small>Three gold slashes carve a sigil on the target; it shatters as the target flies.</small></span></label>
+        <select id="selSigil" aria-label="Sigil"><option value="S">S</option><option value="X">X</option><option value="star">Star</option></select></div>
+      <div class="part"><label class="chk"><input type="checkbox" id="pB" checked><span class="tx"><b><span class="key">B</span>Impact frame</b><small>A short freeze in stark black and white with speed lines, at the hit.</small></span></label></div>
+      <div class="part"><label class="chk"><input type="checkbox" id="pC"><span class="tx"><b><span class="key">C</span>Screen slash<span class="extra">extra</span></b><small>A glint cuts the screen, the two halves slide apart and rejoin with a flash.</small></span></label></div>
+      <div class="part"><label class="chk"><input type="checkbox" id="pF"><span class="tx"><b><span class="key">F</span>Confetti<span class="extra">extra</span></b><small>Something festive thrown up on the hit.</small></span></label>
+        <select id="selConf" aria-label="Confetti"><option value="petals">Rose petals</option><option value="suits">Playing cards</option><option value="hat">Twirling hat</option></select></div>
+    </div>
+  </section>
+
+  <section class="panel" aria-label="Options">
+    <h2>Options</h2>
+    <div class="opts">
+      <label class="chk"><input type="checkbox" id="optCrit"> Critical hit (bigger everything)</label>
+      <label class="chk"><input type="checkbox" id="optNum" checked> Show the damage number</label>
+      <label class="chk"><input type="checkbox" id="optLess"> Less motion</label>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.4.2/pixi.min.js"></script>
+<script>
+(() => {
+'use strict';
+/* Swashbuckler Finisher: mockup of a signature animation (PIXI 7 only, everything painted on canvases).
+   Trigger in the module: the damage roll of a Strike made with a finisher.
+   Porting notes: the dice flourish (E), strip (A) and flashes are plain sprites, graphics, text and one tiling
+   sprite in a screen-space overlay; the screen slash (C) is a render texture of the scene shown as two masked
+   halves; the impact frame (B) swaps each token's art for a two-tone copy over a white sheet with speed lines;
+   the signature mark (D), sparks and the coin reaction live on the scene, as in Token Reactions.
+   The coin model, particles, floor and token painting are taken from token-reactions-fable.html. */
+/* ------------------------------------------------------------------ basics */
+const W = 1280, H = 720, G = 90, COLS = 14, ROWS = 8, GX0 = (W - COLS * G) / 2;
+const TAU = Math.PI * 2, PI = Math.PI;
+const FOC = 950;    // fake camera height: things nearer the camera draw bigger
+const OBL = 0.7;    // fake oblique view: height lifts things up the screen
+const HP = 120;
+const rnd = (a, b) => a + Math.random() * (b - a);
+const sgn = () => (Math.random() < 0.5 ? -1 : 1);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const easeOut = t => 1 - Math.pow(1 - t, 3);
+const easeIO = t => (t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+const rotv = (d, a) => ({ x: d.x * Math.cos(a) - d.y * Math.sin(a), y: d.x * Math.sin(a) + d.y * Math.cos(a) });
+/* flip axis (angle of a horizontal axis) for tumbling along direction d.
+   leadDown=true: leading edge dips (rolling forwards); false: leading edge lifts (struck on the near edge). */
+const axisOf = (d, leadDown) => (leadDown ? Math.atan2(d.x, -d.y) : Math.atan2(-d.x, d.y));
+const rgb = (r, g, b) => (clamp(r * 255 | 0, 0, 255) << 16) | (clamp(g * 255 | 0, 0, 255) << 8) | clamp(b * 255 | 0, 0, 255);
+const hex3 = h => [(h >> 16 & 255) / 255, (h >> 8 & 255) / 255, (h & 255) / 255];
+const GOLD = 0xffd24a;
+const easeBack = t => { const c = 1.9; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); };
+
+const host = document.getElementById('stage');
+const app = new PIXI.Application({ width: W, height: H, backgroundColor: 0x0e0c0a, antialias: true,
+  resolution: Math.min(2, window.devicePixelRatio || 1), autoDensity: true });
+host.appendChild(app.view);
+
+/* Three stacked spaces, as they would be in Foundry:
+   root  = the scene (canvas): tokens, sigil, sparks, the impact frame's ink
+   splitL = the screen slash (two halves of a snapshot of the scene)
+   ov    = screen space above the canvas: dice, cut-in strip, flashes */
+const view = new PIXI.Container(); app.stage.addChild(view);
+const root = new PIXI.Container(); view.addChild(root);
+const splitL = new PIXI.Container(); app.stage.addChild(splitL);
+const ov = new PIXI.Container(); app.stage.addChild(ov);
+splitL.eventMode = 'none'; ov.eventMode = 'none'; // the overlays never take the pointer (in Foundry: pointer-events: none)
+const L = {};
+for (const n of ['floor', 'marks', 'ground', 'shadows', 'bw', 'tokens', 'sig', 'fx', 'props', 'nums', 'hits']) { L[n] = new PIXI.Container(); root.addChild(L[n]); }
+for (const n of ['veil', 'dice', 'strip', 'flash']) { L[n] = new PIXI.Container(); ov.addChild(L[n]); }
+L.tokens.sortableChildren = true;
+let baseScale = 1;
+function fit() { const w = host.clientWidth || 640; app.renderer.resize(w, Math.round(w * 9 / 16)); baseScale = w / W; ov.scale.set(baseScale); }
+fit();
+if (window.ResizeObserver) new ResizeObserver(fit).observe(host); else window.addEventListener('resize', fit);
+
+/* ---------------------------------------------------------------- textures */
+function cv(w, h, fn) { const c = document.createElement('canvas'); c.width = w; c.height = h; fn(c.getContext('2d'), w, h); const t = PIXI.Texture.from(c); t._cv = c; return t; }
+function radial(x, w, stops, cx, cy, r0, r1) {
+  const g = x.createRadialGradient(cx ?? w / 2, cy ?? w / 2, r0 ?? 0, cx ?? w / 2, cy ?? w / 2, r1 ?? w / 2);
+  for (const [o, c] of stops) g.addColorStop(o, c); return g;
+}
+const TX = {};
+TX.dot = cv(64, 64, (x, w) => { x.fillStyle = radial(x, w, [[0, '#fff'], [.35, 'rgba(255,255,255,.75)'], [1, 'rgba(255,255,255,0)']]); x.fillRect(0, 0, w, w); });
+TX.hard = cv(32, 32, (x) => { x.fillStyle = '#fff'; x.beginPath(); x.arc(16, 16, 13, 0, TAU); x.fill(); });
+TX.spark = cv(96, 16, (x) => {
+  const g = x.createLinearGradient(0, 0, 96, 0); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(.7, 'rgba(255,255,255,.9)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+  x.fillStyle = g; x.beginPath(); x.ellipse(48, 8, 48, 4.5, 0, 0, TAU); x.fill();
+});
+TX.shard = cv(32, 48, (x) => {
+  const g = x.createLinearGradient(0, 0, 32, 48); g.addColorStop(0, '#fff'); g.addColorStop(1, 'rgba(255,255,255,.45)');
+  x.fillStyle = g; x.beginPath(); x.moveTo(14, 0); x.lineTo(32, 20); x.lineTo(20, 48); x.lineTo(0, 30); x.closePath(); x.fill();
+});
+TX.rock = cv(32, 32, (x) => { x.fillStyle = '#fff'; x.beginPath(); x.moveTo(6, 4); x.lineTo(24, 2); x.lineTo(30, 16); x.lineTo(20, 30); x.lineTo(5, 24); x.lineTo(1, 12); x.closePath(); x.fill(); x.fillStyle = 'rgba(0,0,0,.3)'; x.beginPath(); x.moveTo(20, 30); x.lineTo(5, 24); x.lineTo(1, 12); x.lineTo(16, 18); x.closePath(); x.fill(); });
+TX.smoke = cv(96, 96, (x) => {
+  for (let i = 0; i < 7; i++) { const cx = 48 + rnd(-18, 18), cy = 48 + rnd(-18, 18), r = rnd(18, 28);
+    x.fillStyle = radial(x, 0, [[0, 'rgba(255,255,255,.5)'], [1, 'rgba(255,255,255,0)']], cx, cy, 0, r); x.fillRect(0, 0, 96, 96); }
+});
+TX.ring = cv(160, 160, (x) => { x.strokeStyle = '#fff'; x.lineWidth = 7; x.shadowColor = '#fff'; x.shadowBlur = 10; x.beginPath(); x.arc(80, 80, 64, 0, TAU); x.stroke(); });
+TX.star = cv(64, 64, (x) => {
+  x.fillStyle = radial(x, 64, [[0, '#fff'], [1, 'rgba(255,255,255,0)']]); x.beginPath();
+  for (let i = 0; i < 8; i++) { const a = i / 8 * TAU, r = i % 2 ? 6 : 32; x.lineTo(32 + Math.cos(a) * r, 32 + Math.sin(a) * r); } x.closePath(); x.fill();
+});
+TX.rays = cv(256, 256, (x) => {
+  x.translate(128, 128); x.fillStyle = radial(x, 0, [[0, 'rgba(255,255,255,.95)'], [.5, 'rgba(255,255,255,.5)'], [1, 'rgba(255,255,255,0)']], 0, 0, 0, 128);
+  for (let i = 0; i < 14; i++) { const a = i / 14 * TAU + rnd(-.08, .08), w = rnd(.05, .12), r = rnd(90, 128);
+    x.beginPath(); x.moveTo(0, 0); x.lineTo(Math.cos(a - w) * r, Math.sin(a - w) * r); x.lineTo(Math.cos(a + w) * r, Math.sin(a + w) * r); x.closePath(); x.fill(); }
+});
+TX.pillar = cv(64, 256, (x) => {
+  const g = x.createLinearGradient(0, 256, 0, 0); g.addColorStop(0, 'rgba(255,255,255,.9)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 256);
+  x.globalCompositeOperation = 'destination-in'; const h = x.createLinearGradient(0, 0, 64, 0); h.addColorStop(0, 'rgba(0,0,0,0)'); h.addColorStop(.5, '#000'); h.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = h; x.fillRect(0, 0, 64, 256);
+});
+TX.shadow = cv(128, 128, (x) => { x.fillStyle = radial(x, 128, [[0, 'rgba(0,0,0,.85)'], [.6, 'rgba(0,0,0,.55)'], [1, 'rgba(0,0,0,0)']]); x.fillRect(0, 0, 128, 128); });
+TX.disc = cv(128, 128, (x) => { x.fillStyle = radial(x, 128, [[0, '#fff'], [.9, '#fff'], [.97, 'rgba(255,255,255,0)']]); x.fillRect(0, 0, 128, 128); });
+TX.edge = cv(128, 128, (x) => { x.fillStyle = '#fff'; x.beginPath(); x.arc(64, 64, 62, 0, TAU); x.fill(); });
+TX.frost = cv(256, 256, (x) => {
+  x.beginPath(); x.arc(128, 128, 124, 0, TAU); x.clip();
+  x.fillStyle = radial(x, 256, [[0, 'rgba(190,230,255,.35)'], [.7, 'rgba(200,236,255,.6)'], [1, 'rgba(240,250,255,.95)']]); x.fillRect(0, 0, 256, 256);
+  x.strokeStyle = 'rgba(255,255,255,.75)'; x.lineCap = 'round';
+  for (let i = 0; i < 16; i++) { let a = rnd(0, TAU), r = 124, px = 128 + Math.cos(a) * r, py = 128 + Math.sin(a) * r; const len = rnd(40, 100);
+    const ia = a + PI + rnd(-.5, .5); x.lineWidth = rnd(1.5, 3.5); x.beginPath(); x.moveTo(px, py);
+    for (let k = 1; k <= 4; k++) { const qx = px + Math.cos(ia) * len * k / 4, qy = py + Math.sin(ia) * len * k / 4; x.lineTo(qx, qy);
+      for (const s of [-1, 1]) { x.moveTo(qx, qy); x.lineTo(qx + Math.cos(ia + s * .9) * 14, qy + Math.sin(ia + s * .9) * 14); } x.moveTo(qx, qy); }
+    x.stroke(); }
+});
+
+function rim(x, c1, c2, c3, rivets) {
+  x.lineWidth = 20; const g = x.createLinearGradient(40, 20, 216, 236); g.addColorStop(0, c1); g.addColorStop(.5, c2); g.addColorStop(1, c3);
+  x.strokeStyle = g; x.beginPath(); x.arc(128, 128, 114, 0, TAU); x.stroke();
+  x.lineWidth = 2.5; x.strokeStyle = 'rgba(0,0,0,.65)'; x.beginPath(); x.arc(128, 128, 104, 0, TAU); x.stroke(); x.beginPath(); x.arc(128, 128, 124, 0, TAU); x.stroke();
+  x.lineWidth = 3; x.strokeStyle = 'rgba(255,255,255,.45)'; x.beginPath(); x.arc(128, 128, 118, PI * 1.05, PI * 1.5); x.stroke();
+  if (rivets) for (let i = 0; i < rivets; i++) { const a = i / rivets * TAU, px = 128 + Math.cos(a) * 114, py = 128 + Math.sin(a) * 114;
+    x.fillStyle = 'rgba(0,0,0,.55)'; x.beginPath(); x.arc(px + 1, py + 1.5, 5, 0, TAU); x.fill(); x.fillStyle = c1; x.beginPath(); x.arc(px, py, 4, 0, TAU); x.fill(); }
+}
+function paintStrokes(x, n, cols) { // loose brush marks for a painted feel
+  for (let i = 0; i < n; i++) { x.strokeStyle = cols[i % cols.length]; x.lineWidth = rnd(2, 7); x.lineCap = 'round'; const px = rnd(20, 236), py = rnd(20, 236), a = rnd(-.9, -.3), l = rnd(10, 34);
+    x.beginPath(); x.moveTo(px, py); x.quadraticCurveTo(px + Math.cos(a) * l * .5 + 4, py + Math.sin(a) * l * .5, px + Math.cos(a) * l, py + Math.sin(a) * l); x.stroke(); }
+}
+TX.ogre = cv(256, 256, (x) => {
+  x.save(); x.beginPath(); x.arc(128, 128, 122, 0, TAU); x.clip();
+  x.fillStyle = radial(x, 0, [[0, '#7d6a3a'], [.55, '#4a3d22'], [1, '#191409']], 120, 96, 10, 190); x.fillRect(0, 0, 256, 256);
+  paintStrokes(x, 50, ['rgba(190,150,80,.12)', 'rgba(20,12,4,.18)', 'rgba(120,150,60,.08)']);
+  x.fillStyle = '#39441f'; x.beginPath(); x.ellipse(128, 258, 126, 62, 0, 0, TAU); x.fill();
+  x.fillStyle = '#5a3a1e'; x.beginPath(); x.moveTo(30, 230); x.lineTo(110, 204); x.lineTo(120, 222); x.lineTo(40, 256); x.closePath(); x.fill();
+  const sk = x.createLinearGradient(60, 40, 196, 220); sk.addColorStop(0, '#a9b869'); sk.addColorStop(.5, '#74863f'); sk.addColorStop(1, '#3a4620');
+  x.fillStyle = sk; x.strokeStyle = '#161b0a'; x.lineWidth = 3.5;
+  for (const s of [-1, 1]) { x.beginPath(); x.moveTo(128 + s * 68, 132); x.lineTo(128 + s * 112, 84); x.lineTo(128 + s * 76, 96); x.closePath(); x.fill(); x.stroke(); }
+  x.beginPath(); x.ellipse(128, 130, 80, 86, 0, 0, TAU); x.fill(); x.stroke();
+  x.fillStyle = 'rgba(210,225,140,.25)'; x.beginPath(); x.ellipse(104, 82, 34, 20, -.4, 0, TAU); x.fill();
+  x.strokeStyle = '#27300f'; x.lineWidth = 17; x.lineCap = 'round'; x.beginPath(); x.moveTo(66, 108); x.quadraticCurveTo(128, 82, 190, 108); x.stroke();
+  for (const s of [-1, 1]) { x.fillStyle = radial(x, 0, [[0, '#fff6a0'], [.5, '#ffb400'], [1, 'rgba(255,120,0,0)']], 128 + s * 29, 121, 0, 15); x.fillRect(128 + s * 29 - 16, 105, 32, 32);
+    x.fillStyle = '#1a0d00'; x.beginPath(); x.ellipse(128 + s * 29, 121, 2.5, 5, 0, 0, TAU); x.fill(); }
+  x.fillStyle = '#53632b'; x.beginPath(); x.ellipse(128, 148, 19, 14, 0, 0, TAU); x.fill(); x.fillStyle = '#1c230d';
+  for (const s of [-1, 1]) { x.beginPath(); x.ellipse(128 + s * 8, 151, 4, 3, 0, 0, TAU); x.fill(); }
+  x.fillStyle = '#1b0b08'; x.beginPath(); x.moveTo(82, 178); x.quadraticCurveTo(128, 166, 174, 178); x.quadraticCurveTo(128, 210, 82, 178); x.fill();
+  for (const s of [-1, 1]) { const tg = x.createLinearGradient(0, 150, 0, 196); tg.addColorStop(0, '#fffbe6'); tg.addColorStop(1, '#b9a36b'); x.fillStyle = tg; x.strokeStyle = '#2a2010'; x.lineWidth = 2;
+    x.beginPath(); x.moveTo(128 + s * 44, 192); x.quadraticCurveTo(128 + s * 54, 168, 128 + s * 46, 146); x.quadraticCurveTo(128 + s * 30, 170, 128 + s * 28, 188); x.closePath(); x.fill(); x.stroke(); }
+  x.fillStyle = 'rgba(40,52,18,.7)'; for (const [a, b, r] of [[84, 150, 4], [168, 96, 3], [150, 66, 3.5], [96, 196, 3]]) { x.beginPath(); x.arc(a, b, r, 0, TAU); x.fill(); }
+  x.strokeStyle = 'rgba(230,180,160,.6)'; x.lineWidth = 2.5; x.beginPath(); x.moveTo(158, 128); x.lineTo(176, 158); x.stroke();
+  x.fillStyle = radial(x, 0, [[.6, 'rgba(0,0,0,0)'], [1, 'rgba(0,0,0,.55)']], 128, 128, 0, 124); x.fillRect(0, 0, 256, 256);
+  x.restore(); rim(x, '#c9b08a', '#7a6248', '#2e241a', 12);
+});
+TX.back = cv(256, 256, (x) => {
+  x.save(); x.beginPath(); x.arc(128, 128, 122, 0, TAU); x.clip();
+  x.fillStyle = radial(x, 0, [[0, '#4a382a'], [1, '#17100b']], 128, 128, 0, 124); x.fillRect(0, 0, 256, 256);
+  paintStrokes(x, 60, ['rgba(120,90,60,.12)', 'rgba(0,0,0,.2)']);
+  x.strokeStyle = '#a8895a'; x.lineWidth = 3; x.beginPath(); x.arc(128, 128, 78, 0, TAU); x.stroke(); x.beginPath(); x.arc(128, 128, 30, 0, TAU); x.stroke();
+  x.lineWidth = 2.5; x.beginPath(); for (let i = 0; i <= 8; i++) { const a = i * 3 / 8 * TAU - PI / 2, px = 128 + Math.cos(a) * 78, py = 128 + Math.sin(a) * 78; i ? x.lineTo(px, py) : x.moveTo(px, py); } x.stroke();
+  x.fillStyle = '#a8895a'; for (let i = 0; i < 8; i++) { const a = i / 8 * TAU; x.beginPath(); x.arc(128 + Math.cos(a) * 92, 128 + Math.sin(a) * 92, 4, 0, TAU); x.fill(); }
+  x.restore(); rim(x, '#6d5a48', '#3d3026', '#17100b', 0);
+});
+TX.dead = cv(256, 256, (x) => {
+  x.save(); x.beginPath(); x.arc(128, 128, 122, 0, TAU); x.clip();
+  x.fillStyle = radial(x, 0, [[0, '#3a3030'], [1, '#120d0d']], 128, 128, 0, 124); x.fillRect(0, 0, 256, 256);
+  paintStrokes(x, 60, ['rgba(120,90,90,.1)', 'rgba(0,0,0,.2)']);
+  x.fillStyle = '#d9cfb8'; x.strokeStyle = '#1a120c'; x.lineWidth = 3;
+  x.beginPath(); x.arc(128, 116, 46, 0, TAU); x.fill(); x.stroke(); x.beginPath(); x.rect(104, 148, 48, 30); x.fill(); x.stroke();
+  x.fillStyle = '#17100b'; for (const s of [-1, 1]) { x.beginPath(); x.ellipse(128 + s * 18, 116, 11, 13, 0, 0, TAU); x.fill(); }
+  x.beginPath(); x.moveTo(128, 130); x.lineTo(121, 144); x.lineTo(135, 144); x.closePath(); x.fill();
+  for (let i = 0; i < 4; i++) x.fillRect(110 + i * 11, 156, 3, 20);
+  x.restore(); rim(x, '#6d5a48', '#3d3026', '#17100b', 0);
+});
+TX.floor = cv(W, H, (x) => {
+  x.fillStyle = '#12100e'; x.fillRect(0, 0, W, H);
+  for (let r = 0; r < ROWS; r++) for (let c = -1; c <= COLS; c++) {
+    const px = GX0 + c * G, py = r * G, v = rnd(-9, 9), b = 50 + v;
+    x.fillStyle = `rgb(${b + 6},${b + 2},${b - 3})`; x.fillRect(px + 1.5, py + 1.5, G - 3, G - 3);
+    const g = x.createLinearGradient(px, py, px + G, py + G); g.addColorStop(0, 'rgba(255,240,210,.07)'); g.addColorStop(1, 'rgba(0,0,0,.2)'); x.fillStyle = g; x.fillRect(px + 1.5, py + 1.5, G - 3, G - 3);
+    x.strokeStyle = 'rgba(255,240,220,.06)'; x.lineWidth = 1; x.strokeRect(px + 2.5, py + 2.5, G - 5, G - 5);
+    if (Math.random() < .3) { x.strokeStyle = 'rgba(0,0,0,.35)'; x.lineWidth = 1.2; x.beginPath(); let qx = px + rnd(8, G - 8), qy = py + rnd(8, G - 8); x.moveTo(qx, qy);
+      for (let k = 0; k < 4; k++) { qx = clamp(qx + rnd(-16, 16), px + 3, px + G - 3); qy = clamp(qy + rnd(-16, 16), py + 3, py + G - 3); x.lineTo(qx, qy); } x.stroke(); }
+    if (Math.random() < .14) { x.fillStyle = 'rgba(70,95,45,.2)'; x.beginPath(); x.ellipse(px + rnd(15, 75), py + rnd(15, 75), rnd(8, 20), rnd(6, 14), rnd(0, 3), 0, TAU); x.fill(); }
+  }
+  for (let i = 0; i < 9000; i++) { x.fillStyle = Math.random() < .5 ? 'rgba(0,0,0,.14)' : 'rgba(255,240,210,.05)'; x.fillRect(rnd(0, W), rnd(0, H), rnd(1, 2.5), rnd(1, 2.5)); }
+  x.fillStyle = radial(x, 0, [[.35, 'rgba(0,0,0,0)'], [1, 'rgba(0,0,0,.62)']], W / 2, H / 2, 0, W * .62); x.fillRect(0, 0, W, H);
+});
+L.floor.addChild(new PIXI.Sprite(TX.floor));
+
+/* ------------------------------------------------- the swashbuckler's art */
+/* One painted figure in a 256 box, used for the token (clipped to a disc) and, larger, for the strip's bust. */
+function swashFig(x) {
+  const ink = '#1a0f0c';
+  x.lineJoin = 'round'; x.lineCap = 'round';
+  // hair
+  x.fillStyle = '#2a1710'; x.beginPath(); x.moveTo(80, 112); x.bezierCurveTo(56, 168, 58, 214, 72, 240); x.lineTo(184, 240); x.bezierCurveTo(200, 212, 200, 168, 176, 112); x.closePath(); x.fill();
+  x.strokeStyle = 'rgba(120,70,40,.5)'; x.lineWidth = 3; for (const [a, b] of [[70, 150], [66, 190], [188, 150], [192, 192]]) { x.beginPath(); x.moveTo(a, b); x.quadraticCurveTo(a + (a < 128 ? -8 : 8), b + 18, a + (a < 128 ? 2 : -2), b + 36); x.stroke(); }
+  // coat
+  const cg = x.createLinearGradient(30, 190, 226, 262); cg.addColorStop(0, '#d23246'); cg.addColorStop(.5, '#96182a'); cg.addColorStop(1, '#4a0a14');
+  x.fillStyle = cg; x.beginPath(); x.moveTo(6, 264); x.bezierCurveTo(12, 214, 58, 200, 96, 194); x.lineTo(160, 194); x.bezierCurveTo(198, 200, 244, 214, 250, 264); x.closePath(); x.fill(); x.strokeStyle = ink; x.lineWidth = 3.5; x.stroke();
+  x.strokeStyle = 'rgba(255,170,160,.35)'; x.lineWidth = 4; x.beginPath(); x.moveTo(26, 236); x.quadraticCurveTo(48, 210, 86, 202); x.stroke();
+  x.strokeStyle = '#e8b84a'; x.lineWidth = 5; x.beginPath(); x.moveTo(90, 198); x.quadraticCurveTo(108, 236, 98, 264); x.moveTo(166, 198); x.quadraticCurveTo(148, 236, 158, 264); x.stroke();
+  x.fillStyle = '#ffd97a'; for (const [a, b] of [[52, 226], [40, 246], [204, 226], [216, 246]]) { x.beginPath(); x.arc(a, b, 4, 0, TAU); x.fill(); }
+  // neck and cravat
+  x.fillStyle = '#b07a56'; x.fillRect(112, 176, 32, 30);
+  x.fillStyle = '#f4efe4'; x.strokeStyle = ink; x.lineWidth = 2.5; x.beginPath(); x.moveTo(98, 200); x.bezierCurveTo(110, 188, 146, 188, 158, 200); x.lineTo(148, 250); x.lineTo(128, 232); x.lineTo(108, 250); x.closePath(); x.fill(); x.stroke();
+  x.strokeStyle = 'rgba(90,80,70,.55)'; x.lineWidth = 2; x.beginPath(); x.moveTo(114, 204); x.lineTo(118, 236); x.moveTo(128, 200); x.lineTo(128, 230); x.moveTo(142, 204); x.lineTo(138, 236); x.stroke();
+  // face
+  const fg = x.createLinearGradient(84, 90, 176, 200); fg.addColorStop(0, '#f6cfa6'); fg.addColorStop(.55, '#d9a078'); fg.addColorStop(1, '#a2623f');
+  x.fillStyle = fg; x.strokeStyle = ink; x.lineWidth = 3; x.beginPath(); x.moveTo(86, 116); x.bezierCurveTo(84, 160, 104, 194, 128, 198); x.bezierCurveTo(152, 194, 172, 160, 170, 116); x.bezierCurveTo(168, 82, 88, 82, 86, 116); x.closePath(); x.fill(); x.stroke();
+  x.fillStyle = 'rgba(120,50,30,.22)'; x.beginPath(); x.ellipse(158, 150, 14, 30, .2, 0, TAU); x.fill();
+  x.fillStyle = 'rgba(255,235,210,.3)'; x.beginPath(); x.ellipse(106, 148, 9, 18, -.2, 0, TAU); x.fill();
+  // eyes: one brow cocked
+  for (const s of [-1, 1]) { const ex = 128 + s * 20, ey = 133;
+    x.fillStyle = '#fbf6ea'; x.beginPath(); x.ellipse(ex, ey, 10, 5.5, s * -.08, 0, TAU); x.fill();
+    x.fillStyle = '#2f7a5a'; x.beginPath(); x.arc(ex + 1.5, ey, 4.6, 0, TAU); x.fill(); x.fillStyle = '#0c0806'; x.beginPath(); x.arc(ex + 1.5, ey, 2.2, 0, TAU); x.fill();
+    x.fillStyle = '#fff'; x.beginPath(); x.arc(ex, ey - 1.6, 1.3, 0, TAU); x.fill();
+    x.strokeStyle = ink; x.lineWidth = 2.8; x.beginPath(); x.moveTo(ex - 11, ey - 1); x.quadraticCurveTo(ex, ey - 9, ex + 11, ey - 1); x.stroke(); }
+  x.strokeStyle = '#24130c'; x.lineWidth = 5; x.beginPath(); x.moveTo(96, 121); x.quadraticCurveTo(108, 116, 121, 122); x.moveTo(135, 119); x.quadraticCurveTo(150, 104, 164, 115); x.stroke();
+  x.strokeStyle = 'rgba(100,50,30,.75)'; x.lineWidth = 2.6; x.beginPath(); x.moveTo(128, 136); x.quadraticCurveTo(136, 154, 125, 157); x.stroke();
+  // moustache, smirk, goatee
+  x.fillStyle = '#24130c';
+  x.beginPath(); x.moveTo(128, 163); x.bezierCurveTo(116, 157, 104, 172, 88, 158); x.bezierCurveTo(96, 178, 118, 174, 128, 169); x.closePath(); x.fill();
+  x.beginPath(); x.moveTo(128, 163); x.bezierCurveTo(140, 157, 152, 172, 170, 154); x.bezierCurveTo(162, 178, 138, 174, 128, 169); x.closePath(); x.fill();
+  x.strokeStyle = '#6e241e'; x.lineWidth = 3; x.beginPath(); x.moveTo(113, 177); x.quadraticCurveTo(131, 185, 148, 172); x.stroke();
+  x.beginPath(); x.moveTo(119, 187); x.quadraticCurveTo(128, 210, 137, 187); x.quadraticCurveTo(128, 193, 119, 187); x.fill();
+  // shadow of the brim
+  x.fillStyle = 'rgba(24,8,6,.42)'; x.beginPath(); x.ellipse(128, 104, 44, 15, 0, 0, TAU); x.fill();
+  // hat: wide tilted brim, crown, gold band
+  x.save(); x.translate(128, 94); x.rotate(-.15);
+  const bg = x.createLinearGradient(0, -30, 0, 30); bg.addColorStop(0, '#571820'); bg.addColorStop(1, '#170709');
+  x.fillStyle = bg; x.strokeStyle = ink; x.lineWidth = 3.5; x.beginPath(); x.ellipse(0, 0, 114, 30, 0, 0, TAU); x.fill(); x.stroke();
+  x.strokeStyle = '#e8b84a'; x.lineWidth = 3; x.beginPath(); x.ellipse(0, 0, 109, 26, 0, PI * .08, PI * .92); x.stroke();
+  x.strokeStyle = 'rgba(255,190,180,.35)'; x.lineWidth = 3; x.beginPath(); x.ellipse(0, 0, 104, 23, 0, PI * 1.1, PI * 1.5); x.stroke();
+  const kg = x.createLinearGradient(-50, -70, 50, 0); kg.addColorStop(0, '#8a2632'); kg.addColorStop(.6, '#4a121a'); kg.addColorStop(1, '#1c080b');
+  x.fillStyle = kg; x.strokeStyle = ink; x.lineWidth = 3.5; x.beginPath(); x.moveTo(-58, -4); x.bezierCurveTo(-62, -70, 62, -74, 60, -6); x.quadraticCurveTo(0, 12, -58, -4); x.closePath(); x.fill(); x.stroke();
+  x.strokeStyle = '#e8b84a'; x.lineWidth = 8; x.beginPath(); x.moveTo(-57, -12); x.quadraticCurveTo(0, 6, 59, -14); x.stroke();
+  x.fillStyle = '#fff0b8'; x.strokeStyle = '#6b4a12'; x.lineWidth = 2; x.beginPath(); x.rect(-12, -14, 16, 14); x.fill(); x.stroke();
+  x.restore();
+  // feather
+  const pg = x.createLinearGradient(168, 90, 250, 10); pg.addColorStop(0, '#fff8e6'); pg.addColorStop(.55, '#ffe6a0'); pg.addColorStop(1, '#e89a2e');
+  x.fillStyle = pg; x.strokeStyle = ink; x.lineWidth = 2.5; x.beginPath(); x.moveTo(164, 84); x.bezierCurveTo(166, 26, 224, -4, 252, 24); x.bezierCurveTo(266, 52, 248, 88, 222, 100); x.bezierCurveTo(238, 68, 222, 44, 198, 56); x.bezierCurveTo(184, 62, 176, 74, 164, 84); x.closePath(); x.fill(); x.stroke();
+  x.strokeStyle = 'rgba(150,90,20,.55)'; x.lineWidth = 2; x.beginPath(); x.moveTo(168, 80); x.bezierCurveTo(182, 42, 222, 22, 246, 38); x.stroke();
+  for (let i = 0; i < 7; i++) { const u = .2 + i * .11, px = lerp(170, 244, u), py = lerp(76, 34, u) - Math.sin(u * PI) * 16; x.beginPath(); x.moveTo(px, py); x.lineTo(px + 10, py + 16 + i); x.stroke(); }
+}
+TX.swash = cv(256, 256, (x) => {
+  x.save(); x.beginPath(); x.arc(128, 128, 122, 0, TAU); x.clip();
+  x.fillStyle = radial(x, 0, [[0, '#3f8f8a'], [.6, '#1d4d55'], [1, '#0a1c24']], 110, 90, 10, 190); x.fillRect(0, 0, 256, 256);
+  paintStrokes(x, 46, ['rgba(140,220,210,.12)', 'rgba(5,20,30,.16)', 'rgba(220,255,250,.06)']);
+  x.translate(128, 136); x.scale(.9, .9); x.translate(-128, -128); swashFig(x); x.setTransform(1, 0, 0, 1, 0, 0);
+  x.fillStyle = radial(x, 0, [[.6, 'rgba(0,0,0,0)'], [1, 'rgba(0,0,0,.5)']], 128, 128, 0, 124); x.fillRect(0, 0, 256, 256);
+  x.restore(); rim(x, '#ffe7a0', '#c9982f', '#6b4a12', 0);
+});
+/* the bust for the strip: the same figure, bigger, with the rapier raised beside the face */
+TX.bust = cv(640, 560, (x) => {
+  const t = document.createElement('canvas'); t.width = 640; t.height = 560; const y = t.getContext('2d');
+  y.translate(70, 4); y.scale(2.06, 2.06); swashFig(y);
+  // rapier
+  const sg = y.createLinearGradient(-6, 0, 34, 0); sg.addColorStop(0, '#f6f9fc'); sg.addColorStop(.5, '#b8c4d0'); sg.addColorStop(1, '#5a6672');
+  y.fillStyle = sg; y.strokeStyle = '#12161c'; y.lineWidth = 2; y.beginPath(); y.moveTo(2, 270); y.lineTo(30, -2); y.lineTo(36, 2); y.lineTo(16, 270); y.closePath(); y.fill(); y.stroke();
+  y.strokeStyle = 'rgba(255,255,255,.9)'; y.lineWidth = 1.6; y.beginPath(); y.moveTo(8, 250); y.lineTo(31, 12); y.stroke();
+  y.strokeStyle = '#e8b84a'; y.lineWidth = 7; y.beginPath(); y.arc(8, 262, 26, PI * 1.05, PI * 1.9); y.stroke(); y.strokeStyle = '#6b4a12'; y.lineWidth = 1.5; y.beginPath(); y.arc(8, 262, 30, PI * 1.05, PI * 1.9); y.stroke();
+  y.setTransform(1, 0, 0, 1, 0, 0);
+  y.translate(70 + 25 * 2.06, 4 + 70 * 2.06); y.fillStyle = radial(y, 0, [[0, '#fff'], [.25, 'rgba(255,255,255,.8)'], [1, 'rgba(255,255,255,0)']], 0, 0, 0, 46);
+  y.beginPath(); for (let i = 0; i < 8; i++) { const a = i / 8 * TAU + .3, r = i % 2 ? 6 : 46; y.lineTo(Math.cos(a) * r, Math.sin(a) * r); } y.closePath(); y.fill();
+  x.shadowColor = 'rgba(0,0,0,.85)'; x.shadowBlur = 22; x.drawImage(t, 0, 0); x.shadowBlur = 0; x.drawImage(t, 0, 0);
+});
+TX.bandit = cv(256, 256, (x) => {
+  x.save(); x.beginPath(); x.arc(128, 128, 122, 0, TAU); x.clip();
+  x.fillStyle = radial(x, 0, [[0, '#6a5a78'], [.6, '#3a2f48'], [1, '#140f1c']], 116, 92, 10, 190); x.fillRect(0, 0, 256, 256);
+  paintStrokes(x, 46, ['rgba(190,170,220,.1)', 'rgba(10,5,20,.18)']);
+  const lg = x.createLinearGradient(40, 180, 220, 256); lg.addColorStop(0, '#7a5a3a'); lg.addColorStop(1, '#2e2014');
+  x.fillStyle = lg; x.strokeStyle = '#120c08'; x.lineWidth = 3.5; x.beginPath(); x.ellipse(128, 252, 112, 60, 0, 0, TAU); x.fill(); x.stroke();
+  const hg = x.createLinearGradient(60, 40, 200, 220); hg.addColorStop(0, '#5f7a4a'); hg.addColorStop(.5, '#3a4f30'); hg.addColorStop(1, '#18230f');
+  x.fillStyle = hg; x.beginPath(); x.moveTo(128, 30); x.bezierCurveTo(52, 44, 44, 150, 64, 214); x.quadraticCurveTo(128, 240, 192, 214); x.bezierCurveTo(212, 150, 204, 44, 128, 30); x.closePath(); x.fill(); x.stroke();
+  x.fillStyle = '#0c0907'; x.beginPath(); x.moveTo(128, 70); x.bezierCurveTo(84, 78, 80, 150, 92, 190); x.quadraticCurveTo(128, 206, 164, 190); x.bezierCurveTo(176, 150, 172, 78, 128, 70); x.closePath(); x.fill();
+  x.fillStyle = '#c9a07a'; x.beginPath(); x.ellipse(128, 132, 34, 22, 0, 0, TAU); x.fill();
+  for (const s of [-1, 1]) { x.fillStyle = '#fff6d8'; x.beginPath(); x.ellipse(128 + s * 15, 130, 7, 4, s * .15, 0, TAU); x.fill(); x.fillStyle = '#1a0d00'; x.beginPath(); x.arc(128 + s * 15, 130, 2.6, 0, TAU); x.fill();
+    x.strokeStyle = '#120c08'; x.lineWidth = 4; x.beginPath(); x.moveTo(128 + s * 6, 120); x.lineTo(128 + s * 26, 114); x.stroke(); }
+  const rg = x.createLinearGradient(90, 140, 170, 200); rg.addColorStop(0, '#b3261e'); rg.addColorStop(1, '#5a0f0c');
+  x.fillStyle = rg; x.strokeStyle = '#120c08'; x.lineWidth = 3; x.beginPath(); x.moveTo(90, 142); x.quadraticCurveTo(128, 156, 166, 142); x.lineTo(162, 192); x.quadraticCurveTo(128, 208, 94, 192); x.closePath(); x.fill(); x.stroke();
+  x.strokeStyle = 'rgba(200,220,170,.4)'; x.lineWidth = 4; x.beginPath(); x.moveTo(78, 110); x.quadraticCurveTo(84, 62, 120, 44); x.stroke();
+  x.fillStyle = radial(x, 0, [[.6, 'rgba(0,0,0,0)'], [1, 'rgba(0,0,0,.55)']], 128, 128, 0, 124); x.fillRect(0, 0, 256, 256);
+  x.restore(); rim(x, '#c9b08a', '#7a6248', '#2e241a', 8);
+});
+/* stark two-tone versions of the token art, for the impact frame */
+function inkTex(tex, thr, inv) {
+  const c = document.createElement('canvas'); c.width = c.height = 256; const x = c.getContext('2d'); x.drawImage(tex._cv, 0, 0);
+  const d = x.getImageData(0, 0, 256, 256), p = d.data;
+  for (let i = 0; i < p.length; i += 4) { const l = (p[i] * .3 + p[i + 1] * .59 + p[i + 2] * .11) / 255, px = (i / 4) % 256 - 127.5, py = (i / 1024 | 0) - 127.5;
+    let v = l > thr ? 255 : 0; if (Math.hypot(px, py) > 102) v = 0; if (inv) v = 255 - v; p[i] = p[i + 1] = p[i + 2] = v; }
+  x.putImageData(d, 0, 0); return PIXI.Texture.from(c);
+}
+/* small props */
+TX.hat = cv(192, 192, (x) => {
+  x.translate(96, 104);
+  const pg = x.createLinearGradient(20, -10, 90, -70); pg.addColorStop(0, '#fff8e6'); pg.addColorStop(1, '#e89a2e');
+  x.fillStyle = pg; x.strokeStyle = '#1a0f0c'; x.lineWidth = 2.5; x.beginPath(); x.moveTo(18, -16); x.bezierCurveTo(30, -70, 78, -100, 92, -70); x.bezierCurveTo(98, -40, 70, -16, 44, -8); x.closePath(); x.fill(); x.stroke();
+  x.fillStyle = radial(x, 0, [[0, '#6a1c26'], [1, '#22090c']], 0, 0, 0, 74); x.lineWidth = 3; x.beginPath(); x.ellipse(0, 0, 74, 70, 0, 0, TAU); x.fill(); x.stroke();
+  x.strokeStyle = '#e8b84a'; x.lineWidth = 3; x.beginPath(); x.ellipse(0, 0, 68, 64, 0, 0, TAU); x.stroke();
+  x.fillStyle = radial(x, 0, [[0, '#9a2c3a'], [1, '#3c0e16']], -8, -10, 0, 40); x.strokeStyle = '#1a0f0c'; x.beginPath(); x.ellipse(0, 0, 34, 32, 0, 0, TAU); x.fill(); x.stroke();
+  x.strokeStyle = '#e8b84a'; x.lineWidth = 5; x.beginPath(); x.ellipse(0, 0, 38, 36, 0, 0, TAU); x.stroke();
+});
+TX.petal = cv(32, 44, (x) => {
+  const g = x.createLinearGradient(0, 0, 32, 44); g.addColorStop(0, '#fff'); g.addColorStop(1, 'rgba(255,255,255,.6)');
+  x.fillStyle = g; x.beginPath(); x.moveTo(16, 2); x.bezierCurveTo(36, 12, 30, 38, 16, 42); x.bezierCurveTo(2, 38, -4, 12, 16, 2); x.fill();
+  x.strokeStyle = 'rgba(0,0,0,.18)'; x.lineWidth = 1.5; x.beginPath(); x.moveTo(16, 6); x.quadraticCurveTo(19, 24, 16, 40); x.stroke();
+});
+TX.cards = ['spade', 'heart', 'club', 'diamond'].map((s, i) => cv(40, 56, (x) => {
+  x.fillStyle = '#fbf6ea'; x.strokeStyle = '#2a2018'; x.lineWidth = 2; x.beginPath(); x.roundRect ? x.roundRect(2, 2, 36, 52, 5) : x.rect(2, 2, 36, 52); x.fill(); x.stroke();
+  x.translate(20, 28); x.fillStyle = i % 2 ? '#c2182c' : '#15110e'; x.beginPath();
+  if (s === 'heart' || s === 'spade') { const k = s === 'heart' ? 1 : -1; x.moveTo(0, 12 * k); x.bezierCurveTo(-18, -2 * k, -10, -16 * k, 0, -6 * k); x.bezierCurveTo(10, -16 * k, 18, -2 * k, 0, 12 * k); x.fill();
+    if (s === 'spade') { x.beginPath(); x.moveTo(0, 2); x.lineTo(-5, 15); x.lineTo(5, 15); x.closePath(); x.fill(); } }
+  else if (s === 'diamond') { x.moveTo(0, -14); x.lineTo(10, 0); x.lineTo(0, 14); x.lineTo(-10, 0); x.closePath(); x.fill(); }
+  else { for (const [a, b] of [[0, -7], [-7, 3], [7, 3]]) { x.moveTo(a + 6, b); x.arc(a, b, 6, 0, TAU); } x.fill(); x.beginPath(); x.moveTo(0, 2); x.lineTo(-4, 15); x.lineTo(4, 15); x.closePath(); x.fill(); }
+}));
+TX.whirl = cv(128, 128, (x) => {
+  x.fillStyle = radial(x, 128, [[0, 'rgba(255,255,255,.9)'], [.45, 'rgba(255,255,255,.35)'], [1, 'rgba(255,255,255,0)']]); x.fillRect(0, 0, 128, 128);
+  x.lineCap = 'round';
+  for (let i = 0; i < 14; i++) { const r = rnd(18, 58), a = rnd(0, TAU), sw = rnd(.7, 2.2); x.strokeStyle = `rgba(255,255,255,${rnd(.45, .95)})`; x.lineWidth = rnd(1.5, 4.5); x.beginPath(); x.arc(64, 64, r, a, a + sw); x.stroke(); }
+});
+TX.stripes = cv(96, 96, (x) => { x.fillStyle = '#fff'; for (let k = -2; k <= 2; k++) { x.beginPath(); x.moveTo(k * 96, 96); x.lineTo(k * 96 + 40, 96); x.lineTo(k * 96 + 136, 0); x.lineTo(k * 96 + 96, 0); x.closePath(); x.fill(); } });
+TX.dots = cv(18, 18, (x) => { x.fillStyle = '#fff'; x.beginPath(); x.arc(9, 9, 4.2, 0, TAU); x.fill(); });
+TX.fadeL = cv(256, 8, (x) => { const g = x.createLinearGradient(0, 0, 256, 0); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 256, 8); });
+
+/* ----------------------------------------------------------- global motion */
+let less = false, shk = 0, punch = 0, punchX = W / 2, punchY = H / 2, slowT = 0;
+const shake = a => { if (!less) shk = Math.max(shk, a); };
+
+/* --------------------------------------------------------------- particles */
+const parts = [];
+function P(tex, x, y, z, o) {
+  if (parts.length > 900) return;
+  const p = Object.assign({ vx: 0, vy: 0, vz: 0, g: 0, drag: 0, life: .6, s0: 10, s1: null, tint: 0xffffff, add: false, a: 1, rot: rnd(0, TAU), vr: 0,
+    stretch: false, ax: 1, bounce: false, below: false, fi: .06, pw: 1.4, ay: .5, layer: null, flut: 0 }, o);
+  p.x = x; p.y = y; p.z = z; p.t = 0; if (p.s1 == null) p.s1 = p.s0; p.tw = tex.width;
+  const s = p.sp = new PIXI.Sprite(tex); s.anchor.set(.5, p.ay); s.tint = p.tint; if (p.add) s.blendMode = PIXI.BLEND_MODES.ADD;
+  (p.layer || (p.below ? L.ground : L.fx)).addChild(s); s.alpha = 0; parts.push(p); return p;
+}
+function stepParts(dt) {
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const p = parts[i]; p.t += dt;
+    if (p.t >= p.life) { p.sp.destroy(); parts.splice(i, 1); continue; }
+    p.vz -= p.g * dt; if (p.drag) { const f = Math.exp(-p.drag * dt); p.vx *= f; p.vy *= f; p.vz *= f; }
+    p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt;
+    if (p.z < 0 && p.g > 0) { p.z = 0; if (p.bounce && p.vz < -60) { p.vz *= -.4; p.vx *= .6; p.vy *= .6; p.vr *= .5; } else { p.vx = p.vy = p.vz = 0; p.g = 0; p.vr = 0; p.flut = 0; p.stretch = false; } }
+    const u = p.t / p.life, s = lerp(p.s0, p.s1, u) / p.tw, sp = p.sp;
+    sp.alpha = p.a * (u < p.fi ? u / p.fi : 1 - Math.pow((u - p.fi) / (1 - p.fi), p.pw));
+    sp.position.set(p.x, p.y - p.z * OBL);
+    if (p.stretch) { sp.rotation = Math.atan2(p.vy - p.vz * OBL, p.vx); sp.scale.set(s * p.ax, s); } else { p.rot += p.vr * dt; sp.rotation = p.rot; sp.scale.set(s * p.ax * (p.flut ? Math.cos(p.t * p.flut + p.rot) : 1), s); }
+  }
+}
+const ringFx = (x, y, s0, s1, life, tint, o) => P(TX.ring, x, y, 0, Object.assign({ s0, s1, life, tint, add: true, below: true, rot: 0, pw: 1, a: .9 }, o));
+function dust(x, y, n, power, tint = 0x9a8d7c, a = .34) {
+  for (let i = 0; i < n; i++) { const an = rnd(0, TAU), v = rnd(.4, 1) * power;
+    P(TX.smoke, x + Math.cos(an) * 10, y + Math.sin(an) * 8, rnd(0, 8), { vx: Math.cos(an) * v, vy: Math.sin(an) * v * .8, vz: rnd(10, 50), drag: 3.2, life: rnd(.45, .9), s0: rnd(26, 44), s1: rnd(70, 110), tint, a, vr: rnd(-1, 1), below: Math.random() < .5 }); }
+}
+function sparks(x, y, z, n, tint, speed, o = {}) {
+  for (let i = 0; i < n; i++) { const an = o.ang != null ? o.ang + rnd(-(o.spread ?? .5), o.spread ?? .5) : rnd(0, TAU), v = rnd(.35, 1) * speed;
+    P(TX.spark, x, y, z, Object.assign({ vx: Math.cos(an) * v, vy: Math.sin(an) * v, vz: rnd(.1, .8) * speed * (o.up ?? .6), g: o.g ?? 1500, drag: 1.5, life: rnd(.25, .6), s0: rnd(5, 9), s1: 2, ax: rnd(2.5, 4.5), tint, add: true, stretch: true, bounce: true }, o.p)); }
+}
+
+/* -------------------------------------------- ground marks and short flashes */
+const marks = [];
+function mark(x, y, life, draw, o = {}) {
+  const g = new PIXI.Graphics(); g.position.set(x, y); if (o.add) g.blendMode = PIXI.BLEND_MODES.ADD; draw(g);
+  (o.layer || L.marks).addChild(g); const m = { g, t: 0, life, upd: o.upd, fade: o.fade ?? Math.min(1.6, life * .45), a: o.a ?? 1 }; marks.push(m); g.alpha = 0; return m;
+}
+function stepMarks(dt) {
+  for (let i = marks.length - 1; i >= 0; i--) { const m = marks[i]; m.t += dt;
+    if (m.t >= m.life) { m.g.destroy(); marks.splice(i, 1); continue; }
+    m.g.alpha = m.a * Math.min(1, m.t / .06, (m.life - m.t) / m.fade); if (m.upd) m.upd(m.g, m.t, dt, m); }
+}
+function jag(g, x, y, ang, len, w, col, alpha, depth) {
+  const n = Math.max(2, Math.round(len / 13)); let px = x, py = y;
+  for (let i = 0; i < n; i++) { const a = ang + rnd(-.55, .55), l = len / n, nx = px + Math.cos(a) * l, ny = py + Math.sin(a) * l;
+    g.lineStyle(w * (1 - i / n) + .7, col, alpha); g.moveTo(px, py); g.lineTo(nx, ny); px = nx; py = ny;
+    if (depth > 0 && Math.random() < .32) jag(g, px, py, a + rnd(.5, 1.1) * sgn(), len * (1 - i / n) * .6, w * .6, col, alpha, depth - 1); }
+  g.lineStyle(0);
+}
+function bolt(x1, y1, x2, y2, col, w = 3, life = .09) {
+  mark(0, 0, life, g => { const n = Math.max(3, Math.hypot(x2 - x1, y2 - y1) / 26 | 0), pts = [[x1, y1]], nx = -(y2 - y1), ny = x2 - x1, nl = Math.hypot(nx, ny) || 1;
+    for (let i = 1; i < n; i++) { const t = i / n, o = rnd(-16, 16); pts.push([lerp(x1, x2, t) + nx / nl * o, lerp(y1, y2, t) + ny / nl * o]); } pts.push([x2, y2]);
+    for (const [lw, c, a] of [[w * 3.2, col, .3], [w, 0xffffff, 1]]) { g.lineStyle(lw, c, a); g.moveTo(pts[0][0], pts[0][1]); for (const p of pts) g.lineTo(p[0], p[1]); }
+  }, { add: true, layer: L.fx, fade: life });
+}
+
+const MARK = {
+  bludgeoning(c, x, y, k = 1) { const R = c.R * k;
+    mark(x, y, 7, g => { g.beginFill(0x070504, .5).drawCircle(0, 0, R * .32).endFill(); g.beginFill(0x070504, .25).drawCircle(rnd(-6, 6), rnd(-6, 6), R * .6).endFill();
+      const n = 6 + (c.I * 3 | 0); for (let i = 0; i < n; i++) jag(g, 0, 0, i / n * TAU + rnd(-.3, .3), R * rnd(.7, 1.5) * (.6 + .4 * c.I), 4.5 * k, 0x050403, .9, 2); }); },
+  slashing(c, x, y) { const R = c.R, a = c.cutAng, n = c.crit ? 3 : 1;
+    for (let k = 0; k < n; k++) { const off = (k - (n - 1) / 2) * R * .34, ox = x - Math.sin(a) * off, oy = y + Math.cos(a) * off, len = R * (1.9 + .8 * c.I), w = 5 + 3 * c.I;
+      const lens = g => { const pts = []; for (let i = 0; i <= 10; i++) pts.push(lerp(-len / 2, len / 2, i / 10), -Math.sin(i / 10 * PI) * w + rnd(-1, 1)); for (let i = 10; i >= 0; i--) pts.push(lerp(-len / 2, len / 2, i / 10), Math.sin(i / 10 * PI) * w * .5); return pts; };
+      mark(ox, oy, 7, g => { g.rotation = a; g.beginFill(0x040303, .92).drawPolygon(lens(g)).endFill(); });
+      mark(ox, oy, .5, g => { g.rotation = a; g.lineStyle(3, 0xffd9d0, 1).moveTo(-len / 2, 0).lineTo(len / 2, 0); g.lineStyle(9, 0xff4a3a, .35).moveTo(-len / 2, 0).lineTo(len / 2, 0); }, { add: true }); } },
+  piercing(c, x, y) { const R = c.R; mark(x, y, 7, g => { g.beginFill(0x030202, .95).drawCircle(0, 0, R * .13).endFill(); g.lineStyle(2, 0x8a8172, .4).drawCircle(0, 0, R * .17);
+    for (let i = 0; i < 5; i++) jag(g, 0, 0, rnd(0, TAU), R * rnd(.3, .6), 2.2, 0x050403, .85, 0);
+    const a = Math.atan2(c.dir.y, c.dir.x); g.beginFill(0x050403, .5).drawPolygon([0, -R * .07, R * .9, 0, 0, R * .07].map((v, i, arr) => i % 2 ? arr[i - 1] * Math.sin(a) + v * Math.cos(a) : v * Math.cos(a) - arr[i + 1] * Math.sin(a))).endFill(); }); },
+};
+
+/* ------------------------------------------------------------------ tokens */
+const N = 8, VN = (N + 1) * (N + 1);
+const baseL = new Float32Array(VN * 2), baseUV = new Float32Array(VN * 2), baseAng = new Float32Array(VN), IDX = [];
+for (let j = 0; j <= N; j++) for (let i = 0; i <= N; i++) { const k = j * (N + 1) + i; baseL[k * 2] = i / N * 2 - 1; baseL[k * 2 + 1] = j / N * 2 - 1; baseUV[k * 2] = i / N; baseUV[k * 2 + 1] = j / N; baseAng[k] = Math.atan2(baseL[k * 2 + 1], baseL[k * 2]); }
+for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) { const a = j * (N + 1) + i; IDX.push(a, a + 1, a + N + 1, a + 1, a + N + 2, a + N + 1); }
+const mkMesh = tex => new PIXI.SimpleMesh(tex, new Float32Array(VN * 2), new Float32Array(baseUV), new Uint16Array(IDX));
+
+function rotH(phi, a, o) { // rotation by angle a about the horizontal axis at azimuth phi
+  const kx = Math.cos(phi), ky = Math.sin(phi), ca = Math.cos(a), sa = Math.sin(a), ic = 1 - ca;
+  o[0] = ca + kx * kx * ic; o[1] = kx * ky * ic; o[2] = ky * sa; o[3] = kx * ky * ic; o[4] = ca + ky * ky * ic; o[5] = -kx * sa; o[6] = -ky * sa; o[7] = kx * sa; o[8] = ca; return o;
+}
+function mul(a, b, o) { for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) o[r * 3 + c] = a[r * 3] * b[c] + a[r * 3 + 1] * b[3 + c] + a[r * 3 + 2] * b[6 + c]; return o; }
+const mW = new Float32Array(9), mF = new Float32Array(9), mZ = new Float32Array(9), mT = new Float32Array(9), mO = new Float32Array(9);
+
+const restState = () => ({ z: 0, vx: 0, vy: 0, vz: 0, psi: 0, psiRate: 0, phi: 0, theta: 0, wA: 0, wPhi: 0, wAv: 0, wDir: 1,
+  q: 0, qv: 0, qDir: 0, qK: 320, qC: 15, bend: 0, bendV: 0, bendDir: 0, rip: 0, ripDir: 0, ripPh: 0, jel: 0, jph: 0, jelDamp: 2,
+  scl: 1, sclV: 0, flash: 0, flashCol: 0xffffff, glow: 0, glowCol: [1, 1, 1], glowDamp: 2, frost: 0, ghost: 0, gph: 0, alpha: 1, dark: 0, jx: 0, jy: 0 });
+
+class Tok {
+  constructor(name, tex, size, cx, cy) {
+    this.name = name; this.size = size; this.R = size * G / 2 * .93; this.U = G * size * .85; this.cx = cx; this.cy = cy;
+    this.S = restState(); this.phases = []; this.cur = null; this.tex = tex; this.sx = 0; this.sy = 0;
+    this.shadow = new PIXI.Sprite(TX.shadow); this.shadow.anchor.set(.5); L.shadows.addChild(this.shadow);
+    this.c = new PIXI.Container(); L.tokens.addChild(this.c);
+    this.ghosts = [mkMesh(tex), mkMesh(tex)]; this.ghosts[0].tint = 0xff70e0; this.ghosts[1].tint = 0x70c8ff;
+    this.edges = [mkMesh(TX.edge), mkMesh(TX.edge), mkMesh(TX.edge)];
+    this.face = mkMesh(tex); this.frost = mkMesh(TX.frost); this.flash = mkMesh(TX.disc); this.flash.blendMode = PIXI.BLEND_MODES.ADD;
+    this.c.addChild(...this.ghosts, ...this.edges, this.face, this.frost, this.flash);
+    this.hit = new PIXI.Container(); this.hit.eventMode = 'static'; this.hit.cursor = 'grab'; this.hit.hitArea = new PIXI.Circle(0, 0, this.R); L.hits.addChild(this.hit);
+    this.snapHome(); this.S.x = this.hx; this.S.y = this.hy;
+  }
+  snapHome() { this.hx = GX0 + (this.cx + this.size / 2) * G; this.hy = (this.cy + this.size / 2) * G; this.hit.position.set(this.hx, this.hy); }
+  rest() { const x = this.hx, y = this.hy; this.S = restState(); this.S.x = x; this.S.y = y; this.phases = []; this.cur = null; }
+  play(ph) { this.phases = ph; this.cur = null; }
+  update(dt) {
+    const S = this.S;
+    while (true) {
+      if (!this.cur) { if (!this.phases.length) break; this.cur = this.phases.shift(); if (this.cur.init) this.cur.init(S); }
+      if (this.cur.update(S, dt)) { if (this.cur.end) this.cur.end(S); this.cur = null; if (!this.phases.length && !this.dragging) { this.rest(); return; } continue; }
+      break;
+    }
+    S.qv += (-S.qK * S.q - S.qC * S.qv) * dt; S.q += S.qv * dt;
+    S.bendV += (-300 * S.bend - 11 * S.bendV) * dt; S.bend += S.bendV * dt;
+    S.sclV += (-240 * (S.scl - 1) - 13 * S.sclV) * dt; S.scl += S.sclV * dt;
+    S.flash *= Math.exp(-7 * dt); S.glow *= Math.exp(-S.glowDamp * dt); S.dark *= Math.exp(-5 * dt); S.jel *= Math.exp(-S.jelDamp * dt); S.jph += 17 * dt;
+    S.rip *= Math.exp(-2.5 * dt); S.ripPh += 28 * dt; S.ghost *= Math.exp(-3.5 * dt); S.gph += 6 * dt;
+  }
+  verts(mesh, m, cx, cy, zc, lz, ox, oy) {
+    const S = this.S, R = this.R * S.scl, out = mesh.vertices, q = S.q, dcx = Math.cos(S.qDir), dcy = Math.sin(S.qDir), jel = S.jel, bend = S.bend, rip = S.rip;
+    const bcx = Math.cos(S.bendDir), bcy = Math.sin(S.bendDir), rcx = Math.cos(S.ripDir), rcy = Math.sin(S.ripDir);
+    for (let i = 0; i < VN; i++) {
+      const ux = baseL[i * 2], uy = baseL[i * 2 + 1]; let px = ux * R, py = uy * R, pz = lz;
+      if (q) { const a = (px * dcx + py * dcy) * (1 - q), b = (-px * dcy + py * dcx) * (1 + q * .55); px = a * dcx - b * dcy; py = a * dcy + b * dcx; }
+      if (jel) { const f = 1 + jel * Math.sin(3 * baseAng[i] + S.jph) + jel * .5 * Math.sin(2 * baseAng[i] - S.jph * 1.3); px *= f; py *= f; }
+      if (bend) { const a = ux * bcx + uy * bcy; pz += bend * R * (a * a - .4); }
+      if (rip) { const a = ux * rcx + uy * rcy; pz += rip * R * Math.sin(a * 5 - S.ripPh); }
+      const X = m[0] * px + m[1] * py + m[2] * pz, Y = m[3] * px + m[4] * py + m[5] * pz, zw = Math.min(FOC * .7, zc + m[6] * px + m[7] * py + m[8] * pz), s = FOC / (FOC - zw);
+      out[i * 2] = cx + ox + X * s; out[i * 2 + 1] = cy + oy + Y * s - zw * OBL;
+    }
+    mesh.geometry.buffers[0].update();
+  }
+  draw() {
+    const S = this.S, R = this.R;
+    rotH(S.wPhi, S.wA, mW); rotH(S.phi, S.theta, mF);
+    const c = Math.cos(S.psi), s = Math.sin(S.psi); mZ[0] = c; mZ[1] = -s; mZ[2] = 0; mZ[3] = s; mZ[4] = c; mZ[5] = 0; mZ[6] = 0; mZ[7] = 0; mZ[8] = 1;
+    mul(mW, mF, mT); mul(mT, mZ, mO);
+    let nx = mO[2], ny = mO[5], nz = mO[8]; const up = nz >= 0 ? 1 : -1; nx *= up; ny *= up; nz *= up;
+    const drop = R * S.scl * Math.sqrt(Math.max(0, 1 - nz * nz)), th = R * .09;
+    const zc = Math.sqrt(S.z * S.z + drop * drop) + th * .5, cx = S.x + S.jx, cy = S.y + S.jy;
+    this.sx = cx; this.sy = cy - zc * OBL; this.zc = zc;
+    // light from the upper left; a glint when the face swings through the mirror direction
+    const b = clamp(.42 + .58 * (nx * -.3 + ny * -.42 + nz * .86) / .86, .25, 1) * (1 - S.dark);
+    const spec = Math.pow(Math.max(0, nx * -.42 + ny * -.56 + nz * .715), 26);
+    const gc = S.glowCol, gl = Math.min(1, S.glow);
+    this.face.texture = up > 0 ? this.tex : (this.deadBack ? TX.dead : TX.back);
+    this.face.tint = rgb(b * lerp(1, gc[0], gl), b * lerp(1, gc[1], gl), b * lerp(1, gc[2], gl));
+    this.verts(this.face, mO, cx, cy, zc, up * th * .5, 0, 0);
+    this.edges.forEach((e, k) => { e.tint = rgb(b * (.2 + k * .07), b * (.15 + k * .055), b * (.1 + k * .04)); this.verts(e, mO, cx, cy, zc, up * th * (-.5 + k * .3), 0, 0); });
+    this.frost.visible = S.frost > .01; if (this.frost.visible) { this.frost.alpha = Math.min(1, S.frost) * .9; this.verts(this.frost, mO, cx, cy, zc, up * th * .55, 0, 0); }
+    const fa = Math.min(1, Math.max(S.flash * .9, spec * .75));
+    this.flash.visible = fa > .01; if (this.flash.visible) { this.flash.alpha = fa; this.flash.tint = S.flash * .9 >= spec * .75 ? S.flashCol : 0xfff4d8; this.verts(this.flash, mO, cx, cy, zc, up * th * .6, 0, 0); }
+    this.ghosts.forEach((g, k) => { g.visible = S.ghost > .02; if (g.visible) { g.alpha = Math.min(1, S.ghost) * .42; const a = S.gph + k * PI; this.verts(g, mO, cx, cy, zc, 0, Math.cos(a) * R * .22, Math.sin(a) * R * .13); } });
+    this.c.alpha = S.alpha; this.c.zIndex = (zc > th * 2 ? 1e5 : 0) + S.y;
+    const sh = this.shadow, k = clamp(zc / (this.U * 3), 0, 1);
+    sh.position.set(cx + zc * .16, S.y + S.jy + zc * .1 + 4); sh.alpha = S.alpha * lerp(.8, .3, k);
+    const ss = R * S.scl * 2.3 * (1 + k * .5) / 128; sh.scale.set(ss * (.55 + .45 * nz), ss * (.55 + .45 * nz) * .96); sh.rotation = Math.atan2(ny, nx);
+    sh.scale.x = ss * (.5 + .5 * nz); sh.scale.y = ss;
+  }
+}
+
+/* ------------------------------------------------------------ motion model */
+function stepWobble(S, dt, damp) { // a coin ringing down: the tilt shrinks while it circles faster and faster
+  S.wA += S.wAv * dt; S.wAv *= Math.exp(-14 * dt); S.wA -= (damp * S.wA + .05) * dt; if (S.wA < 0) S.wA = 0;
+  S.wPhi += dt * S.wDir * 3 / Math.sqrt(S.wA + .02);
+}
+function walls(c, S) { // the art never leaves the table: it rebounds off the edge of the map
+  const m = c.R * .9; let hit = false;
+  if (S.x < m) { S.x = m; S.vx = Math.abs(S.vx) * .55; hit = true; } else if (S.x > W - m) { S.x = W - m; S.vx = -Math.abs(S.vx) * .55; hit = true; }
+  if (S.y < m) { S.y = m; S.vy = Math.abs(S.vy) * .55; hit = true; } else if (S.y > H - m) { S.y = H - m; S.vy = -Math.abs(S.vy) * .55; hit = true; }
+  if (hit && Math.hypot(S.vx, S.vy) > c.U) { S.wAv += 1.5; S.psiRate += rnd(-4, 4); }
+}
+function phHold(dur, fn, init, end) { let t = 0; return { init, end, update(S, dt) { t += dt; fn && fn(S, Math.min(1, t / dur), dt, t); return t >= dur; } }; }
+
+/* One ballistic throw: flight (with planned flips so it lands flat-ish), bounces, slide, coin wobble. */
+function phAir(c, o) {
+  o = Object.assign({ vx: 0, vy: 0, vz: 0, g: 22 * c.U, drag: 0, flips: 0, tiltMax: 0, res: null, axis: 0, prec: 0, yaw: 0, yawAir: 0, yawFric: 3,
+    e: .3, fb: .5, fs: 6, cf: 1.5, wDamp: 2.6, wKick: 1, maxB: 3, stiff: false, noSettle: false, main: false }, o);
+  let t = 0, T = 1, air = true, b = 0, gt = 0, apex = false, rot = false;
+  return {
+    main: o.main,
+    init(S) {
+      if (c.kill && o.main) { o.flips = Math.floor(o.flips) + .5; o.vz = Math.max(o.vz, 4.6 * c.U); o.tiltMax = 0; o.noSettle = false; o.res = o.stiff ? 0 : rnd(-.22, .22); }
+      if (o.res == null) o.res = (o.flips || o.tiltMax) && !o.stiff ? rnd(-.32, .32) : 0;
+      rot = !!(o.flips || o.tiltMax || o.res);
+      S.vx = o.vx; S.vy = o.vy; S.vz = o.vz; S.psiRate += o.yaw;
+      if (rot) { S.wA = 0; S.wAv = 0; S.phi = o.axis; S.theta = 0; }
+      let z = S.z, vz = o.vz; const h = 1 / 240; T = 0;
+      do { vz -= o.g * h; if (o.drag) vz *= Math.exp(-o.drag * .5 * h); z += vz * h; T += h; } while (z > 0 && T < 5);
+      o.pre && o.pre(S);
+    },
+    update(S, dt) {
+      if (air) {
+        S.vz -= o.g * dt;
+        if (o.drag) { const f = Math.exp(-o.drag * dt); S.vx *= f; S.vy *= f; S.vz *= Math.exp(-o.drag * .5 * dt); }
+        S.x += S.vx * dt; S.y += S.vy * dt; S.z += S.vz * dt; S.psi += S.psiRate * dt; if (o.yawAir) S.psiRate *= Math.exp(-o.yawAir * dt);
+        if (b === 0) {
+          t += dt; const u = Math.min(1, t / T);
+          if (rot) { S.theta = o.flips ? (o.flips * TAU + o.res) * u : o.tiltMax * Math.sin(PI * u) + o.res * u; S.phi += o.prec * dt; }
+          if (c.crit && o.main && !apex && S.vz <= 0) { apex = true; if (T > .4) slowT = .22; }
+        } else if (!o.stiff) stepWobble(S, dt, o.wDamp);
+        walls(c, S); o.during && o.during(S, dt, true);
+        if (S.z <= 0 && S.vz < 0) {
+          const sp = -S.vz; S.z = 0;
+          if (b === 0 && rot) { const n = Math.round(S.theta / PI), r = S.theta - n * PI; S.theta = n * PI; if (o.stiff) S.wA = 0; else { S.wA = Math.abs(r); S.wPhi = S.phi + (r < 0 ? PI : 0); } }
+          const k = Math.min(1.3, sp / (9 * c.U));
+          if (!o.stiff) S.wAv += o.wKick * k * 4.5; S.sclV -= k * 2.4;
+          o.onLand && o.onLand(S, sp, b, k); b++;
+          const upv = sp * o.e; S.vx *= o.fb; S.vy *= o.fb;
+          if (upv > 1.1 * c.U && b <= o.maxB) { S.vz = upv; S.psiRate *= .6; } else { S.vz = 0; air = false; if (o.noSettle) return true; }
+        }
+        return false;
+      }
+      gt += dt; const v = Math.hypot(S.vx, S.vy);
+      if (v > 0) { const nv = Math.max(0, v - (o.fs * v + o.cf * c.U) * dt); S.vx *= nv / v; S.vy *= nv / v; }
+      S.x += S.vx * dt; S.y += S.vy * dt; S.psi += S.psiRate * dt; S.psiRate *= Math.exp(-o.yawFric * dt);
+      if (!o.stiff) stepWobble(S, dt, o.wDamp); walls(c, S); o.during && o.during(S, dt, false);
+      return gt > 3 || (v < 6 && S.wA < .012 && Math.abs(S.psiRate) < .5);
+    },
+  };
+}
+/* Hit-stop: the token is pinned for a beat, squashed against the blow, before it lets go. */
+function phStop(c, st) {
+  let x0, y0; const dur = (st.dur || .05) + (c.crit ? .13 : 0);
+  return phHold(dur, (S, u) => { const j = (1 - u) * (2 + 5 * c.I) * (c.crit ? 1.6 : 1); S.jx = rnd(-j, j); S.jy = rnd(-j, j);
+    const p = (st.push || 0) * c.U * Math.sin(u * PI / 2); S.x = x0 + c.dir.x * p; S.y = y0 + c.dir.y * p; S.q = (st.sq || 0) * Math.min(1.3, c.I); S.qv = 0; S.flash = 1; st.hold && st.hold(S, u); },
+    S => { x0 = S.x; y0 = S.y; S.qDir = Math.atan2(c.dir.y, c.dir.x); S.flashCol = c.T.col; st.init && st.init(S); }, S => { S.jx = S.jy = 0; });
+}
+/* The art goes back to its own square: a short hop, leaning into the move, the spin unwinding. */
+function phReturn(c, pause = .24) {
+  let t = 0, x0, y0, p0, p1, d, dist, done = false, ax;
+  return {
+    init(S) { x0 = S.x; y0 = S.y; p0 = S.psi; p1 = Math.round(p0 / TAU) * TAU; S.psiRate = 0; S.vx = S.vy = 0; dist = Math.hypot(c.tok.hx - x0, c.tok.hy - y0); d = .26 + dist / (c.U * 13);
+      ax = axisOf({ x: (c.tok.hx - x0) / (dist || 1), y: (c.tok.hy - y0) / (dist || 1) }, true); if (dist < 3 && Math.abs(p1 - p0) < .05) done = true; },
+    update(S, dt) {
+      t += dt;
+      if (done) { stepWobble(S, dt, 5); return S.wA < .012; }
+      if (t < pause) { stepWobble(S, dt, 3); return false; }
+      const u = Math.min(1, (t - pause) / d), e = easeIO(u); S.x = lerp(x0, c.tok.hx, e); S.y = lerp(y0, c.tok.hy, e); S.psi = lerp(p0, p1, e);
+      S.z = (14 + dist * .12) * Math.sin(PI * u); S.wA = .24 * Math.sin(PI * u) * Math.min(1, dist / c.U + .2); S.wPhi = ax;
+      if (u >= 1) { done = true; S.z = 0; S.psi = 0; S.theta = 0; S.wAv = .9 * Math.min(1, dist / c.U + .2); S.sclV = -.9; if (dist > c.U * .5) dust(S.x, S.y + c.R * .5, 3, 60, 0x9a8d7c, .2); }
+      return false;
+    },
+  };
+}
+
+/* ---------------------------------------------- the coin reactions used here */
+const glowSet = (S, col, amt, damp) => { S.glowCol = hex3(col); S.glow = amt; S.glowDamp = damp; };
+const landDust = (c, S, sp, n = 5) => { if (sp > c.U * 1.5) dust(S.x, S.y + c.R * .3, n, 60 + sp * .12); };
+const BASE = {
+  slashing: { label: 'Slashing', col: 0xff6a5a, css: '#ff5a4d', stop: { dur: .035, sq: .12, push: .04 },
+    burst(c) { const a = c.cutAng; P(TX.spark, c.x, c.y, 30, { s0: 26 + 14 * c.I, s1: 4, ax: c.R * .09, life: .2, add: true, tint: 0xfff0ea, rot: a, pw: 1 });
+      P(TX.spark, c.x, c.y, 30, { s0: 60, s1: 10, ax: c.R * .05, life: .28, add: true, tint: 0xff4a3a, rot: a, a: .6 });
+      sparks(c.x, c.y, 20, 12 * c.I, 0xffb0a0, 620, { ang: a + (c.side > 0 ? 0 : PI), spread: .35 }); sparks(c.x, c.y, 20, 6, 0xfff0e0, 420, { ang: a + (c.side > 0 ? PI : 0), spread: .3 }); shake(3 * c.I); },
+    build(c) { const cut = { x: Math.cos(c.cutAng) * c.side, y: Math.sin(c.cutAng) * c.side }, sp = rnd(4.4, 5.6) * c.I * c.U; let sk = 0;
+      return [phAir(c, { main: true, vx: cut.x * sp, vy: cut.y * sp, vz: rnd(1.8, 3.2) * Math.sqrt(c.I) * c.U, flips: c.crit ? 1 : 0, tiltMax: rnd(.3, .6) * sgn(), axis: Math.atan2(cut.y, cut.x), prec: c.side * rnd(2, 5),
+        yaw: c.side * rnd(13, 21) * c.I, e: .22, fb: .82, fs: 2.3, cf: 1.2, wDamp: 1.5, wKick: 1, maxB: 2, yawFric: 2.2,
+        onLand(S, v, i) { landDust(c, S, v, 4); sparks(S.x, S.y, 4, 6, 0xffc8a0, 300); },
+        during(S, dt, air) { if (!air) { const v = Math.hypot(S.vx, S.vy); sk += dt; if (v > c.U * 1.1 && sk > .03) { sk = 0; sparks(S.x + rnd(-1, 1) * c.R * .7, S.y + rnd(-1, 1) * c.R * .7, 2, 1, 0xffc890, 240, { ang: Math.atan2(-S.vy, -S.vx), spread: .6 }); } } } })]; } },
+  piercing: { label: 'Piercing', col: 0xf0f0ff, css: '#e4e4f0', stop: { dur: .05, sq: .16, push: .17 },
+    burst(c) { const a = Math.atan2(c.dir.y, c.dir.x); for (let i = 0; i < 7; i++) { const v = rnd(900, 1700);
+        P(TX.spark, c.x + rnd(-8, 8), c.y + rnd(-8, 8), 24, { vx: Math.cos(a + rnd(-.07, .07)) * v, vy: Math.sin(a + rnd(-.07, .07)) * v, drag: 3.5, life: rnd(.2, .42), s0: rnd(4, 7), ax: rnd(5, 9), stretch: true, add: true, tint: 0xf0f0ff }); }
+      P(TX.star, c.ix, c.iy, 26, { s0: 30, s1: 110, life: .14, add: true }); sparks(c.ix, c.iy, 20, 5, 0xffffff, 330, { ang: a + PI, spread: .7 }); shake(2.5 * c.I); },
+    build(c) { const stand = !c.crit && Math.random() < .3, flips = stand ? 0 : 1 + (c.I > .95 && Math.random() < .7 ? 1 : 0) + (c.crit ? 1 : 0), sp = rnd(.6, 1.2) * c.I * c.U;
+      return [phAir(c, { main: true, vx: c.dir.x * sp, vy: c.dir.y * sp, vz: (stand ? 3.8 : 3.4 + 1.3 * flips) * Math.pow(c.I, .4) * c.U, g: 24 * c.U, flips, tiltMax: 1.28, axis: axisOf(c.dir, false) + c.off * .25, yaw: c.off * 3,
+        e: .46, fb: .45, fs: 9, wDamp: 5, wKick: .8, maxB: 3, onLand(S, v, i) { landDust(c, S, v, 3); } })]; } },
+};
+/* ------------------------------------------------------------ damage number */
+const nums = [];
+function showNumber(c, n) {
+  const k = new PIXI.Container(), g = new PIXI.Graphics(), col = c.T.col, r = (c.crit ? 50 : 38) * (.85 + .3 * Math.min(1.3, c.I));
+  const starPts = (ro, ri, m, off) => { const p = []; for (let i = 0; i < m * 2; i++) { const a = i / (m * 2) * TAU + off, rr = (i % 2 ? ri : ro) * rnd(.9, 1.08); p.push(Math.cos(a) * rr, Math.sin(a) * rr); } return p; };
+  if (c.crit) g.beginFill(0xffd24a).lineStyle(3, 0x1a0f08).drawPolygon(starPts(r * 1.35, r * .85, 9, .3)).endFill();
+  g.beginFill(col).lineStyle(3.5, 0x1a0f08).drawPolygon(starPts(r, r * .72, 11, 0)).endFill();
+  g.beginFill(0x1a0f08, .28).lineStyle(0).drawCircle(0, 0, r * .62).endFill();
+  const t = new PIXI.Text((c.kill ? '' : '') + n + (c.crit ? '!' : ''), { fontFamily: 'Georgia, "Times New Roman", serif', fontWeight: '900', fontSize: r * .82, fill: 0xffffff, stroke: 0x1a0f08, strokeThickness: 6, lineJoin: 'round' });
+  t.anchor.set(.5); k.addChild(g, t); L.nums.addChild(k);
+  nums.push({ k, tok: c.tok, t: 0, life: less ? 1.5 : 1.7, rot: rnd(-.25, .25), ox: c.R * .7 * (Math.random() < .5 ? -1 : 1), oy: -c.R * .75 });
+}
+function stepNums(dt) {
+  for (let i = nums.length - 1; i >= 0; i--) { const n = nums[i]; n.t += dt; if (n.t >= n.life) { n.k.destroy({ children: true }); nums.splice(i, 1); continue; }
+    const u = n.t / .22, s = less ? 1 : u < 1 ? 1.35 * easeOut(u) + (u > .7 ? -(u - .7) * 1.16 : 0) : 1;
+    n.k.scale.set(Math.max(.05, s)); n.k.rotation = less ? 0 : n.rot * (1 + .15 * Math.sin(n.t * 9)); n.k.alpha = Math.min(1, (n.life - n.t) / .35);
+    n.k.position.set(clamp(n.tok.sx + n.ox, 50, W - 50), clamp(n.tok.sy + n.oy - Math.max(0, n.t - 1.2) * 60, 46, H - 40)); }
+}
+
+const STYLES = {
+  slash: Object.assign({ mark: 'slashing' }, BASE.slashing),
+  pierce: Object.assign({ mark: 'piercing' }, BASE.piercing),
+  /* Unbalancing: a short hop, then the art teeters on its rim like a coin that will not lie down */
+  teeter: { mark: 'slashing', stop: { dur: .05, sq: .2, push: .1 }, burst: BASE.slashing.burst,
+    build(c) { const a = rotv(c.dir, rnd(-.3, .3)), sp = rnd(1.3, 1.8) * c.I * c.U; let em = 0;
+      return [phAir(c, { main: true, vx: a.x * sp, vy: a.y * sp, vz: 3.3 * c.U, g: 24 * c.U, flips: c.crit ? 1 : 0, tiltMax: .9, axis: axisOf(a, true), yaw: c.side * 4, e: .1, fb: .4, fs: 9, maxB: 0, noSettle: true, wKick: 0,
+          onLand(S, v) { landDust(c, S, v, 5); shake(3); } }),
+        { init(S) { S.wA = c.crit ? 1.3 : 1.12; S.wAv = 0; S.wPhi = axisOf(a, true); S.wDir = c.side; S.vx = S.vy = 0; S.psiRate = 0; },
+          update(S, dt) { stepWobble(S, dt, 1.9);
+            const d = S.wA * c.U * 1.05 * dt * S.wDir; S.x += Math.cos(S.wPhi + PI / 2) * d; S.y += Math.sin(S.wPhi + PI / 2) * d; S.psi += S.wDir * S.wA * 1.6 * dt; walls(c, S);
+            em += dt; if (em > .11 && S.wA > .12) { em = 0; const an = S.wPhi + PI / 2;
+              P(TX.star, S.x + Math.cos(an) * c.R * .8, S.y + Math.sin(an) * c.R * .35, c.tok.zc + c.R * .9, { vz: 30, life: .5, s0: rnd(12, 20), s1: 3, add: true, tint: 0x9ff5e6, vr: 5 });
+              if (S.wA > .5) dust(S.x - Math.cos(S.wPhi) * c.R * .8, S.y - Math.sin(S.wPhi) * c.R * .8, 1, 40, 0x9a8d7c, .18); }
+            return S.wA < .02; } }]; } },
+};
+
+/* ------------------------------------------------------------------ tokens */
+const swash = new Tok('Swashbuckler', TX.swash, 1, 5, 3);
+const ogre = new Tok('Ogre', TX.ogre, 2, 6, 2);
+const bandit = new Tok('Bandit', TX.bandit, 1, 4, 4);
+const toks = [swash, ogre, bandit];
+const HOME = [[5, 3], [6, 2], [4, 4]];
+swash.ink1 = inkTex(TX.swash, .5, false); swash.ink2 = inkTex(TX.swash, .5, true);
+ogre.ink1 = inkTex(TX.ogre, .47, false); ogre.ink2 = inkTex(TX.ogre, .47, true);
+bandit.ink1 = inkTex(TX.bandit, .5, false); bandit.ink2 = inkTex(TX.bandit, .5, true);
+for (const t of toks) { t.show = 1; t.bleed = 0; t.bleedT = 0; }
+bandit.show = 0;
+
+/* impact frame: while `ink` is set every token draws as a stark two-tone cut-out */
+let ink = 0;
+const drawTok = Tok.prototype.draw;
+Tok.prototype.draw = function () {
+  drawTok.call(this);
+  this.c.alpha *= this.show; this.shadow.alpha *= this.show; this.c.visible = this.show > .01;
+  if (!ink) return;
+  const dark = ink === 1 ? 0x000000 : 0xffffff;
+  this.face.texture = ink === 1 ? this.ink1 : this.ink2; this.face.tint = 0xffffff;
+  for (const e of this.edges) e.tint = dark; this.flash.visible = false; this.frost.visible = false; for (const g of this.ghosts) g.visible = false;
+};
+
+/* ------------------------------------------------- sequencing (real time) */
+let clock = 0, frozen = false;
+const timers = [], actors = [], sigils = [];
+const after = (d, fn) => { timers.push({ t: d, fn }); };
+const actor = (dur, upd, end) => { const a = { t: 0, dur, upd, end }; actors.push(a); return a; };
+function stepSeq(real) {
+  clock += real;
+  for (const t of timers) t.t -= real;
+  for (let i = 0; i < timers.length;) { if (timers[i].t <= 0) { const f = timers.splice(i, 1)[0]; f.fn(); i = 0; } else i++; }
+  for (const a of actors.slice()) { if (!actors.includes(a)) continue; a.t += real; a.upd && a.upd(Math.min(1, a.t / a.dur), a.t, real);
+    if (a.t >= a.dur) { const i = actors.indexOf(a); if (i >= 0) { actors.splice(i, 1); a.end && a.end(); } } }
+}
+const ADD = PIXI.BLEND_MODES.ADD;
+const veil = new PIXI.Graphics().beginFill(0x07050a).drawRect(0, 0, W, H).endFill(); veil.alpha = 0; L.veil.addChild(veil);
+const flashG = new PIXI.Graphics().beginFill(0xffffff).drawRect(0, 0, W, H).endFill(); flashG.alpha = 0; L.flash.addChild(flashG);
+let flashA = 0;
+const flash = (a, col = 0xffffff) => { if (less) return; flashA = Math.max(flashA, a); flashG.tint = col; };
+const F_DISPLAY = ['Anton', 'Impact', 'Haettenschweiler', 'Arial Narrow', 'sans-serif'], F_SCRIPT = ['Kaushan Script', 'Brush Script MT', 'Segoe Script', 'cursive'];
+if (document.fonts && document.fonts.load) { document.fonts.load('40px Anton').catch(() => { }); document.fonts.load('40px "Kaushan Script"').catch(() => { }); }
+
+const FIN = {
+  confident: { label: 'Confident', band: 0xa8122c, accent: 0xffd24a, css: '#ffd24a', style: 'slash' },
+  unbalancing: { label: 'Unbalancing', band: 0x0d6670, accent: 0x8ff5e6, css: '#5fe0d0', style: 'teeter' },
+  bleeding: { label: 'Bleeding', band: 0x7a0a14, accent: 0xff4a4a, css: '#ff3a3a', style: 'slash' },
+  dual: { label: 'Dual', band: 0x3b2a94, accent: 0xc0aaff, css: '#a890ff', style: 'slash' },
+  lethal: { label: 'Lethal', band: 0x1a0a0e, accent: 0xff2a4a, css: '#e0e0e8', style: 'slash' },
+  impaling: { label: 'Impaling', band: 0x28507a, accent: 0xcfe4ff, css: '#9fc4ee', style: 'pierce' },
+};
+const WHO = 'Mireille, the Scarlet Blade';
+
+/* ------------------------------------------------------- E. dice flourish */
+/* Stands in for Dice So Nice: three damage dice tumble in over the scene, spin up into a gold blur, and settle. */
+function drawDie(g, kind, r) {
+  if (kind === 'd6') { g.lineStyle(3, 0x1a0508).beginFill(0x8f1626).drawRoundedRect(-r * .86, -r * .86, r * 1.72, r * 1.72, r * .3).endFill();
+    g.lineStyle(0).beginFill(0xd23246, .55).drawRoundedRect(-r * .7, -r * .74, r * 1.4, r * .6, r * .2).endFill(); g.lineStyle(2, GOLD, .8).drawRoundedRect(-r * .72, -r * .72, r * 1.44, r * 1.44, r * .22); return; }
+  const hex = [], tri = []; for (let i = 0; i < 6; i++) { const a = i / 6 * TAU - PI / 2, px = Math.cos(a) * r * 1.08, py = Math.sin(a) * r * 1.08; hex.push(px, py); if (i % 2 === 0) tri.push(px, py); }
+  g.lineStyle(3, 0x1a0508).beginFill(0x6e0f1c).drawPolygon(hex).endFill(); g.lineStyle(2, GOLD, .8).beginFill(0xa81c30).drawPolygon(tri).endFill();
+}
+function diceStart(run) {
+  const crit = run.crit, sc = crit ? 1.14 : 1, r = 40 * sc, cx = W / 2, cy = H * .79;
+  const grp = new PIXI.Container(); L.dice.addChild(grp);
+  const dice = ['d8', 'd8', 'd6'].map((kind, i) => {
+    const k = new PIXI.Container(), spin = new PIXI.Container(), glow = new PIXI.Sprite(TX.dot), body = new PIXI.Graphics(), whirl = new PIXI.Sprite(TX.whirl), fl = new PIXI.Sprite(TX.dot);
+    const num = new PIXI.Text('', { fontFamily: F_DISPLAY, fontSize: r * .92, fill: 0xfff3cf, stroke: 0x1a0508, strokeThickness: 5, lineJoin: 'round', padding: 6 });
+    for (const s of [glow, whirl, fl]) { s.anchor.set(.5); s.blendMode = ADD; s.alpha = 0; }
+    glow.tint = 0xffa820; glow.scale.set(r * 4.4 / 64); whirl.tint = GOLD; fl.scale.set(r * 4 / 64);
+    num.anchor.set(.5, kind === 'd8' ? .44 : .5); drawDie(body, kind, r); spin.addChild(body, num); k.addChild(glow, spin, whirl, fl); grp.addChild(k);
+    const x1 = cx + (i - 1) * 128 * sc, y1 = cy + (i === 1 ? 10 : -6);
+    return { k, spin, glow, whirl, fl, num, n: kind === 'd8' ? 8 : 6, val: run.vals[i], x1, y1, x0: x1 - rnd(420, 560), y0: H + 70, rot: rnd(0, TAU), rot1: rnd(-.2, .2), st: 0, fk: 0, d: i * .035 };
+  });
+  const tot = new PIXI.Container(), rays = new PIXI.Sprite(TX.rays); rays.anchor.set(.5); rays.blendMode = ADD; rays.tint = 0xffb020; rays.scale.set(330 * sc / 256);
+  const tt = new PIXI.Text(String(run.total), { fontFamily: F_DISPLAY, fontSize: 112 * sc, fill: [0xfffbe0, 0xffc23a], stroke: 0x1a0508, strokeThickness: 11, lineJoin: 'round', padding: 14 }); tt.anchor.set(.5);
+  tot.addChild(rays, tt);
+  if (crit) { const x2 = new PIXI.Text('CRITICAL  x2', { fontFamily: F_DISPLAY, fontSize: 32, fill: 0xffffff, stroke: 0x8a0a14, strokeThickness: 7, lineJoin: 'round', padding: 8, letterSpacing: 2 }); x2.anchor.set(.5); x2.position.set(0, 74 * sc); tot.addChild(x2); }
+  tot.position.set(cx, cy - 122 * sc); tot.visible = false; grp.addChild(tot);
+
+  if (less) { // no tumble: the dice and the total simply fade in and out
+    for (const d of dice) { d.k.position.set(d.x1, d.y1); d.spin.rotation = d.rot1; d.num.text = String(d.val); d.glow.alpha = .3; } tot.visible = true; rays.alpha = .5;
+    actor(.8, (u, T) => { grp.alpha = Math.min(1, T / .1, (.8 - T) / .14); }, () => grp.destroy({ children: true })); return;
+  }
+  const tA = .22, tB = .48, tC = .54, tG = .6, tN = .66, tEnd = run.o.A ? 1.07 : 1.25;
+  const flick = (d, dt) => { d.fk += dt; if (d.fk > .05) { d.fk = 0; d.num.text = String(1 + (Math.random() * d.n | 0)); } };
+  const gx0 = cx - 310 * sc, gy0 = cy + 62, gx1 = cx + 310 * sc, gy1 = cy - 66, gA = Math.atan2(gy1 - gy0, gx1 - gx0);
+  const gl = new PIXI.Graphics(), head = new PIXI.Sprite(TX.spark); gl.blendMode = ADD; head.blendMode = ADD; head.anchor.set(.5); head.rotation = gA; head.scale.set(3.2, 1.5); head.visible = false; grp.addChild(gl, head);
+  actor(tEnd, (u, T, dt) => {
+    for (const d of dice) { const t = T - d.d; d.k.visible = t >= 0; if (t < 0) continue;
+      if (t < tA) { const v = t / tA, e = easeOut(v); d.k.position.set(lerp(d.x0, d.x1, e), lerp(d.y0, d.y1, e) - Math.sin(v * PI) * 130); d.rot += dt * (10 + 8 * v); d.spin.rotation = d.rot; d.spin.scale.set(1, .72 + .28 * Math.cos(t * 34)); flick(d, dt); }
+      else if (t < tB) { const v = (t - tA) / (tB - tA), rate = 14 + 85 * v * v; d.rot += dt * rate; d.spin.rotation = d.rot; d.spin.scale.set(1 - .12 * v); d.spin.alpha = 1 - .6 * v;
+        d.k.position.set(d.x1, d.y1 - 30 * easeOut(v)); d.whirl.alpha = v; d.whirl.rotation += dt * rate * 1.2; d.whirl.scale.set(r * (2.5 + .9 * v) / 128); d.glow.alpha = .9 * v; flick(d, dt);
+        if (Math.random() < dt * 80 * v) { const a = rnd(0, TAU); P(Math.random() < .6 ? TX.star : TX.dot, d.x1 + Math.cos(a) * r, d.y1 - 30 + Math.sin(a) * r, 0, { layer: L.dice, vx: Math.cos(a) * rnd(60, 260), vy: Math.sin(a) * rnd(60, 260), drag: 2, life: rnd(.25, .55), s0: rnd(10, 22), s1: 2, add: true, tint: Math.random() < .5 ? GOLD : 0xfff2c0, vr: rnd(-5, 5) }); } }
+      else { if (d.st === 0) { d.st = 1; d.num.text = String(d.val); d.spin.rotation = d.rot1; d.spin.alpha = 1; d.fl.alpha = 1;
+          P(TX.ring, d.x1, d.y1, 0, { layer: L.dice, s0: r, s1: r * 4.4, life: .26, tint: GOLD, add: true, rot: 0, pw: 1, a: .9 });
+          for (let j = 0; j < 7; j++) { const a = rnd(0, TAU), v = rnd(180, 460); P(TX.spark, d.x1, d.y1, 0, { layer: L.dice, vx: Math.cos(a) * v, vy: Math.sin(a) * v, drag: 3, life: rnd(.2, .4), s0: rnd(5, 8), s1: 2, ax: rnd(2.5, 4), tint: GOLD, add: true, stretch: true }); } }
+        const v = Math.min(1, (t - tB) / (tC - tB)); d.k.position.set(d.x1, lerp(d.y1 - 30, d.y1, v * v)); d.spin.scale.set(lerp(1.5, 1, easeOut(v))); d.whirl.alpha = (1 - v) * .8; d.glow.alpha = lerp(.9, .4, v); d.fl.alpha *= Math.exp(-13 * dt); }
+    }
+    if (T >= tG) { // the blade glint slices across the settled dice
+      const gu = Math.min(1, (T - tG) / .1), fade = Math.max(0, 1 - Math.max(0, T - tG - .1) / .2), hx = lerp(gx0, gx1, gu), hy = lerp(gy0, gy1, gu);
+      gl.clear(); gl.lineStyle(10 * fade, 0xffa820, .45 * fade).moveTo(gx0, gy0).lineTo(hx, hy); gl.lineStyle(3.2 * fade + .4, 0xffffff, fade).moveTo(gx0, gy0).lineTo(hx, hy);
+      head.visible = gu < 1; head.position.set(hx, hy);
+      for (const d of dice) if (d.st === 1 && hx >= d.x1) { d.st = 2; d.fl.alpha = 1; P(TX.star, d.x1, d.y1, 0, { layer: L.dice, s0: 30, s1: 130, life: .2, add: true, tint: 0xfff6d8, vr: 3 }); }
+    }
+    if (T >= tN) { const v = Math.min(1, (T - tN) / .13); tot.visible = true; tot.scale.set(lerp(2.3, 1, easeOut(v)) * (1 + .03 * Math.sin(T * 30))); tot.alpha = Math.min(1, v * 3); rays.rotation += dt * 1.6; rays.alpha = .85 - .35 * v; }
+    grp.alpha = Math.min(1, (tEnd - T) / .12);
+  }, () => grp.destroy({ children: true }));
+}
+
+/* -------------------------------------------------------- A. cut-in strip */
+function stripStart(run) {
+  const F = run.F, crit = run.crit, Hb = crit ? 250 : 210, half = W * .64, ang = -.105, cy = H * .47;
+  const k = new PIXI.Container(); k.position.set(W / 2, cy); k.rotation = ang; L.strip.addChild(k);
+  const inner = new PIXI.Container(), mask = new PIXI.Graphics(); k.addChild(inner, mask); inner.mask = mask;
+  const base = new PIXI.Graphics(); base.beginFill(0x08050a).drawRect(-half, -Hb / 2 - 12, half * 2, Hb + 24).endFill().beginFill(F.band).drawRect(-half, -Hb / 2, half * 2, Hb).endFill();
+  const stripes = new PIXI.TilingSprite(TX.stripes, half * 2, Hb); stripes.position.set(-half, -Hb / 2); stripes.tint = F.accent; stripes.alpha = .24;
+  const dots = new PIXI.TilingSprite(TX.dots, half * 2, Hb); dots.position.set(-half, -Hb / 2); dots.tint = 0x000000; dots.alpha = .16;
+  const shade = new PIXI.Sprite(TX.fadeL); shade.tint = 0x000000; shade.width = 700; shade.height = Hb; shade.position.set(-half, -Hb / 2); shade.alpha = .62;
+  const lines = new PIXI.Graphics(); lines.beginFill(GOLD).drawRect(-half, -Hb / 2, half * 2, 7).drawRect(-half, Hb / 2 - 7, half * 2, 7).endFill().beginFill(0xffffff, .85).drawRect(-half, -Hb / 2 + 11, half * 2, 2).drawRect(-half, Hb / 2 - 13, half * 2, 2).endFill();
+  const streaks = []; const stk = new PIXI.Container();
+  for (let i = 0; i < 9; i++) { const s = new PIXI.Sprite(TX.spark); s.anchor.set(.5); s.blendMode = ADD; s.tint = i % 3 ? 0xffffff : F.accent; s.alpha = rnd(.25, .6); s.scale.set(rnd(2.5, 6), rnd(.4, 1)); s.position.set(rnd(-half, half), rnd(-Hb / 2 + 16, Hb / 2 - 16)); stk.addChild(s); streaks.push({ s, v: rnd(1600, 3200) }); }
+  const por = new PIXI.Sprite(TX.bust); por.anchor.set(.5); por.rotation = -ang; por.scale.set(Hb * 1.66 / 560); const px0 = -W / 2 + 222;
+  const tb = new PIXI.Container(); tb.skew.x = -.2;
+  const sty = { fontFamily: F_DISPLAY, lineJoin: 'round', stroke: 0x08050a, dropShadow: true, dropShadowBlur: 0, dropShadowAngle: PI * .28, padding: 24 };
+  const name = new PIXI.Text(F.label.toUpperCase(), Object.assign({}, sty, { fontSize: 124, fill: 0xffffff, strokeThickness: 13, dropShadowColor: F.band === 0x1a0a0e ? 0xb0102a : 0x08050a, dropShadowDistance: 10, letterSpacing: 2 }));
+  name.anchor.set(.5); name.position.set(0, -34); const ns = Math.min(1, 690 / name.width);
+  const fin = new PIXI.Text('FINISHER!', Object.assign({}, sty, { fontSize: 78, fill: [0xfffbe0, 0xffb62a], strokeThickness: 10, dropShadowColor: 0x08050a, dropShadowDistance: 7, letterSpacing: 3 }));
+  fin.anchor.set(.5); fin.position.set(196, 58);
+  const who = new PIXI.Text(WHO, { fontFamily: F_SCRIPT, fontSize: 34, fill: 0xffffff, stroke: 0x08050a, strokeThickness: 6, lineJoin: 'round', padding: 12 }); who.anchor.set(0, .5); who.position.set(-338, 62);
+  tb.addChild(who, name, fin);
+  if (crit) { const tag = new PIXI.Container(), tg = new PIXI.Graphics().beginFill(0x08050a).drawRect(-98, -27, 196, 54).endFill().beginFill(0xe0182e).drawRect(-93, -22, 186, 44).endFill();
+    const tx = new PIXI.Text('CRITICAL', { fontFamily: F_DISPLAY, fontSize: 36, fill: 0xffffff, letterSpacing: 3, padding: 8 }); tx.anchor.set(.5); tag.addChild(tg, tx); tag.position.set(-250, -Hb / 2 + 44); tag.rotation = -.07; tb.addChild(tag); }
+  const edge = new PIXI.Graphics().beginFill(0xffffff).drawRect(0, -Hb / 2 - 14, 34, Hb + 28).endFill(); edge.blendMode = ADD;
+  inner.addChild(base, stripes, dots, shade, stk, lines, por, tb, edge);
+  const drawMask = (xa, xb) => mask.clear().beginFill(0xffffff).drawRect(xa, -Hb / 2 - 14, Math.max(1, xb - xa), Hb + 28).endFill();
+
+  if (less) { // short and still: fades in, holds, fades out
+    drawMask(-half, half); edge.visible = false; por.x = px0; tb.x = 165; name.scale.set(ns); const d = .54;
+    actor(d, (u, T) => { k.alpha = Math.min(1, T / .08, (d - T) / .12); veil.alpha = .4 * k.alpha; }, () => { veil.alpha = 0; k.destroy({ children: true }); }); return d;
+  }
+  const tin = .1, hold = crit ? .68 : .6, tout = .12, dur = tin + hold + tout;
+  flash(.45); shake(6);
+  actor(dur, (u, T, dt) => {
+    let xa = -half, xb = half, out = 0;
+    if (T < tin) xb = lerp(-half, half, T / tin); else if (T > tin + hold) { out = (T - tin - hold) / tout; xa = lerp(-half, half, out * out); }
+    drawMask(xa, xb); edge.visible = T < tin || out > 0; edge.x = out > 0 ? xa : xb - 34;
+    const pe = easeBack(Math.min(1, T / .2)), te = easeBack(Math.min(1, Math.max(0, T - .04) / .2));
+    por.x = px0 - 200 * (1 - pe) + 28 * T + out * out * 420; tb.x = 165 + 560 * (1 - te) - 34 * T + out * out * 760;
+    name.scale.set(ns * (1 + .32 * (1 - easeOut(Math.min(1, T / .24)))));
+    const fv = clamp((T - .12) / .1, 0, 1); fin.visible = T > .12; fin.scale.set(lerp(1.9, 1, easeOut(fv))); who.alpha = clamp((T - .16) / .1, 0, 1);
+    stripes.tilePosition.x -= dt * 1500; dots.tilePosition.x -= dt * 90;
+    for (const s of streaks) { s.s.x -= s.v * dt; if (s.s.x < -half - 200) s.s.x = half + 200; }
+    k.y = cy + (T < .14 ? rnd(-1, 1) * 7 * (1 - T / .14) : 0);
+    veil.alpha = .5 * Math.min(1, T / tin) * (1 - out);
+  }, () => { veil.alpha = 0; k.destroy({ children: true }); });
+  return dur;
+}
+
+/* ------------------------------------------------------ D. signature mark */
+/* Each sigil is three strokes; a stroke is a curve a -> b bent through c: [ax, ay, cx, cy, bx, by], in units of the mark's radius. */
+const SIGILS = {
+  S: [[.66, -.6, 0, -.88, -.56, -.5], [-.56, -.5, -.1, .1, .56, .5], [.56, .5, 0, .92, -.7, .64]],
+  X: [[-.66, -.66, .1, -.1, .66, .66], [.66, -.66, .1, .1, -.66, .66], [-.74, .92, 0, 1.06, .74, .86]],
+  star: [[0, -.92, .07, 0, 0, .92], [-.8, -.46, 0, .08, .8, .46], [.8, -.46, 0, .08, -.8, .46]],
+};
+const strokePt = (d, u) => { const v = 1 - u; return [v * v * d[0] + 2 * u * v * d[2] + u * u * d[4], v * v * d[1] + 2 * u * v * d[3] + u * u * d[5]]; };
+function strokePoly(d, R, p, w) { // a blade-shaped ribbon along the first p of the stroke
+  const n = 16, m = Math.max(1, Math.ceil(n * p)), a = [], b = [];
+  for (let i = 0; i <= m; i++) { const u = Math.min(p, i / n), v = 1 - u, q = strokePt(d, u);
+    let tx = 2 * v * (d[2] - d[0]) + 2 * u * (d[4] - d[2]), ty = 2 * v * (d[3] - d[1]) + 2 * u * (d[5] - d[3]); const tl = Math.hypot(tx, ty) || 1; tx /= tl; ty /= tl;
+    const ww = w * Math.pow(Math.sin(PI * u), .6) * (p >= 1 ? 1 : Math.min(1, (p - u) * 9));
+    a.push(q[0] * R - ty * ww, q[1] * R + tx * ww); b.unshift(q[0] * R + ty * ww, q[1] * R - tx * ww); }
+  return a.concat(b);
+}
+function mkSigil(c, kind) {
+  const k = new PIXI.Container(); k.position.set(c.tok.hx, c.tok.hy); k.rotation = rnd(-.16, .16); L.sig.addChild(k);
+  const sg = { k, kind, R: c.R * (c.crit ? .84 : .72), w: Math.max(3.6, c.R * .085) * (c.crit ? 1.25 : 1), dead: false };
+  sg.strokes = SIGILS[kind].map(def => { const glow = new PIXI.Graphics(), core = new PIXI.Graphics(), inkG = new PIXI.Graphics(); glow.blendMode = ADD; inkG.visible = false; k.addChild(glow, core, inkG); return { def, glow, core, inkG, p: 0 }; });
+  sigils.push(sg); return sg;
+}
+function drawStroke(sg, s) {
+  const p = s.p; s.glow.clear(); s.core.clear(); s.inkG.clear(); if (p <= 0) return;
+  s.glow.beginFill(0xff9a1a, .2).drawPolygon(strokePoly(s.def, sg.R, p, sg.w * 2.6)).endFill();
+  s.core.beginFill(0x6a2f06, .9).drawPolygon(strokePoly(s.def, sg.R, p, sg.w * 1.55)).endFill();
+  s.core.beginFill(GOLD).drawPolygon(strokePoly(s.def, sg.R, p, sg.w)).endFill().beginFill(0xfffbe6).drawPolygon(strokePoly(s.def, sg.R, p, sg.w * .42)).endFill();
+  s.inkG.beginFill(0xffffff).drawPolygon(strokePoly(s.def, sg.R, p, sg.w * 1.35)).endFill();
+}
+function slashStroke(c, sg, s, dur) {
+  actor(dur, u => { s.p = less ? u : easeOut(u); drawStroke(sg, s); });
+  if (less) return;
+  const d = s.def, rot = sg.k.rotation, a = Math.atan2(d[5] - d[1], d[4] - d[0]) + rot, m = rotv({ x: (d[0] + d[4]) / 2 * sg.R, y: (d[1] + d[5]) / 2 * sg.R }, rot), e = rotv({ x: d[4] * sg.R, y: d[5] * sg.R }, rot);
+  const len = sg.R * 3.6;
+  P(TX.spark, sg.k.x + m.x, sg.k.y + m.y, 0, { s0: 46, s1: 6, ax: len / 46, life: .16, add: true, tint: 0xfff6dc, rot: a, pw: 1 });
+  P(TX.spark, sg.k.x + m.x, sg.k.y + m.y, 0, { s0: 100, s1: 14, ax: len * .8 / 100, life: .22, add: true, tint: 0xffa820, rot: a, a: .5 });
+  sparks(sg.k.x + e.x, sg.k.y + e.y, 6, c.crit ? 9 : 6, GOLD, 560, { ang: a, spread: .5 });
+  const S = c.tok.S; S.q = .11; S.qv = 0; S.qDir = a; S.flash = .16; S.flashCol = 0xffe9a8; S.dark = .5; c.jit = c.crit ? 8 : 5; c.jab = 11; shake(2.5);
+}
+function carve(run, c, done) {
+  if (!run.o.D) { after(less ? 0 : .05, done); return; }
+  const sg = c.sigil = mkSigil(c, run.o.sigil), per = less ? .1 : run.ctxs.length > 1 ? .062 : .075;
+  c.tok.play([{ update(S, dt) { S.jx = rnd(-1, 1) * c.jit; S.jy = rnd(-1, 1) * c.jit; c.jit *= Math.exp(-16 * dt); return c.released; } }]);
+  sg.strokes.forEach((s, i) => after(i * per, () => slashStroke(c, sg, s, per * .8)));
+  after(3 * per, done);
+}
+function killSigil(sg) { const i = sigils.indexOf(sg); if (i >= 0) sigils.splice(i, 1); sg.k.destroy({ children: true }); }
+function shatter(sg, c) {
+  if (sg.dead) return; sg.dead = true; const kx = sg.k.x, ky = sg.k.y, rot = sg.k.rotation;
+  // the mark stays scorched into the floor for a while
+  mark(kx, ky, 6, g => { g.rotation = rot; for (const s of sg.strokes) g.beginFill(0x070403, .6).drawPolygon(strokePoly(s.def, sg.R, 1, sg.w * .9)).endFill(); });
+  mark(kx, ky, 2.6, g => { g.rotation = rot; for (const s of sg.strokes) g.beginFill(0xffb030, .7).drawPolygon(strokePoly(s.def, sg.R, 1, sg.w * .6)).endFill(); }, { add: true, fade: 1.9 });
+  if (less) { actor(.9, u => { sg.k.alpha = 1 - Math.max(0, (u - .55) / .45); }, () => killSigil(sg)); return; }
+  P(TX.star, kx, ky, 0, { s0: sg.R * 1.2, s1: sg.R * 4.4, life: .2, add: true, tint: 0xfff2c0, rot: rnd(0, 1), vr: 3 });
+  for (const s of sg.strokes) for (let i = 0; i <= 6; i++) { const q = rotv({ x: strokePt(s.def, i / 6)[0] * sg.R, y: strokePt(s.def, i / 6)[1] * sg.R }, rot), x = kx + q.x, y = ky + q.y;
+    sparks(x, y, 8, 2, i % 2 ? GOLD : 0xfff2c0, 560, { g: 1300, up: .9 });
+    if (i % 2 === 0) P(TX.shard, x, y, 10, { vx: rnd(-320, 320) + c.dir.x * 160, vy: rnd(-320, 320) + c.dir.y * 160, vz: rnd(150, 520), g: 1700, life: rnd(.45, .85), s0: rnd(5, 11), tint: GOLD, vr: rnd(-14, 14), bounce: true, add: true, a: .95 }); }
+  actor(.11, u => { sg.k.alpha = 1 - u; sg.k.scale.set(1 + .35 * u); }, () => killSigil(sg));
+}
+
+/* --------------------------------------------------------- B. impact frame */
+const bwBg = new PIXI.Graphics().beginFill(0xffffff).drawRect(-300, -300, W + 600, H + 600).endFill(), bwLines = new PIXI.Graphics();
+L.bw.addChild(bwBg, bwLines); L.bw.visible = false;
+function drawSpeed(c, col) {
+  const g = bwLines, n = c.crit ? 120 : 90; g.clear(); g.beginFill(col);
+  for (let i = 0; i < n; i++) { const a = rnd(0, TAU), w = rnd(.004, .02) * (Math.random() < .16 ? 2.4 : 1), ri = c.R * rnd(1.5, 3.4) * (c.tok.size === 1 ? 1.8 : 1), ro = 1900;
+    g.drawPolygon([c.x + Math.cos(a) * ri, c.y + Math.sin(a) * ri, c.x + Math.cos(a - w) * ro, c.y + Math.sin(a - w) * ro, c.x + Math.cos(a + w) * ro, c.y + Math.sin(a + w) * ro]); }
+  // the cut itself: one long blade line through the target
+  const d = { x: Math.cos(c.scrAng), y: Math.sin(c.scrAng) }, wd = c.crit ? 9 : 6, pts = [];
+  for (let i = 0; i <= 12; i++) { const u = i / 12, l = lerp(-1500, 1500, u), ww = wd * Math.sin(PI * u); pts.push(c.x + d.x * l - d.y * ww, c.y + d.y * l + d.x * ww); }
+  for (let i = 12; i >= 0; i--) { const u = i / 12, l = lerp(-1500, 1500, u), ww = wd * Math.sin(PI * u); pts.push(c.x + d.x * l + d.y * ww, c.y + d.y * l - d.x * ww); }
+  g.drawPolygon(pts); g.endFill();
+}
+function setInk(v, c) {
+  ink = v; L.bw.visible = !!v; for (const n of ['fx', 'props', 'nums', 'shadows']) L[n].visible = !v;
+  if (v) { bwBg.tint = v === 1 ? 0xffffff : 0x000000; drawSpeed(c, v === 1 ? 0x000000 : 0xffffff); }
+  for (const sg of sigils) for (const s of sg.strokes) { s.glow.visible = s.core.visible = !v; s.inkG.visible = !!v; s.inkG.tint = v === 2 ? 0x000000 : 0xffffff; }
+}
+function frameStart(c, dur) {
+  let rd = 0; setInk(c.crit ? 2 : 1, c); punch = c.crit ? .09 : .06; punchX = c.x; punchY = c.y;
+  actor(dur, (u, T, dt) => { const want = c.crit && u < .36 ? 2 : 1; rd += dt; if (want !== ink || rd > .05) { rd = 0; setInk(want, c); } shk = Math.max(shk, c.crit ? 5 : 2.5); },
+    () => { setInk(0); flash(.6); });
+}
+
+/* --------------------------------------------------------- C. screen slash */
+/* A snapshot of the scene is drawn as two masked halves that slide along the cut, then rejoin. */
+let split = null, rt = null;
+function splitEnd() { split = null; view.renderable = true; for (const ch of splitL.removeChildren()) ch.destroy({ children: true }); }
+function splitStart(c, dur) {
+  const sw = app.screen.width, sh = app.screen.height;
+  if (!rt || rt.width !== sw || rt.height !== sh) { if (rt) rt.destroy(true); rt = PIXI.RenderTexture.create({ width: sw, height: sh, resolution: app.renderer.resolution }); }
+  const ang = c.scrAng, d = { x: Math.cos(ang), y: Math.sin(ang) }, n = { x: -d.y, y: d.x };
+  const px = clamp(c.tok.sx, W * .25, W * .75) * baseScale, py = clamp(c.tok.sy, H * .3, H * .7) * baseScale;
+  const rect = [[-60, -60], [sw + 60, -60], [sw + 60, sh + 60], [-60, sh + 60]];
+  const clip = sign => { const out = []; for (let i = 0; i < 4; i++) { const a = rect[i], b = rect[(i + 1) % 4], da = ((a[0] - px) * n.x + (a[1] - py) * n.y) * sign, db = ((b[0] - px) * n.x + (b[1] - py) * n.y) * sign;
+    if (da >= 0) out.push(a[0], a[1]); if ((da >= 0) !== (db >= 0)) { const t = da / (da - db); out.push(a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t); } } return out; };
+  const bg = new PIXI.Graphics().beginFill(0x050305).drawRect(0, 0, sw, sh).endFill();
+  const gap = new PIXI.Graphics().beginFill(0xffa820, .55).drawRect(-3000, -9, 6000, 18).endFill().beginFill(0xfff6dc).drawRect(-3000, -3.5, 6000, 7).endFill(); gap.position.set(px, py); gap.rotation = ang;
+  const halves = [1, -1].map(sign => { const k = new PIXI.Container(), sp = new PIXI.Sprite(rt), m = new PIXI.Graphics().beginFill(0xffffff).drawPolygon(clip(sign)).endFill(); k.addChild(sp, m); sp.mask = m; return { k, sign }; });
+  const gl = new PIXI.Sprite(TX.spark); gl.anchor.set(.5); gl.blendMode = ADD; gl.rotation = ang; gl.scale.set(sw * .9 / 96, Math.max(.8, 2.4 * baseScale));
+  splitL.addChild(bg, gap, ...halves.map(h => h.k), gl);
+  const mag = Math.max(5, (c.crit ? 30 : 18) * baseScale);
+  split = { render() { view.renderable = true; app.renderer.render(view, { renderTexture: rt, clear: true }); view.renderable = false; } };
+  actor(dur, u => { const s = u < .18 ? 0 : u < .72 ? easeOut((u - .18) / .54) : 1 - Math.pow((u - .72) / .28, 2);
+    for (const h of halves) h.k.position.set((d.x * mag + n.x * mag * .3) * s * h.sign, (d.y * mag + n.y * mag * .3) * s * h.sign);
+    const gu = Math.min(1, u / .3), l = lerp(-sw * .8, sw * .8, gu); gl.position.set(px + d.x * l, py + d.y * l); gl.alpha = gu < 1 ? 1 : 0;
+  }, () => { splitEnd(); flash(.5, 0xfff2c0); });
+}
+
+/* ------------------------------------------------------------ F. confetti */
+function confetti(run, c) {
+  const kind = run.o.conf, k = c.crit ? 1.5 : 1, A = swash;
+  if (kind === 'petals') { for (let i = 0; i < 46 * k; i++) { const a = rnd(0, TAU), v = rnd(60, 440);
+    P(TX.petal, c.x, c.y, rnd(30, 90), { vx: Math.cos(a) * v, vy: Math.sin(a) * v * .8, vz: rnd(300, 950), g: 560, drag: 1.7, life: rnd(1.7, 2.9), s0: rnd(12, 22), tint: [0xe8455f, 0xff8fa3, 0xc2203f, 0xffc2cc][i % 4], vr: rnd(-5, 5), flut: rnd(6, 14), pw: 6 }); } }
+  else if (kind === 'suits') { for (let i = 0; i < 26 * k; i++) { const a = rnd(0, TAU), v = rnd(120, 520);
+    P(TX.cards[i % 4], c.x, c.y, rnd(30, 80), { vx: Math.cos(a) * v, vy: Math.sin(a) * v * .8, vz: rnd(400, 1000), g: 1000, drag: 1.3, life: rnd(1.6, 2.6), s0: rnd(18, 27), vr: rnd(-9, 9), flut: rnd(8, 16), pw: 6 }); } }
+  else { // the swashbuckler's hat goes up, twirls and comes back down
+    const sp = new PIXI.Sprite(TX.hat); sp.anchor.set(.5); L.props.addChild(sp); const side = c.side, h = (c.crit ? 330 : 250), s0 = A.R * 2.5 / 192;
+    actor(1.15, u => { const z = 4 * h * u * (1 - u), s = s0 * (1 + z / 500); sp.position.set(A.S.x + Math.sin(u * PI) * 50 * side, A.S.y - A.R * .25 - z * OBL);
+      sp.scale.set(s * Math.cos(u * TAU * 2.5), s); sp.rotation = u * TAU * 1.5 * side; sp.alpha = Math.min(1, u * 10, (1 - u) * 8);
+      if (Math.random() < .25 && u < .8) P(TX.petal, sp.x, sp.y, 0, { vx: rnd(-40, 40), vy: rnd(20, 80), life: rnd(.5, .9), s0: rnd(6, 10), tint: 0xffe6a0, vr: rnd(-4, 4), flut: 10 });
+    }, () => { sp.destroy(); dust(A.S.x, A.S.y, 2, 40, 0x9a8d7c, .15); });
+    for (let i = 0; i < 10; i++) P(TX.star, A.S.x + rnd(-1, 1) * A.R, A.S.y + rnd(-1, 1) * A.R, rnd(20, 60), { vz: rnd(60, 220), life: rnd(.4, .8), s0: rnd(10, 20), s1: 2, add: true, tint: GOLD, vr: rnd(-4, 4) });
+  }
+}
+
+/* ------------------------------------------------------------- the strike */
+function mkCtx(run, tok) {
+  const A = swash; let dx = tok.hx - A.hx, dy = tok.hy - A.hy; const dl = Math.hypot(dx, dy) || 1; dx /= dl; dy /= dl;
+  const side = sgn(), off = rnd(-1, 1), crit = run.crit;
+  const c = { run, T: { col: GOLD }, tok, atk: A, R: tok.R, U: tok.U, dir: { x: dx, y: dy }, dist: dl, side, off, crit, kill: false,
+    I: (crit ? 1.3 : 1.02) * (run.id === 'lethal' ? 1.12 : 1), x: tok.hx, y: tok.hy, jit: 0, jab: 0, released: false, sigil: null };
+  c.cutAng = Math.atan2(dy, dx) + side * rnd(1.0, 1.5);
+  c.scrAng = sgn() * rnd(.32, .58); // the angle of the screen-wide cut (impact frame line, screen slash)
+  c.ix = c.x - dx * c.R * .55 - dy * off * c.R * .55; c.iy = c.y - dy * c.R * .55 + dx * off * c.R * .55;
+  return c;
+}
+const note = (run, name) => run.log.push(`${name} ${(clock - run.t0).toFixed(2)} s`);
+function goldBurst(c) {
+  sparks(c.x, c.y, 24, Math.round(16 * c.I), GOLD, 760, { up: .8 }); sparks(c.x, c.y, 24, 8, 0xfff2c0, 520);
+  P(TX.star, c.ix, c.iy, 30, { s0: 40, s1: 170 * c.I, life: .2, add: true, tint: 0xffe9a8, rot: rnd(0, 1) });
+  ringFx(c.x, c.y, c.R * .8, c.R * 3.6, .32, GOLD, { a: .7 }); shake(6 * c.I);
+  for (let i = 0; i < 9; i++) P(TX.star, c.x + rnd(-1, 1) * c.R * 1.4, c.y + rnd(-1, 1) * c.R * 1.1, rnd(10, 60), { vz: rnd(40, 170), life: rnd(.4, .85), s0: rnd(10, 22), s1: 2, add: true, tint: i % 3 ? GOLD : 0xffffff, vr: rnd(-4, 4), fi: .2 });
+}
+/* The hit lands: marks, number, bursts, and the target's coin reaction. */
+function impactFin(run, c, last) {
+  const t = c.tok, ST = STYLES[run.F.style], a = Math.atan2(c.dir.y, c.dir.x); c.released = true;
+  t.S = Object.assign(restState(), { x: t.hx, y: t.hy }); t.S.wDir = sgn();
+  MARK[ST.mark](c, t.hx, t.hy);
+  if (run.o.num) showNumber(c, run.total);
+  if (c.sigil) { const sg = c.sigil; after(less ? 0 : .06, () => shatter(sg, c)); }
+  if (less) { t.S.flashCol = 0xffe9a8; let tt = 0; t.play([{ update(S, dt) { tt += dt; S.flash = Math.max(0, 1 - tt / .5) * (c.crit ? .6 : .45); return tt > .55; } }]); return; }
+  ST.burst(c); goldBurst(c);
+  if (c.crit) { punch = .05; punchX = c.x; punchY = c.y; shake(13);
+    P(TX.rays, c.x, c.y, 30, { s0: c.R * 2.4, s1: c.R * 6.5, life: .5, add: true, tint: 0xfff0c0, vr: 2.5, a: .85, pw: 1.2 });
+    P(TX.rays, c.x, c.y, 30, { s0: c.R * 2, s1: c.R * 5, life: .42, add: true, tint: GOLD, vr: -3, a: .7 });
+    ringFx(c.x, c.y, c.R, c.R * 6, .4, 0xffffff, { a: .7 }); }
+  // small accents per finisher
+  if (run.id === 'bleeding') { t.bleed = 2.6; t.bx = t.by = undefined;
+    for (let i = 0; i < 16; i++) { const an = c.cutAng + (c.side > 0 ? 0 : PI) + rnd(-.5, .5), v = rnd(150, 620); P(TX.dot, c.x, c.y, 24, { vx: Math.cos(an) * v, vy: Math.sin(an) * v, vz: rnd(80, 380), g: 1500, life: rnd(.5, 1), s0: rnd(6, 14), s1: 5, tint: i % 2 ? 0xd0141e : 0x8a0a12, pw: 4 }); } }
+  else if (run.id === 'lethal') { MARK.bludgeoning(c, t.hx, t.hy, .8); shake(11); flash(.2, 0xff2040);
+    P(TX.rays, c.x, c.y, 30, { s0: c.R * 1.6, s1: c.R * 5.5, life: .45, add: true, tint: 0xff2a4a, vr: 3, a: .8 }); sparks(c.x, c.y, 24, 14, 0xff5a6a, 820, { up: .9 }); }
+  else if (run.id === 'impaling') { // the thrust goes clean through and out the far side
+    P(TX.spark, c.x, c.y, 24, { s0: 50, s1: 6, ax: c.R * 6.5 / 50, life: .24, add: true, tint: 0xffffff, rot: a, pw: 1 });
+    P(TX.spark, c.x, c.y, 24, { s0: 110, s1: 14, ax: c.R * 5.5 / 110, life: .3, add: true, tint: 0xbfd8ff, rot: a, a: .5 });
+    sparks(c.x + c.dir.x * c.R, c.y + c.dir.y * c.R, 24, 12, 0xeaf2ff, 1000, { ang: a, spread: .22, up: .2 }); }
+  else if (run.id === 'unbalancing') ringFx(c.x, c.y, c.R, c.R * 3, .45, 0x8ff5e6, { a: .6 });
+  if (run.o.F && last) confetti(run, c);
+  t.play([phStop(c, ST.stop), ...ST.build(c), phReturn(c)]);
+}
+function finish(run) { ui.last.textContent = run.head + '  ·  ' + run.log.join('  ·  '); }
+function bigHit(run, c) {
+  const B = run.o.B, C = run.o.C, hold = B || C ? (C ? .2 : .15) + (run.crit ? .07 : 0) : .05;
+  note(run, 'hit'); frozen = true;
+  if (B) frameStart(c, hold); if (C) splitStart(c, hold);
+  after(hold, () => { frozen = false; note(run, 'throw'); impactFin(run, c, true); finish(run); });
+}
+function quickHit(run, c, i) { frozen = true; after(.05, () => { frozen = false; impactFin(run, c, false); strike(run, i + 1); }); }
+/* The attacker's art bumps towards its target, holds there while the blade works, then goes home. For Dual it spins on to the second target. */
+function strike(run, i) {
+  const c = run.ctxs[i], A = swash, last = i === run.ctxs.length - 1;
+  const gap = c.dist - A.R - c.tok.R, reach = clamp(gap + A.R * .5, A.U * .25, A.U * 2.6), ax = axisOf(c.dir, true), tx = A.hx + c.dir.x * reach, ty = A.hy + c.dir.y * reach;
+  let x0 = A.hx, y0 = A.hy, bx = tx, by = ty; const ph = [];
+  if (i === 0) ph.push(phHold(.09, (S, u) => { const e = Math.sin(u * PI / 2) * .16 * A.U; S.x = A.hx - c.dir.x * e; S.y = A.hy - c.dir.y * e; S.z = 8 * u; S.wPhi = ax + PI; S.wA = .14 * u; }));
+  ph.push(phHold(i === 0 ? .1 : .15, (S, u) => { const e = i === 0 ? u * u : easeIO(u); S.x = lerp(x0, tx, e); S.y = lerp(y0, ty, e); S.wPhi = ax;
+      if (i === 0) { S.z = 8 + 10 * u; S.wA = lerp(.14, .3, u); } else { S.z = 18 + 34 * Math.sin(PI * u); S.wA = .3; S.psi = TAU * e * c.side; } },
+    S => { x0 = S.x; y0 = S.y; }, S => { S.psi = 0; carve(run, c, () => (last ? bigHit(run, c) : quickHit(run, c, i))); }));
+  ph.push({ update(S, dt) { c.jab *= Math.exp(-22 * dt); S.x = tx + c.dir.x * c.jab; S.y = ty + c.dir.y * c.jab; S.z = 18; S.wA = .3 + c.jab * .012; S.wPhi = ax; return c.released; } });
+  if (last) ph.push(phHold(c.crit ? .16 : .06, S => { S.x = tx; S.y = ty; }),
+    phHold(.32, (S, u) => { const e = 1 - easeOut(u); S.x = lerp(A.hx, bx, e); S.y = lerp(A.hy, by, e); S.z = 18 * e; S.wA = .3 * e; S.wPhi = ax; }, S => { bx = S.x; by = S.y; }, S => { S.wAv = .5; }),
+    { update(S, dt) { stepWobble(S, dt, 5); return S.wA < .012 && S.wAv < .1; } });
+  A.play(ph);
+}
+function attackStart(run) {
+  run.ctxs = (run.id === 'dual' ? [ogre, bandit] : [ogre]).map(t => mkCtx(run, t));
+  if (less) { run.ctxs.forEach((c, i) => after(i * .45, () => { note(run, i ? 'second mark' : 'mark'); carve(run, c, () => { note(run, i ? 'second hit' : 'hit'); impactFin(run, c, false); if (i === run.ctxs.length - 1) finish(run); }); })); return; }
+  note(run, 'lunge'); strike(run, 0);
+}
+
+/* ----------------------------------------------------------------------- UI */
+const $ = id => document.getElementById(id);
+const ui = { E: $('pE'), A: $('pA'), B: $('pB'), C: $('pC'), D: $('pD'), F: $('pF'), sigil: $('selSigil'), conf: $('selConf'), crit: $('optCrit'), num: $('optNum'), less: $('optLess'), last: $('last') };
+let cur = 'confident';
+function cancel() {
+  timers.length = 0; actors.length = 0; frozen = false; setInk(0); veil.alpha = 0; flashA = 0; splitEnd(); slowT = 0; shk = 0; punch = 0;
+  for (const p of parts) p.sp.destroy(); parts.length = 0; for (const n of nums) n.k.destroy({ children: true }); nums.length = 0;
+  for (const l of [L.dice, L.strip, L.sig, L.props]) for (const ch of l.removeChildren()) ch.destroy({ children: true });
+  sigils.length = 0; for (const t of toks) { t.rest(); t.bleed = 0; }
+}
+function setFin(id) { cur = id; for (const b of $('fins').children) b.setAttribute('aria-pressed', b.dataset.fin === id ? 'true' : 'false'); bandit.hit.eventMode = id === 'dual' ? 'static' : 'none'; }
+function play(id) {
+  if (id && FIN[id]) setFin(id); cancel();
+  const F = FIN[cur], o = { E: ui.E.checked, A: ui.A.checked, B: ui.B.checked && !less, C: ui.C.checked && !less, D: ui.D.checked, F: ui.F.checked && !less, sigil: ui.sigil.value, conf: ui.conf.value, num: ui.num.checked, crit: ui.crit.checked };
+  const run = { F, id: cur, o, crit: o.crit, t0: clock, log: [] };
+  run.vals = [8, 8, 6].map(n => 1 + (Math.random() * n | 0)); const sum = run.vals[0] + run.vals[1] + run.vals[2]; run.total = sum * (o.crit ? 2 : 1);
+  run.head = `${F.label} Finisher${o.crit ? ', critical' : ''}: 2d8 + 1d6 = ${sum}${o.crit ? `, doubled to ${run.total}` : ''}`;
+  ui.last.textContent = run.head;
+  let t = 0;
+  if (o.E) { note(run, 'dice'); diceStart(run); t = less ? .5 : .95; }
+  if (o.A) { after(t, () => { note(run, 'strip'); stripStart(run); }); t += less ? .46 : o.crit ? .78 : .7; }
+  after(t, () => attackStart(run));
+  return run;
+}
+const finsEl = $('fins');
+for (const [id, F] of Object.entries(FIN)) {
+  const b = document.createElement('button'); b.type = 'button'; b.dataset.fin = id; const d = document.createElement('span'); d.className = 'dot'; d.style.color = F.css; b.append(d, F.label);
+  b.addEventListener('click', () => play(id)); finsEl.appendChild(b);
+}
+setFin(cur);
+const setLess = v => { less = v; cancel(); };
+ui.less.addEventListener('change', () => setLess(ui.less.checked));
+const mq = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+if (mq && mq.matches) { ui.less.checked = true; setLess(true); }
+$('btnPlay').addEventListener('click', () => play());
+$('btnRandom').addEventListener('click', () => { const ids = Object.keys(FIN); ui.crit.checked = Math.random() < .35; ui.sigil.value = ['S', 'X', 'star'][Math.random() * 3 | 0]; play(ids[Math.random() * ids.length | 0]); });
+$('btnReset').addEventListener('click', () => {
+  cancel(); toks.forEach((t, i) => { t.cx = HOME[i][0]; t.cy = HOME[i][1]; t.snapHome(); t.rest(); }); for (const m of marks) m.life = 0;
+  for (const k of ['E', 'A', 'B', 'D', 'num']) ui[k].checked = true; for (const k of ['C', 'F', 'crit']) ui[k].checked = false; ui.sigil.value = 'S'; ui.conf.value = 'petals'; ui.last.textContent = '';
+  ui.less.checked = !!(mq && mq.matches); less = ui.less.checked; setFin('confident');
+});
+
+/* dragging: tokens follow the pointer and snap to the grid when dropped */
+let drag = null;
+for (const t of toks) t.hit.on('pointerdown', e => {
+  cancel(); const p = root.toLocal(e.global); t.dragging = true; drag = { t, ox: t.hx - p.x, oy: t.hy - p.y }; t.hit.cursor = 'grabbing';
+  t.S.z = less ? 0 : 16; t.S.sclV = less ? 0 : 1.2;
+});
+app.stage.eventMode = 'static'; app.stage.hitArea = app.screen;
+app.stage.on('pointermove', e => { if (!drag) return; const p = root.toLocal(e.global), t = drag.t; t.S.x = clamp(p.x + drag.ox, t.R, W - t.R); t.S.y = clamp(p.y + drag.oy, t.R, H - t.R); t.S.z = less ? 0 : 16; });
+const drop = () => {
+  if (!drag) return; const t = drag.t, pc = [t.cx, t.cy]; drag = null; t.dragging = false; t.hit.cursor = 'grab';
+  t.cx = clamp(Math.round((t.S.x - GX0) / G - t.size / 2), 0, COLS - t.size); t.cy = clamp(Math.round(t.S.y / G - t.size / 2), 0, ROWS - t.size);
+  for (const o of toks) if (o !== t && t.cx < o.cx + o.size && o.cx < t.cx + t.size && t.cy < o.cy + o.size && o.cy < t.cy + t.size) { t.cx = pc[0]; t.cy = pc[1]; }
+  t.snapHome();
+  if (less) t.rest(); else t.play([phReturn({ tok: t, U: t.U, R: t.R }, 0)]);
+};
+app.stage.on('pointerup', drop); app.stage.on('pointerupoutside', drop);
+
+/* --------------------------------------------------------------------- loop */
+function stepBleed(dt) { // Bleeding Finisher: the thrown art drips, and leaves a red trail on the floor
+  for (const t of toks) { if (t.bleed <= 0) continue; t.bleed -= dt; t.bleedT += dt; if (t.bleedT < .035) continue; t.bleedT = 0;
+    const S = t.S, k = Math.min(1, t.bleed / 1.2), moving = Math.hypot(S.vx, S.vy) > 30 || S.z > 4;
+    if (Math.random() < k) P(TX.dot, S.x + rnd(-1, 1) * t.R * .5, S.y + rnd(-1, 1) * t.R * .4, (t.zc || 0) + rnd(0, 10), { vx: rnd(-50, 50), vy: rnd(-40, 40), vz: rnd(0, 140), g: 1500, life: rnd(.35, .7), s0: rnd(5, 11), s1: 4, tint: Math.random() < .5 ? 0xd0141e : 0x8a0a12, pw: 4 });
+    const dist = Math.hypot(S.x - (t.bx ?? S.x), S.y - (t.by ?? S.y)), nb = moving ? Math.min(6, 1 + (dist / 22 | 0)) : 0, ox = t.bx ?? S.x, oy = t.by ?? S.y; t.bx = S.x; t.by = S.y;
+    for (let i = 0; i < nb; i++) { const r = rnd(4, 12) * (t.size > 1 ? 1.25 : 1), e = rnd(.6, 1), u = (i + 1) / nb; mark(lerp(ox, S.x, u) + rnd(-1, 1) * t.R * .45, lerp(oy, S.y, u) + rnd(-1, 1) * t.R * .45, 5.5, g => { g.beginFill(0x7a070c, .85).drawEllipse(0, 0, r, r * e).endFill().beginFill(0xc8141e, .6).drawCircle(r * .2, -r * .2, r * .45).endFill(); }); } }
+}
+let ts = 1;
+app.ticker.add(() => tick(Math.min(.034, app.ticker.deltaMS / 1000)));
+function tick(real) {
+  stepSeq(real);
+  if (slowT > 0) { slowT -= real; ts = lerp(ts, .28, .35); } else ts = lerp(ts, 1, .2);
+  const dt = frozen ? 0 : real * ts;
+  bandit.show = lerp(bandit.show, cur === 'dual' ? 1 : 0, Math.min(1, real * 10));
+  for (const t of toks) { if (dt > 0) t.update(dt); t.draw(); }
+  if (dt > 0) { stepParts(dt); stepMarks(dt); stepNums(dt); stepBleed(dt); }
+  shk *= Math.exp(-9 * real); punch *= Math.exp(-11 * real); flashA *= Math.exp(-13 * real); flashG.alpha = flashA;
+  const sc = baseScale * (1 + punch);
+  root.scale.set(sc); root.position.set((rnd(-shk, shk) - punchX * punch) * baseScale, (rnd(-shk, shk) - punchY * punch) * baseScale);
+  if (split) split.render();
+}
+window.__sf = { play, cancel, FIN, app, tick, toks, state: () => ({ clock, frozen, ink, split: !!split, timers: timers.length, actors: actors.length, parts: parts.length, sigils: sigils.length }) };
+})();
+</script>

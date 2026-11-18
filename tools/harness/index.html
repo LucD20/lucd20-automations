@@ -212,6 +212,7 @@ defineFeature({ id: "demoClient", category: "sheets", scope: "client", defaultEn
 await import("/modules/lucd20-automations/scripts/main.js");
 Hooks.callAll("init");
 game.user = { id: "u1", isGM, isActiveGM: isGM };
+Hooks.callAll("setup");
 game.ready = true; Hooks.callAll("ready");
 await new Promise(r => setTimeout(r, 50));
 window.__registered = registered; window.__values = values;

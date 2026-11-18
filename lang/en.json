@@ -355,6 +355,15 @@
           "size": { "Name": "Text size", "Hint": "The distance's size on your screen, in pixels; it stays the same at any zoom." }
         }
       },
+      "shortcuts": {
+        "Name": "Shortcuts",
+        "Hint": "Keys for tokens and the system, set in Foundry's Configure Controls (under LucD20 Automations); most start unbound. They act on the token under the mouse, else the selected ones, else your character's; players only on what they own. Elevation: PageUp / PageDown (Shift: the large step), or the mouse wheel over the Token HUD's elevation. PF2e: O toggles Off-Guard, plus every condition and action. 4e: O toggles grants combat advantage, plus the basic actions. Replaces F is for Flatfooted and Token Elevator (switch those off; your keys from them are copied over).",
+        "Setting": {
+          "step": { "Name": "Elevation step (squares)", "Hint": "How far PageUp / PageDown raise or lower a token, in squares of the scene (1 = 5 ft)." },
+          "largeStep": { "Name": "Large step (squares)", "Hint": "With Shift." },
+          "hudWheel": { "Name": "Mouse wheel on the HUD's elevation", "Hint": "Scroll over the elevation in the Token HUD to raise or lower the token (and the other selected ones); Shift for the large step." }
+        }
+      },
       "settingsMarkers": {
         "Name": "Settings Markers",
         "Hint": "In Foundry's Configure Settings, a small mark before each setting: the world (the GM sets it for everyone), each user, or this device. Replaces Settings Markers (switch that one off)."
@@ -1989,6 +1998,64 @@
         "Mark": "{name} is next to an ally: {power} marks it for that ally (−2 against everyone else).",
         "Mockery": "{power}: the target takes −2 to its attacks until the end of your next turn.",
         "Shout": "{name} is tough: {power} (daily): your allies regain hit points each time they hit it."
+      }
+    },
+    "Shortcuts": {
+      "ElevationUp": "Elevation: raise",
+      "ElevationDown": "Elevation: lower",
+      "ElevationUpLarge": "Elevation: raise (large step)",
+      "ElevationDownLarge": "Elevation: lower (large step)",
+      "ElevationReset": "Elevation: back to 0",
+      "ElevationHint": "The token under the mouse, else the selected ones, else your character's token. The step is set in LucD20 Automations → Shortcuts.",
+      "Visibility": "Hide / reveal",
+      "VisibilityHint": "Hide or reveal the selected tokens, tiles or drawings (the token under the mouse when nothing is selected).",
+      "EndTurn": "End turn",
+      "EndTurnHint": "End the current turn, if it is yours (the GM: anyone's).",
+      "Defeated": "Mark defeated",
+      "TokenHint": "The token under the mouse, else the selected ones, else your character's token.",
+      "TokenArt": "Show token art",
+      "ActorArt": "Show actor art",
+      "ArtHint": "Show the token's (or its actor's) art to everyone. A name hidden from players stays hidden.",
+      "Status": "Condition: {name}",
+      "StatusHint": "Toggle {name} on the token under the mouse, else the selected ones, else your character.",
+      "ActionHint": "Taken by your selected token, else your character.",
+      "NotYours": "You don't control {name}.",
+      "NoTarget": "Hover or select one of your tokens, or have a character assigned.",
+      "NoActor": "Select your token, or have a character assigned.",
+      "OneOnly": "Select only one token for this shortcut.",
+      "NotYourTurn": "It isn't your turn.",
+      "Unknown": "Unknown creature",
+      "OriginalOn": "Shortcuts: {modules} is still on. Its keys answer instead of these until you switch it off.",
+      "Copied": "Shortcuts: {count} keys copied from {modules}.",
+      "NothingToCopy": "Shortcuts: no keys to copy from F is for Flatfooted or Token Elevator.",
+      "OpenControls": "Configure Controls",
+      "CopyKeys": "Copy keys from the old modules",
+      "PanelHint": "Keys are per player and per browser. Each browser copies its keys from F is for Flatfooted and Token Elevator once by itself.",
+      "PF2e": {
+        "OffGuard": "PF2e: Off-Guard",
+        "OffGuardHint": "Toggle Off-Guard on the token under the mouse, else the selected ones, else your character.",
+        "Toggle": "PF2e: {name}",
+        "Increase": "PF2e: {name} +1",
+        "Decrease": "PF2e: {name} −1",
+        "Cover": "PF2e: Cover effect",
+        "CoverHint": "Toggle the Cover effect (Take Cover / situational cover) on the token under the mouse, else the selected ones, else your character.",
+        "Browser": "PF2e: Compendium Browser",
+        "Search": "PF2e: search the compendiums",
+        "Alliance": "PF2e: cycle alliance",
+        "AllianceHint": "Party → opposition → neutral, for flanking; your selected token, else your character.",
+        "AllianceNow": "{name} is now {alliance}.",
+        "AllianceParty": "allied with the party",
+        "AllianceOpposition": "allied with the opposition",
+        "AllianceNeutral": "neutral",
+        "NotPcNpc": "Select one character or NPC.",
+        "Action": "PF2e action: {name}"
+      },
+      "Dnd4e": {
+        "CombatAdvantage": "4e: grants combat advantage",
+        "CombatAdvantageHint": "Toggle Grants Combat Advantage on the token under the mouse, else the selected ones, else your character.",
+        "Basic": "4e: {name}",
+        "DeathSave": "4e: death saving throw",
+        "CombatOnly": "{name}: only in combat."
       }
     },
     "Dnd4eHud": {

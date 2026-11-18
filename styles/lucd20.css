@@ -2265,6 +2265,8 @@ li:has(> .lucd20-scene-nav) {
 
 .lucd20-tt-panel { display: flex; align-items: center; gap: 10px; }
 .lucd20-tt-panel button { width: auto; flex: none; }
+.lucd20-sc-panel { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.lucd20-sc-panel button { width: auto; flex: none; }
 
 .lucd20-tooltip-editor .lucd20-loot-hint { display: flex; align-items: center; gap: 8px; }
 .lucd20-tooltip-editor .tt-preview-on { margin-left: auto; white-space: nowrap; color: var(--ll-accent-text); }

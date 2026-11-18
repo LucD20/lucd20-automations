@@ -2068,7 +2068,7 @@ not tracked.)
 
 ---
 
-## 18. Five more modules (owner, 2026-11-18) — proposed, awaiting answers
+## 18. Five more modules (owner, 2026-11-18)
 
 Owner: "To all systems": PF2e Effects Halo ("the effects appear around the
 token and not covering it. It should show beneath tokens"), F is for
@@ -2104,7 +2104,7 @@ Elevator MIT-0):
   token first, else the selected ones; mouse wheel on the Token HUD's
   elevation box.
 
-Proposed (Q266–Q275, recommendations in brackets):
+Q266–Q275: owner, "All yes" (as recommended):
 
 | # | Question | Recommendation |
 |---|---|---|
@@ -2122,3 +2122,46 @@ Proposed (Q266–Q275, recommendations in brackets):
 Switch off the originals as each lands (F is for Flatfooted, Token Elevator,
 PF2e Effects Halo, PF2e See Simple Scale Statistics). Existing Stairways stay
 on their own layer: they aren't converted.
+
+**Built v0.69.0 (phase 59): Shortcuts** (`shortcuts`, Tokens page, world switch,
+on by default; `scripts/features/shortcuts.js`, adapters `systems/pf2e/shortcuts.js`
+and `systems/dnd4e/shortcuts.mjs`, `test57.js`):
+- Keys in Foundry's Configure Controls under the module, as `sc-<id>`. Generic
+  ones are registered at `init`, the system's and the status toggles at
+  `setup` (they need the system's data and our texts; still before Foundry
+  fixes the keybindings). While the feature is off a key does nothing here.
+- Who: the hovered token (a hovered token you don't own stops it, with a
+  warning, instead of falling through to your own); else the selected tokens
+  you own; else your character's token (conditions: your character, even off
+  the scene). Actions (PF2e actions, 4e basic actions, alliance, death save):
+  your one selected token, else your character; two selected warns.
+- Generic: elevation raise / lower (PageUp / PageDown, Shift = large step;
+  step and large step in squares of the scene, options 1 and 2), back to 0
+  (unbound); the mouse wheel over the Token HUD's elevation (option, on: the
+  HUD's token and the other selected ones); hide / reveal (GM only), end turn,
+  mark defeated, show token / actor art (shared; a name hidden from players
+  is shared as "Unknown creature", without the actor link); outside PF2e a
+  toggle for each `CONFIG.statusEffects` entry.
+- PF2e: O = Off-Guard; each condition (no attitudes) toggle, + / − for
+  valued ones; every `game.pf2e.actions` entry (the Collection's Actions with
+  one key per variant, plus the legacy macros), Cover effect, Compendium
+  Browser, compendium search, cycle alliance.
+- 4e: O = grants combat advantage (`grantingCA`, else a status whose id or
+  name says combat advantage; none → no key); each basic action (in combat
+  through the Action Tracker, as the HUD; out of combat only Second Wind and
+  Action Point, the others warn); death saving throw.
+- Moving over: each shortcut names the original action it replaces. Once per
+  browser (and with "Copy keys from the old modules" in the card) the keys
+  that browser set in F is for Flatfooted / Token Elevator are copied in (Foundry
+  keeps them stored even with the module off), or Token Elevator's defaults
+  (the key left of Z, IntlBackslash) while it is still on; ours that browser
+  already changed are left alone. While an original module is on, the
+  shortcuts copied from it stand down (its key answers) and the GM is told
+  to switch it off.
+- Owner's keybinding export: `tools/export-keybindings.js` (console or macro)
+  writes every bound action with its current and default key.
+- (verify) in V14 / PF2e 8.7: PageUp / PageDown free; registering in `setup`;
+  `canvas.tokens.hover`; the Token HUD's `#token-hud [name=elevation]`;
+  `foundry.applications.apps.ImagePopout` options and `shareImage`;
+  `ControlsConfig` path; `game.pf2e.actions` entries and `variants`; the Cover
+  effect's UUID; dnd4e's `grantingCA` status.

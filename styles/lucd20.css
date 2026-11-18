@@ -2649,7 +2649,9 @@ li:has(> .lucd20-scene-nav) {
 .chat-message:has(.lucd20-pf2e-card) .message-content { margin-top: 0; }
 /* v0.51.1 (owner): one line per target, like the PF2e Flat Check module: the die, a green or red background. */
 /* v0.53.0 (owner): the hand is a small button covering the link's right end, easy to hit. */
-.lucd20-cc-hit { display: inline-block; margin: -2px -4px -2px 3px; padding: 2px 6px 2px 5px; border-left: 1px solid rgba(0, 0, 0, .2); cursor: pointer; border-radius: 0 3px 3px 0; }
+/* v0.69.2 (owner: the divider stuck out above and below the link): no vertical padding or margin, so the hand
+   never makes the link taller, whether Foundry draws the link inline or as an inline flexbox. */
+.lucd20-cc-hit { display: inline; margin: 0 0 0 4px; padding: 0 3px 0 5px; border-left: 1px solid rgba(0, 0, 0, .2); cursor: pointer; border-radius: 0 2px 2px 0; line-height: inherit; align-self: stretch; }
 .lucd20-cc-hit:hover { background: rgba(0, 0, 0, .12); }
 .lucd20-cc-hit i { font-size: .7em; opacity: .7; vertical-align: 1px; }
 .lucd20-cc-hit:hover i { opacity: 1; }

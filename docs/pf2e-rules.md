@@ -493,6 +493,10 @@ one that leaves fewer squares next to enemies (see PLAN).
   actually aim for the hand. And it can likely be a bit smaller too"): the
   hand is a small split button at the link's right end, the whole end
   clickable.
+- v0.69.2 (owner's screenshot: the divider before the hand stuck out above and
+  below the link and touched the line under it): the hand has no vertical
+  padding or margin, so it never makes the link taller (checked with links
+  drawn inline and as an inline flexbox).
 - (verify) `increaseCondition(slug, { value })` setting the value; the
   compendium index carrying `type` for the links; Ctrl-click on Foundry's
   links not also opening the sheet.

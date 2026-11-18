@@ -2270,7 +2270,7 @@ Statistics with its MIT notice, credited in the README; `test60.js`):
 
 ---
 
-## 19. Token Reactions (owner, 2026-11-18) — proposed, awaiting answers
+## 19. Token Reactions (owner, 2026-11-18)
 
 Owner: instead of (only) animations flying from token to token, the hit token
 *reacts*, as in Hearthstone / MTG Arena: a lightning bolt hits the card and it
@@ -2293,3 +2293,14 @@ damage type's colours. The token document never moves.
 | Q279 | JB2A: our own drawn effects always work; if JB2A is installed, a matching JB2A impact clip is played on top (files read directly, no Sequencer needed). | Yes |
 | Q280 | Systems: PF2e first (type and crit from the damage message), then 4e; elsewhere, HP drops only. | Yes |
 | Q281 | First a mockup: a page with a token and a button per damage type, to tune the feel before building it into Foundry. | Yes |
+
+Q276–Q281: owner, "All yes, start the mockup". Mockup:
+`docs/mockups/token-reactions.html` (PIXI 7, also published as a private
+artifact): two draggable tokens on a stone floor; a button per damage type;
+Critical (hit-stop, camera shake, bigger), Drops it to 0 HP (the card falls
+flat in perspective, cracks, greys and fades, then returns), share of max HP
+(strength), damage number (optional), Less motion (flash + decal only). The
+card is the token art on a 12 × 12 plane mesh tilted with a perspective
+projection, on springs (knockback away from the attacker, lift with a
+growing shadow, lean, spin, shake); the attacker lunges for weapon types.
+Waiting for the owner's tuning notes.

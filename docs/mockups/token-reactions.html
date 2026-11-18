@@ -1,0 +1,502 @@
+<title>Token Reactions</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+Sans+SC:wght@500;800&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: one stage (the map) on top, the controls under it in wrapping groups; a single dark look, like a VTT at night. */
+:root {
+  --bg: #121419;
+  --panel: #1b1e26;
+  --line: #2c313d;
+  --fg: #ebe5d8;
+  --muted: #9a9686;
+  --accent: #e2a84b;
+  --display: "Alegreya Sans SC", "Trebuchet MS", sans-serif;
+  --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+html, body { background: var(--bg); color: var(--fg); }
+body { font-family: var(--body); font-size: 14px; line-height: 1.45; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-block: 20px 32px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 14px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
+h1 { font-family: var(--display); font-weight: 800; font-size: 28px; letter-spacing: .02em; margin: 0; text-wrap: balance; }
+header p { margin: 0; color: var(--muted); }
+.stage { position: relative; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: #0d0f13; aspect-ratio: 16 / 9; max-width: 100%; }
+.stage canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+.hint { position: absolute; left: 10px; bottom: 8px; font-size: 12px; color: #c9c2b0; background: rgba(10, 11, 14, .7); padding: 3px 8px; border-radius: 3px; pointer-events: none; }
+.controls { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+@media (max-width: 720px) { .controls { grid-template-columns: minmax(0, 1fr); } }
+fieldset { margin: 0; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); padding: 10px 12px 12px; min-width: 0; }
+legend { font-family: var(--display); font-weight: 500; font-size: 13px; letter-spacing: .08em; color: var(--muted); padding: 0 6px; }
+.types { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 6px; }
+button { font: inherit; color: var(--fg); background: #252a35; border: 1px solid #353b49; border-radius: 4px; padding: 7px 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+button:hover { background: #2e3442; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); box-shadow: 0 0 6px var(--c); flex: none; }
+.opts { display: grid; gap: 9px; }
+.opts label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.opts input[type=checkbox] { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.range { display: grid; gap: 4px; }
+.range .row { display: flex; justify-content: space-between; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.range input { width: 100%; accent-color: var(--accent); margin: 0; }
+.opts .actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.opts .actions button { flex: 1 1 auto; justify-content: center; }
+.primary { background: #3a2c14; border-color: #6b5225; }
+.primary:hover { background: #4a3818; }
+.notes { color: var(--muted); font-size: 13px; max-width: 75ch; display: grid; gap: 6px; }
+.notes p { margin: 0; }
+.notes strong { color: var(--fg); font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { button { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Token Reactions</h1>
+    <p>Mockup for LucD20 Automations: the hit token reacts like a card.</p>
+  </header>
+
+  <div class="stage" id="stage"><span class="hint">Drag either token. The hit comes from Valeros and knocks the target away from him.</span></div>
+
+  <div class="controls">
+    <fieldset>
+      <legend>Hit with</legend>
+      <div class="types" id="types"></div>
+    </fieldset>
+    <fieldset class="opts">
+      <legend>The hit</legend>
+      <label for="crit"><input type="checkbox" id="crit"> Critical hit</label>
+      <label for="kill"><input type="checkbox" id="kill"> Drops it to 0 HP</label>
+      <div class="range">
+        <div class="row"><label for="share" style="cursor:default">Share of its max HP</label><span id="shareOut">35%</span></div>
+        <input type="range" id="share" min="5" max="100" step="5" value="35">
+      </div>
+      <label for="number"><input type="checkbox" id="number" checked> Show the damage number</label>
+      <label for="less"><input type="checkbox" id="less"> Less motion (per player)</label>
+      <div class="actions">
+        <button type="button" class="primary" id="random">Random hit</button>
+        <button type="button" id="reset">Reset</button>
+      </div>
+    </fieldset>
+  </div>
+
+  <div class="notes">
+    <p><strong>What moves:</strong> only the drawing. The token's art is lifted like a card, tilted in perspective (drawn on a bendable mesh), knocked back and shaken, then it settles. The token itself never moves.</p>
+    <p><strong>In Foundry</strong> it would play on critical hits, kills and hits of a quarter of max HP or more, for everyone who can see the target. With JB2A installed, a matching JB2A impact clip would play on top of this. JB2A's files can't be loaded in this page.</p>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.4.2/pixi.min.js"></script>
+<script>
+(() => {
+  "use strict";
+  const W = 960, H = 540, GRID = 90;
+  const stageEl = document.getElementById("stage");
+  const app = new PIXI.Application({ width: W, height: H, backgroundColor: 0x0d0f13, antialias: true,
+    resolution: Math.min(2, window.devicePixelRatio || 1), autoDensity: true });
+  app.view.style.width = "100%"; app.view.style.height = "100%";
+  stageEl.prepend(app.view);
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  if (reduced) document.getElementById("less").checked = true;
+
+  /* ---------------- textures ---------------- */
+  const canvasTex = (w, h, draw) => { const c = document.createElement("canvas"); c.width = w; c.height = h; draw(c.getContext("2d"), w, h); return PIXI.Texture.from(c); };
+  const SOFT = canvasTex(64, 64, (g) => { const r = g.createRadialGradient(32, 32, 0, 32, 32, 32); r.addColorStop(0, "rgba(255,255,255,1)"); r.addColorStop(.35, "rgba(255,255,255,.55)"); r.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = r; g.fillRect(0, 0, 64, 64); });
+  const CHIP = canvasTex(16, 16, (g) => { g.fillStyle = "#fff"; g.beginPath(); g.moveTo(2, 4); g.lineTo(13, 1); g.lineTo(15, 12); g.lineTo(5, 15); g.closePath(); g.fill(); });
+  const SHARD = canvasTex(12, 32, (g) => { g.fillStyle = "#fff"; g.beginPath(); g.moveTo(6, 0); g.lineTo(12, 18); g.lineTo(6, 32); g.lineTo(0, 18); g.closePath(); g.fill(); });
+  const SPARK = canvasTex(32, 4, (g) => { const l = g.createLinearGradient(0, 0, 32, 0); l.addColorStop(0, "rgba(255,255,255,0)"); l.addColorStop(1, "rgba(255,255,255,1)"); g.fillStyle = l; g.fillRect(0, 0, 32, 4); });
+
+  /** A painted round token: portrait, rim, light from above-left. */
+  function portrait(kind) {
+    return canvasTex(256, 256, (g) => {
+      const c = 128;
+      g.save(); g.beginPath(); g.arc(c, c, 118, 0, Math.PI * 2); g.clip();
+      const bg = g.createRadialGradient(90, 80, 10, c, c, 150);
+      if (kind === "ogre") { bg.addColorStop(0, "#5b6b3a"); bg.addColorStop(1, "#1c2412"); } else { bg.addColorStop(0, "#4a6a9a"); bg.addColorStop(1, "#121b2c"); }
+      g.fillStyle = bg; g.fillRect(0, 0, 256, 256);
+      // shoulders
+      g.fillStyle = kind === "ogre" ? "#3f2a1c" : "#6f7783";
+      g.beginPath(); g.ellipse(c, 250, 112, 70, 0, Math.PI, 0); g.fill();
+      if (kind === "ogre") {
+        // head, ears, tusks, brow
+        const skin = g.createRadialGradient(104, 104, 8, c, 120, 80); skin.addColorStop(0, "#9bb067"); skin.addColorStop(1, "#4e6a2a");
+        g.fillStyle = skin;
+        g.beginPath(); g.ellipse(c, 128, 58, 64, 0, 0, Math.PI * 2); g.fill();
+        g.beginPath(); g.moveTo(74, 104); g.lineTo(34, 84); g.lineTo(78, 132); g.fill();
+        g.beginPath(); g.moveTo(182, 104); g.lineTo(222, 84); g.lineTo(178, 132); g.fill();
+        g.fillStyle = "#2a3516"; g.beginPath(); g.moveTo(84, 110); g.quadraticCurveTo(c, 92, 172, 110); g.lineTo(168, 118); g.quadraticCurveTo(c, 104, 88, 118); g.fill();
+        g.fillStyle = "#f1c24a"; g.beginPath(); g.arc(106, 124, 6, 0, 7); g.arc(150, 124, 6, 0, 7); g.fill();
+        g.fillStyle = "#24170e"; g.beginPath(); g.ellipse(c, 168, 28, 12, 0, 0, Math.PI); g.fill();
+        g.fillStyle = "#efe6cf"; g.beginPath(); g.moveTo(108, 166); g.lineTo(112, 146); g.lineTo(118, 168); g.fill(); g.beginPath(); g.moveTo(138, 168); g.lineTo(144, 146); g.lineTo(148, 166); g.fill();
+      } else {
+        // a helm with a visor slit and a plume
+        g.fillStyle = "#b8202a"; g.beginPath(); g.moveTo(c, 40); g.quadraticCurveTo(190, 30, 196, 92); g.quadraticCurveTo(160, 64, c, 70); g.fill();
+        const steel = g.createLinearGradient(80, 60, 180, 200); steel.addColorStop(0, "#e9edf2"); steel.addColorStop(.5, "#9aa4b1"); steel.addColorStop(1, "#4a5260");
+        g.fillStyle = steel; g.beginPath(); g.moveTo(76, 120); g.quadraticCurveTo(76, 62, c, 60); g.quadraticCurveTo(180, 62, 180, 120); g.lineTo(172, 196); g.quadraticCurveTo(c, 214, 84, 196); g.closePath(); g.fill();
+        g.fillStyle = "#14171c"; g.fillRect(92, 118, 72, 10); g.fillRect(124, 128, 8, 46);
+        g.strokeStyle = "rgba(255,255,255,.5)"; g.lineWidth = 3; g.beginPath(); g.moveTo(90, 98); g.quadraticCurveTo(110, 70, 132, 68); g.stroke();
+      }
+      g.restore();
+      // rim
+      g.lineWidth = 12; const rim = g.createLinearGradient(0, 0, 256, 256); rim.addColorStop(0, "#f3d48c"); rim.addColorStop(.5, "#a8762c"); rim.addColorStop(1, "#5c3b12");
+      g.strokeStyle = rim; g.beginPath(); g.arc(c, c, 120, 0, Math.PI * 2); g.stroke();
+      g.lineWidth = 2; g.strokeStyle = "rgba(0,0,0,.6)"; g.beginPath(); g.arc(c, c, 113, 0, Math.PI * 2); g.stroke();
+    });
+  }
+
+  /* ---------------- the map ---------------- */
+  const floor = new PIXI.Graphics();
+  for (let x = 0; x < W; x += GRID / 2) for (let y = 0; y < H; y += GRID / 2) {
+    const shade = 0x2a2d33 + Math.floor(rnd(0, 10)) * 0x010101;
+    floor.beginFill(shade).drawRect(x + 1, y + 1, GRID / 2 - 2, GRID / 2 - 2).endFill();
+  }
+  floor.lineStyle(1, 0x000000, 0.35);
+  for (let x = 0; x <= W; x += GRID) floor.moveTo(x, 0).lineTo(x, H);
+  for (let y = 0; y <= H; y += GRID) floor.moveTo(0, y).lineTo(W, y);
+  const world = new PIXI.Container();
+  app.stage.addChild(world);
+  const decals = new PIXI.Container(), shadows = new PIXI.Container(), cards = new PIXI.Container(), fx = new PIXI.Container(), over = new PIXI.Container();
+  world.addChild(floor, decals, shadows, cards, fx, over);
+
+  /* ---------------- a card: the token's art on a bendable mesh ---------------- */
+  const SEG = 12, FOCAL = 520;
+  function makeCard(kind, cx, cy, size) {
+    const tex = portrait(kind);
+    const geo = new PIXI.PlaneGeometry(size, size, SEG, SEG);
+    const mesh = new PIXI.Mesh(geo, new PIXI.MeshMaterial(tex));
+    const base = Float32Array.from(geo.getBuffer("aVertexPosition").data).map((v) => v - size / 2);
+    const holder = new PIXI.Container();
+    holder.addChild(mesh);
+    const bright = new PIXI.ColorMatrixFilter();
+    const grey = new PIXI.ColorMatrixFilter();
+    holder.filters = [bright, grey];
+    const shadow = new PIXI.Sprite(SOFT); shadow.anchor.set(0.5); shadow.tint = 0x000000;
+    shadows.addChild(shadow); cards.addChild(holder);
+    const card = { kind, home: { x: cx, y: cy }, size, holder, mesh, geo, base, bright, grey, shadow,
+      s: { x: 0, y: 0, lift: 0, rx: 0, ry: 0, rot: 0 }, v: { x: 0, y: 0, lift: 0, rx: 0, ry: 0, rot: 0 },
+      shake: 0, flash: 0, flashColor: 0xffffff, dead: 0, alpha: 1, frozen: 0, stiff: 1 };
+    holder.eventMode = "static"; holder.cursor = "grab";
+    return card;
+  }
+
+  function drawCard(card, t) {
+    const { s, size } = card;
+    const shk = card.shake;
+    const jx = shk ? (Math.sin(t * 0.09) + Math.sin(t * 0.23)) * shk : 0, jy = shk ? (Math.cos(t * 0.11) + Math.sin(t * 0.17)) * shk : 0;
+    const lift = s.lift, scale = 1 + lift * 0.18;
+    const rx = s.rx + card.dead * 1.15, ry = s.ry, rot = s.rot;
+    const cX = Math.cos(rx), sX = Math.sin(rx), cY = Math.cos(ry), sY = Math.sin(ry), cR = Math.cos(rot), sR = Math.sin(rot);
+    const buf = card.geo.getBuffer("aVertexPosition"), d = buf.data, b = card.base;
+    for (let i = 0; i < d.length; i += 2) {
+      let x = b[i] * scale, y = b[i + 1] * scale, z = 0;
+      // z-rotation, then tilt about X (top leans back) and Y (side leans back), then perspective.
+      let x1 = x * cR - y * sR, y1 = x * sR + y * cR;
+      let y2 = y1 * cX - z * sX, z2 = y1 * sX + z * cX;
+      let x3 = x1 * cY + z2 * sY, z3 = -x1 * sY + z2 * cY;
+      const p = FOCAL / (FOCAL - z3);
+      d[i] = x3 * p; d[i + 1] = y2 * p;
+    }
+    buf.update();
+    const hx = card.home.x + s.x + jx, hy = card.home.y + s.y + jy - lift * 16 + card.dead * 6;
+    card.holder.position.set(hx, hy);
+    card.holder.alpha = card.alpha;
+    card.bright.reset();
+    if (card.flash > 0.01) {
+      const f = card.flash, c = card.flashColor;
+      const r = ((c >> 16) & 255) / 255, g = ((c >> 8) & 255) / 255, bl = (c & 255) / 255;
+      card.bright.matrix = [1 + f * r, 0, 0, 0, f * r * 0.35, 0, 1 + f * g, 0, 0, f * g * 0.35, 0, 0, 1 + f * bl, 0, f * bl * 0.35, 0, 0, 0, 1, 0];
+    }
+    card.grey.reset();
+    if (card.dead > 0.01) { card.grey.desaturate(); card.grey.alpha = Math.min(1, card.dead); }
+    else if (card.frozen > 0.01) { card.grey.matrix = [0.7, 0.1, 0.2, 0, 0, 0, 1, 0.1, 0, 0.05, 0.1, 0.2, 1.25, 0, 0.12, 0, 0, 0, 1, 0]; card.grey.alpha = Math.min(1, card.frozen); }
+    else card.grey.alpha = 0;
+    // the shadow on the ground: bigger, softer and further away while the card is up
+    card.shadow.position.set(card.home.x + s.x * 0.6 + lift * 10, card.home.y + s.y * 0.6 + size * 0.42 + lift * 6);
+    card.shadow.width = size * (1.05 + lift * 0.45); card.shadow.height = size * (0.32 + lift * 0.12);
+    card.shadow.alpha = (0.55 - lift * 0.25) * card.alpha;
+  }
+
+  const springs = (card, dt) => {
+    const k = 120 * card.stiff, c = 11 * Math.sqrt(card.stiff);
+    for (const key of Object.keys(card.s)) {
+      card.v[key] += (-k * card.s[key] - c * card.v[key]) * dt;
+      card.s[key] += card.v[key] * dt;
+    }
+    card.shake *= Math.pow(0.0015, dt);
+    card.flash *= Math.pow(0.002, dt);
+    card.frozen = Math.max(0, card.frozen - dt * 0.6);
+  };
+
+  const hero = makeCard("knight", GRID * 2.5, GRID * 3.5, GRID * 0.98);
+  const target = makeCard("ogre", GRID * 6.5, GRID * 2.5, GRID * 1.96);
+  const allCards = [hero, target];
+
+  /* ---------------- dragging (snaps to the grid) ---------------- */
+  let drag = null;
+  for (const card of allCards) {
+    card.holder.on("pointerdown", (e) => { drag = { card, dx: e.global.x - card.home.x, dy: e.global.y - card.home.y }; card.holder.cursor = "grabbing"; });
+  }
+  app.stage.eventMode = "static"; app.stage.hitArea = new PIXI.Rectangle(0, 0, W, H);
+  app.stage.on("pointermove", (e) => { if (drag) { drag.card.home.x = e.global.x - drag.dx; drag.card.home.y = e.global.y - drag.dy; } });
+  const endDrag = () => {
+    if (!drag) return;
+    const c = drag.card, n = c === target ? 2 : 1, half = (n * GRID) / 2;
+    c.home.x = Math.min(W - half, Math.max(half, Math.round((c.home.x - half) / GRID) * GRID + half));
+    c.home.y = Math.min(H - half, Math.max(half, Math.round((c.home.y - half) / GRID) * GRID + half));
+    c.holder.cursor = "grab"; drag = null;
+  };
+  app.stage.on("pointerup", endDrag); app.stage.on("pointerupoutside", endDrag);
+
+  /* ---------------- particles, decals, short-lived drawings ---------------- */
+  const parts = [];
+  function emit(tex, o) {
+    const sp = new PIXI.Sprite(tex); sp.anchor.set(0.5); sp.tint = o.tint ?? 0xffffff;
+    sp.blendMode = o.add ? PIXI.BLEND_MODES.ADD : PIXI.BLEND_MODES.NORMAL;
+    (o.layer ?? fx).addChild(sp);
+    parts.push({ sp, x: o.x, y: o.y, vx: o.vx ?? 0, vy: o.vy ?? 0, life: 0, max: o.life ?? 1, drag: o.drag ?? 1.5, grav: o.grav ?? 0,
+      rot: o.rot ?? rnd(0, 6.28), spin: o.spin ?? 0, s0: o.s0 ?? 0.3, s1: o.s1 ?? 0, a0: o.a0 ?? 1, a1: o.a1 ?? 0, face: !!o.face, sx: o.sx ?? 1 });
+  }
+  const temps = []; // { g, life, max, draw(g, k) }
+  const temp = (max, draw, layer = fx, add = true) => { const g = new PIXI.Graphics(); if (add) g.blendMode = PIXI.BLEND_MODES.ADD; layer.addChild(g); temps.push({ g, life: 0, max, draw }); };
+  const decalList = [];
+  const decal = (g, hold = 1.6, fade = 1.4) => { decals.addChild(g); decalList.push({ g, life: 0, hold, fade }); };
+
+  function cracks(x, y, r, color = 0x0b0b0c) {
+    const g = new PIXI.Graphics();
+    // a dent, then radial cracks that branch
+    g.beginFill(0x000000, 0.28).drawEllipse(x, y, r * 0.55, r * 0.35).endFill();
+    const arms = Math.round(rnd(7, 10));
+    for (let a = 0; a < arms; a++) {
+      let ang = (a / arms) * 6.283 + rnd(-.25, .25), px = x, py = y, len = r * rnd(.55, 1.05), w = 4;
+      const steps = 6;
+      for (let i = 0; i < steps; i++) {
+        const nx = px + Math.cos(ang) * len / steps, ny = py + Math.sin(ang) * len / steps * 0.62;
+        g.lineStyle(w, color, 0.85).moveTo(px, py).lineTo(nx, ny);
+        g.lineStyle(1, 0x8b8f99, 0.35).moveTo(px + 1, py + 1.5).lineTo(nx + 1, ny + 1.5);
+        if (Math.random() < .35) { const b = ang + rnd(-.9, .9); g.lineStyle(Math.max(1, w - 2), color, .7).moveTo(nx, ny).lineTo(nx + Math.cos(b) * len / 5, ny + Math.sin(b) * len / 8); }
+        px = nx; py = ny; ang += rnd(-.35, .35); w = Math.max(1, w - .6);
+      }
+    }
+    return g;
+  }
+  function blotch(x, y, r, color, alpha, spikes = 0) {
+    const g = new PIXI.Graphics();
+    for (let i = 0; i < 4; i++) g.beginFill(color, alpha * (0.35 + i * 0.12)).drawEllipse(x + rnd(-4, 4), y + rnd(-3, 3), r * (1 - i * .2), r * (1 - i * .2) * .6).endFill();
+    for (let i = 0; i < spikes; i++) {
+      const a = rnd(0, 6.28), l = r * rnd(.7, 1.3);
+      g.beginFill(color, alpha * .8).moveTo(x + Math.cos(a + .08) * r * .3, y + Math.sin(a + .08) * r * .2).lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l * .6).lineTo(x + Math.cos(a - .08) * r * .3, y + Math.sin(a - .08) * r * .2).endFill();
+    }
+    return g;
+  }
+  function bolt(x0, y0, x1, y1, jag) {
+    const pts = [[x0, y0]], n = 9;
+    for (let i = 1; i < n; i++) { const k = i / n; pts.push([x0 + (x1 - x0) * k + rnd(-jag, jag), y0 + (y1 - y0) * k + rnd(-jag * .3, jag * .3)]); }
+    pts.push([x1, y1]); return pts;
+  }
+
+  /* ---------------- the reactions ---------------- */
+  const TYPES = [
+    { id: "bludgeoning", label: "Bludgeoning", color: 0xd9c7a3, melee: true },
+    { id: "slashing", label: "Slashing", color: 0xf2f2f2, melee: true },
+    { id: "piercing", label: "Piercing", color: 0xe6e0c9, melee: true },
+    { id: "fire", label: "Fire", color: 0xff7a1a },
+    { id: "cold", label: "Cold", color: 0x8fd8ff },
+    { id: "electricity", label: "Electricity", color: 0xb9a6ff },
+    { id: "acid", label: "Acid", color: 0x8ee03a },
+    { id: "sonic", label: "Sonic", color: 0x7fe7d6 },
+    { id: "force", label: "Force", color: 0xc07bff },
+    { id: "mental", label: "Mental", color: 0xff7bd5 },
+    { id: "void", label: "Void", color: 0x9d6bff },
+    { id: "vitality", label: "Vitality", color: 0xffe08a }
+  ];
+  let camShake = 0, hitStop = 0, cardsQueue = [];
+
+  function damageNumber(card, value, color, crit) {
+    const style = new PIXI.TextStyle({ fontFamily: "Alegreya Sans SC, Trebuchet MS, sans-serif", fontWeight: "800", fontSize: crit ? 46 : 36, fill: "#ffffff", stroke: "#1a0d05", strokeThickness: 7, dropShadow: true, dropShadowBlur: 6, dropShadowColor: "#000000", dropShadowDistance: 2 });
+    const txt = new PIXI.Text(`−${value}`, style); txt.anchor.set(0.5);
+    const burst = new PIXI.Graphics(); const R = crit ? 46 : 38;
+    burst.beginFill(color, 1); for (let i = 0; i < 24; i++) { const a = (i / 24) * 6.283, r = i % 2 ? R : R * 0.72; i ? burst.lineTo(Math.cos(a) * r, Math.sin(a) * r) : burst.moveTo(Math.cos(a) * r, Math.sin(a) * r); } burst.endFill();
+    burst.beginFill(0x000000, .25).drawCircle(0, 0, R * .55).endFill();
+    const c = new PIXI.Container(); c.addChild(burst, txt); over.addChild(c);
+    temps.push({ g: c, life: 0, max: 1.5, draw: (g, k) => {
+      g.position.set(card.home.x + card.size * .38, card.home.y - card.size * .36 - k * 22);
+      const pop = k < .12 ? (k / .12) * 1.25 : k < .2 ? 1.25 - (k - .12) / .08 * .25 : 1; g.scale.set(pop); g.alpha = k > .75 ? 1 - (k - .75) / .25 : 1; burst.rotation = k * .6;
+    } });
+  }
+
+  function hit(type, opts) {
+    const share = opts.share, crit = opts.crit, kill = opts.kill, less = opts.less;
+    const p = Math.min(1.6, (0.35 + share * 0.9) * (crit ? 1.45 : 1) * (kill ? 1.2 : 1));
+    const T = target, cx = T.home.x, cy = T.home.y, r = T.size / 2;
+    const dx = cx - hero.home.x, dy = cy - hero.home.y, dl = Math.hypot(dx, dy) || 1, ux = dx / dl, uy = dy / dl;
+    const hx = cx - ux * r * .55, hy = cy - uy * r * .55; // where it hits: the side facing Valeros
+    const motion = less ? 0 : 1;
+
+    // the attacker lunges for weapon hits
+    if (type.melee && motion) { hero.v.x += ux * 260; hero.v.y += uy * 260; hero.v.lift += 2.5; }
+    const delay = type.melee && motion ? 0.12 : type.id === "electricity" ? 0.05 : 0.02;
+    cardsQueue.push({ at: delay, run: () => impact() });
+
+    function impact() {
+      if (crit && motion) hitStop = 0.07;
+      // the card reacts: jumps up, leans away from the blow, slides back, shakes
+      T.v.x += ux * 520 * p * motion; T.v.y += uy * 520 * p * motion;
+      T.v.lift += 9 * p * motion;
+      T.v.rx += -uy * 9 * p * motion; T.v.ry += ux * 9 * p * motion;
+      T.v.rot += (Math.random() < .5 ? -1 : 1) * 2.2 * p * motion;
+      T.shake = 7 * p * motion; T.flash = 0.9 + 0.4 * (crit ? 1 : 0); T.flashColor = type.color;
+      if (crit) camShake = 8 * p * motion;
+      if (opts.number) damageNumber(T, Math.round(share * 120 * (crit ? 2 : 1)) || 1, type.color, crit);
+      // a flash where it lands
+      emit(SOFT, { x: hx, y: hy, s0: 2.2 * p, s1: 3.4 * p, a0: .9, a1: 0, life: .22, tint: type.color, add: true });
+      emit(SOFT, { x: hx, y: hy, s0: 1, s1: 1.6, a0: 1, a1: 0, life: .12, tint: 0xffffff, add: true });
+      looks[type.id](T, { cx, cy, r, hx, hy, ux, uy, p, crit, motion, color: type.color });
+      if (kill) die(T, p);
+    }
+  }
+
+  const n = (base, p) => Math.round(base * (0.6 + p * 0.8));
+  const looks = {
+    bludgeoning(T, o) {
+      decal(cracks(o.cx, o.cy + o.r * .55, o.r * (1.1 + o.p * .5)), 2.2, 1.6);
+      for (let i = 0; i < n(26, o.p); i++) { const a = rnd(0, 6.28), sp = rnd(80, 320) * o.p; emit(CHIP, { x: o.cx + rnd(-20, 20), y: o.cy + o.r * .5, vx: Math.cos(a) * sp, vy: -Math.abs(Math.sin(a)) * sp - 120, grav: 900, drag: 1, life: rnd(.5, .9), s0: rnd(.5, 1.1), s1: .4, a0: 1, a1: .8, tint: 0x6e6a62, spin: rnd(-12, 12) }); }
+      for (let i = 0; i < n(10, o.p); i++) { const a = rnd(0, 6.28); emit(SOFT, { x: o.cx + rnd(-30, 30), y: o.cy + o.r * .55, vx: Math.cos(a) * 90, vy: Math.sin(a) * 30 - 20, life: rnd(.9, 1.4), s0: 1.2, s1: 2.6, a0: .35, a1: 0, tint: 0x9a8f7a, drag: 2 }); }
+      // a ring of dust along the ground
+      temp(.5, (g, k) => { g.clear(); g.lineStyle(10 * (1 - k), 0xd9c7a3, .45 * (1 - k)).drawEllipse(o.cx, o.cy + o.r * .55, o.r * (.4 + k * 1.3), o.r * (.25 + k * .8)); });
+    },
+    slashing(T, o) {
+      const a = Math.atan2(o.uy, o.ux) + Math.PI / 2 + rnd(-.4, .4), L = o.r * 1.6;
+      temp(.32, (g, k) => { g.clear(); const w = 16 * (1 - k) * o.p + 2; const x0 = o.cx - Math.cos(a) * L, y0 = o.cy - Math.sin(a) * L, x1 = o.cx + Math.cos(a) * L, y1 = o.cy + Math.sin(a) * L;
+        const e = Math.min(1, k * 4); g.lineStyle(w, 0xffffff, 1 - k).moveTo(x0, y0).lineTo(x0 + (x1 - x0) * e, y0 + (y1 - y0) * e); g.lineStyle(w * 2.4, 0xff5a4a, .35 * (1 - k)).moveTo(x0, y0).lineTo(x0 + (x1 - x0) * e, y0 + (y1 - y0) * e); });
+      for (let i = 0; i < n(16, o.p); i++) emit(SPARK, { x: o.cx + rnd(-10, 10), y: o.cy + rnd(-10, 10), vx: Math.cos(a + 1.57) * rnd(-300, 300), vy: Math.sin(a + 1.57) * rnd(-300, 300), face: true, life: rnd(.25, .45), s0: 1, s1: .3, a0: 1, a1: 0, tint: 0xffd6c9, add: true });
+      for (let i = 0; i < n(10, o.p); i++) emit(SOFT, { x: o.cx, y: o.cy, vx: rnd(-160, 160), vy: rnd(-60, 160), grav: 600, life: rnd(.4, .8), s0: .22, s1: .12, a0: 1, a1: .6, tint: 0x9e1b1b });
+      decal(blotch(o.cx + rnd(-10, 10), o.cy + o.r * .6, o.r * .35, 0x5a0c0c, .5), 1.4, 1.2);
+    },
+    piercing(T, o) {
+      const ang = Math.atan2(o.uy, o.ux);
+      temp(.25, (g, k) => { g.clear(); const L = o.r * 2.4 * Math.min(1, k * 5); g.lineStyle(6 * (1 - k) + 1, 0xffffff, 1 - k).moveTo(o.hx - o.ux * 30, o.hy - o.uy * 30).lineTo(o.hx + Math.cos(ang) * L, o.hy + Math.sin(ang) * L); });
+      for (let i = 0; i < n(22, o.p); i++) { const a = ang + rnd(-.45, .45), sp = rnd(250, 560); emit(SPARK, { x: o.cx + o.ux * o.r * .6, y: o.cy + o.uy * o.r * .6, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, face: true, life: rnd(.2, .4), s0: 1.2, s1: .2, a0: 1, a1: 0, tint: 0xfff3c4, add: true }); }
+      for (let i = 0; i < n(8, o.p); i++) emit(SOFT, { x: o.cx + o.ux * o.r * .7, y: o.cy + o.uy * o.r * .7, vx: o.ux * rnd(60, 200) + rnd(-50, 50), vy: o.uy * rnd(60, 200) + rnd(-20, 120), grav: 500, life: rnd(.4, .7), s0: .2, s1: .1, a0: 1, a1: .5, tint: 0x9e1b1b });
+    },
+    fire(T, o) {
+      decal(blotch(o.cx, o.cy + o.r * .5, o.r * (.9 + o.p * .4), 0x120804, .75, 10), 2.4, 2);
+      for (let i = 0; i < n(46, o.p); i++) { const a = rnd(0, 6.28), d = rnd(0, o.r * .9); emit(SOFT, { x: o.cx + Math.cos(a) * d, y: o.cy + Math.sin(a) * d * .7, vx: rnd(-40, 40), vy: rnd(-260, -80), drag: 1.2, life: rnd(.5, 1.1), s0: rnd(.5, 1), s1: .1, a0: 1, a1: 0, tint: [0xff7a1a, 0xffb347, 0xff4810][i % 3], add: true }); }
+      for (let i = 0; i < n(18, o.p); i++) emit(CHIP, { x: o.cx + rnd(-o.r, o.r) * .7, y: o.cy + rnd(-o.r, o.r) * .5, vx: rnd(-60, 60), vy: rnd(-200, -60), grav: -60, life: rnd(1, 1.8), s0: .3, s1: .1, a0: 1, a1: 0, tint: 0xffc35a, add: true, spin: rnd(-6, 6) });
+      temp(.7, (g, k) => { g.clear(); g.beginFill(0xff6a00, .35 * (1 - k)).drawCircle(o.cx, o.cy, o.r * (1 + k * .6)).endFill(); });
+      for (let i = 0; i < 5; i++) emit(SOFT, { x: o.cx + rnd(-20, 20), y: o.cy - o.r * .3, vx: rnd(-20, 20), vy: rnd(-70, -40), drag: .6, life: rnd(1.6, 2.4), s0: 1.2, s1: 3, a0: .3, a1: 0, tint: 0x3a3632, layer: over });
+    },
+    cold(T, o) {
+      T.frozen = 1; T.stiff = 2.2; setTimeout(() => (T.stiff = 1), 900);
+      decal(blotch(o.cx, o.cy + o.r * .5, o.r * (.9 + o.p * .3), 0xcfefff, .45, 16), 2.4, 1.8);
+      for (let i = 0; i < n(26, o.p); i++) { const a = rnd(0, 6.28), sp = rnd(120, 360) * o.p; emit(SHARD, { x: o.hx, y: o.hy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 60, grav: 500, drag: 1.4, life: rnd(.5, .9), s0: rnd(.5, 1), s1: .4, a0: 1, a1: 0, tint: 0xd8f4ff, face: true, add: true }); }
+      for (let i = 0; i < n(14, o.p); i++) emit(SOFT, { x: o.cx + rnd(-o.r, o.r) * .8, y: o.cy + rnd(-o.r, o.r) * .6, vx: rnd(-20, 20), vy: rnd(-30, 10), life: rnd(1, 1.6), s0: .6, s1: 1.4, a0: .45, a1: 0, tint: 0xbfe9ff, add: true });
+    },
+    electricity(T, o) {
+      // a bolt from above, flickering, with branches; the card jitters
+      T.shake += 5 * o.p * o.motion;
+      let pts = bolt(o.cx + rnd(-60, 60), -10, o.cx, o.cy, 34);
+      temp(.36, (g, k) => { if (Math.random() < .5) pts = bolt(pts[0][0], -10, o.cx, o.cy, 34); g.clear(); const a = k < .7 ? 1 : 1 - (k - .7) / .3;
+        g.lineStyle(14, 0x8a7bff, .35 * a); pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)));
+        g.lineStyle(4, 0xffffff, a); pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)));
+        for (let b = 3; b < pts.length - 1; b += 3) { const [x, y] = pts[b]; g.lineStyle(2, 0xd9d0ff, a * .8).moveTo(x, y).lineTo(x + rnd(-50, 50), y + rnd(10, 50)); } });
+      temp(.3, (g, k) => { g.clear(); g.beginFill(0xffffff, .22 * (1 - k)).drawRect(0, 0, W, H).endFill(); }, over);
+      decal(blotch(o.cx, o.cy + o.r * .55, o.r * .5, 0x0d0d14, .7, 12), 1.8, 1.6);
+      for (let i = 0; i < n(30, o.p); i++) { const a = rnd(0, 6.28), sp = rnd(200, 520); emit(SPARK, { x: o.cx, y: o.cy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, face: true, life: rnd(.15, .35), s0: 1, s1: .2, a0: 1, a1: 0, tint: [0xffffff, 0xc9b8ff, 0x9ad0ff][i % 3], add: true }); }
+      // little arcs crawling on the card for a moment
+      temp(.6, (g, k) => { g.clear(); if (k > .9) return; for (let j = 0; j < 3; j++) { const a0 = rnd(0, 6.28), a1 = a0 + rnd(.5, 1.4); const q = bolt(o.cx + Math.cos(a0) * o.r * .9 + T.s.x, o.cy + Math.sin(a0) * o.r * .9 + T.s.y, o.cx + Math.cos(a1) * o.r * .9 + T.s.x, o.cy + Math.sin(a1) * o.r * .9 + T.s.y, 10); g.lineStyle(2, 0xe6ddff, .9); q.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); } });
+    },
+    acid(T, o) {
+      decal(blotch(o.cx + rnd(-10, 10), o.cy + o.r * .55, o.r * (.8 + o.p * .4), 0x3f7a12, .55, 6), 2.6, 1.8);
+      for (let i = 0; i < n(34, o.p); i++) { const a = rnd(-3.1, 0), sp = rnd(120, 340); emit(SOFT, { x: o.hx, y: o.hy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, grav: 900, drag: .8, life: rnd(.5, .9), s0: rnd(.18, .35), s1: .12, a0: 1, a1: .7, tint: 0x8ee03a }); }
+      for (let i = 0; i < n(16, o.p); i++) emit(SOFT, { x: o.cx + rnd(-o.r, o.r) * .7, y: o.cy + o.r * .5 + rnd(-8, 8), vx: rnd(-8, 8), vy: rnd(-60, -20), life: rnd(.8, 1.6), s0: .15, s1: .45, a0: .9, a1: 0, tint: 0xc8ff8a, add: true });
+    },
+    sonic(T, o) {
+      for (let j = 0; j < 3; j++) temp(.55 + j * .12, (g, k) => { g.clear(); const kk = Math.max(0, k - j * .12); g.lineStyle(6 * (1 - kk), 0x7fe7d6, .9 * (1 - kk)).drawCircle(o.cx, o.cy, o.r * (.6 + kk * 1.8)); });
+      T.shake += 9 * o.p * o.motion;
+      for (let i = 0; i < n(18, o.p); i++) { const a = rnd(0, 6.28); emit(SOFT, { x: o.cx + Math.cos(a) * o.r, y: o.cy + Math.sin(a) * o.r, vx: Math.cos(a) * 220, vy: Math.sin(a) * 220, life: .4, s0: .3, s1: .1, a0: .8, a1: 0, tint: 0xc8fff6, add: true }); }
+    },
+    force(T, o) {
+      temp(.45, (g, k) => { g.clear(); g.lineStyle(14 * (1 - k), 0xc07bff, .8 * (1 - k)).drawCircle(o.cx, o.cy, o.r * (.7 + k * 1.3)); g.lineStyle(3, 0xffffff, .8 * (1 - k)).drawCircle(o.cx, o.cy, o.r * (.65 + k * 1.2)); });
+      temp(.8, (g, k) => { g.clear(); const a = 1 - k; for (let i = 0; i < 6; i++) { const ang = i * 1.047 + k * 2; g.lineStyle(3, 0xe4c6ff, a).drawPolygon([o.cx + Math.cos(ang) * o.r * 1.15, o.cy + Math.sin(ang) * o.r * 1.15, o.cx + Math.cos(ang + .5) * o.r * 1.05, o.cy + Math.sin(ang + .5) * o.r * 1.05, o.cx + Math.cos(ang + .25) * o.r * .95, o.cy + Math.sin(ang + .25) * o.r * .95]); } });
+      for (let i = 0; i < n(20, o.p); i++) { const a = rnd(0, 6.28); emit(SOFT, { x: o.cx, y: o.cy, vx: Math.cos(a) * 300, vy: Math.sin(a) * 300, drag: 3, life: .5, s0: .5, s1: .1, a0: 1, a1: 0, tint: 0xd8a8ff, add: true }); }
+    },
+    mental(T, o) {
+      for (let j = 0; j < 3; j++) temp(.9, (g, k) => { g.clear(); const kk = Math.max(0, k - j * .15), a = 1 - kk; g.lineStyle(3, 0xff7bd5, .8 * a); for (let s = 0; s <= 60; s++) { const t = s / 60, ang = t * 9 + kk * 6 + j * 2, rr = o.r * (.2 + t * (.6 + kk * .8)); const x = o.cx + Math.cos(ang) * rr, y = o.cy + Math.sin(ang) * rr * .9; s ? g.lineTo(x, y) : g.moveTo(x, y); } });
+      for (let i = 0; i < n(14, o.p); i++) { const a = rnd(0, 6.28); emit(SOFT, { x: o.cx + Math.cos(a) * o.r * 1.2, y: o.cy + Math.sin(a) * o.r * 1.2, vx: -Math.cos(a) * 120, vy: -Math.sin(a) * 120, life: .7, s0: .4, s1: .1, a0: .9, a1: 0, tint: 0xffa8e6, add: true }); }
+      T.v.rot += 3 * o.p * o.motion;
+    },
+    void(T, o) {
+      for (let i = 0; i < n(36, o.p); i++) { const a = rnd(0, 6.28), d = o.r * rnd(1.1, 1.8); emit(SOFT, { x: o.cx + Math.cos(a) * d, y: o.cy + Math.sin(a) * d, vx: -Math.cos(a) * d * 2.2, vy: -Math.sin(a) * d * 2.2, drag: 1, life: .5, s0: .7, s1: .1, a0: .9, a1: .3, tint: 0x14061f, layer: over }); }
+      temp(.7, (g, k) => { g.clear(); g.beginFill(0x0a0312, .55 * Math.sin(k * 3.14)).drawCircle(o.cx, o.cy, o.r * (1.2 - k * .5)).endFill(); }, over, false);
+      decal(blotch(o.cx, o.cy + o.r * .55, o.r * .8, 0x1a0a2a, .6, 8), 1.8, 1.6);
+      T.flashColor = 0x6b3bff;
+    },
+    vitality(T, o) {
+      temp(.8, (g, k) => { g.clear(); g.beginFill(0xffe08a, .4 * (1 - k)).drawRect(o.cx - o.r * .5, o.cy - 400, o.r, 400 + o.r * .3).endFill(); });
+      for (let i = 0; i < n(30, o.p); i++) emit(SOFT, { x: o.cx + rnd(-o.r, o.r), y: o.cy + rnd(-o.r, o.r) * .7, vx: rnd(-30, 30), vy: rnd(-180, -60), life: rnd(.6, 1.2), s0: .3, s1: 0, a0: 1, a1: 0, tint: [0xfff2c2, 0xffe08a][i % 2], add: true });
+      decal(blotch(o.cx, o.cy + o.r * .55, o.r * .7, 0xfff0b0, .25, 0), 1.2, 1.4);
+    }
+  };
+
+  /** Down to 0 HP: the card is knocked flat, cracks, greys out and fades; it comes back after a moment. */
+  function die(T, p) {
+    const crack = new PIXI.Graphics(); T.holder.addChild(crack);
+    const lines = []; for (let i = 0; i < 7; i++) { let x = rnd(-10, 10), y = rnd(-10, 10), a = rnd(0, 6.28); const seg = [[x, y]]; for (let j = 0; j < 5; j++) { x += Math.cos(a) * T.size * .1; y += Math.sin(a) * T.size * .1; a += rnd(-.5, .5); seg.push([x, y]); } lines.push(seg); }
+    temps.push({ g: crack, life: 0, max: 2.6, draw: (g, k) => { g.clear(); const e = Math.min(1, k * 6); for (const seg of lines) { g.lineStyle(3, 0x0a0a0a, .9); const m = Math.max(1, Math.round(seg.length * e)); seg.slice(0, m).forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.lineStyle(1, 0xffffff, .35); seg.slice(0, m).forEach(([x, y], i) => (i ? g.lineTo(x + 1, y + 1) : g.moveTo(x + 1, y + 1))); } } });
+    deathAnim = { t: 0, T };
+    for (let i = 0; i < n(20, p); i++) { const a = rnd(0, 6.28); emit(CHIP, { x: T.home.x, y: T.home.y, vx: Math.cos(a) * rnd(100, 300), vy: Math.sin(a) * rnd(100, 300) - 100, grav: 700, life: rnd(.6, 1), s0: rnd(.6, 1.2), s1: .4, a0: 1, a1: 0, tint: 0x8a7a5e, spin: rnd(-10, 10) }); }
+  }
+  let deathAnim = null;
+
+  /* ---------------- the loop ---------------- */
+  let time = 0;
+  app.ticker.add(() => {
+    let dt = Math.min(0.05, app.ticker.deltaMS / 1000);
+    time += app.ticker.deltaMS;
+    if (hitStop > 0) { hitStop -= dt; dt *= 0.08; }
+    for (let i = cardsQueue.length - 1; i >= 0; i--) { cardsQueue[i].at -= dt; if (cardsQueue[i].at <= 0) { const q = cardsQueue.splice(i, 1)[0]; q.run(); } }
+    for (const c of allCards) { springs(c, dt); drawCard(c, time); }
+    if (deathAnim) {
+      const d = deathAnim; d.t += dt; const T = d.T;
+      if (d.t < 2.2) { T.dead = Math.min(1, d.t * 2.2); T.alpha = 1 - Math.min(.65, Math.max(0, d.t - .8) * .6); }
+      else { T.dead = Math.max(0, 1 - (d.t - 2.2) * 2.5); T.alpha = Math.min(1, .35 + (d.t - 2.2) * 2); if (d.t > 2.7) { T.dead = 0; T.alpha = 1; deathAnim = null; } }
+    }
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const q = parts[i]; q.life += dt; const k = q.life / q.max;
+      if (k >= 1) { q.sp.destroy(); parts.splice(i, 1); continue; }
+      const f = Math.exp(-q.drag * dt); q.vx *= f; q.vy *= f; q.vy += q.grav * dt; q.x += q.vx * dt; q.y += q.vy * dt; q.rot += q.spin * dt;
+      q.sp.position.set(q.x, q.y); q.sp.rotation = q.face ? Math.atan2(q.vy, q.vx) : q.rot;
+      const s = q.s0 + (q.s1 - q.s0) * k; q.sp.scale.set(s * (q.face ? 1.6 : 1), s); q.sp.alpha = q.a0 + (q.a1 - q.a0) * k;
+    }
+    for (let i = temps.length - 1; i >= 0; i--) { const q = temps[i]; q.life += dt; const k = Math.min(1, q.life / q.max); q.draw(q.g, k); if (k >= 1) { q.g.destroy({ children: true }); temps.splice(i, 1); } }
+    for (let i = decalList.length - 1; i >= 0; i--) { const q = decalList[i]; q.life += dt; if (q.life > q.hold) q.g.alpha = Math.max(0, 1 - (q.life - q.hold) / q.fade); if (q.life > q.hold + q.fade) { q.g.destroy(); decalList.splice(i, 1); } }
+    camShake *= Math.pow(0.004, dt);
+    world.position.set(camShake > .2 ? rnd(-camShake, camShake) : 0, camShake > .2 ? rnd(-camShake, camShake) : 0);
+  });
+
+  /* ---------------- controls ---------------- */
+  const $ = (id) => document.getElementById(id);
+  const opts = () => ({ crit: $("crit").checked, kill: $("kill").checked, share: Number($("share").value) / 100, number: $("number").checked, less: $("less").checked });
+  const typesEl = $("types");
+  for (const t of TYPES) {
+    const b = document.createElement("button"); b.type = "button"; b.id = `t-${t.id}`;
+    b.style.setProperty("--c", `#${t.color.toString(16).padStart(6, "0")}`);
+    b.innerHTML = `<span class="dot"></span>${t.label}`;
+    b.addEventListener("click", () => hit(t, opts()));
+    typesEl.append(b);
+  }
+  $("share").addEventListener("input", () => ($("shareOut").textContent = `${$("share").value}%`));
+  $("random").addEventListener("click", () => {
+    const t = TYPES[Math.floor(Math.random() * TYPES.length)];
+    hit(t, { ...opts(), crit: Math.random() < .3, share: rnd(.2, .7) });
+  });
+  $("reset").addEventListener("click", () => {
+    for (const c of allCards) { for (const k of Object.keys(c.s)) { c.s[k] = 0; c.v[k] = 0; } c.dead = 0; c.alpha = 1; c.shake = 0; c.flash = 0; c.frozen = 0; }
+    deathAnim = null; hero.home = { x: GRID * 2.5, y: GRID * 3.5 }; target.home = { x: GRID * 6.5, y: GRID * 2.5 };
+  });
+  // A first hit so the page opens showing what it does.
+  setTimeout(() => hit(TYPES.find((t) => t.id === "electricity"), { ...opts(), crit: true }), 600);
+})();
+</script>

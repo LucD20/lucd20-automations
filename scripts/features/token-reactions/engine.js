@@ -68,6 +68,7 @@ const E = {
   stageOff: null, // while the stage is shaken: { base: where it belongs, at: where we left it }
   slowT: 0,
   ts: 1,
+  freezeT: 0, // seconds left of a hit-stop of the whole simulation (Signature Spells: the impact frame)
   wallsOk: true
 };
 /** The layer set that drawing goes to right now (the reacting token's elevation). */
@@ -135,6 +136,18 @@ export function useLayersOf(coin) {
   L = coin.layers;
 }
 
+/**
+ * Draw at this elevation from now on, coin or no coin (Signature Spells: a mark and sparks on a token that is
+ * not thrown). The engine runs until what was drawn has ended.
+ */
+export function useLayersAt(elevation = 0) {
+  if (!primary()) return null;
+  textures();
+  L = layerSet(Number(elevation) || 0);
+  start();
+  return L;
+}
+
 /** The effects layer in use, and the scale (for the optional JB2A clip). */
 export const fxLayer = () => L?.fx ?? null;
 
@@ -144,6 +157,8 @@ export const fxLayer = () => L?.fx ?? null;
 
 export const shake = a => { if (E.shakeOn) E.shk = Math.max(E.shk, a); };
 export const slowMotion = t => { E.slowT = t; };
+/** Hold the whole simulation still for `t` seconds of real time (0: let go now). It lets go by itself. */
+export const freezeFor = t => { E.freezeT = Math.max(0, t); };
 
 /** Shake: an offset on the stage's position, taken off again exactly (Foundry pans with the pivot). */
 function applyShake(real) {
@@ -173,7 +188,7 @@ function applyShake(real) {
 export function P(tex, x, y, z, o) {
   if (E.parts.length > MAX_PARTICLES || !L || !tex) return null;
   const p = Object.assign({ vx: 0, vy: 0, vz: 0, g: 0, drag: 0, life: .6, s0: 10, s1: null, tint: 0xffffff, add: false, a: 1, rot: rnd(0, TAU), vr: 0,
-    stretch: false, ax: 1, bounce: false, below: false, fi: .06, pw: 1.4, ay: .5, sy: 1 }, o);
+    stretch: false, ax: 1, bounce: false, below: false, fi: .06, pw: 1.4, ay: .5, sy: 1, flut: 0 }, o);
   p.x = x; p.y = y; p.z = z; p.t = 0;
   if (p.s1 == null) p.s1 = p.s0;
   p.tw = tex.width;
@@ -203,14 +218,15 @@ function stepParts(dt) {
     if (p.z < 0 && p.g > 0) {
       p.z = 0;
       if (p.bounce && p.vz < -60) { p.vz *= -.4; p.vx *= .6; p.vy *= .6; p.vr *= .5; }
-      else { p.vx = p.vy = p.vz = 0; p.g = 0; p.vr = 0; p.stretch = false; }
+      else { p.vx = p.vy = p.vz = 0; p.g = 0; p.vr = 0; p.flut = 0; p.stretch = false; }
     }
     const u = p.t / p.life, s = lerp(p.s0, p.s1, u) / p.tw, sp = p.sp;
     sp.alpha = p.a * (u < p.fi ? u / p.fi : 1 - Math.pow((u - p.fi) / (1 - p.fi), p.pw));
     sp.position.set(p.x, p.y - p.z * OBL);
     if (p.stretch) sp.rotation = Math.atan2(p.vy - p.vz * OBL, p.vx);
     else { p.rot += p.vr * dt; sp.rotation = p.rot; }
-    sp.scale.set(s * p.ax, s * p.sy);
+    // flut: it flutters as it falls (a petal, a card), turning edge-on and back.
+    sp.scale.set(s * p.ax * (p.flut ? Math.cos(p.t * p.flut + p.rot) : 1), s * p.sy);
   }
 }
 
@@ -315,7 +331,7 @@ const restState = () => ({ x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, psi: 0, psiRat
   scl: 1, sclV: 0, flash: 0, flashCol: 0xffffff, glow: 0, glowCol: [1, 1, 1], glowDamp: 2, frost: 0, ghost: 0, gph: 0, alpha: 1, dark: 0, jx: 0, jy: 0 });
 
 /** The token's outline as a white texture (for the flash, the rim and the back), or null. */
-function silhouette(tex) {
+export function silhouette(tex) {
   try {
     const renderer = canvas.app?.renderer;
     const Filter = PIXI.ColorMatrixFilter ?? PIXI.filters?.ColorMatrixFilter;
@@ -340,7 +356,7 @@ function silhouette(tex) {
  * subject; its ring is drawn by the mesh's shader, so the coin lost its border). Drawn unrotated and unmirrored
  * (the coin applies both itself, as for a plain texture); null on any trouble, and the coin falls back to the plain texture.
  */
-function snapshot(mesh) {
+export function snapshot(mesh) {
   const renderer = canvas.app?.renderer;
   if (!renderer || !mesh || mesh.destroyed) return null;
   const w = Math.ceil(Math.abs(mesh.width)), h = Math.ceil(Math.abs(mesh.height));
@@ -643,7 +659,7 @@ function wallBetween(x0, y0, x1, y1) {
 }
 
 /** The art never leaves the map, nor a room: it rebounds off the scene's edge and off walls. */
-function walls(c, S) {
+export function walls(c, S) {
   const k = E.k, d = canvas.dimensions, r = d?.sceneRect ?? d?.rect, m = c.R * .9;
   let hit = false;
   if (r) {
@@ -861,19 +877,24 @@ export function addExtra(extra) {
 function tick() {
   const real = Math.min(.034, (E.ticker?.deltaMS ?? 16) / 1000);
   if (E.slowT > 0) { E.slowT -= real; E.ts = lerp(E.ts, .28, .35); } else E.ts = lerp(E.ts, 1, .2);
-  const dt = real * E.ts;
+  // A hit-stop: everything holds still (and is still drawn) until it runs out.
+  const frozen = E.freezeT > 0;
+  if (frozen) E.freezeT -= real;
+  const dt = frozen ? 0 : real * E.ts;
   for (const coin of [...E.coins.values()]) {
     if (coin.gone) { coin.finish(); continue; }
     L = coin.layers;
     coin.hide();
-    coin.update(dt);
+    if (!frozen) coin.update(dt);
     if (coin.done) coin.finish();
     else coin.draw();
   }
-  stepParts(dt);
-  stepMarks(dt);
-  stepNums(dt);
-  for (let i = E.extras.length - 1; i >= 0; i--) {
+  if (!frozen) {
+    stepParts(dt);
+    stepMarks(dt);
+    stepNums(dt);
+  }
+  for (let i = E.extras.length - 1; !frozen && i >= 0; i--) {
     let done = true;
     try { done = E.extras[i].step(dt); } catch { /* a broken clip ends */ }
     if (done) { try { E.extras[i].destroy(); } catch { /* gone */ } E.extras.splice(i, 1); }
@@ -897,7 +918,7 @@ function stop() {
   E.ticker?.remove(tick);
   E.ticker = null;
   E.running = false;
-  E.shk = 0; E.slowT = 0;
+  E.shk = 0; E.slowT = 0; E.freezeT = 0;
   if (E.stageOff) applyShake(0);
   destroyLayers();
 }

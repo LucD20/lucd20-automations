@@ -49,7 +49,7 @@ export function lookOf(type) {
 /*  Ground marks                                */
 /* -------------------------------------------- */
 
-const MARK = {
+export const MARK = {
   bludgeoning(c, x, y, k = 1) {
     const R = c.R * k;
     mark(x, y, 7, g => {
@@ -447,7 +447,7 @@ export const TYPES = {
  * Everything one hit needs: the look, the direction of the blow (from the attacker, else any), where across
  * the token it lands, the strength.
  */
-function context(coin, hit, attacker) {
+export function context(coin, hit, attacker) {
   const { look, col } = lookOf(hit.type);
   const T = Object.assign(Object.create(TYPES[look]), { col });
   const share = clamp(Number(hit.share) || 0, .02, 1), crit = !!hit.crit, kill = !!hit.kill;

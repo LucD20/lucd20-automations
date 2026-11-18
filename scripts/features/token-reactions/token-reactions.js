@@ -209,9 +209,11 @@ const claims = new Map();
  * Another feature played this token's reaction itself (a signature spell's bolt arriving). The next reaction
  * of that look for the token, within `ms`, is then the quiet one (flash, mark and number, nothing thrown a
  * second time). A hit that drops it to 0 HP always plays in full. Per client, like everything shown.
+ * `type` null claims the next reaction of any look.
  */
 export function claimReaction(tokenId, type, ms = WINDOW) {
-  if (tokenId) claims.set(tokenId, { until: Date.now() + ms, look: lookOf(type).look });
+  // type null: whatever the damage turns out to be (a Strike's finisher: the weapon decides the type).
+  if (tokenId) claims.set(tokenId, { until: Date.now() + ms, look: type == null ? null : lookOf(type).look });
 }
 
 /** Uses up a claim on this hit, if there is one. */
@@ -219,7 +221,7 @@ function takeClaim(payload) {
   const claim = claims.get(payload.token);
   if (!claim) return false;
   if (Date.now() > claim.until) { claims.delete(payload.token); return false; }
-  if (claim.look !== lookOf(payload.type).look) return false;
+  if (claim.look && claim.look !== lookOf(payload.type).look) return false;
   claims.delete(payload.token);
   return !payload.kill;
 }
@@ -228,8 +230,13 @@ function takeClaim(payload) {
 export function reactionOptions() {
   const on = !!feature?.active && !!feature.get("show");
   let less = reducedMotion();
-  try { less ||= !!game.settings.get(MODULE_ID, "tokenReactions_lessMotion"); } catch { /* not registered yet */ }
-  return { on, less };
+  let shake = true, intensity = 1;
+  try {
+    less ||= !!game.settings.get(MODULE_ID, "tokenReactions_lessMotion");
+    shake = !!game.settings.get(MODULE_ID, "tokenReactions_shake");
+    intensity = Number(game.settings.get(MODULE_ID, "tokenReactions_intensity")) || 1;
+  } catch { /* not registered yet */ }
+  return { on, less, shake: shake && !less, intensity };
 }
 
 /** Draw one reaction with this user's options. `quiet`: as Less motion, whatever the option says. */

@@ -1,4 +1,5 @@
 import { canSee, claimReaction, playOn, reactionOptions } from "../token-reactions/token-reactions.js";
+import { shake as engineShake, engineState, isRunning } from "../token-reactions/engine.js";
 import { overlayZ } from "./dsn.js";
 
 /**
@@ -11,6 +12,10 @@ import { overlayZ } from "./dsn.js";
  *   with the scene and stays under the windows).
  * A bolt is a jagged line between two moving points that reshapes itself every few milliseconds, grows from
  * its start to its end, and fades. With Less motion bolts keep one shape and have no forks.
+ *
+ * Since v0.75.0 (the Swashbuckler finisher, docs/PLAN.md §21) the screen also takes painters (a function that
+ * draws on the 2D overlay every frame until it returns false) and a full-window flash, and a signature can ask
+ * for a container of its own on the canvas (`fx.worldLayer`), removed when its run ends.
  */
 
 export const ABORT = Symbol("signature aborted");
@@ -19,6 +24,7 @@ const rnd = (a, b) => a + Math.random() * (b - a);
 
 const S = {
   bolts: [], glows: [], frames: new Set(), holds: 0,
+  painters: [], flashA: 0, flashCol: 0xffffff, layers: new Set(), gen: 0,
   raf: null, last: 0, el: null, ctx: null, g: null
 };
 export const effectsState = S;
@@ -81,6 +87,23 @@ function worldLayer() {
   g.zIndex = 9e5;
   parent.addChild(g);
   return g;
+}
+
+/** A container of a signature's own on the canvas (the interface group: above tokens, lighting and fog). */
+function addWorldLayer(z = 0) {
+  const parent = canvas?.interface ?? canvas?.stage;
+  if (!parent) return null;
+  const c = new PIXI.Container();
+  c.eventMode = "none";
+  c.zIndex = 9e5 + 1 + z;
+  parent.addChild(c);
+  S.layers.add(c);
+  return c;
+}
+
+function removeWorldLayer(c) {
+  S.layers.delete(c);
+  try { if (c && !c.destroyed) c.destroy({ children: true }); } catch { /* torn down with the canvas */ }
 }
 
 function removeSurfaces() {
@@ -167,13 +190,16 @@ function frame(now) {
   for (const fn of [...S.frames]) { try { fn(dt, now); } catch (err) { console.error(err); S.frames.delete(fn); } }
   S.bolts = S.bolts.filter(b => now - b.born < b.life);
   S.glows = S.glows.filter(g => now - g.born < g.life);
-  try { draw(now); } catch (err) { console.error(err); S.bolts = []; S.glows = []; }
-  if (!S.bolts.length && !S.glows.length && !S.frames.size && !S.holds) { removeSurfaces(); return; }
+  S.painters = S.painters.filter(p => !p.dead);
+  try { draw(now, dt); } catch (err) { console.error(err); S.bolts = []; S.glows = []; S.painters = []; S.flashA = 0; }
+  S.flashA *= Math.exp(-13 * dt);
+  if (S.flashA < .012) S.flashA = 0;
+  if (!S.bolts.length && !S.glows.length && !S.frames.size && !S.holds && !S.painters.length && !S.flashA) { removeSurfaces(); return; }
   S.raf = requestAnimationFrame(frame);
 }
 
-function draw(now) {
-  const screen = S.bolts.some(b => b.space === "screen") || S.glows.some(g => g.space === "screen");
+function draw(now, dt = 0) {
+  const screen = S.bolts.some(b => b.space === "screen") || S.glows.some(g => g.space === "screen") || S.painters.length > 0 || S.flashA > 0;
   const ctx = screen || S.el ? overlay() : null;
   if (ctx) {
     const ratio = Number(S.el.dataset.ratio) || 1;
@@ -221,6 +247,31 @@ function draw(now) {
       });
     }
   }
+  if (!ctx) return;
+  // Painters, lowest first, each with a clean state; then the flash over everything.
+  const vw = window.innerWidth, vh = window.innerHeight;
+  for (const p of S.painters) {
+    if (p.dead) continue;
+    ctx.save();
+    ctx.globalCompositeOperation = "source-over";
+    ctx.shadowBlur = 0;
+    try { if (p.fn(ctx, now, dt, vw, vh) === false) p.dead = true; } catch (err) { console.error(err); p.dead = true; }
+    ctx.restore();
+  }
+  if (S.flashA > 0) {
+    ctx.globalCompositeOperation = "source-over";
+    ctx.fillStyle = css(S.flashCol, Math.min(1, S.flashA));
+    ctx.fillRect(0, 0, vw, vh);
+  }
+}
+
+/** Draw on the screen overlay every frame: fn(ctx, now, dt, width, height) until it returns false. */
+function addPainter(fn, { z = 0 } = {}) {
+  const p = { fn, z, dead: false };
+  S.painters.push(p);
+  S.painters.sort((a, b) => a.z - b.z);
+  start();
+  return () => { p.dead = true; };
 }
 
 /** Keep the surfaces while a run goes on (between its bolts); the returned function lets go. */
@@ -228,7 +279,9 @@ export function hold() {
   S.holds++;
   start();
   let held = true;
-  return () => { if (held) { held = false; S.holds = Math.max(0, S.holds - 1); } };
+  const gen = S.gen;
+  // After everything was cleared (`clearEffects`), an older hold has nothing left to let go of.
+  return () => { if (held) { held = false; if (gen === S.gen) S.holds = Math.max(0, S.holds - 1); } };
 }
 
 /** Call fn(dt, now) every frame until the returned function is called. */
@@ -240,7 +293,9 @@ export function onFrame(fn) {
 
 /** Everything gone, now. */
 export function clearEffects() {
-  S.bolts = []; S.glows = []; S.frames.clear(); S.holds = 0;
+  S.bolts = []; S.glows = []; S.frames.clear(); S.holds = 0; S.gen++;
+  S.painters = []; S.flashA = 0;
+  for (const c of [...S.layers]) removeWorldLayer(c);
   if (S.raf != null) cancelAnimationFrame(S.raf);
   S.raf = null;
   removeSurfaces();
@@ -262,13 +317,61 @@ export function clearEffects() {
  * fx.canSee(token)
  * fx.strike(from, token, o)       a bolt from a die's screen point ({ screen: true }), a token, or the sky
  *                                 (null) to the token; when it arrives the token plays the look `o.look`
+ *
+ * fx.info, fx.total               what the system's reader found; the roll's total (null when not known)
+ * fx.get(key)                     an option of the feature (the signature's own are declared in its `settings`)
+ * fx.tr                           this user's Token Reactions options: { on, less, shake, intensity }
+ * fx.claim                        a real roll: the targets' later Token Reactions are ours (not a preview)
+ * fx.note(name, data)             a line in the run's log (name, ms since it began, data), for tests
+ * fx.screenPaint(fn, { z })       fn(ctx, now, dt, width, height) on the screen overlay every frame until it
+ *                                 returns false; returns a function that removes it
+ * fx.flash(alpha, col)            the whole window flashes (not with Less motion)
+ * fx.shake(amount)                screen shake, by Token Reactions' option
+ * fx.tween(seconds, upd, end)     upd(u, t, dt) every frame for that long (real time), then end()
+ * fx.later(ms, fn)                fn in a while, unless the run has ended
+ * fx.cleanup(fn)                  fn when the run ends or is stopped; returns a function that runs it now
+ * fx.worldLayer(z)                a container on the canvas, above the tokens, destroyed with the run (or
+ *                                 sooner: `container.lucdRemove()`)
  */
 export function makeFx(run) {
-  const less = reactionOptions().less;
+  const tr = reactionOptions(), less = tr.less;
   const fx = {
-    less, memo: {}, rnd, canSee, centerOf, toScreen, toWorld,
+    less, tr, memo: {}, rnd, canSee, centerOf, toScreen, toWorld,
     get alive() { return !run.dead; },
+    get info() { return run.info ?? {}; },
+    get total() { return run.total ?? null; },
+    get claim() { return !!run.claim; },
+    get: key => run.get?.(key),
+    note: (name, data) => { run.log?.push({ name, t: Math.round(performance.now() - (run.t0 ?? 0)), ...(data ?? {}) }); },
     wait: ms => new Promise((resolve, reject) => setTimeout(() => (run.dead ? reject(ABORT) : resolve()), ms)),
+    screenPaint: (fn, o) => addPainter(fn, o),
+    flash: (alpha, col = 0xffffff) => { if (less || run.dead) return; S.flashA = Math.max(S.flashA, alpha); S.flashCol = col; start(); },
+    // The engine takes the shake off again as it runs: only while it does.
+    shake: amount => { if (less || !tr.shake || run.dead || !isRunning()) return; engineState.shakeOn = true; engineShake(amount); },
+    tween(seconds, upd, end) {
+      // By the clock, not by the frames: on a slow frame it still ends on time.
+      const t0 = performance.now();
+      let t = 0;
+      const stop = onFrame(() => {
+        if (run.dead) return stop();
+        const now = (performance.now() - t0) / 1000, dt = Math.max(0, now - t);
+        t = now;
+        upd?.(Math.min(1, t / seconds), t, dt);
+        if (t >= seconds) { stop(); end?.(); }
+      });
+      return stop;
+    },
+    later: (ms, fn) => setTimeout(() => { if (!run.dead) { try { fn(); } catch (err) { console.error(err); } } }, ms),
+    cleanup(fn) {
+      const once = () => { if (run.cleanups?.delete(once)) { try { fn(); } catch (err) { console.error(err); } } };
+      (run.cleanups ??= new Set()).add(once);
+      return once;
+    },
+    worldLayer(z = 0) {
+      const c = addWorldLayer(z);
+      if (c) c.lucdRemove = fx.cleanup(() => removeWorldLayer(c)); // call it to remove the container before the run ends
+      return c;
+    },
     screenBolt: (a, b, o) => addBolt("screen", a, b, o, less),
     worldBolt: (a, b, o) => addBolt("world", a, b, o, less),
     screenGlow: (p, o) => addGlow("screen", p, o),

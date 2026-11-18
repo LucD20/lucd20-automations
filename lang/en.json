@@ -396,10 +396,19 @@
       },
       "signatureSpells": {
         "Name": "Signature Spells",
-        "Hint": "Some spells get an effect of their own, tied to Dice So Nice: it plays on the 3D dice while they roll and when they land, then goes from the dice to the targets' tokens, which react (Token Reactions). Each player sees it only for rolls and tokens they can see. Without Dice So Nice, only the part on the tokens plays. Your Token Reactions options (Less motion, strength, screen shake) count here too.",
+        "Hint": "Some spells and class moves get an effect of their own, tied to Dice So Nice: it plays on the 3D dice while they roll and when they land, then goes from the dice to the targets' tokens, which react (Token Reactions). Each player sees it only for rolls and tokens they can see. Without Dice So Nice, only the part on the screen and the tokens plays. Your Token Reactions options (Less motion, strength, screen shake) count here too.",
         "Setting": {
           "show": { "Name": "Show them to me", "Hint": "Off: you see no signature spell effects at all." },
-          "chainLightning": { "Name": "Chain Lightning", "Hint": "PF2e, the damage roll: lightning darts around the dice while they roll, runs through all of them when they land, then jumps from the last die to the first target and from target to target." }
+          "chainLightning": { "Name": "Chain Lightning", "Hint": "PF2e, the damage roll: lightning darts around the dice while they roll, runs through all of them when they land, then jumps from the last die to the first target and from target to target." },
+          "finisher": { "Name": "Swashbuckler finisher", "Hint": "PF2e, the damage roll of a Strike made with a finisher (Confident, Unbalancing, Bleeding, Dual, Lethal, Impaling; any other finisher gets the general look): the dice flourish, a strip names the finisher, the blade carves a mark on the target, the hit freezes, then the target's token art is thrown. Not on attack rolls. With Less motion (Token Reactions): a short still strip, the mark without sparks, and a flash instead of the throw." },
+          "finisherDice": { "Name": "Dice flourish", "Hint": "Dice So Nice's damage dice spin in a gold blur; when they land a blade glint crosses them and the total flashes." },
+          "finisherStrip": { "Name": "Cut-in strip", "Hint": "A slanted band slams across the screen with the attacker's portrait, name and the finisher's name. Only for players who can see the attacker's token; a name players can't see is never shown." },
+          "finisherMark": { "Name": "Signature mark", "Hint": "Three gold slashes carve a sigil on the target; it shatters as the target flies." },
+          "finisherSigil": { "Name": "Sigil" },
+          "finisherFrame": { "Name": "Impact frame", "Hint": "A short freeze in stark black and white with speed lines, at the hit." },
+          "finisherSlash": { "Name": "Screen slash", "Hint": "A glint cuts the scene, the two halves slide apart and rejoin with a flash." },
+          "finisherConfetti": { "Name": "Confetti", "Hint": "Something festive thrown up on the hit." },
+          "finisherConfettiKind": { "Name": "Confetti kind" }
         }
       },
       "pf2eCreatureScale": {
@@ -2065,8 +2074,26 @@
     "SignatureSpells": {
       "Preview": "Preview",
       "PreviewSpell": "Spell",
-      "PreviewHint": "Plays the spell on the tokens you target (cast by the token you have selected), or on the selected tokens, with a throw of its dice when Dice So Nice is active (only you see the dice). Everyone else sees the part on the tokens they can see; no damage is dealt.",
-      "PreviewNone": "Select or target a token first."
+      "PreviewHint": "Plays the spell on the tokens you target (cast by the token you have selected), or on the selected tokens, with a throw of its dice when Dice So Nice is active (only you see the dice). Everyone else sees the part on the tokens they can see; no damage is dealt. For the finisher, select the swashbuckler and target the enemy (two enemies for Dual).",
+      "PreviewNone": "Select or target a token first.",
+      "Finisher": {
+        "Shout": "FINISHER!",
+        "Critical": "CRITICAL",
+        "PreviewKind": "Finisher",
+        "PreviewHit": "Hit",
+        "Kind": {
+          "generic": "Any other finisher",
+          "confident": "Confident",
+          "unbalancing": "Unbalancing",
+          "bleeding": "Bleeding",
+          "dual": "Dual",
+          "lethal": "Lethal",
+          "impaling": "Impaling"
+        },
+        "Hit": { "success": "Hit", "criticalSuccess": "Critical hit" },
+        "Sigil": { "S": "S", "X": "X", "star": "Star" },
+        "Confetti": { "hat": "Twirling hat", "petals": "Rose petals", "suits": "Playing cards" }
+      }
     },
     "TokenReactions": {
       "Preview": "Preview",

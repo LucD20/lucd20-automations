@@ -211,7 +211,7 @@ async function helpers(page) {
     };
   }, MOD);
   assert.deepStrictEqual(pure.catalog, { id: "signatureSpells", category: "tokens", phase: 64 });
-  assert.deepStrictEqual(pure.def, ["tokens", "world", true, ["show:client:true", "chainLightning:world:true"]], "on by default, per-player switch, one GM switch per spell");
+  assert.deepStrictEqual([pure.def.slice(0, 3), pure.def[3].slice(0, 3)], [["tokens", "world", true], ["show:client:true", "chainLightning:world:true", "finisher:world:true"]], "on by default, per-player switch, one GM switch per spell (the finisher's own options follow: test63)");
   assert.deepStrictEqual(pure.texts, ["Signature Spells", "Chain Lightning", "Show them to me"]);
   assert.ok(pure.panel.includes('value="chainLightning"') && pure.panel.includes('data-feature-action="preview"'), "the preview panel lists the spell");
   assert.deepStrictEqual({ ...pure.info, options: undefined, outcome: undefined, finisher: undefined }, { options: undefined, outcome: undefined, finisher: undefined, slug: "chain-lightning", name: "Chain Lightning", roll: "damage", caster: "ezren", scene: "s1", targets: ["Scene.s1.Token.ogre", "Scene.s1.Token.hiddenGoblin", "Scene.s1.Token.valeros"], ordered: true });

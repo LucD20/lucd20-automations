@@ -2572,3 +2572,194 @@ Foundry draws it (unrotated, unmirrored, then the coin's own rotation and
 mirroring apply as before) and frees it with the coin; any trouble falls back
 to the plain texture. (verify) the ring shader renders through
 `renderer.render(mesh, { renderTexture, transform })`.
+
+## 21. Swashbuckler finisher — a signature animation (owner, 2026-11-18)
+
+Owner, after choosing from the mockup (`docs/mockups/swashbuckler-finisher.html`,
+the reference for the look, the timing and every part): every part on — **E**
+dice flourish, **A** cut-in strip, **D** signature mark with the **S** sigil,
+**B** impact frame, **C** screen slash, **F** confetti with the **twirling
+hat**; the per-finisher accents as in the mockup. "Damage is rolled, finisher
+animation plays": it starts **only** on the damage roll of a Strike made with a
+finisher — not on attack rolls, not on gaining panache. Signature animations
+are rare and must be flashy.
+
+**Built v0.75.0 (phase 65)**: the second signature of Signature Spells (§20),
+`finisher`; `scripts/features/signature-spells/spells/finisher.js` (what starts
+it, the options, the screen parts E and A) and `spells/finisher-canvas.js` (the
+lunge, D, B, C, F and the throw, on Token Reactions' engine, §19); fonts in
+`assets/fonts/`; test `test63.js`.
+
+- **Detection** (the main session's reader, `systems/pf2e/signature-spells.js`,
+  contract unchanged): any PF2e damage roll is read as `{ slug, name, options,
+  outcome, finisher, roll: "damage", caster, scene, targets, ordered }`;
+  `finisher` is `null` unless the roll options include `finisher`, else
+  `{ slug }` (`unbalancing`, `confident` … or `null`). The signature matches
+  with a function, `match: { pf2e: info => !!info.finisher && info.roll ===
+  "damage" }` (and never a spell's damage roll: `item:type:spell` among the
+  options).
+  - `signatureFor` now looks for a slug match first, then for function matches:
+    a spell with its own signature (Chain Lightning) is never taken by the
+    finisher, whatever the order of the files.
+  - The look: `confident`, `unbalancing`, `bleeding`, `dual`, `lethal`,
+    `impaling` (a `-finisher` suffix is dropped). Anything else, or no slug:
+    Confident's look and the strip says only "FINISHER!".
+  - A critical (`outcome === "criticalSuccess"`): bigger everything, as the
+    mockup's Critical option (a "CRITICAL" tag on the strip, a longer freeze,
+    the frame starts inverted, the target flips).
+- **The parts**, mockup → module:
+  - **E dice flourish**, on Dice So Nice's own dice (`rolling` / `result`, as
+    Chain Lightning): while they roll, a gold glow and a whirl that spins up
+    around each die, throwing off sparks; when they have landed, a ring and
+    sparks off each die, a blade glint across them (through the two dice
+    furthest apart, left to right; each die flashes as it is cut), then the
+    total pops above them with turning rays ("CRITICAL" under it on a
+    critical). The total is the message's roll total. No Dice So Nice (or it
+    doesn't animate the roll): no E, the strip comes at once.
+  - **A cut-in strip**, on the screen overlay (2D canvas): the slanted band in
+    the finisher's colour with rushing stripes, dots, streaks, gold edges; the
+    portrait; the finisher's name, "FINISHER!" and the name line; a white edge
+    wipes it in and out; the window dims under it, flashes and shakes as it
+    lands. Sizes are the mockup's at 1280×720, scaled to the window.
+  - **D signature mark**, on the canvas (a container of ours on the interface
+    group): three blade-shaped strokes (S, X or star), each with sparks off its
+    end; the target's art stands in, pinned and trembling; the mark shatters
+    into shards as the target flies and stays scorched on the floor for 6 s.
+  - **B impact frame**, on the canvas, above everything else on it: a white
+    sheet over the view, black speed lines from the target (redrawn every
+    0.05 s), one long blade line, and the tokens involved as stark two-tone
+    cut-outs with a black outline; the sigil in white; a small zoom punch.
+    Because the sheet covers the scene, nothing under it is hidden or changed
+    and there is nothing to put back.
+  - **C screen slash**: the stage is rendered into a render texture every frame
+    for the freeze; two masked halves of it slide apart along the cut over a
+    dark gap with a gold line, a glint runs along it, and they rejoin with a
+    flash. Meanwhile the stage's other children are not rendered.
+  - **F confetti**: the hat goes up from the swashbuckler, twirls and comes
+    back (or 46 rose petals / 26 playing cards from the target).
+  - **The throw**: Token Reactions' coin. Confident, Bleeding, Dual, Lethal:
+    the slashing throw; Impaling: the piercing one and a thrust line out the
+    far side; Unbalancing: a hop, then the art teeters on its rim; Bleeding:
+    drips and a red trail for 2.6 s; Lethal: a crater, red rays, a red flash.
+    Gold bursts on every hit.
+  - **Dual**: the hits on `ctx.targets` in order, the first two: a quick first
+    hit (0.05 s pause, thrown), the attacker's art spins on, the big hit (B, C,
+    F) on the second. Any other finisher: the first target only.
+- **Timing** (the mockup's, in seconds): dice land → 0.47 → strip (0.82 long;
+  0.9 on a critical) → 0.7 (0.78) → lunge: wind-up 0.09, dash 0.1 → three
+  strokes of 0.075 (0.062 for Dual) → the hit: frozen 0.15 with B, 0.2 with C,
+  +0.07 on a critical, 0.05 with neither → the throw; the attacker goes home
+  in 0.32; the hat takes 1.15.
+- **What changed for Foundry** (decisions):
+  - The dice are Dice So Nice's (the mockup drew its own); their number,
+    kind and place are whatever was rolled.
+  - No damage number: the damage is applied later, which is when Token
+    Reactions shows it. Each thrown target is claimed (`claimReaction(id,
+    null)`: any damage type, since the weapon decides it), so that later
+    reaction is the quiet one (flash, mark, number), no second lunge or throw.
+    A hit to 0 HP still plays in full. A preview claims nothing.
+  - The ink cut-outs: there is no painted canvas to threshold. Each token's
+    art (its coin's texture, a snapshot for a dynamic-ring token, else the
+    mesh's texture) is rendered once, at most 256 px, through a small
+    threshold filter (a fragment shader: luminance ≥ threshold → white, else
+    black, alpha kept; a pushed colour matrix where a custom filter can't be
+    made). The threshold is the art's own average brightness (read from a
+    16×16 copy), so dark and light art both read. The textures are freed with
+    the frame.
+  - The screen slash only with WebGL 2; any error while preparing it or while
+    it plays ends it and the hit goes on without. The stage's children get
+    their own `renderable` back exactly, on every path (end, error, stop).
+    The halves are re-placed at `prerender`, so a screen shake after our frame
+    doesn't show an edge.
+  - The freeze: `freezeFor(seconds)` in Token Reactions' engine holds its
+    whole simulation still (coins, particles, marks) and lets go by itself.
+  - The fonts are the mockup's (Anton, Kaushan Script; SIL OFL, licences
+    beside them in `assets/fonts/`), loaded with `FontFace` when a finisher
+    first plays; until then, and if they fail, Impact / a script fallback.
+  - Engine additions for it: `useLayersAt(elevation)` (particles and marks
+    without a coin), `freezeFor`, a particle's `flut` (petals and cards turn
+    edge-on), `walls`, `snapshot`, `MARK` and `context` exported;
+    `reactionOptions()` also gives `shake` and `intensity`.
+  - Signature toolkit additions (`effects.js`, doc comment there):
+    `fx.screenPaint` (painters on the overlay), `fx.flash`, `fx.shake`,
+    `fx.tween`, `fx.later`, `fx.cleanup`, `fx.worldLayer`, `fx.get`, `fx.info`,
+    `fx.total`, `fx.note`; a signature may declare `settings`, `solo`,
+    `start`, `previewOptions`, `previewInfo`, `dispose` (`registry.js`).
+- **Who sees what** (nothing is sent; every client reads the same message):
+  - A roll this user may not see: nothing at all (as §20).
+  - The strip and the impact frame only if this user sees the attacker's token
+    or owns it (they name and show the attacker). Not seen: no strip, no B,
+    nobody lunges, no hat, and the blow comes from a random direction, so the
+    attacker's place is not given away; D, C and the throw still play on a
+    target they see.
+  - The name line: the actor's name for the GM and the actor's owners; for
+    everyone else the token's name, and **none** when players can't see that
+    name (`token.document.playersCanSeeName === false`).
+  - The portrait: the actor's image for the GM and the actor's owners; for
+    everyone else the token's art (what they see on the canvas anyway). An
+    image that is a video or fails to load is skipped (then the token's art,
+    then no portrait).
+  - Targets this user doesn't see are skipped; with none left, only the strip
+    plays. The frame inks only tokens this user sees.
+- **Less motion** (Token Reactions' per-player option, or the system's
+  reduced motion; exactly as the mockup): no B, C, F; the dice only glow and
+  the total fades in and out; a short still strip (0.54 s, fades); nobody
+  lunges; the sigil is drawn without sparks (0.1 s a stroke) and fades; the
+  target flashes instead of being thrown; no flash of the window, no shake.
+- **Token Reactions off for this user**: no art is moved (no lunge, no
+  throw, no claim); the strip, the mark with its sparks, B, C and the confetti
+  still play.
+- **Options** (GM, world, under the feature; all default to the owner's
+  choice): the finisher's switch `finisher`; `finisherDice` (E),
+  `finisherStrip` (A), `finisherMark` (D) with `finisherSigil` (S / X / Star),
+  `finisherFrame` (B), `finisherSlash` (C), `finisherConfetti` (F) with
+  `finisherConfettiKind` (Twirling hat / Rose petals / Playing cards).
+- **Cleanup**: the overlays take no pointer events. A run registers what it
+  made (`fx.cleanup`); the feature switched off, a part's switch turned off,
+  the canvas torn down or another finisher starting (`solo`) ends it at once:
+  overlay and containers removed, the stage rendered again, the freeze let
+  go, the tokens' own drawings back. Switching the feature off (and a canvas
+  teardown) also ends what the Token Reactions engine is drawing.
+- **GM preview** (settings window): pick "Swashbuckler finisher", a finisher
+  (or "Any other finisher") and Hit / Critical hit; it plays on the selected
+  token → the targets, with a throw of `2d8+1d6` when Dice So Nice is active
+  (only for the GM, as §20); the others get it without dice.
+- Not done: sound; the mockup's own token art and floor (Foundry's are used);
+  a number on the hit; the dice part for the other clients in a preview.
+- **(verify) in Foundry** (it couldn't be run here):
+  - PF2e 8.7: a finisher's damage roll carries the roll option `finisher`, and
+    names the finisher as `finisher:<slug>` or `item:slug:<slug>-finisher`
+    (the reader's note); if it names none, every finisher gets the general
+    look. `context.outcome` is `criticalSuccess` on the damage roll of a
+    critical hit. A Strike's damage message has its target
+    (`context.target.token`), and for Dual both targets (Target Helper's rows,
+    else only the first is animated).
+  - `token.document.playersCanSeeName` (PF2e) is false for an NPC whose name
+    is hidden from players; `actor.isOwner` / `token.isOwner` for a player's
+    own character.
+  - The overlay (z-index one above Dice So Nice's canvas) puts the strip above
+    the sidebar and the windows, which is meant; the dim under it covers the
+    whole window.
+  - The fonts load from `modules/lucd20-automations/assets/fonts/` (also with
+    a route prefix) and the strip's text reads well; Impact until they are in.
+  - `canvas.interface` draws our containers above tokens, lighting and fog
+    (the sigil glows in the dark; the impact frame covers the whole view also
+    when zoomed or panned); the frame's `zIndex` puts it above everything else
+    there.
+  - The ink cut-outs look right on real token art (the threshold from the
+    average brightness; `renderer.extract.pixels` of a 16×16 render texture),
+    also for dynamic-ring tokens and mirrored or rotated tokens.
+  - The screen slash: `renderer.render(canvas.stage, { renderTexture })` from
+    outside Foundry's own render gives the scene as seen (lighting, fog,
+    weather), does no harm to the frame that follows, and is fast enough on
+    the owner's machines (two renders of the scene per frame for 0.2 s);
+    `renderer.context.webGLVersion === 2`; setting `renderable = false` on
+    `canvas.stage`'s children for those frames has no side effect; the
+    `prerender` event is emitted.
+  - The lunge and the throw read right at real map scale; the hat's size; the
+    Unbalancing teeter stays inside walls.
+  - The dice flourish on real 3D dice: the whirl and the glint sit on the dice
+    (`getScreenPosition`), and the 0.47 s on the dice fits before Dice So Nice
+    hides them.
+  - After the finisher, applying the damage gives only the quiet Token
+    Reaction on the target (and the full one if it drops to 0 HP).

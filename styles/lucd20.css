@@ -2272,6 +2272,7 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-tr-panel { display: flex; align-items: center; gap: 6px 10px; flex-wrap: wrap; }
 .lucd20-tr-panel button, .lucd20-tr-panel select { width: auto; flex: none; }
 .lucd20-tr-panel .hint { flex-basis: 100%; }
+.lucd20-tr-panel select[hidden] { display: none; }
 
 .lucd20-tooltip-editor .lucd20-loot-hint { display: flex; align-items: center; gap: 8px; }
 .lucd20-tooltip-editor .tt-preview-on { margin-left: auto; white-space: nowrap; color: var(--ll-accent-text); }

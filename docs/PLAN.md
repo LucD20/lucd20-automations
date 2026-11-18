@@ -2425,3 +2425,140 @@ adapters `scripts/systems/pf2e/token-reactions.js` and
     PinkPurple, Dark_Purple on Patreon),
     `Generic/Impact/FrostImpact_01_Regular_White_600x600.webm`,
     `Generic/Lightning/StaticElectricity_03_Regular_Blue_400x400.webm`.
+
+## 20. Signature Spells (owner, 2026-11-18)
+
+Owner, after Token Reactions ("works pretty much exactly like I wanted"): "Now
+we add effects to 'signature' spells, and I would like to merge with Dice So
+Nice. One example first, then we go from there: Chain Lightning — the damage
+dice have some lightning darting around while rolling; then when the result is
+clear, lightning darts around all the dice; then from the last die, it hits
+the first target, then the second target, etc., playing the lightning effect
+on each token."
+
+**Built v0.74.0 (phase 64): Signature Spells** (`signatureSpells`, Tokens
+page, after Token Reactions, on by default; `scripts/features/signature-spells/`;
+PF2e reader `scripts/systems/pf2e/signature-spells.js`; test `test62.js`).
+
+- **A spell = one small file** in `signature-spells/spells/`, imported from
+  `spells/index.js`, calling `defineSignature({ id, match, look, preview,
+  rolling, result, toTargets })` (doc comment in `registry.js`), plus its
+  switch's texts under `LUCD20.Feature.signatureSpells.Setting.<id>`:
+  - `match`: per system, the item's slug and which roll starts it
+    (`{ pf2e: { slug: "chain-lightning", roll: "damage" } }`), or a function.
+  - `rolling(fx, dice, dt)`: every frame while the 3D dice roll.
+  - `result(fx, dice)`: the dice have landed.
+  - `toTargets(fx, ctx)`: from the dice to the tokens; `chain(fx, ctx, { look })`
+    in `effects.js` is the ready-made "jump from target to target".
+  - `fx` (in `effects.js`): `screenBolt` / `screenGlow` (on the screen, over the
+    dice), `worldBolt` / `worldGlow` (on the scene), `strike(from, token)` (a
+    bolt that arrives, then the token plays a Token Reactions look), `wait`,
+    `less`, `memo`.
+- **Systems**: a reader per system (`registerSignatureReader`) says what a chat
+  message is: `{ slug, name, roll, caster, scene, targets, ordered }`. PF2e: a
+  damage roll (`flags.pf2e.context.type === "damage-roll"`) of an item with
+  that slug (`message.item.slug`, else the roll option `item:slug:<slug>`);
+  targets = Target Helper's rows in their order, else the roll's own target,
+  else the tokens the message's author has targeted (then ordered nearest-next
+  from the caster). D&D 4e: no reader yet (no spell asked for).
+- **Everything is local**: each client reads the same chat message and plays
+  for its own user; nothing is sent (only the GM's preview is).
+- **Dice So Nice** (v6.4.5 read from its source; nothing of it is changed,
+  wrapped or delayed; `dsn.js`):
+  - Hooks: `diceSoNiceMessageProcessed(id, { willTrigger3DRoll })`,
+    `diceSoNiceRollStart(id, context)`, `diceSoNiceRollComplete(id)`. A message
+    gets the dice part when, after every `createChatMessage` handler has run,
+    DSN has started a roll for it (`diceSoNiceRollStart`) or marked it
+    (`message._dice3danimating`), and has not said it won't animate it.
+  - Dice on the screen: `game.dice3d.getScreenPosition(mesh)` (public) for
+    each mesh in `game.dice3d.box.throwEngine.diceList` (the throw in play;
+    `box.diceList` in older versions). Meshes not in the scene yet and
+    persistent dice are left out. The dice seen while rolling are remembered,
+    so the result plays on this throw's dice and not on older ones left on the
+    table. Size on screen from the mesh's bounding sphere (else a guess).
+  - Our drawing: a transparent full-window `<canvas id="lucd20-signature-overlay">`,
+    `pointer-events: none`, z-index one above DSN's `#dice-box-canvas`; made
+    with the first bolt on the dice, removed when the spell has ended.
+  - No dice points (DSN's canvas hidden, fields renamed …): no dice part, the
+    chain still plays.
+- **Sequence** (Chain Lightning; times are the design, in ms):
+  1. Rolling: every 45 ms a small arc leaps off a die (lives 130), 40% of the
+     time also one from die to die (140). Nothing on the scene yet.
+  2. Landed (`diceSoNiceRollComplete`): 700 — one bolt through all the dice in
+     their order (the i-th link grows in 60·i), a glow on each, small arcs
+     around each every 60.
+  3. From the last die to the first target: a bolt on the screen overlay that
+     grows in 120 and stays 260 more; when it arrives the token plays the
+     electricity reaction, hit from the bolt's direction.
+  4. 240 later the next bolt, on the scene, from that token to the next
+     (120 to arrive): about 360 per target.
+- **Who sees what**:
+  - A roll this user may not see (`message.isContentVisible` / `visible`
+    false: secret, blind, a whisper to others): nothing at all, also when DSN
+    shows ghost dice.
+  - Targets: only tokens this user sees on the canvas (Token Reactions'
+    `canSee`: visible, not hidden unless GM), checked again as each bolt
+    leaves. A hidden or unseen target is skipped without a pause; the chain
+    jumps to the next.
+  - The caster's token is the start only when this user sees it; else the
+    first bolt comes from above the top of the view.
+- **Without the dice** (decision): DSN not active, off for this user, not
+  animating this roll (its own rules: hidden NPC rolls, "only my dice" …), or
+  the dice never land (15 s): the reduced version — the chain alone, at once
+  (or at the timeout), from the caster's token.
+- **Token Reactions**: the reaction on each target is its engine
+  (`playOn(token, { type, origin })`, new: a hit from a canvas point, nobody
+  lunges), with this user's Token Reactions options (Less motion, strength,
+  screen shake, JB2A). With Token Reactions off for the user: the bolts and a
+  small burst of arcs on the token, nothing is thrown.
+  - **No double reaction** (decision): the chain plays at the damage *roll*;
+    the damage is applied later (saves first), which is when Token Reactions
+    normally reacts. Each token the chain threw is claimed on that client
+    (`claimReaction`, 3 minutes, used once): its next reaction of the same
+    look is the quiet one (flash, ground mark, damage number — nothing thrown
+    twice). A hit that drops it to 0 HP always plays in full. A preview claims
+    nothing.
+- **Less motion** (the Token Reactions option, or the system's reduced
+  motion): nothing while the dice roll; on landing one still bolt through the
+  dice for 320; a plain chain (no forks, no flicker), 160 between targets; the
+  tokens only flash.
+- **Options**: the feature (world, on); "Show them to me" (per player); one
+  GM switch per spell (`chainLightning`). Switching any off ends what plays.
+- **GM preview** (settings window): pick the spell, Preview — on the GM's
+  targets (cast by the selected token) or on the selected tokens. The GM gets
+  a throw of the spell's dice (`game.dice3d.showForRoll(roll, user, false)`,
+  8d12) with the dice part; everyone else gets the chain alone
+  (`signaturePreview` over the module socket; hidden tokens are never in it).
+  Decision: the dice are not synchronised, because other clients couldn't tie
+  an un-messaged throw to the effect.
+- Not done: sound; a 4e reader; the dice part for other clients in the
+  preview; when DSN queues two rolls one after the other, the rolling arcs may
+  also play on the roll that is ahead in the queue.
+- **(verify) in Foundry** (it couldn't be run here):
+  - DSN 6.4.5: `game.dice3d.box.throwEngine.diceList` holds the meshes of the
+    throw in play from spawn until the next throw; `mesh.parent.parent` is set
+    once the die is in the scene; `getScreenPosition` gives viewport pixels
+    that match what is seen; `mesh.geometry.boundingSphere` gives a sensible
+    size (arcs start at the die's centre and reach 1.3–2.8 radii).
+  - `diceSoNiceRollComplete` fires when the dice have *stopped* (before DSN's
+    "time before hide"), so the 700 ms on the dice fit before they fade
+    (default 2 s). With DSN's "show chat message immediately" the hook still
+    comes at the end of the animation.
+  - `message._dice3danimating` / `diceSoNiceRollStart` are set before a
+    `setTimeout(0)` after `createChatMessage` (PF2e damage rolls go through
+    DSN's normal chat hook).
+  - The overlay's z-index (DSN's + 1) is above the dice in DSN's "over" and
+    "auto" modes; in "under the interface" mode the bolts are above the
+    sidebar while the dice are under it.
+  - PF2e 8.7: `message.item` is the spell on its damage roll and
+    `item.slug === "chain-lightning"` (remaster and legacy); `item:slug:…` in
+    `flags.pf2e.context.options`; `message.speaker.token` is the caster.
+  - PF2e Toolbelt: `flags["pf2e-toolbelt"].targetHelper.targets` is on the
+    damage message when `createChatMessage` fires, as token uuids in the order
+    targeted.
+  - `message.author.targets` holds Token objects for another user's targets.
+  - `canvas.interface` accepts a plain `PIXI.Graphics` (ADD blend) and draws
+    it above tokens; `canvas.stage.worldTransform` ↔ viewport pixels (with
+    the board's `getBoundingClientRect`) matches DSN's viewport pixels.
+  - A token's reaction reads right when it starts as the bolt arrives while
+    the dice are still on screen.

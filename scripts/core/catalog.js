@@ -53,6 +53,7 @@ export const FEATURE_ORDER = [
   { id: "shortcuts", category: "tokens", phase: 59 },
   { id: "effectsHalo", category: "tokens", phase: 60 },
   { id: "tokenReactions", category: "tokens", phase: 63 },
+  { id: "signatureSpells", category: "tokens", phase: 64 },
   { id: "doorIconSize", category: "doors", phase: 19 },
   { id: "secretDoorHighlight", category: "doors", phase: 19 },
   { id: "lockedDoorAlert", category: "doors", phase: 19 },

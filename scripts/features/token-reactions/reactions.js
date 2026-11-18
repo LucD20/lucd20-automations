@@ -510,7 +510,9 @@ function impact(c) {
 /**
  * Play one reaction on this client.
  * @param {Token} token      the token that was hit (already checked: this user sees it)
- * @param {object} hit       { type, crit, kill, share, less, number, intensity, clip }
+ * @param {object} hit       { type, crit, kill, share, less, number, intensity, clip, origin }
+ *                           origin: a canvas point the blow comes from when there is no attacker token
+ *                           (nothing lunges; used by Signature Spells for the bolt that arrives)
  * @param {Token|null} from  the attacker's token, when known and seen by this user
  * @returns {boolean} whether anything was drawn
  */
@@ -527,7 +529,7 @@ export function playReaction(token, hit, from = null) {
     x: lunger ? lunger.hx : fromMesh.position.x / k,
     y: lunger ? lunger.hy : fromMesh.position.y / k,
     pos: () => (lunger && activeCoin(from.id) === lunger ? { x: lunger.sx, y: lunger.sy } : { x: fromMesh.position.x / k, y: fromMesh.position.y / k })
-  } : null;
+  } : hit.origin ? { x: hit.origin.x / k, y: hit.origin.y / k, pos: () => ({ x: hit.origin.x / k, y: hit.origin.y / k }) } : null;
   const c = context(coin, hit, attacker);
   if (!lunger) { impact(c); return true; }
   const A = lunger;

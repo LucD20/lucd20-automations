@@ -394,6 +394,14 @@
           "jb2a": { "Name": "JB2A impact on top", "Hint": "With a JB2A module active, a matching JB2A impact clip also plays on the token. Nothing changes without JB2A." }
         }
       },
+      "signatureSpells": {
+        "Name": "Signature Spells",
+        "Hint": "Some spells get an effect of their own, tied to Dice So Nice: it plays on the 3D dice while they roll and when they land, then goes from the dice to the targets' tokens, which react (Token Reactions). Each player sees it only for rolls and tokens they can see. Without Dice So Nice, only the part on the tokens plays. Your Token Reactions options (Less motion, strength, screen shake) count here too.",
+        "Setting": {
+          "show": { "Name": "Show them to me", "Hint": "Off: you see no signature spell effects at all." },
+          "chainLightning": { "Name": "Chain Lightning", "Hint": "PF2e, the damage roll: lightning darts around the dice while they roll, runs through all of them when they land, then jumps from the last die to the first target and from target to target." }
+        }
+      },
       "pf2eCreatureScale": {
         "Name": "Creature Scale",
         "Hint": "On an NPC's sheet (GM only), each number GM Core's Building Creatures rates is coloured by where it sits for the creature's level: Terrible red, Low orange, Moderate yellow, High green, Extreme blue (AC, HP, Perception, saves, attributes, skills, weaknesses, resistances, Strikes, spellcasting). Hover one for the table rows. The Scale switch in the sheet's header turns it on and off. Elite / Weak sheets are left alone. Replaces pF2e See Simple Scale Statistics (switch that one off).",
@@ -2053,6 +2061,12 @@
       "SwitchOn": "Creature Scale: colour this creature's numbers by GM Core's Building Creatures tables.",
       "SwitchOff": "Creature Scale is on: click to hide the colours.",
       "Adjusted": "Creature Scale leaves Elite and Weak creatures alone (their numbers are adjusted)."
+    },
+    "SignatureSpells": {
+      "Preview": "Preview",
+      "PreviewSpell": "Spell",
+      "PreviewHint": "Plays the spell on the tokens you target (cast by the token you have selected), or on the selected tokens, with a throw of its dice when Dice So Nice is active (only you see the dice). Everyone else sees the part on the tokens they can see; no damage is dealt.",
+      "PreviewNone": "Select or target a token first."
     },
     "TokenReactions": {
       "Preview": "Preview",

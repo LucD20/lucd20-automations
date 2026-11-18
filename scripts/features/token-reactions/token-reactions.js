@@ -1,4 +1,4 @@
-import { error, localize } from "../../core/constants.js";
+import { MODULE_ID, error, localize } from "../../core/constants.js";
 import { defineFeature } from "../../core/registry.js";
 import { broadcast, onBroadcast } from "../../core/socket.js";
 import { readHP } from "../../core/hp.js";
@@ -202,6 +202,55 @@ export function canSeeHP(token) {
   return mode === modes.ALWAYS || mode === modes.HOVER;
 }
 
+/* A reaction another feature already played for a hit (Signature Spells): token id → { until, look }. */
+const claims = new Map();
+
+/**
+ * Another feature played this token's reaction itself (a signature spell's bolt arriving). The next reaction
+ * of that look for the token, within `ms`, is then the quiet one (flash, mark and number, nothing thrown a
+ * second time). A hit that drops it to 0 HP always plays in full. Per client, like everything shown.
+ */
+export function claimReaction(tokenId, type, ms = WINDOW) {
+  if (tokenId) claims.set(tokenId, { until: Date.now() + ms, look: lookOf(type).look });
+}
+
+/** Uses up a claim on this hit, if there is one. */
+function takeClaim(payload) {
+  const claim = claims.get(payload.token);
+  if (!claim) return false;
+  if (Date.now() > claim.until) { claims.delete(payload.token); return false; }
+  if (claim.look !== lookOf(payload.type).look) return false;
+  claims.delete(payload.token);
+  return !payload.kill;
+}
+
+/** This user's options, also for features that draw along with the reactions. */
+export function reactionOptions() {
+  const on = !!feature?.active && !!feature.get("show");
+  let less = reducedMotion();
+  try { less ||= !!game.settings.get(MODULE_ID, "tokenReactions_lessMotion"); } catch { /* not registered yet */ }
+  return { on, less };
+}
+
+/** Draw one reaction with this user's options. `quiet`: as Less motion, whatever the option says. */
+function draw(token, hit, from = null, { quiet = false, origin = null } = {}) {
+  const less = quiet || !!feature.get("lessMotion") || reducedMotion();
+  engineState.shakeOn = !less && !!feature.get("shake");
+  const amount = Number(hit.amount);
+  const number = feature.get("damageNumber") && amount > 0 && canSeeHP(token) ? Math.max(1, Math.round(amount)) : null;
+  const clip = !less && feature.get("jb2a") && jb2aLibrary() ? c => playClip(c.type, c.x, c.y, c.R * 3.4) : null;
+  try {
+    return playReaction(token, {
+      type: hit.type, crit: !!hit.crit, kill: !!hit.kill, share: Number(hit.share) || 0,
+      less, number, clip, origin, intensity: feature.get("intensity")
+    }, canSee(from) ? from : null);
+  } catch (err) {
+    error("Token Reactions: could not draw a reaction.", err);
+    clearAll();
+    return false;
+  }
+}
+
 /** A hit arrives (from the GM's client, or made here): play it if this user may and wants to see it. */
 export function show(payload) {
   if (!feature?.active || !payload || !canvas?.ready || !feature.get("show")) return false;
@@ -209,22 +258,18 @@ export function show(payload) {
   if (payload.scene && canvas.scene?.id && payload.scene !== canvas.scene.id) return false;
   const token = tokenById(payload.token);
   if (!canSee(token)) return false;
-  const from = tokenById(payload.attacker);
-  const less = !!feature.get("lessMotion") || reducedMotion();
-  engineState.shakeOn = !less && !!feature.get("shake");
-  const amount = Number(payload.amount);
-  const number = feature.get("damageNumber") && amount > 0 && canSeeHP(token) ? Math.max(1, Math.round(amount)) : null;
-  const clip = !less && feature.get("jb2a") && jb2aLibrary() ? c => playClip(c.type, c.x, c.y, c.R * 3.4) : null;
-  try {
-    return playReaction(token, {
-      type: payload.type, crit: !!payload.crit, kill: !!payload.kill, share: Number(payload.share) || 0,
-      less, number, clip, intensity: feature.get("intensity")
-    }, canSee(from) ? from : null);
-  } catch (err) {
-    error("Token Reactions: could not draw a reaction.", err);
-    clearAll();
-    return false;
-  }
+  return draw(token, payload, tokenById(payload.attacker), { quiet: takeClaim(payload) });
+}
+
+/**
+ * For other features (Signature Spells): play a look on a token for this user, with this user's options, as
+ * if hit from the canvas point `origin`. No damage number, nothing sent. False when nothing was drawn (Token
+ * Reactions off for this user, or the token is not seen).
+ */
+export function playOn(token, { type = "default", crit = false, share = 0.3, origin = null } = {}) {
+  if (!feature?.active || !canvas?.ready || !feature.get("show") || !canSee(token)) return false;
+  if (document.visibilityState === "hidden") return false;
+  return draw(token, { type, crit, share, kill: false, amount: null }, null, { origin });
 }
 
 /* -------------------------------------------- */
@@ -251,7 +296,7 @@ function preview(button, { crit = false, kill = false } = {}) {
 /*  Feature                                     */
 /* -------------------------------------------- */
 
-export const _test = { cache, records, onChatMessage, checkActor, send, adapters };
+export const _test = { cache, records, onChatMessage, checkActor, send, adapters, claims };
 
 defineFeature({
   id: "tokenReactions",
@@ -290,6 +335,7 @@ defineFeature({
       clearAll({ textures: true });
       cache.clear();
       records.length = 0;
+      claims.clear();
     });
     snapshotAll();
   },

@@ -901,6 +901,7 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 4. 4e tips: track Majestic Word's once-per-round limit (§17.5).
 5. Shadow of the Demon Lord support (targets table).
 6. The open (verify) items for the owner to check in Foundry.
+7. Creature Scale for 4e, from the DMG's monster-building numbers (§18).
 
 ---
 
@@ -2064,3 +2065,60 @@ not tracked.)
   cover preview shows one line when melee and ranged agree ("Cobertura:
   nenhuma"), "Corpo a corpo" instead of "Corpo a corpo/contíguo", and a
   smaller font (about a fifth of a square).
+
+---
+
+## 18. Five more modules (owner, 2026-11-18) — proposed, awaiting answers
+
+Owner: "To all systems": PF2e Effects Halo ("the effects appear around the
+token and not covering it. It should show beneath tokens"), F is for
+Flatfooted ("so we can make shortcuts for different systems"), PF2e See
+Simple Scale Statistics ("for now, just for 2e"), Stairways ("much simpler.
+Just a button in the regions area that creates teleports right away"), Token
+Elevator ("part of the keybinds, a keybind to increase or decrease height").
+
+Read from their source (licences: Halo MIT, F is for Flatfooted GPL-3 so
+ideas only and no code copied, Scale Statistics MIT, Stairways MIT, Token
+Elevator MIT-0):
+- **Halo** wraps `Token#_drawEffect` / `_refreshEffects` / `_refreshSize`:
+  round icons (background + border colour), placed on rings around the
+  token's footprint (icon radius = grid / 10; ring 1 just outside the
+  token; more rings when full; ellipse for non-square tokens; follows
+  autoscale and dynamic rings); the death overlay stays as it is.
+- **F is for Flatfooted**: O toggles Off-Guard on the hovered token; unbound
+  keys for every condition (toggle, + / − for valued ones), every
+  `game.pf2e.actions` entry and its variants, Raise a Shield, Take Cover,
+  compendium browser and its search, cycle alliance, toggle visibility, end
+  turn, mark defeated, show token / actor art. Targets: selected tokens,
+  else the assigned character.
+- **Scale Statistics**: GM Core's Building Creatures tables (plus its own
+  "Terrible" row) colour an NPC sheet's AC, HP, Perception, saves, attribute
+  modifiers, skills, strike attack and average damage, spell DC / attack,
+  resistances and weaknesses (cyan / green / yellow / orange / red); hover
+  shows the table row; a sheet header button toggles it; Elite / Weak
+  switch it off; a ⚠️ list of creature-building warnings.
+- **Stairways**: its own placeable layer (door-like icons, click to use).
+  V14 Regions already have a Teleport Token behaviour, so ours only creates
+  regions.
+- **Token Elevator**: one key (+ Ctrl lower, + Shift large step), hovered
+  token first, else the selected ones; mouse wheel on the Token HUD's
+  elevation box.
+
+Proposed (Q266–Q275, recommendations in brackets):
+
+| # | Question | Recommendation |
+|---|---|---|
+| Q266 | Effects Halo — `effectsHalo`, all systems, Tokens page, per player: icons on rings just outside the token, **drawn under every token** (like the Turn Marker, at the token's elevation), so token art covers them and never the reverse; the overlay (death) icon stays on the token; only the icons Foundry already draws for that user, on tokens they can see. | Yes |
+| Q267 | Halo options: icon size (0.2 of a square), distance from the token, background and border colour, all per player. The original's per-actor radius is dropped. | Yes |
+| Q268 | Shortcuts — `shortcuts`, all systems, Tokens page: keys are set in Foundry's Configure Controls (a button in the card opens it); most come unbound so nothing clashes. They act on the hovered token, else the selected ones, else your character. Players only affect what they own. | Yes |
+| Q269 | Elevation: PageUp / PageDown raise / lower by one square's distance (5 ft), Shift for 2 squares; mouse wheel on the HUD's elevation box; below 0 allowed (burrow, swim); "reset to 0" unbound. | Yes, (verify) PageUp / PageDown are free in V14 |
+| Q270 | PF2e: Off-Guard on the hovered token on **O** (the current module's key); everything else F is for Flatfooted has, unbound. | All of it |
+| Q271 | 4e: the same hovered-token key toggles "grants combat advantage" (if dnd4e has that status, verify); unbound keys for each 4e condition, Second Wind, Spend Action Point. | Yes |
+| Q272 | Quick Teleport — `quickTeleport`, all systems, GM only: a tool in the Regions controls; click (one square) or drag (a rectangle) for each end, the second end on any scene; two regions with Foundry's Teleport Token behaviour pointing at each other, named "Stairs N". Two-way; a one-way switch on the tool's bar. | Yes |
+| Q273 | Teleports ask the player first (Foundry's "choice"), so a drag or route across the stairs doesn't teleport by surprise; regions seen by the GM only (the map art shows the stairs). | Yes |
+| Q274 | Creature Scale — `pf2eCreatureScale`, PF2e Tools, GM only: colours and hover on the NPC sheet, header toggle remembered per GM. The ⚠️ creature-building warnings later, if wanted. | Colours first |
+| Q275 | Order: Shortcuts (with elevation) → Effects Halo → Quick Teleport → Creature Scale, one release each. | Yes |
+
+Switch off the originals as each lands (F is for Flatfooted, Token Elevator,
+PF2e Effects Halo, PF2e See Simple Scale Statistics). Existing Stairways stay
+on their own layer: they aren't converted.

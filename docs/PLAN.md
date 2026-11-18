@@ -892,6 +892,16 @@ For each phase: agree on details → build → owner tests in Foundry → next.
 - D&D 4e merge: see §8.3.
 - Skill Challenges: see §9.4.
 
+**Parked** (owner, 2026-11-18: "Dont remove those", back to PF2e first):
+1. 4e monster HUD: roll used recharge powers by itself at the start of the
+   monster's turn (§17.1, Q156).
+2. 4e HUD: a Skills tab, after seeing the HUD in play (§17, Q149).
+3. 4e New Player Tips: more classes and monster powers, as sheets come in
+   (§17.3–17.6).
+4. 4e tips: track Majestic Word's once-per-round limit (§17.5).
+5. Shadow of the Demon Lord support (targets table).
+6. The open (verify) items for the owner to check in Foundry.
+
 ---
 
 ## 6. Next pass

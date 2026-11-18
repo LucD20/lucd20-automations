@@ -44,3 +44,4 @@ import "./instant-range.js";
 import "./shortcuts.js";
 import "./effects-halo.js";
 import "./quick-teleport.js";
+import "./token-reactions/token-reactions.js";

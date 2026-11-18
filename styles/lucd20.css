@@ -2268,6 +2268,11 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-sc-panel { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .lucd20-sc-panel button { width: auto; flex: none; }
 
+/* Token Reactions: the GM's preview row in the settings window */
+.lucd20-tr-panel { display: flex; align-items: center; gap: 6px 10px; flex-wrap: wrap; }
+.lucd20-tr-panel button, .lucd20-tr-panel select { width: auto; flex: none; }
+.lucd20-tr-panel .hint { flex-basis: 100%; }
+
 .lucd20-tooltip-editor .lucd20-loot-hint { display: flex; align-items: center; gap: 8px; }
 .lucd20-tooltip-editor .tt-preview-on { margin-left: auto; white-space: nowrap; color: var(--ll-accent-text); }
 .lucd20-tooltip-editor .tt-columns { display: flex; flex: 1; min-height: 0; }

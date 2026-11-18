@@ -378,6 +378,22 @@
         "Name": "Quick Teleport",
         "Hint": "A Place stairs tool in the Regions controls: click (one square) or drag for the first end, then the other end, on this scene or another one. Two linked regions are made at once, each with Foundry's Teleport Token behaviour; players are asked before they teleport, and only the GM sees the regions. One-way on the tool's bar gives only the first end a teleport. Replaces Stairways (old stairs keep working there)."
       },
+      "tokenReactions": {
+        "Name": "Token Reactions",
+        "Hint": "When a creature takes a hit that matters, its token's art reacts like a coin on the table: thrown, flipped and spun in a way that depends on the damage type, with particles and a mark on the ground that fades. Only the drawing moves: the token stays on its square and the art always comes back to it. The attacker's token lunges at its target. Shown to everyone who sees the token (never for a token a player can't see).",
+        "Setting": {
+          "onCrit": { "Name": "On critical hits", "Hint": "A damage roll that follows a critical hit (PF2e, D&D 4e)." },
+          "onKill": { "Name": "On hits that drop it to 0 HP" },
+          "onBigHit": { "Name": "On big hits" },
+          "threshold": { "Name": "A big hit is at least", "Hint": "Percent of the creature's maximum HP lost in one hit (25 = a quarter)." },
+          "show": { "Name": "Show them to me", "Hint": "Off: you see no token reactions at all." },
+          "lessMotion": { "Name": "Less motion", "Hint": "Only a flash on the token and the mark on the ground: nothing is thrown, no particles, no screen shake. Also used when your system asks for reduced motion." },
+          "damageNumber": { "Name": "Damage number", "Hint": "The damage pops up next to the token. Only for tokens whose HP bar you can see (the GM: always)." },
+          "shake": { "Name": "Screen shake" },
+          "intensity": { "Name": "Strength", "Hint": "How hard tokens are thrown, for you: 1 = as designed." },
+          "jb2a": { "Name": "JB2A impact on top", "Hint": "With a JB2A module active, a matching JB2A impact clip also plays on the token. Nothing changes without JB2A." }
+        }
+      },
       "pf2eCreatureScale": {
         "Name": "Creature Scale",
         "Hint": "On an NPC's sheet (GM only), each number GM Core's Building Creatures rates is coloured by where it sits for the creature's level: Terrible red, Low orange, Moderate yellow, High green, Extreme blue (AC, HP, Perception, saves, attributes, skills, weaknesses, resistances, Strikes, spellcasting). Hover one for the table rows. The Scale switch in the sheet's header turns it on and off. Elite / Weak sheets are left alone. Replaces pF2e See Simple Scale Statistics (switch that one off).",
@@ -2037,6 +2053,28 @@
       "SwitchOn": "Creature Scale: colour this creature's numbers by GM Core's Building Creatures tables.",
       "SwitchOff": "Creature Scale is on: click to hide the colours.",
       "Adjusted": "Creature Scale leaves Elite and Weak creatures alone (their numbers are adjusted)."
+    },
+    "TokenReactions": {
+      "Preview": "Preview",
+      "PreviewCrit": "Critical",
+      "PreviewKill": "To 0 HP",
+      "PreviewType": "Damage type",
+      "PreviewHint": "Plays a reaction on the tokens you target (the token you have selected attacks), or on the selected tokens. Everyone who sees them sees it; no damage is dealt.",
+      "PreviewNone": "Select or target a token first.",
+      "Type": {
+        "bludgeoning": "Bludgeoning",
+        "slashing": "Slashing",
+        "piercing": "Piercing",
+        "fire": "Fire",
+        "cold": "Cold",
+        "electricity": "Electricity",
+        "acid": "Acid",
+        "sonic": "Sonic",
+        "force": "Force",
+        "mental": "Mental",
+        "void": "Void",
+        "vitality": "Vitality"
+      }
     },
     "QuickTeleport": {
       "Tool": "Place stairs (two linked teleports)",

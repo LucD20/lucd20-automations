@@ -2315,3 +2315,113 @@ slashing sideways spin-out, piercing flat and fast, electricity straight up,
 force far, void pulled toward the attacker, mental twist ...), every throw is
 randomised, and a critical hit adds one or two whole flips (the card's back
 shows dark while it is upside down).
+
+Owner (2026-11-18): chose the second mockup, `docs/mockups/token-reactions-fable.html`
+("coin on the table"), as the look and feel. `token-reactions.html` is the
+rejected one.
+
+**Built v0.73.0 (phase 63): Token Reactions** (`tokenReactions`, Tokens page,
+every system, on by default; `scripts/features/token-reactions/`
+(`token-reactions.js` feature, detection, who sees it; `engine.js` layers,
+particles, marks, the coin mesh, the motion model; `reactions.js` the twelve
+looks, ported from the mockup with its numbers; `textures.js`; `jb2a.js`),
+adapters `scripts/systems/pf2e/token-reactions.js` and
+`scripts/systems/dnd4e/token-reactions.mjs`; `test61.js`):
+- **When** (world options, Q276): critical hits, hits that drop it to 0 HP,
+  hits for ≥ a share of max HP (default 25%).
+- **Detection**, on the active GM's client only: an actor's HP (+ temporary HP)
+  went down, compared with the last value seen (as the Damage Log does, so it
+  works whoever applied it, also unlinked tokens; healing and a falling max HP
+  are no hit). The type, the critical and the attacker come from the system's
+  last damage roll: adapters turn a chat message into { type, crit, attacker,
+  scene, targets, actors } (PF2e: `flags.pf2e.context.type "damage-roll"`,
+  `outcome "criticalSuccess"`, the instance that deals the most, the speaker's
+  token, the context / Target Helper targets; healing rolls ignored. 4e:
+  `roll.options.hitTypeDamage`, `hitType "crit"`, the biggest typed term, our
+  damage cards' stored targets). A drop takes the newest roll of the last
+  3 minutes, not yet used for that creature, that was aimed at it or at nobody
+  (areas); failing that a roll of the last minute nobody took yet (aimed at A,
+  applied to B). No roll (any other system, HP typed in by hand): the default
+  look, no critical, no attacker.
+- **Sent**: `{ scene, token, type, crit, kill, share, amount, attacker }` by
+  `broadcast`; nothing is sent for a token hidden from players (the GM's own
+  client still plays it). Decision: the damage amount travels with it (as the
+  Damage Log's entries do) and each client shows the number only where its
+  user can see that token's HP bar (GM; owners; bars set to Always / Hover).
+- **Who sees it** (Q277): a client plays it only when the token is on the
+  viewed scene and `token.visible` (Foundry's own answer: hidden, out of sight,
+  fog) and not hidden for a non-GM; the attacker lunges only if that user sees
+  it too. Per player: Show them to me, Less motion (a flash and the ground
+  mark only; also with the browser's `prefers-reduced-motion`), Damage number,
+  Screen shake, Strength (0.5–1.5), JB2A impact on top.
+- **Drawing**: the simulation runs in the mockup's units (a square = 90) and
+  the layers are scaled by grid size / 90, so the mockup's tuning carries
+  over. A reacting token gets a "coin": its own texture on an 8 × 8 mesh
+  (tilt, flips, squash, bend, ripple, jelly, in fake perspective) at the
+  size, rotation, mirroring, tint and opacity of its mesh. While it exists
+  the token's mesh is `renderable = false` (bars, effects, nameplate and
+  elevation text too, unless Less motion), re-applied every frame and on
+  `refreshToken`; what was changed is put back exactly when the coin ends.
+  The document, the token and its mesh never move; the art returns to the
+  mesh's current position (so Token Scatter's offset and Flying Tokens' hover
+  are respected; their state isn't touched; the Effects Halo's badges stay
+  round the square). Differences from the mockup, because token art isn't a
+  round disc: the rim, the flash, the back and the shadow use the art's own
+  outline (a white copy of the texture rendered once per reaction); a token
+  at 0 HP lands face down with a skull on its back, then fades back onto its
+  square; no zoom "punch" on criticals (the stage's scale is Foundry's);
+  the art rebounds off the scene's edge and off walls that block movement.
+- **Layers**, in the primary group at the token's elevation and the tokens'
+  sort layer: ground (marks, ground particles, shadows) at sort
+  `HALO_SORT − 0.5` (over the Turn Markers, under the halo and every token),
+  each coin at its mesh's sort, or above the other tokens (1e6 + y) while
+  airborne, effects at 2e6; damage numbers on the interface group.
+- One ticker callback, only while something animates; at most 600 particles;
+  layers and outline textures destroyed when idle, effect textures when the
+  feature is switched off. Canvas teardown, the feature (or Show them to me /
+  Less motion) switched mid-animation, a token deleted or re-drawn: the
+  reaction ends and everything is restored.
+- Types → looks (Q278): the twelve of the mockup (bludgeoning, slashing,
+  piercing, fire, cold, electricity, acid, sonic, force, mental, void,
+  vitality); bleed → slashing (red), poison → acid, spirit / holy / radiant /
+  positive → vitality, unholy / necrotic / negative → void, lightning →
+  electricity, thunder → sonic, psychic → mental, precision → piercing;
+  untyped, 4e "physical" and anything unknown → bludgeoning (the default).
+- **JB2A** (Q279): with `jb2a_patreon` or `JB2A_DnD5e` active (and the
+  player's option on, not Less motion), a .webm from its `Library/` is played
+  over the token through a plain video texture (no Sequencer); a file that
+  fails to load is remembered and skipped, the next candidate of that look is
+  tried on the next hit.
+- GM, in the settings window: a preview row (damage type; Preview / Critical /
+  To 0 HP) that plays a reaction on the GM's targets (the selected token
+  attacks) or on the selected tokens, for everyone, without damage.
+- Not done: wall-aware flight is only a rebound (no sliding along walls); a
+  critical from a failed save (PF2e basic saves) isn't recognised as critical;
+  tokens with Foundry's dynamic ring lose the ring while they react (the coin
+  shows the subject texture only).
+- **(verify) in Foundry** (it couldn't be run here):
+  - Plain `PIXI.Container`s with `elevation` / `sortLayer` / `sort` among
+    `canvas.primary`'s children sort with the tokens (as Sequencer does), and
+    render there (lighting applies to them like to tokens).
+  - `token.mesh.renderable = false` hides the art and Foundry doesn't undo it
+    visibly; `token.bars` / `effects` / `nameplate` / `tooltip` likewise.
+  - `PIXI.SimpleMesh` and `PIXI.ColorMatrixFilter` exist in Foundry's PIXI;
+    `mesh.texture` / `width` / `height` / `rotation` / `tint` / `alpha` /
+    `anchor` / `sort` / `sortLayer` / `elevation` read as expected on a
+    `PrimarySpriteMesh`.
+  - Shaking `canvas.stage.position` (put back exactly) doesn't fight panning.
+  - `CONFIG.Canvas.polygonBackends.move.testCollision(a, b, { type: "move",
+    mode: "any" })` for the wall rebound (switched off by itself if it throws).
+  - Unlinked tokens: `updateActor` / `updateToken` / `updateActorDelta` reach
+    the HP check in V14 (the same hooks the Damage Log uses).
+  - PF2e 8.7: `DamageRoll#instances[].type` / `.total`, `DamageRoll#kinds`,
+    `context.outcome`, `context.target`, `message.speaker.token` on damage
+    rolls (also persistent damage and spells).
+  - dnd4e 0.9.3: `roll.options.hitType === "crit"`, typed terms' `flavor`.
+  - JB2A file paths (all guessed, in `jb2a.js` `CLIPS`, under
+    `modules/<jb2a>/Library/`): `Generic/Impact/GroundCrackImpact_01_Regular_Orange_600x600.webm`,
+    `Generic/Impact/Impact_NN_Regular_<Colour>_400x400.webm` for NN = 01–08,
+    10–12 (Blue as the free module's fallback; Orange, Red, Yellow, Green,
+    PinkPurple, Dark_Purple on Patreon),
+    `Generic/Impact/FrostImpact_01_Regular_White_600x600.webm`,
+    `Generic/Lightning/StaticElectricity_03_Regular_Blue_400x400.webm`.

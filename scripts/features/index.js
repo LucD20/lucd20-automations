@@ -42,3 +42,4 @@ import "./damage-estimate.js";
 import "./settings-markers.js";
 import "./instant-range.js";
 import "./shortcuts.js";
+import "./effects-halo.js";

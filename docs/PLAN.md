@@ -2181,3 +2181,26 @@ and `systems/dnd4e/shortcuts.mjs`, `test57.js`):
   Shift+X; 4e combat advantage F.
 - LucD20 Automations was not on in the owner's PF2e world at the export;
   its F is for Flatfooted keys are copied when it is switched on there.
+
+**Built v0.70.0 (phase 60): Effects Halo** (`effectsHalo`, Tokens page, per
+player, on by default; `scripts/features/effects-halo.js`, `test58.js`):
+- The icons Foundry drew in `token.effects` (not `bg`, not `overlay`) are
+  hidden there (`renderable = false`, the background too) and copied as round
+  badges (background + border colour, the icon clipped to a circle; rendered
+  once per icon and colours into a texture) on the primary canvas: at the
+  token art's elevation and sort layer, sort −1 000 000, so every token at
+  that elevation draws over them (a Turn Marker, sorted just under its token,
+  also draws over them). The overlay (dead) icon stays on the token.
+- Rings as the original: icon radius = square × size / 2 (0.2), ring 1 at
+  the footprint's half size × distance (1) + r + 10 %, more rings when full,
+  ellipse for non-square tokens, from the top round anticlockwise.
+- Kept in step on every `refreshToken` (the icon set) and every frame
+  (position, so moves, animation and Token Scatter's offsets are followed;
+  visibility: nothing for a token this user can't see; hidden tokens at half
+  opacity for the GM). Off: Foundry redraws its own icons (`redrawEffects`).
+- Options (per player): icon size, distance from the token, background and
+  border colour (the original's PF2e colours).
+- Switch off PF2e Effects Halo.
+- (verify) in V14: `token.effects.bg` / `.overlay`; the `redrawEffects`
+  render flag; primary sorting by elevation → sort layer → sort; PF2e 8.7
+  drawing its effects into `token.effects`.

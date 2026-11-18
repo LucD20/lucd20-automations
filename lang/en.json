@@ -364,6 +364,16 @@
           "hudWheel": { "Name": "Mouse wheel on the HUD's elevation", "Hint": "Scroll over the elevation in the Token HUD to raise or lower the token (and the other selected ones); Shift for the large step." }
         }
       },
+      "effectsHalo": {
+        "Name": "Effects Halo",
+        "Hint": "A token's effect icons sit in a ring around it, as round badges, instead of in columns over its art. They're drawn under tokens, so token art always covers them, never the other way round. The dead icon stays on the token. Replaces PF2e Effects Halo (switch that one off).",
+        "Setting": {
+          "size": { "Name": "Icon size", "Hint": "Each icon's width, as a part of a square (0.2 = a fifth)." },
+          "distance": { "Name": "Distance from the token", "Hint": "Where the ring sits: 1 = just outside the token's square(s); more pushes it out, less pulls it in under the art." },
+          "background": { "Name": "Background colour" },
+          "border": { "Name": "Border colour" }
+        }
+      },
       "settingsMarkers": {
         "Name": "Settings Markers",
         "Hint": "In Foundry's Configure Settings, a small mark before each setting: the world (the GM sets it for everyone), each user, or this device. Replaces Settings Markers (switch that one off)."

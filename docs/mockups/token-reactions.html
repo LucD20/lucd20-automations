@@ -82,7 +82,7 @@ button .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c
   </div>
 
   <div class="notes">
-    <p><strong>What moves:</strong> only the drawing. The token's art is lifted like a card, tilted in perspective (drawn on a bendable mesh), knocked back and shaken, then it settles. The token itself never moves.</p>
+    <p><strong>What moves:</strong> only the drawing. The token's art behaves like a physical card: each hit throws it along the floor and into the air, it tumbles and spins in flight, bounces when it lands and wobbles to rest like a dropped coin, then slides back to its square. Each damage type throws it differently, criticals flip it over, and no two hits are the same. The token itself never moves.</p>
     <p><strong>In Foundry</strong> it would play on critical hits, kills and hits of a quarter of max HP or more, for everyone who can see the target. With JB2A installed, a matching JB2A impact clip would play on top of this. JB2A's files can't be loaded in this page.</p>
   </div>
 </div>
@@ -161,7 +161,9 @@ button .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c
   world.addChild(floor, decals, shadows, cards, fx, over);
 
   /* ---------------- a card: the token's art on a bendable mesh ---------------- */
-  const SEG = 12, FOCAL = 520;
+  const SEG = 12, FOCAL = 520, TAU = Math.PI * 2, G = 2600;
+  /** The card as a small rigid body: slides on the floor, flies (z), tumbles in the air, wobbles like a coin when it lands. */
+  const freshPhysics = () => ({ x: 0, y: 0, vx: 0, vy: 0, z: 0, vz: 0, rx: 0, ry: 0, wx: 0, wy: 0, rz: 0, wz: 0, A: 0, phase: 0, squash: 0, rigid: 0 });
   function makeCard(kind, cx, cy, size) {
     const tex = portrait(kind);
     const geo = new PIXI.PlaneGeometry(size, size, SEG, SEG);
@@ -175,22 +177,22 @@ button .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c
     const shadow = new PIXI.Sprite(SOFT); shadow.anchor.set(0.5); shadow.tint = 0x000000;
     shadows.addChild(shadow); cards.addChild(holder);
     const card = { kind, home: { x: cx, y: cy }, size, holder, mesh, geo, base, bright, grey, shadow,
-      s: { x: 0, y: 0, lift: 0, rx: 0, ry: 0, rot: 0 }, v: { x: 0, y: 0, lift: 0, rx: 0, ry: 0, rot: 0 },
-      shake: 0, flash: 0, flashColor: 0xffffff, dead: 0, alpha: 1, frozen: 0, stiff: 1 };
+      ph: freshPhysics(), shake: 0, flash: 0, flashColor: 0xffffff, dead: 0, alpha: 1, frozen: 0 };
     holder.eventMode = "static"; holder.cursor = "grab";
     return card;
   }
 
   function drawCard(card, t) {
-    const { s, size } = card;
+    const P = card.ph, size = card.size;
     const shk = card.shake;
     const jx = shk ? (Math.sin(t * 0.09) + Math.sin(t * 0.23)) * shk : 0, jy = shk ? (Math.cos(t * 0.11) + Math.sin(t * 0.17)) * shk : 0;
-    const lift = s.lift, scale = 1 + lift * 0.18;
-    const rx = s.rx + card.dead * 1.15, ry = s.ry, rot = s.rot;
+    const lift = Math.max(0, P.z) / 260, scale = 1 + lift * 0.35;
+    const rx = P.rx + P.A * Math.cos(P.phase) + card.dead * 1.15, ry = P.ry + P.A * Math.sin(P.phase), rot = P.rz;
+    const facing = Math.cos(rx) * Math.cos(ry); // < 0: we see the card's back
     const cX = Math.cos(rx), sX = Math.sin(rx), cY = Math.cos(ry), sY = Math.sin(ry), cR = Math.cos(rot), sR = Math.sin(rot);
     const buf = card.geo.getBuffer("aVertexPosition"), d = buf.data, b = card.base;
     for (let i = 0; i < d.length; i += 2) {
-      let x = b[i] * scale, y = b[i + 1] * scale, z = 0;
+      let x = b[i] * scale * (1 + P.squash), y = b[i + 1] * scale * (1 - P.squash), z = 0;
       // z-rotation, then tilt about X (top leans back) and Y (side leans back), then perspective.
       let x1 = x * cR - y * sR, y1 = x * sR + y * cR;
       let y2 = y1 * cX - z * sX, z2 = y1 * sX + z * cX;
@@ -199,11 +201,12 @@ button .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c
       d[i] = x3 * p; d[i + 1] = y2 * p;
     }
     buf.update();
-    const hx = card.home.x + s.x + jx, hy = card.home.y + s.y + jy - lift * 16 + card.dead * 6;
+    const hx = card.home.x + P.x + jx, hy = card.home.y + P.y + jy - Math.max(0, P.z) * 0.45 + card.dead * 6;
     card.holder.position.set(hx, hy);
     card.holder.alpha = card.alpha;
     card.bright.reset();
-    if (card.flash > 0.01) {
+    if (facing < 0) card.bright.matrix = [0.22, 0, 0, 0, 0.12, 0, 0.18, 0, 0, 0.08, 0, 0, 0.16, 0, 0.05, 0, 0, 0, 1, 0]; // the back of the card
+    else if (card.flash > 0.01) {
       const f = card.flash, c = card.flashColor;
       const r = ((c >> 16) & 255) / 255, g = ((c >> 8) & 255) / 255, bl = (c & 255) / 255;
       card.bright.matrix = [1 + f * r, 0, 0, 0, f * r * 0.35, 0, 1 + f * g, 0, 0, f * g * 0.35, 0, 0, 1 + f * bl, 0, f * bl * 0.35, 0, 0, 0, 1, 0];
@@ -213,16 +216,44 @@ button .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c
     else if (card.frozen > 0.01) { card.grey.matrix = [0.7, 0.1, 0.2, 0, 0, 0, 1, 0.1, 0, 0.05, 0.1, 0.2, 1.25, 0, 0.12, 0, 0, 0, 1, 0]; card.grey.alpha = Math.min(1, card.frozen); }
     else card.grey.alpha = 0;
     // the shadow on the ground: bigger, softer and further away while the card is up
-    card.shadow.position.set(card.home.x + s.x * 0.6 + lift * 10, card.home.y + s.y * 0.6 + size * 0.42 + lift * 6);
-    card.shadow.width = size * (1.05 + lift * 0.45); card.shadow.height = size * (0.32 + lift * 0.12);
-    card.shadow.alpha = (0.55 - lift * 0.25) * card.alpha;
+    card.shadow.position.set(card.home.x + P.x + lift * 22, card.home.y + P.y + size * 0.42 + lift * 10);
+    card.shadow.width = size * (1.05 + lift * 0.6); card.shadow.height = size * (0.32 + lift * 0.16);
+    card.shadow.alpha = Math.max(0.12, 0.55 - lift * 0.3) * card.alpha;
   }
 
-  const springs = (card, dt) => {
-    const k = 120 * card.stiff, c = 11 * Math.sqrt(card.stiff);
-    for (const key of Object.keys(card.s)) {
-      card.v[key] += (-k * card.s[key] - c * card.v[key]) * dt;
-      card.s[key] += card.v[key] * dt;
+  /** It lands: any tilt left becomes a coin wobble (continuous, no snap); a hard landing bounces. */
+  function land(card) {
+    const P = card.ph;
+    P.z = 0;
+    const nrx = P.rx - Math.round(P.rx / TAU) * TAU, nry = P.ry - Math.round(P.ry / TAU) * TAU;
+    const tilt = Math.min(0.75, Math.hypot(nrx, nry) + Math.hypot(P.wx, P.wy) * 0.025);
+    if (tilt > P.A) { P.A = tilt * (1 - P.rigid * 0.8); P.phase = Math.atan2(nry, nrx); }
+    P.rx = 0; P.ry = 0; P.wx *= 0.25; P.wy *= 0.25;
+    if (P.vz < -240) {
+      const hard = -P.vz;
+      P.vz = hard * 0.34; P.squash = Math.min(0.2, hard / 5000); P.wz += rnd(-2.5, 2.5);
+      P.wx += rnd(-2, 2); P.wy += rnd(-2, 2);
+      for (let i = 0; i < 6; i++) { const a = rnd(0, TAU); emit(SOFT, { x: card.home.x + P.x + Math.cos(a) * card.size * .45, y: card.home.y + P.y + card.size * .4, vx: Math.cos(a) * 70, vy: Math.sin(a) * 20, life: .7, s0: .8, s1: 1.8, a0: .25 * Math.min(1, hard / 900), a1: 0, tint: 0x9a8f7a, drag: 2, layer: shadows }); }
+    } else { P.vz = 0; P.wx = 0; P.wy = 0; }
+  }
+
+  function physics(card, dt) {
+    const P = card.ph;
+    const air = P.z > 0.01 || P.vz > 0;
+    if (air) {
+      P.vz -= G * dt; P.z += P.vz * dt; P.rx += P.wx * dt; P.ry += P.wy * dt;
+      if (P.z <= 0 && P.vz < 0) land(card);
+    }
+    // the coin settling: the tilt circles round, faster and faster as it dies down
+    if (P.A > 0.002) { P.A *= Math.exp(-(1.5 + P.rigid * 6) * dt); P.phase += dt * (5 + 2.4 / (P.A + 0.06)); } else P.A = 0;
+    const fr = air ? 0.5 : 5;
+    P.vx *= Math.exp(-fr * dt); P.vy *= Math.exp(-fr * dt); P.x += P.vx * dt; P.y += P.vy * dt;
+    P.wz *= Math.exp(-(air ? 0.3 : 3) * dt); P.rz += P.wz * dt;
+    P.squash *= Math.exp(-10 * dt); P.rigid *= Math.exp(-0.8 * dt);
+    // settled: it glides back to its square, upright (a card returning to its slot)
+    if (!air && Math.hypot(P.vx, P.vy) < 45 && Math.abs(P.wz) < 1.5 && P.A < 0.1) {
+      const k = 1 - Math.exp(-3.5 * dt), target = Math.round(P.rz / TAU) * TAU;
+      P.x -= P.x * k; P.y -= P.y * k; P.rz += (target - P.rz) * k;
     }
     card.shake *= Math.pow(0.0015, dt);
     card.flash *= Math.pow(0.002, dt);
@@ -313,6 +344,37 @@ button .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c
   ];
   let camShake = 0, hitStop = 0, cardsQueue = [];
 
+  /** Throw a card: a push along the floor, a hop, a tumble about the axis across the push, a spin, whole flips. */
+  function kick(card, { ang, speed = 0, hop = 0, tumble = 0, spin = 0, flips = 0, squash = 0, rigid = 0, wobble = 0 }) {
+    const P = card.ph;
+    P.vx += Math.cos(ang) * speed; P.vy += Math.sin(ang) * speed;
+    P.squash = Math.max(P.squash, squash); P.rigid = Math.max(P.rigid, rigid);
+    if (hop > 0) {
+      P.vz = Math.max(P.vz, hop); P.z = Math.max(P.z, 0.01);
+      const airtime = (2 * P.vz) / G;
+      P.wx += -Math.sin(ang) * tumble; P.wy += Math.cos(ang) * tumble;
+      if (flips) { const axis = ang + rnd(-0.6, 0.6), w = (TAU * flips) / airtime; P.wx += -Math.sin(axis) * w; P.wy += Math.cos(axis) * w; }
+    }
+    if (wobble) { P.A = Math.min(0.75, P.A + wobble); P.phase = ang; }
+    P.wz += spin;
+  }
+  const side = () => (Math.random() < 0.5 ? -1 : 1);
+  /** How each kind of damage throws the card (p: how big the hit is). Every hit is different. */
+  const THROWS = {
+    bludgeoning: (p) => ({ speed: rnd(300, 480) * p, hop: rnd(420, 620) + 420 * p, tumble: rnd(2, 4) * p, spin: rnd(-3, 3), squash: 0.22, spread: 0.5 }),
+    slashing: (p) => ({ off: side() * rnd(0.9, 1.4), speed: rnd(320, 460) * p, hop: rnd(260, 380) + 200 * p, tumble: 2 * p, spin: side() * rnd(9, 14) * p, spread: 0.3 }),
+    piercing: (p) => ({ speed: rnd(560, 760) * p, hop: rnd(140, 240) + 120 * p, tumble: rnd(4, 6) * p, spin: rnd(-1, 1), spread: 0.15 }),
+    fire: (p) => ({ speed: rnd(180, 320) * p, hop: rnd(380, 520) + 260 * p, tumble: rnd(3, 6) * p, spin: rnd(-4, 4), spread: 0.8 }),
+    cold: (p) => ({ speed: rnd(160, 240) * p, hop: 180, tumble: 1, spin: rnd(-1, 1), rigid: 0.9, spread: 0.3 }),
+    electricity: (p) => ({ speed: rnd(60, 160) * p, hop: rnd(820, 1020) + 260 * p, tumble: rnd(4, 8) * p, spin: rnd(-6, 6), spread: 1.4 }),
+    acid: (p) => ({ speed: rnd(160, 260) * p, hop: rnd(260, 360), tumble: 3 * p, spin: rnd(-3, 3), spread: 0.8, wobble: 0.2 }),
+    sonic: (p) => ({ speed: rnd(240, 360) * p, hop: rnd(380, 500), tumble: rnd(6, 9) * p, spin: rnd(-2, 2), spread: 0.4 }),
+    force: (p) => ({ speed: rnd(820, 1050) * p, hop: rnd(320, 460) + 160 * p, tumble: rnd(3, 5) * p, spin: rnd(-5, 5), spread: 0.2 }),
+    mental: (p) => ({ speed: 70, hop: rnd(220, 300), tumble: 2, spin: side() * rnd(10, 16) * p, spread: 3, wobble: 0.25 }),
+    void: (p) => ({ off: Math.PI, speed: rnd(240, 340) * p, hop: rnd(320, 420), tumble: 3, spin: rnd(-8, 8), spread: 0.3 }),
+    vitality: (p) => ({ speed: rnd(80, 140) * p, hop: rnd(680, 820), tumble: 2, spin: rnd(-3, 3), spread: 1 })
+  };
+
   function damageNumber(card, value, color, crit) {
     const style = new PIXI.TextStyle({ fontFamily: "Alegreya Sans SC, Trebuchet MS, sans-serif", fontWeight: "800", fontSize: crit ? 46 : 36, fill: "#ffffff", stroke: "#1a0d05", strokeThickness: 7, dropShadow: true, dropShadowBlur: 6, dropShadowColor: "#000000", dropShadowDistance: 2 });
     const txt = new PIXI.Text(`−${value}`, style); txt.anchor.set(0.5);
@@ -321,7 +383,7 @@ button .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c
     burst.beginFill(0x000000, .25).drawCircle(0, 0, R * .55).endFill();
     const c = new PIXI.Container(); c.addChild(burst, txt); over.addChild(c);
     temps.push({ g: c, life: 0, max: 1.5, draw: (g, k) => {
-      g.position.set(card.home.x + card.size * .38, card.home.y - card.size * .36 - k * 22);
+      g.position.set(card.home.x + card.ph.x + card.size * .38, card.home.y + card.ph.y - card.ph.z * .45 - card.size * .36 - k * 22);
       const pop = k < .12 ? (k / .12) * 1.25 : k < .2 ? 1.25 - (k - .12) / .08 * .25 : 1; g.scale.set(pop); g.alpha = k > .75 ? 1 - (k - .75) / .25 : 1; burst.rotation = k * .6;
     } });
   }
@@ -335,18 +397,20 @@ button .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c
     const motion = less ? 0 : 1;
 
     // the attacker lunges for weapon hits
-    if (type.melee && motion) { hero.v.x += ux * 260; hero.v.y += uy * 260; hero.v.lift += 2.5; }
+    if (type.melee && motion) kick(hero, { ang: Math.atan2(uy, ux), speed: 700, hop: 260, tumble: 2.5 });
     const delay = type.melee && motion ? 0.12 : type.id === "electricity" ? 0.05 : 0.02;
     cardsQueue.push({ at: delay, run: () => impact() });
 
     function impact() {
       if (crit && motion) hitStop = 0.07;
       // the card reacts: jumps up, leans away from the blow, slides back, shakes
-      T.v.x += ux * 520 * p * motion; T.v.y += uy * 520 * p * motion;
-      T.v.lift += 9 * p * motion;
-      T.v.rx += -uy * 9 * p * motion; T.v.ry += ux * 9 * p * motion;
-      T.v.rot += (Math.random() < .5 ? -1 : 1) * 2.2 * p * motion;
-      T.shake = 7 * p * motion; T.flash = 0.9 + 0.4 * (crit ? 1 : 0); T.flashColor = type.color;
+      if (motion) {
+        const th = THROWS[type.id](p);
+        const ang = Math.atan2(uy, ux) + (th.off ?? 0) + rnd(-(th.spread ?? 0.4), th.spread ?? 0.4);
+        // a critical hit throws it higher and flips it over (twice on a huge one)
+        kick(T, { ...th, ang, hop: (th.hop ?? 0) * (crit ? 1.35 : 1), speed: (th.speed ?? 0) * (crit ? 1.2 : 1), flips: crit ? (p > 1.25 ? 2 : 1) : 0 });
+      }
+      T.shake = 3 * p * motion; T.flash = 0.9 + 0.4 * (crit ? 1 : 0); T.flashColor = type.color;
       if (crit) camShake = 8 * p * motion;
       if (opts.number) damageNumber(T, Math.round(share * 120 * (crit ? 2 : 1)) || 1, type.color, crit);
       // a flash where it lands
@@ -388,7 +452,7 @@ button .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c
       for (let i = 0; i < 5; i++) emit(SOFT, { x: o.cx + rnd(-20, 20), y: o.cy - o.r * .3, vx: rnd(-20, 20), vy: rnd(-70, -40), drag: .6, life: rnd(1.6, 2.4), s0: 1.2, s1: 3, a0: .3, a1: 0, tint: 0x3a3632, layer: over });
     },
     cold(T, o) {
-      T.frozen = 1; T.stiff = 2.2; setTimeout(() => (T.stiff = 1), 900);
+      T.frozen = 1;
       decal(blotch(o.cx, o.cy + o.r * .5, o.r * (.9 + o.p * .3), 0xcfefff, .45, 16), 2.4, 1.8);
       for (let i = 0; i < n(26, o.p); i++) { const a = rnd(0, 6.28), sp = rnd(120, 360) * o.p; emit(SHARD, { x: o.hx, y: o.hy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 60, grav: 500, drag: 1.4, life: rnd(.5, .9), s0: rnd(.5, 1), s1: .4, a0: 1, a1: 0, tint: 0xd8f4ff, face: true, add: true }); }
       for (let i = 0; i < n(14, o.p); i++) emit(SOFT, { x: o.cx + rnd(-o.r, o.r) * .8, y: o.cy + rnd(-o.r, o.r) * .6, vx: rnd(-20, 20), vy: rnd(-30, 10), life: rnd(1, 1.6), s0: .6, s1: 1.4, a0: .45, a1: 0, tint: 0xbfe9ff, add: true });
@@ -405,7 +469,7 @@ button .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c
       decal(blotch(o.cx, o.cy + o.r * .55, o.r * .5, 0x0d0d14, .7, 12), 1.8, 1.6);
       for (let i = 0; i < n(30, o.p); i++) { const a = rnd(0, 6.28), sp = rnd(200, 520); emit(SPARK, { x: o.cx, y: o.cy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, face: true, life: rnd(.15, .35), s0: 1, s1: .2, a0: 1, a1: 0, tint: [0xffffff, 0xc9b8ff, 0x9ad0ff][i % 3], add: true }); }
       // little arcs crawling on the card for a moment
-      temp(.6, (g, k) => { g.clear(); if (k > .9) return; for (let j = 0; j < 3; j++) { const a0 = rnd(0, 6.28), a1 = a0 + rnd(.5, 1.4); const q = bolt(o.cx + Math.cos(a0) * o.r * .9 + T.s.x, o.cy + Math.sin(a0) * o.r * .9 + T.s.y, o.cx + Math.cos(a1) * o.r * .9 + T.s.x, o.cy + Math.sin(a1) * o.r * .9 + T.s.y, 10); g.lineStyle(2, 0xe6ddff, .9); q.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); } });
+      temp(.6, (g, k) => { g.clear(); if (k > .9) return; for (let j = 0; j < 3; j++) { const a0 = rnd(0, 6.28), a1 = a0 + rnd(.5, 1.4); const q = bolt(o.cx + Math.cos(a0) * o.r * .9 + T.ph.x, o.cy + Math.sin(a0) * o.r * .9 + (T.ph.y - T.ph.z * .45), o.cx + Math.cos(a1) * o.r * .9 + T.ph.x, o.cy + Math.sin(a1) * o.r * .9 + (T.ph.y - T.ph.z * .45), 10); g.lineStyle(2, 0xe6ddff, .9); q.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); } });
     },
     acid(T, o) {
       decal(blotch(o.cx + rnd(-10, 10), o.cy + o.r * .55, o.r * (.8 + o.p * .4), 0x3f7a12, .55, 6), 2.6, 1.8);
@@ -425,7 +489,6 @@ button .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c
     mental(T, o) {
       for (let j = 0; j < 3; j++) temp(.9, (g, k) => { g.clear(); const kk = Math.max(0, k - j * .15), a = 1 - kk; g.lineStyle(3, 0xff7bd5, .8 * a); for (let s = 0; s <= 60; s++) { const t = s / 60, ang = t * 9 + kk * 6 + j * 2, rr = o.r * (.2 + t * (.6 + kk * .8)); const x = o.cx + Math.cos(ang) * rr, y = o.cy + Math.sin(ang) * rr * .9; s ? g.lineTo(x, y) : g.moveTo(x, y); } });
       for (let i = 0; i < n(14, o.p); i++) { const a = rnd(0, 6.28); emit(SOFT, { x: o.cx + Math.cos(a) * o.r * 1.2, y: o.cy + Math.sin(a) * o.r * 1.2, vx: -Math.cos(a) * 120, vy: -Math.sin(a) * 120, life: .7, s0: .4, s1: .1, a0: .9, a1: 0, tint: 0xffa8e6, add: true }); }
-      T.v.rot += 3 * o.p * o.motion;
     },
     void(T, o) {
       for (let i = 0; i < n(36, o.p); i++) { const a = rnd(0, 6.28), d = o.r * rnd(1.1, 1.8); emit(SOFT, { x: o.cx + Math.cos(a) * d, y: o.cy + Math.sin(a) * d, vx: -Math.cos(a) * d * 2.2, vy: -Math.sin(a) * d * 2.2, drag: 1, life: .5, s0: .7, s1: .1, a0: .9, a1: .3, tint: 0x14061f, layer: over }); }
@@ -457,7 +520,7 @@ button .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c
     time += app.ticker.deltaMS;
     if (hitStop > 0) { hitStop -= dt; dt *= 0.08; }
     for (let i = cardsQueue.length - 1; i >= 0; i--) { cardsQueue[i].at -= dt; if (cardsQueue[i].at <= 0) { const q = cardsQueue.splice(i, 1)[0]; q.run(); } }
-    for (const c of allCards) { springs(c, dt); drawCard(c, time); }
+    for (const c of allCards) { physics(c, dt); drawCard(c, time); }
     if (deathAnim) {
       const d = deathAnim; d.t += dt; const T = d.T;
       if (d.t < 2.2) { T.dead = Math.min(1, d.t * 2.2); T.alpha = 1 - Math.min(.65, Math.max(0, d.t - .8) * .6); }
@@ -493,7 +556,7 @@ button .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c
     hit(t, { ...opts(), crit: Math.random() < .3, share: rnd(.2, .7) });
   });
   $("reset").addEventListener("click", () => {
-    for (const c of allCards) { for (const k of Object.keys(c.s)) { c.s[k] = 0; c.v[k] = 0; } c.dead = 0; c.alpha = 1; c.shake = 0; c.flash = 0; c.frozen = 0; }
+    for (const c of allCards) { c.ph = freshPhysics(); c.dead = 0; c.alpha = 1; c.shake = 0; c.flash = 0; c.frozen = 0; }
     deathAnim = null; hero.home = { x: GRID * 2.5, y: GRID * 3.5 }; target.home = { x: GRID * 6.5, y: GRID * 2.5 };
   });
   // A first hit so the page opens showing what it does.

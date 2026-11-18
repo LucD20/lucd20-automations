@@ -2304,3 +2304,14 @@ card is the token art on a 12 × 12 plane mesh tilted with a perspective
 projection, on springs (knockback away from the attacker, lift with a
 growing shadow, lean, spin, shake); the attacker lunges for weapon types.
 Waiting for the owner's tuning notes.
+Mockup v2 (owner: "the movement is too similar ... the cards go up, fly to the
+sides, move around, like it took a real impact and moved almost like a coin"):
+the springs are replaced by a small rigid-body simulation: a push along the
+floor with friction, a hop with gravity, a tumble about the axis across the
+push while airborne, a spin, bounces on landing (with a little dust), then a
+coin-like wobble whose tilt circles faster as it dies down, and a glide back
+to the square. Each damage type has its own throw (bludgeoning high hop,
+slashing sideways spin-out, piercing flat and fast, electricity straight up,
+force far, void pulled toward the attacker, mental twist ...), every throw is
+randomised, and a critical hit adds one or two whole flips (the card's back
+shows dark while it is upside down).

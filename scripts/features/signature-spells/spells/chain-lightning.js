@@ -3,8 +3,9 @@ import { chain } from "../effects.js";
 
 /**
  * Chain Lightning (owner, docs/PLAN.md §20): while the damage dice roll, lightning darts around them; when
- * they have landed, it runs through all of them; then from the last die it hits the first target, the second
- * and so on, each token playing the electricity reaction as the bolt arrives.
+ * they have landed, it runs through all of them, each die jumping as it is hit and vanishing at the top of
+ * its jump; then from where the last die was it hits the first target, the second and so on, each token
+ * playing the electricity reaction as the bolt arrives.
  */
 
 const COL = 0x8fc8ff;
@@ -32,19 +33,37 @@ defineSignature({
     }
   },
 
-  // The result is clear: one bolt through all the dice, in order, crackling around each.
+  // The result is clear: the bolt runs through the dice in order. Each die jumps as it is hit and is gone at
+  // the top of its jump, in a burst, so the table is clear when the bolt leaves for the tokens.
   async result(fx, dice) {
-    const T = fx.less ? 320 : 700;
-    for (const die of dice) fx.screenGlow(() => die.at(), { r: die.r * 2.6, life: T, col: COL });
-    for (let i = 1; i < dice.length; i++) fx.screenBolt(() => dice[i - 1].at(), () => dice[i].at(), { life: T, grow: fx.less ? 0 : 60 * i, width: 2.8, forks: 1, col: COL });
-    if (fx.less) return fx.wait(T);
-    for (const end = performance.now() + T; performance.now() < end - 30;) {
-      for (const die of dice) {
-        const a = fx.rnd(0, Math.PI * 2), len = die.r * fx.rnd(1.2, 2.2);
-        fx.screenBolt(() => die.at(), () => { const p = die.at(); return { x: p.x + Math.cos(a) * len, y: p.y + Math.sin(a) * len }; }, { life: 100, width: 1.5, jag: 5, seg: 9, col: COL, fade: 50 });
-      }
-      await fx.wait(Math.min(60, Math.max(1, end - performance.now())));
+    if (fx.less) {
+      for (const die of dice) fx.screenGlow(() => die.at(), { r: die.r * 2.6, life: 570, col: COL });
+      for (let i = 1; i < dice.length; i++) fx.screenBolt(() => dice[i - 1].at(), () => dice[i].at(), { life: 320, width: 2.8, col: COL });
+      await fx.wait(320);
+      return fx.diceFade(dice, 250);
     }
+    const n = dice.length, step = n > 1 ? Math.min(110, 700 / (n - 1)) : 0, RISE = 240;
+    const arcs = (die, count, reach, life) => {
+      for (let k = 0; k < count; k++) {
+        const a = fx.rnd(0, Math.PI * 2), len = die.r * fx.rnd(reach * .6, reach);
+        fx.screenBolt(() => die.at(), () => { const p = die.at(); return { x: p.x + Math.cos(a) * len, y: p.y + Math.sin(a) * len }; }, { life, width: 1.6, jag: 5, seg: 9, col: COL, fade: 60 });
+      }
+    };
+    const jumps = [];
+    for (let i = 0; i < n; i++) {
+      const die = dice[i];
+      if (i) {
+        fx.screenBolt(() => dice[i - 1].at(), () => die.at(), { life: step + RISE, grow: step * .8, width: 2.8, forks: 1, col: COL });
+        await fx.wait(step);
+      }
+      fx.screenGlow(() => die.at(), { r: die.r * 2.6, life: RISE + 160, col: COL });
+      arcs(die, 3, 2.2, 120);
+      jumps.push(fx.diceJump(die, { rise: RISE }).then(() => {
+        fx.screenGlow(() => die.at(), { r: die.r * 3.4, life: 220, col: COL, alpha: .9 });
+        arcs(die, 6, 3, 150);
+      }));
+    }
+    await Promise.all(jumps);
   },
 
   // From the last die (else the caster, else the sky) to the first target, then target to target.

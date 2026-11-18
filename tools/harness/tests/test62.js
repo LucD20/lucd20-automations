@@ -3,7 +3,7 @@ const assert = require("assert");
 const out = __dirname;
 const MOD = "/modules/lucd20-automations/scripts";
 
-/** Phase 64: Signature Spells — Chain Lightning on Dice So Nice's dice, then from token to token. */
+/** Phase 64: Signature Spells — Chain Lightning on Dice So Nice's dice (they jump and vanish), then from token to token. */
 
 /** A small canvas as Foundry's: primary group (sorted by elevation → layer → sort), interface, tokens with actors. */
 async function setup(page) {
@@ -81,22 +81,42 @@ async function mockDsn(page) {
     el.id = "dice-box-canvas";
     el.style.cssText = "position:absolute;left:0;top:0;width:900px;height:500px;pointer-events:none;z-index:1000";
     document.body.append(el);
-    const engine = { diceList: [], deadDiceList: [] };
-    const mesh = (x, y) => ({ parent: { parent: {} }, userData: {}, __p: { x, y } });
+    const removed = [], physics = [];
+    const scene = { remove(c) { c.parent = null; removed.push(c.__mesh.id); } };
+    const engine = { diceList: [], deadDiceList: [], rolling: false, physicsWorker: { exec: async (name, ids) => { physics.push([name, ...ids]); } } };
+    let nextId = 1;
+    /** A die as Dice So Nice builds it: the mesh in a container (a Group) in the scene. */
+    const mesh = (x, y, userData = {}) => {
+      const m = { id: nextId++, userData, __p: { x, y } };
+      m.parent = { __mesh: m, parent: scene, visible: true, position: { x: 0, y: 1, z: 0 }, scale: { x: 1, y: 1, z: 1 } };
+      return m;
+    };
+    window.__dsn = { engine, removed, physics, renders: 0, mesh };
     game.dice3d = {
-      canvas: el, box: { throwEngine: engine },
+      canvas: el, box: { throwEngine: engine, camera: { position: { x: 0, y: 101, z: 0 } }, renderScene() { __dsn.renders++; drawDice(); } },
       getScreenPosition: m => ({ ...m.__p }),
       // The preview's throw: resolves true when the dice have landed.
       showForRoll: async (roll, user, synchronize) => {
         window.__showForRoll = { formula: roll.formula, synchronize };
+        engine.rolling = true;
         engine.diceList = [mesh(380, 80), mesh(470, 110), mesh(560, 70)];
         await __sleep(450);
+        engine.rolling = false;
         return true;
       }
     };
     // Dice drawn on the screen so the screenshots show them.
     const dots = [];
-    const drawDice = () => { dots.splice(0).forEach(d => d.remove()); for (const m of engine.diceList) { const d = document.createElement("div"); d.style.cssText = `position:absolute;left:${m.__p.x - 22}px;top:${m.__p.y - 22}px;width:44px;height:44px;border-radius:9px;background:#8a2be2;border:2px solid #fff;box-sizing:border-box`; el.append(d); dots.push(d); } };
+    function drawDice() {
+      dots.splice(0).forEach(d => d.remove());
+      for (const m of [...engine.deadDiceList, ...engine.diceList]) {
+        if (!m.parent.parent || !m.parent.visible) continue;
+        // Nearer the camera = bigger, as its perspective camera would draw it.
+        const k = 100 / (101 - m.parent.position.y) * m.parent.scale.x, d = document.createElement("div");
+        d.style.cssText = `position:absolute;left:${m.__p.x - 22}px;top:${m.__p.y - 22}px;width:44px;height:44px;border-radius:9px;background:${m.userData.persistent ? "#2e8b57" : "#8a2be2"};border:2px solid #fff;box-sizing:border-box;transform:scale(${k})`;
+        el.append(d); dots.push(d);
+      }
+    }
     /** DSN's own createChatMessage handler (registered after ours, the worse order), then the throw. */
     Hooks.on("createChatMessage", message => {
       if (!message.__dsn) return;
@@ -104,10 +124,12 @@ async function mockDsn(page) {
       message._dice3danimating = true;
       Hooks.callAll("diceSoNiceRollStart", message.id, { roll: message.rolls[0], blind: false });
       const dice = [mesh(300, 60), mesh(450, 40), mesh(600, 60)];
-      setTimeout(() => { engine.diceList = dice; }, 150);
+      engine.rolling = true;
+      // As Dice So Nice: the dice of the throw before stay on the table (the dead list) until it clears them.
+      setTimeout(() => { engine.deadDiceList = engine.deadDiceList.concat(engine.diceList); engine.diceList = dice; }, 150);
       const t0 = performance.now();
       const move = setInterval(() => { const u = Math.min(1, (performance.now() - t0 - 150) / 600); dice.forEach((m, i) => { m.__p.y = 60 + u * (40 + i * 25); }); drawDice(); }, 16);
-      setTimeout(() => { clearInterval(move); drawDice(); delete message._dice3danimating; Hooks.callAll("diceSoNiceRollComplete", message.id, []); window.__landedAt = performance.now(); }, message.__dsn);
+      setTimeout(() => { clearInterval(move); drawDice(); engine.rolling = false; delete message._dice3danimating; Hooks.callAll("diceSoNiceRollComplete", message.id, []); window.__landedAt = performance.now(); }, message.__dsn);
     });
     window.__clearDice = () => { engine.deadDiceList = []; engine.diceList = []; drawDice(); };
   });
@@ -130,7 +152,7 @@ async function helpers(page) {
       rolls: [{ total: 52, instances: [{ type: "electricity", total: 52 }], kinds: new Set(["damage"]) }] });
     /** Watch a run: when each token's reaction starts, what is drawn where, sampled every 10 ms. */
     window.__watch = () => {
-      const log = { coins: [], samples: [], t0: performance.now(), overlayZ: null, overlayEvents: null, firstScreenTarget: null, firstWorldFrom: null };
+      const log = { dice: [], coins: [], samples: [], t0: performance.now(), overlayZ: null, overlayEvents: null, firstScreenTarget: null, firstWorldFrom: null };
       const seenCoins = new Set();
       const timer = setInterval(() => {
         const t = Math.round(performance.now() - log.t0), S = fxm.effectsState;
@@ -142,9 +164,18 @@ async function helpers(page) {
         const strike = screen.find(b => b.life === 380);
         if (strike && !log.firstScreenTarget) log.firstScreenTarget = { a: strike.a(), b: strike.b() };
         if (world.length && !log.firstWorldFrom) { const w = world.find(b => b.life === 380); if (w) log.firstWorldFrom = w.a(); }
+        const dice3d = game.dice3d?.box?.throwEngine;
+        for (const m of dice3d ? [...dice3d.diceList, ...dice3d.deadDiceList, ...log.dice.map(d => d.mesh)] : []) {
+          let d = log.dice.find(x => x.mesh === m);
+          if (!d) log.dice.push(d = { mesh: m, id: m.id, up: null, top: 1, small: 1, gone: null });
+          const c = m.parent;
+          if (c.position.y > 1.5 && d.up == null) d.up = t;
+          d.top = Math.max(d.top, c.position.y); d.small = Math.min(d.small, c.scale.x);
+          if (!c.parent && d.gone == null) { d.gone = t; d.restored = c.position.y === 1 && c.scale.x === 1; }
+        }
         log.samples.push({ t, screen: screen.length, world: world.length, glows: S.glows.length, overlay: !!el, flicker: screen.some(b => b.flicker > 0), forks: [...screen, ...world].some(b => b.forks > 0) });
       }, 10);
-      log.stop = () => { clearInterval(timer); return log; };
+      log.stop = () => { clearInterval(timer); log.dice = log.dice.map(({ mesh, ...d }) => d); return log; };
       return log;
     };
     window.__idle = () => ({ bolts: fxm.effectsState.bolts.length, glows: fxm.effectsState.glows.length, frames: fxm.effectsState.frames.size, holds: fxm.effectsState.holds, raf: fxm.effectsState.raf,
@@ -187,11 +218,11 @@ async function helpers(page) {
     const at = (x, y, id) => ({ token: id, x, y });
     // A die the old way: no getScreenPosition, projected with the box's camera.
     const V = class { constructor(x = 0, y = 0, z = 0) { this.x = x; this.y = y; this.z = z; } clone() { return new V(this.x, this.y, this.z); } project() { this.x = this.x / 10; this.y = -this.z / 10; return this; } };
-    const keep = game.dice3d.getScreenPosition; game.dice3d.getScreenPosition = undefined; game.dice3d.box.camera = {};
+    const keep = game.dice3d.getScreenPosition, keepCamera = game.dice3d.box.camera; game.dice3d.getScreenPosition = undefined; game.dice3d.box.camera = {};
     const old = { parent: { parent: {}, scale: { x: 1 } }, scale: { x: 1 }, userData: {}, position: new V(), geometry: { boundingSphere: { radius: 1 } }, getWorldPosition(v) { v.x = 5; v.z = 0; return v; } };
     game.dice3d.box.throwEngine.diceList = [old, { parent: null, userData: {}, __p: { x: 1, y: 1 } }, { parent: { parent: {} }, userData: { persistent: true }, __p: { x: 1, y: 1 } }];
     const manual = dsn.dicePoints().map(p => [Math.round(p.x), Math.round(p.y), Math.round(p.r)]);
-    game.dice3d.getScreenPosition = keep; delete game.dice3d.box.camera; game.dice3d.box.throwEngine.diceList = [];
+    game.dice3d.getScreenPosition = keep; game.dice3d.box.camera = keepCamera; game.dice3d.box.throwEngine.diceList = [];
     return {
       catalog: FEATURE_ORDER.find(e => e.id === "signatureSpells"),
       def: [f.category, f.scope, f.def.defaultEnabled, f.settings.map(s => `${s.key}:${s.scope}:${s.default}`)],
@@ -235,7 +266,7 @@ async function helpers(page) {
   });
   const { early } = await started;
   await page.screenshot({ path: `${out}/p64-rolling.png` });
-  await page.waitForFunction(() => window.__landedAt && performance.now() - window.__landedAt > 350);
+  await page.waitForFunction(() => window.__landedAt && performance.now() - window.__landedAt > 240);
   await page.screenshot({ path: `${out}/p64-result.png` });
   await page.waitForFunction(() => window.__eng.engineState.coins.size >= 2);
   await page.screenshot({ path: `${out}/p64-chain.png` });
@@ -245,7 +276,8 @@ async function helpers(page) {
     const landed = Math.round(__landedAt - log.t0);
     const before = log.samples.filter(s => s.t < landed), rolling = before.filter(s => s.t > 250);
     const result = log.samples.filter(s => s.t > landed + 60 && s.t < landed + 600);
-    return { landed, coins: log.coins, overlayZ: log.overlayZ, overlayEvents: log.overlayEvents, strike: log.firstScreenTarget,
+    return { landed, dice: log.dice, lists: [__dsn.engine.diceList.length, __dsn.engine.deadDiceList.length], removed: [...__dsn.removed], physics: [...__dsn.physics], renders: __dsn.renders,
+      coins: log.coins, overlayZ: log.overlayZ, overlayEvents: log.overlayEvents, strike: log.firstScreenTarget,
       boltsBeforeDice: before.filter(s => s.t < 140).some(s => s.screen + s.world > 0),
       rollingBolts: rolling.filter(s => s.screen > 0).length / rolling.length, rollingWorld: rolling.some(s => s.world > 0),
       resultMin: Math.min(...result.map(s => s.screen)), resultGlows: Math.max(...result.map(s => s.glows)), resultWorld: result.some(s => s.world > 0),
@@ -257,13 +289,21 @@ async function helpers(page) {
   assert.ok(gm.rollingBolts > 0.8, `lightning darts around the dice while they roll (${gm.rollingBolts})`);
   assert.strictEqual(gm.rollingWorld, false, "nothing on the canvas while the dice roll");
   assert.deepStrictEqual([gm.overlayZ, gm.overlayEvents], ["1001", "none"], "the overlay: one above Dice So Nice's canvas, takes no clicks");
-  assert.ok(gm.resultMin >= 2 && gm.resultGlows >= 3, `the result: a bolt through all three dice, a glow on each (${gm.resultMin}, ${gm.resultGlows})`);
+  assert.ok(gm.resultMin >= 1 && gm.resultGlows >= 3, `the result: a bolt through the dice, a glow on each (${gm.resultMin}, ${gm.resultGlows})`);
+  const ids = gm.dice.map(d => d.id);
+  assert.deepStrictEqual(gm.dice.map(d => d.up != null && d.gone != null && d.restored), [true, true, true], "each die jumped and was taken off the table (left as Dice So Nice had it)");
+  assert.ok(gm.dice.every(d => d.up >= gm.landed - 20) && gm.dice[0].up < gm.dice[1].up && gm.dice[1].up < gm.dice[2].up, `the dice jump in the order the bolt reaches them (${gm.dice.map(d => d.up - gm.landed)})`);
+  assert.ok(gm.dice.every(d => d.top > 20 && d.top <= 25.1), `towards the camera (${gm.dice.map(d => d.top)})`);
+  assert.ok(gm.dice.every(d => d.gone - d.up >= 100 && d.gone - d.up < 450) && gm.dice[0].gone < gm.dice[2].gone, `gone at the top of the jump, before falling (${gm.dice.map(d => d.gone - d.up)})`);
+  assert.ok(Math.max(...gm.dice.map(d => d.gone)) <= gm.coins[0].t, "all dice are gone before the first token is hit");
+  assert.deepStrictEqual([gm.lists, gm.removed, gm.physics], [[0, 0], ids, ids.map(id => ["removeDice", id])], "out of Dice So Nice's lists, scene and physics: nothing left for the next throw");
+  assert.ok(gm.renders > 10, "Dice So Nice's scene is redrawn while the dice move");
   assert.strictEqual(gm.resultWorld, false, "the chain waits for the result");
   assert.deepStrictEqual(gm.coins.map(c => c.id), ["ogre", "hiddenGoblin", "valeros"], "each target reacts in Target Helper's order (the GM sees the hidden one)");
-  assert.ok(gm.coins[0].t >= gm.landed + 700 + 100 && gm.coins[0].t < gm.landed + 1150, `the first target after the result (${gm.coins[0].t - gm.landed} ms after landing)`);
+  assert.ok(gm.coins[0].t >= gm.landed + 460 + 100 && gm.coins[0].t < gm.landed + 1000, `the first target after the result (${gm.coins[0].t - gm.landed} ms after landing)`);
   const gaps = [gm.coins[1].t - gm.coins[0].t, gm.coins[2].t - gm.coins[1].t];
   assert.ok(gaps.every(g => g >= 250 && g < 600), `a short delay between targets (${gaps})`);
-  assert.deepStrictEqual([Math.round(gm.strike.a.x), Math.round(gm.strike.a.y), Math.round(gm.strike.b.x), Math.round(gm.strike.b.y)], [600, 150, 500, 250], "from the last die on the screen to the first target's token");
+  assert.deepStrictEqual([Math.round(gm.strike.a.x), Math.round(gm.strike.a.y), Math.round(gm.strike.b.x), Math.round(gm.strike.b.y)], [600, 150, 500, 250], "from where the last die was to the first target's token");
   assert.strictEqual(gm.chainWorld, true, "target to target on the canvas");
   assert.deepStrictEqual(gm.after, { bolts: 0, glows: 0, frames: 0, holds: 0, raf: null, overlay: false, layer: false, runs: 0 }, "afterwards: overlay and layer removed, nothing running");
   assert.deepStrictEqual([gm.meshes, gm.ours, gm.dsnCanvas], [[true, true, true], 0, true], "tokens back, Dice So Nice untouched");
@@ -301,6 +341,44 @@ async function helpers(page) {
   assert.deepStrictEqual(dedupe.kill, { less: false, payload: true }, "a kill always plays in full");
   assert.deepStrictEqual(dedupe.fire, { less: false, claim: true }, "another damage type is not the spell's");
 
+  /* ---- the next throws: Dice So Nice rolls as ever; other rolls' dice and persistent dice are never touched ---- */
+  const next = await page.evaluate(async () => {
+    const { engine, mesh } = __dsn;
+    const old = mesh(120, 60), persistent = mesh(800, 440, { persistent: true });
+    engine.deadDiceList = [old]; engine.diceList = [persistent];
+    __dsn.removed.length = 0; __dsn.physics.length = 0;
+    const res = {};
+    for (const key of ["second", "third"]) {
+      const log = __watch();
+      Hooks.callAll("createChatMessage", __chain({ dsn: 500, targets: ["ogre"] }), {}, "u2");
+      await __sleep(100); await __settle();
+      log.stop();
+      const mine = log.dice.filter(d => d.id !== old.id && d.id !== persistent.id);
+      res[key] = { thrown: mine.length, jumped: mine.every(d => d.up != null && d.gone != null), coins: log.coins.map(c => c.id),
+        others: log.dice.filter(d => d.id === old.id || d.id === persistent.id).map(d => [d.up, d.gone, d.top, d.small]) };
+    }
+    res.left = [engine.diceList.map(d => d.id), engine.deadDiceList.map(d => d.id)];
+    res.expected = [[], [old.id, persistent.id]];
+    res.inScene = [!!old.parent.parent, !!persistent.parent.parent];
+    res.removed = __dsn.removed.length;
+    // A throw that starts while a die is in the air: the die is put back, Dice So Nice keeps it.
+    const dsn = await import("/modules/lucd20-automations/scripts/features/signature-spells/dsn.js");
+    const late = mesh(300, 300); engine.diceList = [late];
+    const handle = dsn.grabDie(late);
+    handle.lift(1);
+    engine.rolling = true;
+    handle.remove();
+    res.late = [late.parent.position.y, !!late.parent.parent, engine.diceList.includes(late), dsn.grabDie(late)];
+    engine.rolling = false;
+    res.persistentGrab = dsn.grabDie(persistent);
+    __clearDice();
+    return res;
+  });
+  for (const key of ["second", "third"]) assert.deepStrictEqual(next[key], { thrown: 3, jumped: true, coins: ["ogre"], others: [[null, null, 1, 1], [null, null, 1, 1]] }, `${key} throw: rolled, played and cleared as the first; an older roll's die and a persistent die untouched`);
+  assert.deepStrictEqual([next.left, next.inScene, next.removed], [next.expected, [true, true], 6]);
+  assert.deepStrictEqual(next.late, [1, true, true, null], "a new throw under way: the die goes back, nothing is removed, no die is grabbed");
+  assert.strictEqual(next.persistentGrab, null, "a persistent die is never ours");
+
   /* ---- Less motion: no darting bolts, one plain chain, a flash on each token ---- */
   await page.evaluate(ID => game.settings.set(ID, "tokenReactions_lessMotion", true), ID);
   const less = await page.evaluate(async () => {
@@ -311,10 +389,12 @@ async function helpers(page) {
     const rolling = log.samples.some(s => s.screen + s.world > 0);
     await __sleep(100); await __settle();
     log.stop();
-    return { rolling, result: log.samples.some(s => s.screen >= 2), flicker: log.samples.some(s => s.flicker), forks: log.samples.some(s => s.forks), coins: log.coins.map(c => [c.id, c.less]), after: __idle() };
+    return { rolling, dice: log.dice.map(d => [d.up, d.gone != null, d.small < 0.2, d.restored]), diceBeforeCoin: Math.max(...log.dice.map(d => d.gone)) <= log.coins[0].t,
+      result: log.samples.some(s => s.screen >= 2), flicker: log.samples.some(s => s.flicker), forks: log.samples.some(s => s.forks), coins: log.coins.map(c => [c.id, c.less]), after: __idle() };
   });
   await page.evaluate(ID => game.settings.set(ID, "tokenReactions_lessMotion", false), ID);
   assert.deepStrictEqual([less.rolling, less.result, less.flicker, less.forks], [false, true, false, false], "Less motion: nothing while rolling, a still chain through the dice, no forks");
+  assert.deepStrictEqual([less.dice, less.diceBeforeCoin], [[[null, true, true, true], [null, true, true, true], [null, true, true, true]], true], "Less motion: no jump, the dice shrink away and are gone before the chain");
   assert.deepStrictEqual(less.coins, [["ogre", true], ["valeros", true]], "Less motion: the tokens only flash");
   assert.strictEqual(less.after.overlay, false);
 
@@ -348,6 +428,16 @@ async function helpers(page) {
     res.mid = __idle();
     await __sleep(600);
     res.midLater = { ...__idle(), coins: __eng.engineState.coins.size };
+    // Switched off while a die is in the air: it is put back and stays Dice So Nice's.
+    await game.settings.set(ID, "signatureSpells_enabled", true);
+    __clearDice();
+    Hooks.callAll("createChatMessage", __chain({ dsn: 200 }), {}, "u2");
+    for (let i = 0; i < 200 && !__dsn.engine.diceList.some(m => m.parent.position.y > 5); i++) await __sleep(10);
+    res.inAir = __dsn.engine.diceList.some(m => m.parent.position.y > 5);
+    await game.settings.set(ID, "signatureSpells_enabled", false);
+    await __sleep(400);
+    res.putBack = __dsn.engine.diceList.map(m => [m.parent.position.y, !!m.parent.parent]);
+    __clearDice();
     res.featureOff = await tryIt();
     await game.settings.set(ID, "signatureSpells_enabled", true);
     res.backOn = await tryIt();
@@ -356,6 +446,8 @@ async function helpers(page) {
   assert.deepStrictEqual([off.spellOff, off.showOff, off.featureOff, off.backOn], [false, false, false, true], "the spell's switch, my switch, the feature: nothing; back on: it plays");
   assert.strictEqual(off.midBefore, true);
   assert.deepStrictEqual(off.mid, { bolts: 0, glows: 0, frames: 0, holds: 0, raf: null, overlay: false, layer: false, runs: 0 }, "switched off mid-roll: gone at once");
+  assert.strictEqual(off.inAir, true);
+  assert.ok(off.putBack.length >= 2 && off.putBack.every(([y, inScene]) => y === 1 && inScene), `switched off mid-jump: the dice still on the table are back in place (${JSON.stringify(off.putBack)})`);
   assert.deepStrictEqual(off.midLater, { ...off.mid, coins: 0 }, "and the chain never comes");
 
   /* ---- the GM's preview: dice for the GM, the chain for everyone, nothing about hidden tokens sent ---- */

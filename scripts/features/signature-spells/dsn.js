@@ -142,3 +142,87 @@ export function overlayZ() {
   } catch { /* the default */ }
   return z + 1;
 }
+
+/* -------------------------------------------- */
+/*  Moving and removing this throw's dice       */
+/* -------------------------------------------- */
+
+/**
+ * After the throw has ended, a signature may lift its own dice towards the camera (they "jump") and take them
+ * off the table. Only dice handed to `grabDie` are touched: never a persistent die, never while a throw is in
+ * play. Removing a die is what Dice So Nice's own `fadeOutEphemeral` does for all dice, for this one only: out
+ * of the throw engine's lists, out of the scene, its physics body removed — so the next throw neither shows
+ * nor collides with it, and Dice So Nice's own clean-up finds nothing left to do for it.
+ *
+ * Internal (verify): a die mesh sits in a container (`mesh.parent`, a Group in `box.scene`); the camera looks
+ * straight down from `box.camera.position.y`, so a higher `container.position.y` draws the die bigger;
+ * `box.renderScene()` redraws (Dice So Nice's own ticker may have stopped); `throwEngine.rolling`;
+ * `throwEngine.physicsWorker.exec("removeDice", [mesh.id])`; once the dice have stopped nothing moves them
+ * back (the physics world is asleep).
+ * Anything missing: `grabDie` returns null and the dice stay as they are.
+ */
+
+const grabbed = new Set();
+let dirty = false;
+
+const boxOf = () => game.dice3d?.box ?? null;
+const busy = () => { const box = boxOf(); return !!(box?.throwEngine?.rolling ?? box?.rolling); };
+
+export function grabDie(mesh) {
+  try {
+    const box = boxOf(), c = mesh?.parent, scene = c?.parent;
+    if (!dsnActive() || !box || typeof box.renderScene !== "function" || busy()) return null;
+    if (!c || !scene || typeof scene.remove !== "function" || mesh.userData?.persistent) return null;
+    const camY = Number(box.camera?.position?.y);
+    if (![c.position?.x, c.position?.y, c.position?.z, c.scale?.x, c.scale?.y, c.scale?.z, camY].every(Number.isFinite) || !(camY > c.position.y)) return null;
+    const base = { y: c.position.y, sx: c.scale.x, sy: c.scale.y, sz: c.scale.z };
+    const ok = () => !handle.gone && c.parent === scene && !busy();
+    const handle = {
+      mesh, gone: false,
+      /** u = 0…1: on the table … at the top of its jump (about a third bigger on the screen). */
+      lift(u) { if (!ok()) return; c.position.y = base.y + (camY - base.y) * 0.24 * u; dirty = true; },
+      /** u = 0…1: full size … nothing. */
+      shrink(u) { if (!ok()) return; const k = Math.max(0.001, 1 - u); c.scale.x = base.sx * k; c.scale.y = base.sy * k; c.scale.z = base.sz * k; dirty = true; },
+      /** Back as Dice So Nice left it. */
+      restore() {
+        if (handle.gone) return;
+        handle.gone = true; grabbed.delete(handle);
+        try { c.position.y = base.y; c.scale.x = base.sx; c.scale.y = base.sy; c.scale.z = base.sz; dirty = true; } catch { /* gone with its scene */ }
+      },
+      /** Off the table for good. */
+      remove() {
+        if (handle.gone) return;
+        const can = ok();
+        handle.restore();
+        if (!can) return;
+        try {
+          const engine = box.throwEngine, owner = Array.isArray(engine?.diceList) ? engine : box;
+          for (const name of ["diceList", "deadDiceList"]) if (Array.isArray(owner[name])) owner[name] = owner[name].filter(d => d !== mesh);
+          scene.remove(c);
+          const worker = engine?.physicsWorker ?? box.physicsWorker;
+          Promise.resolve(worker?.exec?.("removeDice", [mesh.id])).catch(() => {});
+        } catch {
+          try { c.visible = false; } catch { /* nothing more to try */ }
+        }
+        dirty = true;
+      }
+    };
+    grabbed.add(handle);
+    return handle;
+  } catch {
+    return null;
+  }
+}
+
+/** Redraw Dice So Nice's scene once, if a die was moved this frame. */
+export function flushDice() {
+  if (!dirty) return;
+  dirty = false;
+  try { boxOf()?.renderScene?.(); } catch { /* its renderer is gone */ }
+}
+
+/** A run stopped half-way: every die still held goes back to where it was. */
+export function releaseDice() {
+  for (const handle of [...grabbed]) handle.restore();
+  flushDice();
+}

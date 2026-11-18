@@ -2484,10 +2484,12 @@ PF2e reader `scripts/systems/pf2e/signature-spells.js`; test `test62.js`).
 - **Sequence** (Chain Lightning; times are the design, in ms):
   1. Rolling: every 45 ms a small arc leaps off a die (lives 130), 40% of the
      time also one from die to die (140). Nothing on the scene yet.
-  2. Landed (`diceSoNiceRollComplete`): 700 — one bolt through all the dice in
-     their order (the i-th link grows in 60·i), a glow on each, small arcs
-     around each every 60.
-  3. From the last die to the first target: a bolt on the screen overlay that
+  2. Landed (`diceSoNiceRollComplete`), since v0.74.1: the bolt runs through
+     the dice in their order, reaching the next one every 110 (less with many
+     dice: the whole run takes at most 700). Each die jumps as it is hit
+     (240, towards the camera: about a third bigger) and is gone at the top of
+     its jump in a burst of arcs. Three dice: 460; eight: 940.
+  3. From where the last die was to the first target: a bolt on the screen overlay that
      grows in 120 and stays 260 more; when it arrives the token plays the
      electricity reaction, hit from the bolt's direction.
   4. 240 later the next bolt, on the scene, from that token to the next
@@ -2520,7 +2522,7 @@ PF2e reader `scripts/systems/pf2e/signature-spells.js`; test `test62.js`).
     nothing.
 - **Less motion** (the Token Reactions option, or the system's reduced
   motion): nothing while the dice roll; on landing one still bolt through the
-  dice for 320; a plain chain (no forks, no flicker), 160 between targets; the
+  dice for 320, then the dice shrink away in 250 (no jump); a plain chain (no forks, no flicker), 160 between targets; the
   tokens only flash.
 - **Options**: the feature (world, on); "Show them to me" (per player); one
   GM switch per spell (`chainLightning`). Switching any off ends what plays.
@@ -2531,6 +2533,27 @@ PF2e reader `scripts/systems/pf2e/signature-spells.js`; test `test62.js`).
   (`signaturePreview` over the module socket; hidden tokens are never in it).
   Decision: the dice are not synchronised, because other clients couldn't tie
   an un-messaged throw to the effect.
+- **v0.74.1 — the dice jump and vanish** (owner: "I want the dice to 'jump'
+  as well, in order as they are 'hit' by the lightning. They could disappear
+  before falling so you can see the lightnings hitting the tokens."):
+  - The real 3D dice move (no stand-ins): DSN's camera looks straight down,
+    so raising a die's container (`mesh.parent.position.y`, by 24% of the way
+    to the camera) draws it bigger, with its shadow; we call
+    `box.renderScene()` once per frame while a die moves (DSN's own ticker
+    may have stopped).
+  - At the top the die is taken off the table the way DSN's own
+    `fadeOutEphemeral` does it, for that die only: out of
+    `throwEngine.diceList` / `deadDiceList`, `scene.remove(container)`,
+    `physicsWorker.exec("removeDice", [mesh.id])`. So the next throw neither
+    shows nor collides with it, and DSN's "hide after roll" finds nothing
+    left to do for it. Position and scale are put back first.
+  - Only this throw's dice (the meshes seen rolling for this message); never
+    a persistent die; never while a throw is in play (`throwEngine.rolling`):
+    a new throw starting mid-jump puts the die back and leaves it to DSN.
+    Switched off mid-jump: every die still held goes back in place.
+  - Anything missing (container, scene, camera, `renderScene`): the dice stay
+    as DSN left them and only the bolts play (v0.74.0's look).
+  - For a later spell: `fx.diceJump(die, { rise })`, `fx.diceFade(dice, ms)`.
 - Not done: sound; a 4e reader; the dice part for other clients in the
   preview; when DSN queues two rolls one after the other, the rolling arcs may
   also play on the roll that is ahead in the queue.
@@ -2540,8 +2563,15 @@ PF2e reader `scripts/systems/pf2e/signature-spells.js`; test `test62.js`).
     once the die is in the scene; `getScreenPosition` gives viewport pixels
     that match what is seen; `mesh.geometry.boundingSphere` gives a sensible
     size (arcs start at the die's centre and reach 1.3–2.8 radii).
+  - v0.74.1: after `diceSoNiceRollComplete`, `throwEngine.rolling` is false
+    and nothing writes the dice's positions back (the physics world is asleep;
+    with DSN's interactive dice on, a die still settling could be pulled back
+    down mid-jump); `box.renderScene()` shows a moved container at once;
+    removing a die as above leaves DSN's special effects (if any play on that
+    die) and its "hide after roll" timer without errors; the 24% lift reads as
+    a jump (it is a guess: `0.24` in `dsn.js`).
   - `diceSoNiceRollComplete` fires when the dice have *stopped* (before DSN's
-    "time before hide"), so the 700 ms on the dice fit before they fade
+    "time before hide"), so the time on the dice fits before DSN fades them
     (default 2 s). With DSN's "show chat message immediately" the hook still
     comes at the end of the animation.
   - `message._dice3danimating` / `diceSoNiceRollStart` are set before a

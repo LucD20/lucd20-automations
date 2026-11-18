@@ -214,7 +214,7 @@ async function helpers(page) {
   assert.deepStrictEqual(pure.def, ["tokens", "world", true, ["show:client:true", "chainLightning:world:true"]], "on by default, per-player switch, one GM switch per spell");
   assert.deepStrictEqual(pure.texts, ["Signature Spells", "Chain Lightning", "Show them to me"]);
   assert.ok(pure.panel.includes('value="chainLightning"') && pure.panel.includes('data-feature-action="preview"'), "the preview panel lists the spell");
-  assert.deepStrictEqual(pure.info, { slug: "chain-lightning", name: "Chain Lightning", roll: "damage", caster: "ezren", scene: "s1", targets: ["Scene.s1.Token.ogre", "Scene.s1.Token.hiddenGoblin", "Scene.s1.Token.valeros"], ordered: true });
+  assert.deepStrictEqual({ ...pure.info, options: undefined, outcome: undefined, finisher: undefined }, { options: undefined, outcome: undefined, finisher: undefined, slug: "chain-lightning", name: "Chain Lightning", roll: "damage", caster: "ezren", scene: "s1", targets: ["Scene.s1.Token.ogre", "Scene.s1.Token.hiddenGoblin", "Scene.s1.Token.valeros"], ordered: true });
   assert.strictEqual(pure.viaOptions, "chain-lightning", "the slug from the roll options when the item is gone");
   assert.deepStrictEqual(pure.noHelper, { targets: ["Scene.s1.Token.valeros", "Scene.s1.Token.ogre"], ordered: false }, "without Target Helper: the author's targets, to be ordered by distance");
   assert.strictEqual(pure.notDamage, null);

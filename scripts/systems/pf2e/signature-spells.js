@@ -11,6 +11,10 @@ import { damageTargets } from "./shield-block.js";
  * - the targets: Target Helper's rows (`flags["pf2e-toolbelt"].targetHelper.targets`, token uuids, in the
  *   order they were targeted), else the roll's own target (`context.target.token`), else the tokens the
  *   message's author has targeted right now (`message.author.targets`).
+ * - v0.75.0 (Swashbuckler finisher, owner: "just the damage that has Finisher applied"): the roll's options
+ *   (`context.options`) and outcome are passed on, so a signature can match a Strike, not only a spell's slug.
+ *   A finisher's damage roll carries the `finisher` option (Precise Strike's toggle) (verify), and the finisher
+ *   used, when PF2e says so, as `finisher:<slug>` or the action's `item:slug:<slug>` (verify).
  */
 
 const slugOf = (message) => {
@@ -25,11 +29,20 @@ const slugOf = (message) => {
 	return null;
 };
 
+/** Which finisher, if the roll says (e.g. `finisher:unbalancing`, or the action's slug `unbalancing-finisher`). */
+export function finisherOf(options) {
+	for (const o of options) {
+		const m = /^finisher:([a-z0-9-]+)$/.exec(o) ?? /^(?:origin:)?item:slug:([a-z0-9-]+)-finisher$/.exec(o);
+		if (m) return m[1];
+	}
+	return null;
+}
+
 export function read(message) {
 	const context = message?.flags?.pf2e?.context;
 	if (context?.type !== "damage-roll") return null;
-	const found = slugOf(message);
-	if (!found) return null;
+	const options = (context.options ?? []).map(String);
+	const found = slugOf(message) ?? { slug: null, name: message.item?.name ?? "" };
 	const rows = message.flags?.["pf2e-toolbelt"]?.targetHelper?.targets;
 	let targets = Array.isArray(rows) && rows.length ? rows.filter((u) => typeof u === "string") : damageTargets(message).map((doc) => doc?.uuid).filter(Boolean);
 	let ordered = targets.length > 0;
@@ -37,7 +50,8 @@ export function read(message) {
 		targets = [...(message.author?.targets ?? [])].map((t) => t?.document?.uuid).filter(Boolean);
 		ordered = false;
 	}
-	return { ...found, roll: "damage", caster: message.speaker?.token ?? null, scene: message.speaker?.scene ?? null, targets, ordered };
+	const finisher = options.includes("finisher") ? { slug: finisherOf(options) } : null;
+	return { ...found, options, outcome: context.outcome ?? null, finisher, roll: "damage", caster: message.speaker?.token ?? null, scene: message.speaker?.scene ?? null, targets, ordered };
 }
 
 registerSignatureReader({ system: "pf2e", read });

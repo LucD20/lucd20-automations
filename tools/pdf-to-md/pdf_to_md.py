@@ -54,7 +54,8 @@ PROFILES = {
         (r"^TradeGothic.*BdCn20$", 9.5, 11, "runin"),  # A1 VERANDA: The old floorboards… (room keys)
         (r"^TradeGothic.*BdCn20$", 0, 8, "drop"),      # side tabs, contents
         (r"^NexusSansOT", 12, 20, "drop"),        # the chapter's contents page
-        (r"^Dax-Black", 0, 100, "label"),         # DEFENSE / OFFENSE / TACTICS / STATISTICS
+        (r"^Dax-Black", 0, 100, "statlabel"),     # DEFENSE / OFFENSE / TACTICS / STATISTICS
+        (r"^Dax", 0, 100, "stattext"),            # stat block lines: written as "> " quotes
         (r"^(Gene|P22DaVinci|BibleScript|BakerScript|CCTreacherous)", 0, 100, "handout"),  # handouts, letters
     ],
 }
@@ -249,12 +250,18 @@ def main():
         last = None
         for _, lines in blocks:
             para = []
+            kind = ["text"]  # "stat": the paragraph is stat block text, written as a "> " quote
 
             def flush():
                 if para:
                     text = re.sub(r"(\w)- (\w)", r"\1\2", " ".join(para))  # hyphenated line breaks
-                    out.append(text + "\n")
+                    out.append(("> " if kind[0] == "stat" else "") + text + "\n")
                     para.clear()
+
+            def set_kind(k):
+                if kind[0] != k:
+                    flush()
+                    kind[0] = k
 
             for line in lines:
                 plain = line["plain"]
@@ -295,6 +302,12 @@ def main():
                     continue
                 last = None
                 text = line_text(line["spans"])
+                if role == "statlabel":
+                    set_kind("stat")
+                    flush()
+                    out.append(f"> **{plain}**\n")
+                    continue
+                set_kind("stat" if role == "stattext" else "text")
                 if role == "label" or (rules is None and line["bold"] and abs(line["size"] - body) < 1 and len(plain) < 80 and not para):
                     flush()
                     out.append(f"**{plain}**\n")

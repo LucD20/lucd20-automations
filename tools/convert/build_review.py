@@ -116,7 +116,7 @@ def main():
     level, pending = marks[0][1], list(marks)
     rows = []
     for i, r in enumerate(rolls):
-        if pending and pending[0][0] in (r["heading"] or "").lower():
+        while pending and pending[0][0] in f'{r.get("part") or ""} | {r["heading"] or ""}'.lower():
             level = pending.pop(0)[1]
         if r["stat"]:
             continue

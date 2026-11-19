@@ -45,6 +45,9 @@ consequences ("the psychovox gains +1 to Acrobatics"), checks inside
 water, vents), conditions with lasting effect, critical thresholds, sidebar
 checks (Firewatch Station, Temple of Hylax).
 
+Haunts and hazards: their own stat blocks are skipped (they become hazard
+actors), but rolls written in the room text around them are converted.
+
 Skip, with the reason on the review page:
 - **1e starship combat** mechanics (placement, wreckage fields, gunnery):
   the owner builds SF2e starship encounters separately.
@@ -72,9 +75,51 @@ Skip, with the reason on the review page:
 - Damage: `@Damage[6d6[bludgeoning]]`; SF1e damage dice stay as written
   (the owner adjusts them in play). Attack bonuses are not DCs: flag them
   for the owner.
-- Conditions: link them (`@UUID[Compendium.pf2e.conditionitems.Item.j91X7x0XSomq8d60]{Prone}`;
-  ids as in the owner's journals).
-- Percent chances: flat check, `50%` → `@Check[flat|dc:11]`.
+- Conditions: link them, `@UUID[Compendium.pf2e.conditionitems.Item.<id>]{Name}`
+  (add the value: `{Frightened 1}`). Ids from the owner's journals:
+
+  | Condition | id | Condition | id |
+  |---|---|---|---|
+  | Blinded | XgEqL1kFApUbl5Z2 | Friendly | v66R7FdOf11l94im |
+  | Broken | 6dNUvdb1dhToNDj3 | Frightened | TBSHQspnbcqxsmjL |
+  | Clumsy | i3OJZU2nk64Df3xm | Grabbed | kWc1fhmv9LBiTuei |
+  | Concealed | DmAIPqOBomZ7H95W | Helpful | v44P3WUcU1j0115l |
+  | Confused | yblD8fOR1J8rDwEQ | Hidden | iU0fEDdBp3rXpTMC |
+  | Controlled | 9qGBRpbX9NEwtAAr | Immobilized | eIcWbB5o3pP6OIMe |
+  | Dazzled | TkIyaNPgTZFBCCuh | Invisible | zJxUflt9np0q4yML |
+  | Deafened | 9PR9y0bi4JPKnHPR | Off-Guard | AJh5ex99aV6VTggg |
+  | Doomed | 3uh1r86TzbQvosxv | Paralyzed | 6uEgoh53GbXuHpTF |
+  | Drained | 4D2KBtexWXa6oUMR | Petrified | dTwPJuKgBQCMxixg |
+  | Dying | yZRUzMqrMmfLu0V1 | Prone | j91X7x0XSomq8d60 |
+  | Encumbered | D5mg6Tc7Jzrj6ro7 | Quickened | nlCjDvLMf2EkV2dl |
+  | Enfeebled | MIRkyAjyBeXivMa7 | Restrained | VcDeM8A5oI6VqhbM |
+  | Fascinated | AdPVz7rbaVSRxHFg | Sickened | fesd1n5eVhpCSS18 |
+  | Fatigued | HL2l2VRSaQHu9lUw | Slowed | xYTAsEpcJE1Ccni3 |
+  | Fleeing | sDPxOjQ9kx2RZE8D | Stunned | dfCMdR4wnpbYNTix |
+  | Stupefied | e1XGnhKNSQIm5IXg | Unconscious | fBnFDH2MTzgFijKf |
+  | Undetected | VRSef5y1LmL2Hkjf | Wounded | Yl48xTdMh3aeQYL2 |
+
+  1e conditions without a value (sickened, frightened…) become value 1
+  *(proposal)*.
+- Percent chances: flat check with DC = 21 − X/5 (`50%` → `@Check[flat|dc:11]`,
+  `25%` → 16, `20%` → 17, `75%` → 6).
+- Bonuses and penalties without a type, and morale / profane / sacred /
+  luck ones: halved (rounded up), as circumstance (untyped) or status
+  (morale, profane, sacred, luck).
+- "Exceeds the DC by 5 / by 10 or more" → **Critical Success** either way.
+- A check with no DC in the book (1e attitude DCs come from Charisma, a
+  Perform check "against" nothing): write it without a DC
+  (`@Check[diplomacy]`) and note "no DC in the book: set by hand".
+- Checks a creature rolls (a ghoul's Perception, a rat escaping a tub):
+  the same codes.
+- Ability damage / drain → the matching condition at value 1 *(proposal)*:
+  Str → enfeebled, Dex → clumsy, Con → drained, Int / Wis / Cha →
+  stupefied; flag it.
+- Doors and objects to break: keep the 1e hardness and HP as written and
+  convert the Break DC (Book 6). *Owner's older books used presets instead*
+  (wooden door: hardness 5, hp 20, force open 17; reinforced wooden: 10 / 40
+  / 22; iron: 16 / 60 / 30): ask the owner which to use.
+- Leave 1e hit point amounts and falling damage as written; flag them.
 - Break stats: `hardness X, HP Y, [[/act force-open dc=…]]` (Break DC
   converted like any DC).
 
@@ -95,6 +140,20 @@ Skip, with the reason on the review page:
 | gather information | `[[/act gather-information dc=N]]` |
 | Spellcraft / identify magic | `[[/act identify-magic statistic=<arcana|nature|occultism|religion> dc=N]]` |
 | saving throws | `@Check[fortitude|dc:N]`, `reflex`, `will` |
+| balance on a ledge / slope (Acrobatics) | `[[/act balance dc=N]]` |
+| escape bonds / a grapple (Escape Artist) | `[[/act escape dc=N]]` |
+| follow tracks (Survival) | `[[/act track dc=N]]` |
+| Bluff to lie / Intimidate to coerce | `[[/act lie dc=N]]`, `[[/act coerce dc=N]]` (the owner used both) |
+
+**Seek or Perception?** Seek (`[[/act seek]]`) when the PCs search for
+something hidden (a loose brick, a keyhole, a datapad under a table). A plain
+`@Check[perception|dc:N]` for noticing, hearing, watching or spotting a clue
+in something already in view (a recording, a sound upstairs).
+
+**Recall Knowledge or a plain check?** Recall Knowledge when the PC *knows,
+recognises or identifies* something from what they know. A plain `@Check`
+(e.g. `@Check[medicine]`) when the PC *examines* something hands-on to learn
+from it (a corpse, a wound).
 
 ## Skills (1e → 2e)
 
@@ -117,13 +176,19 @@ Sleight of Hand → thievery; Stealth → stealth; Survival → survival.
 Knowledge (arcana), Knowledge (planes), Spellcraft, Use Magic Device →
 arcana; Climb, Swim → athletics; Appraise, Craft, Knowledge (engineering),
 Profession → crafting; Bluff, Disguise, Sleight of Hand → deception;
-Diplomacy → diplomacy; Intimidate → intimidation; any Knowledge → a Lore;
-Heal → medicine; Handle Animal, Knowledge (geography / nature / planes),
+Diplomacy → diplomacy; Intimidate → intimidation; Heal → medicine; Handle Animal, Knowledge (geography / nature / planes),
 Ride → nature; Knowledge (dungeoneering / planes), Spellcraft → occultism;
 Perception, Sense Motive → perception; Perform → performance; Knowledge
 (planes / religion) → religion; Appraise, Knowledge (history / local /
 nobility), Linguistics → society; Stealth → stealth; Survival → survival;
 Disable Device, Escape Artist, Sleight of Hand → thievery.
+
+Where the table lists a 1e skill under several 2e skills (Knowledge
+[planes], Spellcraft, Appraise, Sleight of Hand, Mysticism), pick by the
+subject (next section) and list every one that fits. **Knowledge checks are
+always Recall Knowledge with the subject's skill, never a Lore**, unless the
+owner says otherwise. Linguistics to decipher → `[[/act decipher-writing statistic=society dc=N]]`
+*(proposal; the agent used @Check[society])*.
 
 ## Recall Knowledge statistic by subject
 

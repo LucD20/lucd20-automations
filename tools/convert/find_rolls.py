@@ -48,6 +48,7 @@ def main():
     page = 0
     active = args.start is None
     in_stat = False
+    uses_quotes = False
     found = []
     para = []
 
@@ -99,8 +100,16 @@ def main():
         if not line.strip():
             flush()
             continue
-        # A run-in label ("**Treasure:**", "**Development:**") ends a stat block.
-        if in_stat and re.match(r"^\*\*[A-Z][\w ’']+:\*\*", line):
+        # Stat block text is quoted ("> ") when the PDF profile knows its font: a plain line then ends it.
+        # Otherwise a run-in label ("**Treasure:**", "**Development:**") ends it.
+        quoted = line.startswith("> ")
+        if quoted:
+            uses_quotes = True
+            if not in_stat:
+                flush(final=True)
+                in_stat = True
+            line = line[2:]
+        elif in_stat and (uses_quotes or re.match(r"^\*\*[A-Z][\w ’']+:\*\*", line)):
             flush(final=True)
             in_stat = False
         para.append(line)

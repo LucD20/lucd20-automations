@@ -2876,7 +2876,102 @@ no longer match the module); not touched.
    22 in the ledger; `systems/pf2e/immunity.js` is the shared tracker
    (flags on the target actor, world time); a Swashbuckler section under
    Classes.
+**Parked (owner, 2026-11-19): steps 5–7 wait until after §23's drafting.**
+
 5. **Battle Medicine HUD** (Q291), **Flanking overlay** (Q292).
 6. **Dice Stats**: damage per turn tab, dice per creature and the end card
    (Q293–Q294), one per-encounter record for both.
 7. **Sell** (Q295), **Hero start area** (Q296).
+
+---
+
+## 23. Adventure conversion tools (owner, 2026-11-19, drafting)
+
+The owner converts Paizo adventures (Starfinder 1e → 2e, Pathfinder 1e → 2e)
+into Foundry by hand: copy each check from the book, have an AI shorten it and
+write the inline codes, convert the DC from a table, then build the folders,
+journals, pages, NPCs and token art one at a time, and log fixes found in play
+in Discord. Goal: cut the manual steps. **Ideas only, nothing agreed yet.**
+The owner will send: the 1e → 2e DC sheets, a world with finished
+conversions, and the Discord fix log (sample in the chat of 2026-11-19).
+The old GPT conversion instructions are examples of the output wanted, not
+rules to copy.
+
+### 23.1 Ideas
+
+**A. Converter (paste → converted HTML).** A GM window: paste a passage,
+pick the source (SF1e / PF1e) and the party level, get the `<ul><li><p>`
+list with the codes, and a live preview with the buttons working.
+- Done by code, no AI, the same every time: `DC N Skill` → `@Check[skill|dc:M]`
+  through the owner's skill map and DC table (cap at the table's max);
+  the special actions (climb, swim, force open, pick a lock, hack, seek,
+  sense motive, gather information, recall knowledge, identify magic) by
+  keywords; `N%` → flat check; `XdY type damage` → `@Damage`; `1d4+1 days` →
+  `[[/gmr]]`; bonuses / penalties halved (rounded up) as sub-bullets;
+  "by 5 or more" / "failed by X" → **Critical Success** / **Critical Failure**;
+  break stats → the door presets.
+- What code can't decide (Mysticism → arcana / occultism / religion, "search"
+  vs plain Perception) is highlighted in the preview with a picker; the
+  choice is remembered for the next passage.
+- Shortening the prose is the one part that needs an AI. Options: (a) keep
+  it outside, the window copies a ready prompt; (b) call the Claude API from
+  the browser with the owner's own key (GM-only client setting), the
+  converter's codes kept, the AI only shortens the sentences. Proposal: (a)
+  first, (b) if the owner wants it.
+- An **Audit** button: runs the converter over an existing page and lists
+  DCs that don't match the table and leftovers (`DC 26 Computers]`, "intimidate",
+  "gp" in a credits book), which covers many of the Discord fixes.
+
+**B. Adventure skeleton.** Paste a chapter's outline (headings as they come
+out of the PDF: `Part 1: …`, `A1. Room (Moderate 3)`, `Event 2: …`) or pick
+the PDF's bookmarks; preview the tree, then one click creates: a folder per
+book / chapter with its colour, a journal per part with an Introduction page
+and one page per entry, in the book's order, names cleaned. Each page body
+can run through the converter (A). Later: map notes on the scene for each
+A1/B2 page.
+
+**C. NPC help.** Paste a 1e stat block → a PF2e NPC draft: level, traits,
+senses, languages, AC / HP / saves / skills / Strikes / DCs set from
+Building Creatures (the tables of Creature Scale) at the right band, the
+1e abilities as action items with the text converted by (A) and a
+pick of action cost and traits. Plus a **Quick adjust** on a sheet ("nerf
+Lorkin", "reduce HP", "reduce DCs"): shift a creature's HP / AC / attack /
+damage / DCs one band down or up in one click.
+
+**D. Token Art Studio** (replaces the Photoshop step). Drop many images at
+once; for each: the owner's frame drawn on top, drag / scroll to place and
+zoom, the mask applied (circle of the frame, the subject allowed past the
+frame's top if wanted), Enter → next. Saved in the browser as WebP
+`name-like-this-token.webp` (named from the actor) into a chosen folder via
+Foundry's upload, and assigned to the actor's prototype token and its placed
+tokens (the old macro's job). Optional automatic background removal (an
+in-browser model) if the subject has to be cut out, not just masked.
+
+**E. Fix Log** (replaces Discord). A GM key / button "Log fix": a one-line
+box, the context filled in by itself (book, scene, the selected token /
+actor, the open journal page, the item clicked, date). A list window:
+filter by book / chapter, done tick, click jumps to the thing. In the
+adventure template world, sheets, journal pages and scenes with an open fix
+show a badge. Both worlds share the log through one JSON file in the user
+data folder (same Foundry server), matched by UUID (an Adventure import keeps
+ids) or by name. Import of the old Discord text (dates and "Book N"
+headings parsed).
+
+### 23.2 Questions for the owner (Q297–)
+
+- Q297: SF2e in Foundry: the PF2e system with the SF2e modules, or the
+  separate SF2e system? Which version?
+- Q298: The DC sheets: by level (1e DC → 2e DC per level) or one table?
+- Q299: The source text: copied from the PDF (and which reader), or can the
+  tool read the PDF itself? Are the books' bookmarks usable for (B)?
+- Q300: AI for shortening: copy a prompt (no key) or call Claude with your
+  own key from Foundry?
+- Q301: Tokens: what does the frame look like, is it the dynamic ring or a
+  frame painted into the image, and does "cut the mask" mean a circle or
+  cutting the subject out of its background? Send one source image and the
+  finished token. WebP or WebM (animated)?
+- Q302: Fix log: are the play world and the template world on the same
+  Foundry server? Is the template world the source of the Adventure you
+  import (so ids match)?
+- Q303: Which of A–E first? Proposal: E (small, used every session), then
+  A + Audit, then D, B, C.

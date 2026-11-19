@@ -2973,5 +2973,90 @@ headings parsed).
 - Q302: Fix log: are the play world and the template world on the same
   Foundry server? Is the template world the source of the Adventure you
   import (so ids match)?
-- Q303: Which of A–E first? Proposal: E (small, used every session), then
-  A + Audit, then D, B, C.
+- Q303: Which of A–E first? → see §23.4 (files reviewed first).
+
+Answers (2026-11-19): Q297 the separate **SF2e system 1.7.0** (with the
+`sf2e-anachronism` compendiums; PF2e for Pathfinder). Q298 by level (§23.3).
+Q299 read the **PDF directly**; A / B should also *find* every passage with
+a roll (skill, save, attack, flat) and list it per heading for review. Q300
+Foundry + Claude is fine if Foundry alone can't. Q301 **dynamic ring**, PSD
+template sent. Q302 same server, worlds built with the Adventure importer
+(ids match).
+
+### 23.3 What the owner's files show (2026-11-19)
+
+- **DC table** (`DC_Sheets.csv`): perfectly regular. 2e DC = level DC (GM
+  Core: 1→15 … 20→40) + an offset that depends only on (1e DC − level):
+  ≤−3→−10, −2→−9, −1→−8, 0→−7, 1→−6, 2→−5, 3/4→−4, 5/6→−3, 7/8→−2, 9/10→−1,
+  11–13→0, 14/15→+1, 16/17→+2, 18/19→+3, 20/21→+4, 22→+5, 23→+6, 24→+7,
+  25→+8, 26→+9, ≥27→+10 (cap). Rows also give the minimum proficiency
+  (Untrained … Legendary) and difficulty band. A small function, no AI. The
+  second table in the sheet (rows 67–97, "1=9, 2=10 …") is not understood
+  yet (Q305).
+- **Finished conversions** (`sf2e-adv`: 9 books, 296 pages, 265 actors;
+  `2e-cov`: Rise of the Runelords ch. 1–2): one folder per book (one colour
+  per AP), sub-folders per Part for Actors / Items / Scenes, one journal per
+  Part, one page per heading (`A. Main Floor`, `Event 2: … (Severe 7)`), plus
+  a Treasure journal (level pages). Page body: a `<ul>` of checks, then
+  `<h2>` Hazard / Creatures (`<h3>@UUID[Actor…]` + During Combat / Morale) /
+  Treasure (item links). Codes used: `@Check` (skills, saves, lores,
+  `piloting`, `computers`), 21 `[[/act]]` actions (recall-knowledge 105,
+  hack 50, identify-magic 37 …), `@Damage`, `[[/gmr]]`, `[[/r]]`.
+- **An audit of the finished pages already finds Discord-type bugs**:
+  `@Check[intimidate…]` ×7, `@Check[mysticism]`, `[engineering]`,
+  `[computer]`, `@Check[computers|dc:26]]` (the "remove ]" log entry),
+  ~20 (SF) + 9 (PF) unconverted "DC N Skill" left in text,
+  `@Check[crafting] DC 28` (DC outside the code).
+- **Token template** (`Dynamic_token.psd`): 1024×1024; portrait group masked
+  by a circle Ø 682 px, centred (⅔ of the image, the dynamic ring's subject
+  area); a green guide circle layer (Círculo); a 50 % inner shadow arc at the
+  lower right (Sombra, drop shadow). Files: `Starfinder/Adventures/<ap-slug>/
+  actors/<name>.webp` art, `<name>-token.webp` token = ring subject texture,
+  scale 1.
+
+### 23.4 Proposed architecture (owner to confirm, Q304)
+
+One converter (plain ES module; runs in Foundry and in Node, so the numbers
+are the same everywhere): DC table, skill maps (SF1e / PF1e), the action
+rules, damage / duration / bonus / critical formatting, and the audit.
+
+1. **Reading the PDF: a Claude Code session** (the owner's Claude plan, no
+   API key). The owner uploads the book PDF; Claude keeps the heading tree
+   (Part → area / event), finds every passage with a roll (skills, saves,
+   attacks, flat %, damage, durations, break stats, stat blocks), writes the
+   short mechanical sentence and picks skill / action / recall-knowledge
+   statistic; **the converter script**, not the AI, turns 1e DCs into 2e at
+   that heading's level. Output `book.json` (tree, entries, original quote,
+   page number), sent to the owner as a file. **Never committed** (Paizo
+   text; the repo is public).
+   - All in Foundry instead: pdf.js for the text + the Claude API from the
+     browser with the owner's key (GM-only setting; Haiku 5.5 $0.10 / $0.50
+     per M tokens, a book well under $1; Sonnet 5.5 $2 / $10 for better
+     wording). Possible later; API credits are billed apart from the plan,
+     and Paizo's two-column layout is the hard part either way.
+2. **Foundry: Conversion Review + Build** (GM window). Load `book.json`: the
+   tree on the left, entries on the right with the book quote, the converted
+   line (editable, live buttons), the DC maths (1e DC 20 @ L6 → 23, Expert)
+   and flags on uncertain picks; tick to accept. **Build** creates the
+   book / part folders with the colour, a journal per Part, a page per
+   heading in the owner's layout (checks, Hazard, Creatures with During
+   Combat / Morale, Treasure), or merges into an existing page. **Audit** on
+   any journal (the §23.3 findings).
+3. Then on the same rails: NPC drafts from the stat blocks found (C), Token
+   Art Studio (D, the PSD's numbers), Fix Log (E).
+
+### 23.5 Questions for the owner (Q304–)
+
+- Q304: OK with the split (a Claude session reads the PDF and writes
+  `book.json`; Foundry reviews and builds)? Or all in Foundry (API key and
+  credits)?
+- Q305: The second table in the sheet (rows 67–97, "1=9, 2=10 …"): what is
+  it?
+- Q306: Which level converts a heading's DCs: the level in its title
+  ("(Moderate 8)"), else the Part's level from the book? Is the party level
+  the same as the 1e book's level?
+- Q307: Tokens: is the green guide circle hidden on export? Do subjects
+  ever go past the circle (head over the ring) or always clipped? Shadow arc
+  on every token? `name-token.webp` next to the art, art untouched?
+- Q308: First test book: one not converted yet, or one already done so we
+  compare with your version?

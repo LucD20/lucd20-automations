@@ -106,3 +106,4 @@ sets `game.system.id`.
 
 For a new feature, copy the closest test, keep its mock setup and replace the
 checks.
+| `test67.js` | SF2e runs the PF2e features (`?system=sf2e`), PF2e and 4e unchanged (v0.79.1) |

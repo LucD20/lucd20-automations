@@ -3138,6 +3138,11 @@ run in the SF2e world** (system id `sf2e`) (Q311).
     `"pf2e.<pack>"` and `pf2e` setting in `systems/pf2e/` goes through them;
     Riding's size-link flags too. Creature Scale also listens to
     `renderActorSheetSF2e`.
+  - v0.79.1: 0.79.0 failed to load (two wrong import paths, in Signature
+    Spells' registry and Token Tooltip's presets); fixed. Harness test 67
+    loads the module as `sf2e`, `pf2e` and `dnd4e` and checks which features
+    register, `flags.sf2e`, `CONFIG.SF2E` and `sf2e.gmVision`; the harness
+    page mocks SF2e like PF2e under its own id.
   - (verify) in SF2e 1.7: the API / config object names, the sheet class
     name, and each feature in play. If one does nothing in SF2e, check
     `sysApi()` / `sysConfig()` in the console first.

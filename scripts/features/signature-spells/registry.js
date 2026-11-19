@@ -1,4 +1,4 @@
-import { systemFamily } from "../core/constants.js";
+import { systemFamily } from "../../core/constants.js";
 /**
  * Signature Spells: the list of spells with an effect of their own (docs/PLAN.md §20).
  *

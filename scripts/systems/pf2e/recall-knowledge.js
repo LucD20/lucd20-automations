@@ -1,5 +1,6 @@
 import { MODULE_ID, error, localize } from "../../core/constants.js";
 import { defineFeature } from "../../core/registry.js";
+import { sysId } from "./sys.js";
 
 /**
  * Recall Knowledge (owner, v0.78.0: "assimilate that macro into our module, with any improvements"). Replaces
@@ -116,8 +117,8 @@ async function skillTotal(actor, slug, d20, target, extra) {
 		]);
 		if (result?.roll) {
 			modifier = Number(result.roll.options?.totalModifier ?? modifier);
-			rollOptions = result.message?.getFlag?.("pf2e", "context.options") ?? result.message?.flags?.pf2e?.context?.options ?? options;
-			domains = result.message?.getFlag?.("pf2e", "context.domains") ?? result.message?.flags?.pf2e?.context?.domains ?? [];
+			rollOptions = result.message?.getFlag?.(sysId(), "context.options") ?? result.message?.flags?.[sysId()]?.context?.options ?? options;
+			domains = result.message?.getFlag?.(sysId(), "context.domains") ?? result.message?.flags?.[sysId()]?.context?.domains ?? [];
 		}
 	} catch (err) {
 		/* the plain modifier */
@@ -219,7 +220,7 @@ export async function recallKnowledge({ actor = null, token = null, targets = nu
 		blind: true,
 		rolls: [roll],
 		flags: {
-			pf2e: { context: { type: "skill-check", options: ["action:recall-knowledge", "check:type:skill", "secret"], traits: ["concentrate", "secret"], rollMode: "blindroll",
+			[sysId()]: { context: { type: "skill-check", options: ["action:recall-knowledge", "check:type:skill", "secret"], traits: ["concentrate", "secret"], rollMode: "blindroll",
 				origin: { actor: actor.uuid, token: (token?.document ?? token)?.uuid ?? null }, ...(one ? { target: { actor: one.actor.uuid, token: (one.document ?? one).uuid } } : {}) } },
 			[MODULE_ID]: { recallKnowledge: true }
 		}

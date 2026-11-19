@@ -13,6 +13,7 @@ import "./reactions.js";
 import "./reactive-strike.js";
 import "./shield-block.js";
 import "./recall-knowledge.js";
+import "./multi-check.js";
 import "./commander.js";
 import "./combat-assessment.js";
 import "./guardians-deflection.js";

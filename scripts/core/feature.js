@@ -1,4 +1,4 @@
-import { MODULE_ID, error, localize, localizeIfExists } from "./constants.js";
+import { MODULE_ID, error, localize, localizeIfExists, systemMatches } from "./constants.js";
 import { isAvailableForSystem } from "./catalog.js";
 
 /** Foundry setting `type` for each setting kind a feature can declare. */
@@ -85,7 +85,7 @@ export class Feature {
   get settings() {
     return Object.entries(this.def.settings ?? {})
       .map(([key, s]) => ({ key, ...s, scope: s.scope ?? this.scope }))
-      .filter(s => !s.system || s.system === game.system.id);
+      .filter(s => !s.system || systemMatches(s.system));
   }
 
   get isEnabled() {

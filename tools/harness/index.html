@@ -114,10 +114,13 @@ window.game = {
 // core + other-module settings exist before our module registers
 settingsAPI.register("core", "fontSize", { name: "CORE.FontSize", scope: "client", config: true, type: Number, default: 5 });
 settingsAPI.register("other", "mode", { name: "OTHER.Mode", scope: "client", config: true, type: String, default: "a", choices: { a: "OTHER.A", b: "OTHER.B" } });
-if ((params.get("system") ?? "pf2e") === "pf2e") {
-  settingsAPI.register("pf2e", "gmVision", { scope: "client", config: false, type: Boolean, default: false,
-    onChange: v => { window.__pf2eGmVisionChanges = (window.__pf2eGmVisionChanges ?? 0) + 1; CONFIG.Canvas.darknessColor = v ? CONFIG.PF2E.Canvas.darkness.gmVision : CONFIG.PF2E.Canvas.darkness.default; } });
-  window.CONFIG.PF2E = { Canvas: { darkness: { default: 0x242448, gmVision: 0xd1ccff } } };
+// PF2e, and SF2e (a PF2e fork: its own id for settings and CONFIG.SF2E; test67)
+const sysId = params.get("system") ?? "pf2e";
+if (["pf2e", "sf2e"].includes(sysId)) {
+  const SYS = sysId.toUpperCase();
+  settingsAPI.register(sysId, "gmVision", { scope: "client", config: false, type: Boolean, default: false,
+    onChange: v => { window.__pf2eGmVisionChanges = (window.__pf2eGmVisionChanges ?? 0) + 1; CONFIG.Canvas.darknessColor = v ? CONFIG[SYS].Canvas.darkness.gmVision : CONFIG[SYS].Canvas.darkness.default; } });
+  window.CONFIG[SYS] = { Canvas: { darkness: { default: 0x242448, gmVision: 0xd1ccff } } };
 }
 settingsAPI.register("other", "worldThing", { name: "OTHER.World", scope: "world", config: true, type: Boolean, default: false });
 

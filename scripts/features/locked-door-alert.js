@@ -1,4 +1,4 @@
-import { MODULE_ID, localize } from "../core/constants.js";
+import { MODULE_ID, localize, systemMatches } from "../core/constants.js";
 import { defineFeature } from "../core/registry.js";
 import { doorControlClass, doorControlOf } from "../core/doors.js";
 
@@ -20,7 +20,7 @@ const adapters = [];
 export function registerLockedDoorAdapter(adapter) {
   adapters.push(adapter);
 }
-const activeAdapters = () => adapters.filter(a => !a.system || a.system === game.system.id);
+const activeAdapters = () => adapters.filter(a => !a.system || systemMatches(a.system));
 
 const COOLDOWN_MS = 10_000;
 const lastTry = new Map(); // wall id → time (this client = this player)

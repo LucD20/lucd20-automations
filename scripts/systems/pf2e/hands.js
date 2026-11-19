@@ -1,5 +1,6 @@
 import { localize } from "../../core/constants.js";
 import { defineFeature } from "../../core/registry.js";
+import { sysId } from "./sys.js";
 
 /**
  * Merge 4 (docs/pf2e-rules.md §15): hand reminders, replacing "PF2e Hands Management (Reminder)" (owner,
@@ -36,7 +37,7 @@ const warn = (text) => ui.notifications.warn(text);
 export function messageWarning(message) {
 	const actor = message.actor, item = message.item;
 	if (!actor || !item) return null;
-	const context = message.flags?.pf2e?.context;
+	const context = message.flags?.[sysId()]?.context;
 	if (context?.isReroll) return null;
 	if (context?.type === "attack-roll" && item.type === "weapon" && actor.type === "character") {
 		if ((item.slug ?? item.system?.slug) === "basic-unarmed" || item.hands === "0") return null;
@@ -47,7 +48,7 @@ export function messageWarning(message) {
 	}
 	if (context) return null; // other rolls: their action was already posted
 	const traits = traitsOf(item);
-	if (message.flags?.pf2e?.casting && item.type === "spell" && traits.has("manipulate") && has(actor, "restrained")) return L("Restrained", { name: actor.name, item: item.name });
+	if (message.flags?.[sysId()]?.casting && item.type === "spell" && traits.has("manipulate") && has(actor, "restrained")) return L("Restrained", { name: actor.name, item: item.name });
 	if (raging(actor) && traits.has("concentrate") && !traits.has("rage") && (item.slug ?? item.system?.slug) !== "seek") return L("Rage", { name: actor.name, item: item.name });
 	return null;
 }

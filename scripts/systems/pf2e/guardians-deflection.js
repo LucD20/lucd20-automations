@@ -6,6 +6,7 @@ import { hasReaction, spendReaction } from "./reactions.js";
 import { reachOf, withinReach } from "./reactive-strike.js";
 import { heldItems } from "./hands.js";
 import { pf2eCard, wireOpen, sourceUuid, itemBySlug, compactCard, nameForPlayers } from "./card.js";
+import { sysId, sysPack } from "./sys.js";
 
 /**
  * Rule 22 (docs/pf2e-rules.md): Guardian's Deflection (Swashbuckler feat 4, owner's AoN link; the Fighter
@@ -100,7 +101,7 @@ function deflectors(ally, attacker) {
 /** Active GM's client: cards for this attack roll. */
 export async function onAttack(message) {
 	if (!game.user.isActiveGM) return;
-	const context = message?.flags?.pf2e?.context;
+	const context = message?.flags?.[sysId()]?.context;
 	if (!["attack-roll", "spell-attack-roll"].includes(context?.type) || context.isReroll || seen.has(message.id)) return;
 	if (!["success", "criticalSuccess"].includes(context.outcome)) return;
 	const ally = context.target?.token ? fromUuidSync(context.target.token) : null;
@@ -172,7 +173,7 @@ async function answer({ card, deflect }, senderId) {
 async function givePanache(actor) {
 	const has = (actor.itemTypes?.effect ?? []).some((e) => e.name === PANACHE || slugOf(e) === "effect-panache");
 	if (has) return;
-	const pack = game.packs?.get("pf2e.feat-effects");
+	const pack = sysPack("feat-effects");
 	const entry = pack?.index?.find?.((e) => e.name === PANACHE) ?? (await pack?.getIndex?.())?.find?.((e) => e.name === PANACHE);
 	const effect = entry ? await pack.getDocument(entry._id) : null;
 	if (!effect) return void ui.notifications.warn(L("NoPanache"));

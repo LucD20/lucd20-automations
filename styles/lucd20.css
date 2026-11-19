@@ -2837,3 +2837,20 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-cs-tooltip .lucd20-cs-table td { text-align: right; padding: 0 5px; }
 .lucd20-cs-tooltip .lucd20-cs-table .lucd20-cs-other { opacity: .5; }
 .lucd20-cs-tooltip .lucd20-cs-table .lucd20-cs-hl { opacity: 1; font-weight: bold; font-size: larger; }
+
+/* Multiple Checks (pf2eMultiCheck) */
+.lucd20-multi-check-app .lucd20-mc { display: flex; flex-direction: column; gap: 8px; padding: 4px 0; }
+.lucd20-multi-check-app .lucd20-mc-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.lucd20-multi-check-app .lucd20-mc-row { display: grid; grid-template-columns: 1fr 64px 84px auto auto; align-items: center; gap: 6px; }
+.lucd20-multi-check-app .lucd20-mc-row .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lucd20-multi-check-app .sub { font-size: 0.85em; opacity: 0.7; }
+.lucd20-multi-check-app .lucd20-mc-add { display: grid; grid-template-columns: 1fr 64px auto; gap: 6px; }
+.lucd20-multi-check-app .lucd20-mc-add .lore { grid-column: 1 / -1; }
+.lucd20-multi-check-app .lucd20-mc-empty { opacity: 0.75; margin: 4px 0; }
+.lucd20-multi-check-app .lucd20-mc-footer { display: flex; gap: 6px; }
+.lucd20-multi-check-app .lucd20-mc-footer button { flex: 1; }
+.lucd20-multi-check ul { margin: 0; padding-left: 1.1em; }
+.lucd20-multi-check li { margin: 2px 0; }
+.lucd20-multi-check .lucd20-mc-title { margin: 0 0 4px; }
+.lucd20-multi-check .lucd20-mc-diff { opacity: 0.8; font-size: 0.9em; }
+.lucd20-multi-check .lucd20-mc-reveal { margin-top: 4px; width: 100%; }

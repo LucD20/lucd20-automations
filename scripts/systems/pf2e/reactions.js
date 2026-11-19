@@ -2,6 +2,7 @@ import { MODULE_ID, error, localize } from "../../core/constants.js";
 import { defineFeature } from "../../core/registry.js";
 import { watchDOM } from "../../core/dom-watch.js";
 import { onTurns } from "./rules.js";
+import { sysId } from "./sys.js";
 
 /**
  * Rule 6 (docs/pf2e-rules.md): PF2e reactions, tracked (owner: "automate uses like PF2e Reactions
@@ -83,7 +84,7 @@ export async function spendReaction(combatant, { source = "" } = {}) {
 
 /** What a chat message says about reactions: "card" (a reaction's card), "strike" (an off-turn attack) or null. */
 export function reactionUse(message) {
-	const context = message?.flags?.pf2e?.context;
+	const context = message?.flags?.[sysId()]?.context;
 	const item = message?.item ?? null;
 	const cost = item?.system?.actionType?.value ?? item?.system?.time?.value ?? null;
 	if (!context && cost === "reaction") return "card";

@@ -1,4 +1,4 @@
-import { MODULE_ID } from "../core/constants.js";
+import { MODULE_ID, systemMatches } from "../core/constants.js";
 import { defineFeature, getFeature } from "../core/registry.js";
 
 /**
@@ -260,7 +260,7 @@ defineFeature({
 
   init(feature) {
     state.feature = feature;
-    state.backend = backends.find(b => b.system === game.system.id) ?? null;
+    state.backend = backends.find(b => systemMatches(b.system)) ?? null;
     state.defaultDarkness = CONFIG.Canvas.darknessColor;
     // Systems with their own GM vision (PF2e) keep their own Ctrl+G.
     if (!state.backend) {
@@ -345,7 +345,7 @@ defineFeature({
     });
     // PF2e's GM vision is a client setting: follow its changes.
     feature.on("clientSettingChanged", key => {
-      if (key === "pf2e.gmVision") scheduleOutlines();
+      if (key === `${game.system.id}.gmVision`) scheduleOutlines();
     });
     scheduleOutlines();
     feature.onCleanup(() => {

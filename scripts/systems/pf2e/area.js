@@ -1,6 +1,7 @@
 import { MODULE_ID, error, localize } from "../../core/constants.js";
 import { defineFeature } from "../../core/registry.js";
 import { areaPoint, coverFromPoint, inShape, LEVELS } from "./cover.js";
+import { sysId } from "./sys.js";
 
 /**
  * Rule 20 (docs/pf2e-rules.md): PF2e effect areas (owner, Q237–Q240, as recommended).
@@ -18,7 +19,7 @@ const esc = (v) => Handlebars.escapeExpression(String(v ?? ""));
 const STORE = `${MODULE_ID}.areaTargets`;
 const COLORS = { none: 0x43a047, lesser: 0xfdd835, standard: 0xfb8c00, greater: 0xe53935 };
 
-const isArea = (doc) => !!doc?.flags?.pf2e?.areaShape && (doc.shapes?.length ?? 0) >= 1;
+const isArea = (doc) => !!doc?.flags?.[sysId()]?.areaShape && (doc.shapes?.length ?? 0) >= 1;
 const remembered = () => { try { return JSON.parse(localStorage.getItem(STORE) ?? "{}"); } catch { return {}; } };
 const remember = (v) => { try { localStorage.setItem(STORE, JSON.stringify(v)); } catch { /* private mode */ } };
 
@@ -44,7 +45,7 @@ export function chooseTargets(region, { targets = "enemies", self = false, neutr
 	if (targets === "none") return [];
 	if (targets === "both") targets = "all";
 	let caster = null;
-	try { caster = region.flags.pf2e.origin?.actor ? fromUuidSync(region.flags.pf2e.origin.actor) : null; } catch { caster = null; }
+	try { caster = region.flags[sysId()].origin?.actor ? fromUuidSync(region.flags[sysId()].origin.actor) : null; } catch { caster = null; }
 	const alliance = caster ? caster.alliance : game.user.isGM ? "opposition" : "party";
 	const opposition = alliance === "party" ? "opposition" : alliance === "opposition" ? "party" : null;
 	return tokensInArea(region).filter((d) => {
@@ -68,7 +69,7 @@ async function applyTargets(region, docs) {
 		for (const t of game.user.targets ?? []) t.setTarget?.(false, { releaseOthers: false });
 		for (const d of docs) d.object?.setTarget?.(true, { releaseOthers: false, groupSelection: true });
 	}
-	const message = region.flags.pf2e.messageId ? game.messages.get(region.flags.pf2e.messageId) : null;
+	const message = region.flags[sysId()].messageId ? game.messages.get(region.flags[sysId()].messageId) : null;
 	if (message?.isOwner ?? message?.isAuthor) await message.update({ "flags.pf2e-toolbelt.targetHelper.targets": docs.map((d) => d.uuid) }).catch(() => {});
 }
 
@@ -89,7 +90,7 @@ async function ask(region) {
 	};
 	if (!DialogV2) return { ...last };
 	return DialogV2.wait({
-		window: { title: region.flags.pf2e.origin?.name ?? L("Title") },
+		window: { title: region.flags[sysId()].origin?.name ?? L("Title") },
 		position: { width: 300 },
 		content,
 		classes: ["lucd20-area-dialog"],
@@ -103,7 +104,7 @@ async function ask(region) {
 
 async function onCreateRegion(feature, region, options, userId) {
 	if (userId !== game.user.id || !isArea(region) || !feature.get("targeting")) return;
-	if (!region.flags.pf2e.origin) return;
+	if (!region.flags[sysId()].origin) return;
 	await new Promise((r) => setTimeout(r, 50)); // the region's coverage is ready once drawn
 	const choice = await ask(region);
 	if (!choice) return;

@@ -1,6 +1,7 @@
 import { MODULE_ID, localize } from "../../core/constants.js";
 import { executeAsGM, onGMRequest } from "../../core/socket.js";
 import { registerLockedDoorAdapter } from "../../features/locked-door-alert.js";
+import { sysApi, sysConfig, sysSetting } from "./sys.js";
 
 /**
  * PF2e door locks (part of Locked Door Alert; PF2e options "Lock options" and
@@ -61,7 +62,7 @@ function stateOf(wall) {
 }
 
 function skillLabel(slug) {
-  const entry = CONFIG.PF2E?.skills?.[slug];
+  const entry = sysConfig()?.skills?.[slug];
   const label = typeof entry === "string" ? entry : entry?.label;
   if (label) return game.i18n.localize(label);
   if (slug === "perception") return game.i18n.localize("PF2E.PerceptionLabel");
@@ -147,7 +148,7 @@ async function postCard(feature, control, who) {
 function showDC() {
   if (game.user.isGM) return true;
   try {
-    return !!game.settings.get("pf2e", "metagame_showDC");
+    return !!sysSetting("metagame_showDC");
   } catch {
     return false;
   }
@@ -220,7 +221,7 @@ async function chooseActor(way) {
 const OUTCOMES = ["criticalFailure", "failure", "success", "criticalSuccess"];
 
 function jammedModifier() {
-  const Modifier = game.pf2e?.Modifier;
+  const Modifier = sysApi()?.Modifier;
   if (!Modifier) return [];
   return [new Modifier({ slug: "lucd20-jammed", label: localize("LUCD20.DoorLocks.Jammed"), modifier: -2, type: "circumstance" })];
 }
@@ -244,7 +245,7 @@ async function attempt(wall, way, actor, event) {
   };
 
   const action = TYPES[way.type].action;
-  const legacy = action ? game.pf2e?.actions?.[action] : null;
+  const legacy = action ? sysApi()?.actions?.[action] : null;
   if (typeof legacy === "function") {
     legacy({
       actors: [actor],
@@ -335,7 +336,7 @@ async function applyResult(feature, { sceneId, wallId, type, outcome, actorName 
 /* -------------------------------------------- */
 
 function skillOptions(selected) {
-  const skills = Object.keys(CONFIG.PF2E?.skills ?? {});
+  const skills = Object.keys(sysConfig()?.skills ?? {});
   const all = ["perception", ...skills];
   return all.map(slug => `<option value="${esc(slug)}" ${slug === selected ? "selected" : ""}>${esc(skillLabel(slug))}</option>`).join("");
 }

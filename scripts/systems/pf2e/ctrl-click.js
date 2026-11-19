@@ -2,6 +2,7 @@ import { error, localize } from "../../core/constants.js";
 import { defineFeature } from "../../core/registry.js";
 import { executeAsGM, onGMRequest } from "../../core/socket.js";
 import { nameForPlayers } from "./card.js";
+import { sysId, sysApi } from "./sys.js";
 
 /**
  * Merge 2 (docs/pf2e-rules.md): Ctrl-click effects, replacing "PF2e Ctrl Click Effects" (owner, Q196–Q201;
@@ -46,7 +47,7 @@ async function payloadFor(a, kind) {
 		const roll = DamageRoll ? new DamageRoll(String(a.dataset.formula)) : null;
 		const instances = (roll?.instances ?? []).filter((i) => i.persistent);
 		if (!instances.length) return null;
-		const base = game.pf2e.ConditionManager.getCondition("persistent-damage").toObject();
+		const base = sysApi().ConditionManager.getCondition("persistent-damage").toObject();
 		const conditions = instances.map((i) => {
 			const c = structuredClone(base);
 			c.system = { ...(c.system ?? {}), persistent: { formula: i.head?.expression ?? i.formula, damageType: i.type, dc: 15 } };
@@ -60,7 +61,7 @@ async function payloadFor(a, kind) {
 	if (doc.type === "condition") return { kind: "condition", label: a.innerText.trim(), slug: doc.slug ?? doc.system?.slug, value: number };
 	const message = game.messages.get(a.closest("[data-message-id]")?.dataset.messageId ?? "");
 	const source = doc.toObject();
-	const castRank = Number(a.closest("[data-cast-rank]")?.dataset.castRank) || message?.flags?.pf2e?.origin?.castRank || 0;
+	const castRank = Number(a.closest("[data-cast-rank]")?.dataset.castRank) || message?.flags?.[sysId()]?.origin?.castRank || 0;
 	if (castRank > 0) foundry.utils.setProperty(source, "system.level.value", castRank);
 	if (number && source.system?.badge?.type === "counter") source.system.badge.value = number;
 	if (message?.actor) {
@@ -72,7 +73,7 @@ async function payloadFor(a, kind) {
 			? { attribute: { type: item.attribute, mod: item.spellcasting.statistic?.attributeModifier?.value ?? 0 }, tradition: item.spellcasting.tradition }
 			: null;
 		source.system.context = {
-			origin: { actor: actor.uuid, token: token?.uuid ?? null, item: item?.uuid ?? null, spellcasting, rollOptions: message.flags?.pf2e?.origin?.rollOptions ?? [] },
+			origin: { actor: actor.uuid, token: token?.uuid ?? null, item: item?.uuid ?? null, spellcasting, rollOptions: message.flags?.[sysId()]?.origin?.rollOptions ?? [] },
 			target: target?.actor && target?.token ? { actor: target.actor.uuid, token: target.token.uuid } : null,
 			roll: roll ? { total: roll.total, degreeOfSuccess: message.isCheckRoll ? (roll.degreeOfSuccess ?? null) : null } : null
 		};

@@ -1,3 +1,4 @@
+import { systemMatches } from "./constants.js";
 /**
  * The settings layout from docs/PLAN.md §2.
  *
@@ -92,6 +93,7 @@ export const FEATURE_ORDER = [
   { id: "pf2eAreas", category: "pf2e", phase: 55, systems: ["pf2e"] },
   { id: "pf2eCreatureScale", category: "pf2e", phase: 62, systems: ["pf2e"] },
   { id: "pf2eRecallKnowledge", category: "pf2e", phase: 68, systems: ["pf2e"] },
+  { id: "pf2eMultiCheck", category: "pf2e", phase: 69, systems: ["pf2e"] },
   { id: "pf2eCombatAssessment", category: "pf2e", phase: 67, systems: ["pf2e"] },
   { id: "pf2eGuardiansDeflection", category: "pf2e", phase: 67, systems: ["pf2e"] },
   { id: "dnd4eClassFeatures", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
@@ -117,7 +119,7 @@ export const FEATURE_ORDER = [
 
 /** Whether a category / feature entry applies to the active game system. */
 export function isAvailableForSystem(entry) {
-  return !entry.systems?.length || entry.systems.includes(game.system.id);
+  return !entry.systems?.length || entry.systems.some(systemMatches);
 }
 
 /* -------------------------------------------- */
@@ -172,6 +174,7 @@ export const PLACE = {
   pf2eHands: { page: "pf2eCore", section: "tools" },
   pf2eCtrlClick: { page: "pf2eCore", section: "tools" },
   pf2eCreatureScale: { page: "pf2eCore", section: "tools" },
+  pf2eMultiCheck: { page: "pf2eCore", section: "tools" },
   pf2eRoaringHeart: { page: "pf2eClasses", section: "animist" },
   pf2eDemoralizingCharge: { page: "pf2eClasses", section: "commander" },
   pf2eCombatAssessment: { page: "pf2eClasses", section: "commander" },

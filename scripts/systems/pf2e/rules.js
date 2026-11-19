@@ -3,6 +3,7 @@ import { defineFeature } from "../../core/registry.js";
 import { executeAsGM, onGMRequest } from "../../core/socket.js";
 import { waitForDice } from "../../core/dice.js";
 import { pickSquare } from "../../core/square-picker.js";
+import { sysId, sysApi, sysPack } from "./sys.js";
 
 /**
  * PF2e rules the owner wants automated, replacing several automation modules. Each rule is noted
@@ -25,7 +26,7 @@ import { pickSquare } from "../../core/square-picker.js";
 
 const esc = value => Handlebars.escapeExpression(String(value ?? ""));
 const L = (key, data) => localize(`LUCD20.PF2eRules.${key}`, data);
-const contextOf = message => message?.flags?.pf2e?.context ?? null;
+const contextOf = message => message?.flags?.[sysId()]?.context ?? null;
 const authorId = message => message?.author?.id ?? message?.user?.id ?? null;
 const isAction = (message, slug) => {
   const context = contextOf(message);
@@ -157,7 +158,7 @@ export function retchDC(actor) {
   for (const message of recent) {
     const context = contextOf(message);
     if (context?.type === "saving-throw" && context.actor === actor.id && Number(context.dc?.value)) return { dc: Number(context.dc.value), source: "save" };
-    const uuid = message.flags?.pf2e?.origin?.uuid;
+    const uuid = message.flags?.[sysId()]?.origin?.uuid;
     const item = uuid ? fromUuidSync(uuid) : null;
     if (!item?.actor || item.actor === actor) continue;
     const spellDC = item.type === "spell" ? Number(item.spellcasting?.statistic?.dc?.value) : 0;
@@ -458,7 +459,7 @@ export function isTemporalDistortionSave(message) {
   const context = contextOf(message);
   if (context?.type !== "saving-throw") return false;
   const options = Array.isArray(context.options) ? context.options : [];
-  const origin = message?.flags?.pf2e?.origin?.rollOptions ?? [];
+  const origin = message?.flags?.[sysId()]?.origin?.rollOptions ?? [];
   return options.includes(`item:slug:${TD_SLUG}`) || origin.includes(`origin:item:slug:${TD_SLUG}`);
 }
 
@@ -484,7 +485,7 @@ const shownName = (actor, token) => (token?.playersCanSeeName === false ? L("TD.
 async function onTemporalSave(message) {
   if (!game.user.isActiveGM || !isTemporalDistortionSave(message)) return;
   const outcome = contextOf(message).outcome;
-  const origin = message.flags.pf2e.origin ?? {};
+  const origin = message.flags[sysId()].origin ?? {};
   const caster = origin.actor ? fromUuidSync(origin.actor) : null;
   const { actor, token } = saveTarget(message);
   if (!caster || !actor) return;
@@ -566,11 +567,11 @@ async function tdClaim({ cardId }, senderId) {
 
 /** A condition item of PF2e's compendium, by slug: its uuid for a GrantItem rule. */
 async function conditionUuid(slug) {
-  const pack = game.packs?.get("pf2e.conditionitems");
+  const pack = sysPack("conditionitems");
   const index = pack ? await pack.getIndex() : [];
   const entry = [...index].find(e => (e.system?.slug ?? String(e.name).toLowerCase()) === slug || String(e.name).toLowerCase() === slug);
   if (entry) return entry.uuid ?? `Compendium.pf2e.conditionitems.Item.${entry._id}`;
-  const condition = game.pf2e?.ConditionManager?.getCondition?.(slug);
+  const condition = sysApi()?.ConditionManager?.getCondition?.(slug);
   return condition?.sourceId ?? condition?._stats?.compendiumSource ?? null;
 }
 

@@ -21,3 +21,18 @@ export function localizeIfExists(key, fallback = "") {
 export function systemLabel(systemId) {
   return localizeIfExists(`LUCD20.System.${systemId}`, systemId.toUpperCase());
 }
+
+/**
+ * Systems built on another system's engine count as that system (owner, Q311: everything for PF2e also
+ * runs in the SF2e system, a PF2e fork with its own id, settings and flag namespace).
+ */
+export const SYSTEM_FAMILY = { sf2e: "pf2e" };
+
+/** The engine family of a system id ("sf2e" → "pf2e"; others: themselves). */
+export const systemFamily = (id = game.system?.id) => SYSTEM_FAMILY[id] ?? id;
+
+/** Whether a feature / adapter / setting declared for `id` applies to the active system. */
+export function systemMatches(id) {
+  const own = game.system?.id;
+  return !!id && (id === own || id === SYSTEM_FAMILY[own]);
+}

@@ -1,4 +1,4 @@
-import { MODULE_ID, error, localize } from "../core/constants.js";
+import { MODULE_ID, error, localize, systemMatches } from "../core/constants.js";
 import { defineFeature } from "../core/registry.js";
 import { addChatControl, refreshChatControls } from "../core/chat-controls.js";
 import { addFlushContributor } from "../core/chat-flush.js";
@@ -46,7 +46,7 @@ export function registerDamageLogAdapter(adapter) {
   adapters.push(adapter);
 }
 
-const activeAdapters = () => adapters.filter(a => !a.system || a.system === game.system.id);
+const activeAdapters = () => adapters.filter(a => !a.system || systemMatches(a.system));
 
 /* -------------------------------------------- */
 /*  Reading HP                                  */
@@ -118,7 +118,7 @@ function onDeltaHook(delta, changes, options, userId) {
 /** System messages that explain a change (e.g. PF2e "takes 12 damage"). */
 function onChatMessage(message) {
   // "details" exists only where an adapter explains changes (PF2e): elsewhere, nothing to do.
-  if (!game.user.isActiveGM || game.system.id !== "pf2e" || !state.feature?.get("details")) return;
+  if (!game.user.isActiveGM || !systemMatches("pf2e") || !state.feature?.get("details")) return;
   for (const adapter of activeAdapters()) {
     const cause = adapter.causeFromMessage?.(message);
     if (!cause) continue;

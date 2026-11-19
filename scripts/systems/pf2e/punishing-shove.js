@@ -3,6 +3,7 @@ import { defineFeature } from "../../core/registry.js";
 import { waitForDice } from "../../core/dice.js";
 import { itemBySlug } from "./card.js";
 import { audience } from "./rules.js";
+import { sysId } from "./sys.js";
 
 /**
  * Rule 11 (docs/pf2e-rules.md): Punishing Shove (guardian feat 1). "When you successfully Shove a
@@ -26,7 +27,7 @@ export function punishingDamage(strMod, rank, critical) {
 }
 
 async function onShove(message) {
-	const context = message.flags?.pf2e?.context;
+	const context = message.flags?.[sysId()]?.context;
 	if (context?.type !== "skill-check" || !(context.options ?? []).includes("action:shove") || context.isReroll) return;
 	if (!["success", "criticalSuccess"].includes(context.outcome)) return;
 	const shover = message.actor ?? (context.origin?.token ? fromUuidSync(context.origin.token)?.actor : null);

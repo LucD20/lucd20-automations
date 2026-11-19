@@ -849,6 +849,10 @@
           }
         }
       },
+      "pf2eMultiCheck": {
+        "Name": "Multiple Checks",
+        "Hint": "Post several checks as one chat card. Shift-click an inline check's \"send to chat\" icon to collect it (a check group adds all of its checks), paste or drop selected journal text or @Check codes, or add a skill and DC by hand; then Send. Players see one button per check and how much lower each DC is than the hardest (\"Stealth (DC 2 lower)\"); only the GM sees the DCs. GM only; the window also opens from the chat's buttons."
+      },
       "pf2eRecallKnowledge": {
         "Name": "Recall Knowledge",
         "Hint": "Recall Knowledge in one secret roll (replaces PF2e Workbench's macro): for each target, the skills that identify it and every Lore, with the result against each attempt's DC, the lore DCs and modifiers that might apply. Only the GM sees it. From the Recall Knowledge shortcut, Combat Assessment, or api.pf2e.recallKnowledge()."
@@ -2204,6 +2208,26 @@
       "Placed": "Stairs {n} placed: each end teleports to the other.",
       "PlacedOneWay": "Stairs {n} placed: the first end teleports to the second.",
       "Failed": "The stairs could not be placed (see the console)."
+    },
+    "MultiCheck": {
+      "Title": "Multiple Checks",
+      "TitlePlaceholder": "Title (optional), e.g. The cracked wall",
+      "Empty": "No checks yet. Shift-click an inline check's \"send to chat\" icon, paste or drop journal text below, or add one by hand.",
+      "Action": "action",
+      "NoDC": "no DC",
+      "DCLabel": "DC",
+      "DC": "DC {dc}",
+      "Lower": "DC {n} lower",
+      "Up": "Move up",
+      "Remove": "Remove",
+      "Lore": "Lore…",
+      "LorePlaceholder": "Lore name, e.g. Sailing",
+      "Add": "Add the check",
+      "PastePlaceholder": "Paste selected journal text or @Check[…] / [[/act …]] codes here",
+      "Clear": "Clear",
+      "Send": "Send to chat",
+      "Added": "Multiple Checks: {n} added.",
+    "Reveal": "Reveal DCs"
     },
     "Shortcuts": {
       "ElevationUp": "Elevation: raise",

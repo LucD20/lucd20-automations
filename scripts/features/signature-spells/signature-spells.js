@@ -1,4 +1,4 @@
-import { error, localize } from "../../core/constants.js";
+import { error, localize, systemMatches } from "../../core/constants.js";
 import { defineFeature } from "../../core/registry.js";
 import { broadcast, onBroadcast } from "../../core/socket.js";
 import { canSee } from "../token-reactions/token-reactions.js";
@@ -51,7 +51,7 @@ export function registerSignatureReader(reader) {
 
 function read(message) {
   for (const reader of readers) {
-    if (reader.system && reader.system !== game.system.id) continue;
+    if (reader.system && !systemMatches(reader.system)) continue;
     try {
       const info = reader.read?.(message);
       if (info) return info;

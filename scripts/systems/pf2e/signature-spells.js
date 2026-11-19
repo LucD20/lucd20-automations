@@ -1,5 +1,6 @@
 import { registerSignatureReader } from "../../features/signature-spells/signature-spells.js";
 import { damageTargets } from "./shield-block.js";
+import { sysId } from "./sys.js";
 
 /**
  * PF2e detail for Signature Spells: which spell a damage roll belongs to, who cast it and at whom.
@@ -18,7 +19,7 @@ import { damageTargets } from "./shield-block.js";
  */
 
 const slugOf = (message) => {
-	const flags = message?.flags?.pf2e ?? {};
+	const flags = message?.flags?.[sysId()] ?? {};
 	const item = message.item ?? null;
 	const slug = item?.slug ?? item?.system?.slug;
 	if (slug) return { slug, name: item.name ?? slug };
@@ -39,7 +40,7 @@ export function finisherOf(options) {
 }
 
 export function read(message) {
-	const context = message?.flags?.pf2e?.context;
+	const context = message?.flags?.[sysId()]?.context;
 	if (context?.type !== "damage-roll") return null;
 	const options = (context.options ?? []).map(String);
 	const found = slugOf(message) ?? { slug: null, name: message.item?.name ?? "" };

@@ -2876,7 +2876,495 @@ no longer match the module); not touched.
    22 in the ledger; `systems/pf2e/immunity.js` is the shared tracker
    (flags on the target actor, world time); a Swashbuckler section under
    Classes.
+**Parked (owner, 2026-11-19): steps 5–7 wait until after §23's drafting.**
+
 5. **Battle Medicine HUD** (Q291), **Flanking overlay** (Q292).
 6. **Dice Stats**: damage per turn tab, dice per creature and the end card
    (Q293–Q294), one per-encounter record for both.
 7. **Sell** (Q295), **Hero start area** (Q296).
+
+---
+
+## 23. Adventure conversion tools (owner, 2026-11-19, drafting)
+
+The owner converts Paizo adventures (Starfinder 1e → 2e, Pathfinder 1e → 2e)
+into Foundry by hand: copy each check from the book, have an AI shorten it and
+write the inline codes, convert the DC from a table, then build the folders,
+journals, pages, NPCs and token art one at a time, and log fixes found in play
+in Discord. Goal: cut the manual steps. **Ideas only, nothing agreed yet.**
+The owner will send: the 1e → 2e DC sheets, a world with finished
+conversions, and the Discord fix log (sample in the chat of 2026-11-19).
+The old GPT conversion instructions are examples of the output wanted, not
+rules to copy.
+
+### 23.1 Ideas
+
+**A. Converter (paste → converted HTML).** A GM window: paste a passage,
+pick the source (SF1e / PF1e) and the party level, get the `<ul><li><p>`
+list with the codes, and a live preview with the buttons working.
+- Done by code, no AI, the same every time: `DC N Skill` → `@Check[skill|dc:M]`
+  through the owner's skill map and DC table (cap at the table's max);
+  the special actions (climb, swim, force open, pick a lock, hack, seek,
+  sense motive, gather information, recall knowledge, identify magic) by
+  keywords; `N%` → flat check; `XdY type damage` → `@Damage`; `1d4+1 days` →
+  `[[/gmr]]`; bonuses / penalties halved (rounded up) as sub-bullets;
+  "by 5 or more" / "failed by X" → **Critical Success** / **Critical Failure**;
+  break stats → the door presets.
+- What code can't decide (Mysticism → arcana / occultism / religion, "search"
+  vs plain Perception) is highlighted in the preview with a picker; the
+  choice is remembered for the next passage.
+- Shortening the prose is the one part that needs an AI. Options: (a) keep
+  it outside, the window copies a ready prompt; (b) call the Claude API from
+  the browser with the owner's own key (GM-only client setting), the
+  converter's codes kept, the AI only shortens the sentences. Proposal: (a)
+  first, (b) if the owner wants it.
+- An **Audit** button: runs the converter over an existing page and lists
+  DCs that don't match the table and leftovers (`DC 26 Computers]`, "intimidate",
+  "gp" in a credits book), which covers many of the Discord fixes.
+
+**B. Adventure skeleton.** Paste a chapter's outline (headings as they come
+out of the PDF: `Part 1: …`, `A1. Room (Moderate 3)`, `Event 2: …`) or pick
+the PDF's bookmarks; preview the tree, then one click creates: a folder per
+book / chapter with its colour, a journal per part with an Introduction page
+and one page per entry, in the book's order, names cleaned. Each page body
+can run through the converter (A). Later: map notes on the scene for each
+A1/B2 page.
+
+**C. NPC help.** Paste a 1e stat block → a PF2e NPC draft: level, traits,
+senses, languages, AC / HP / saves / skills / Strikes / DCs set from
+Building Creatures (the tables of Creature Scale) at the right band, the
+1e abilities as action items with the text converted by (A) and a
+pick of action cost and traits. Plus a **Quick adjust** on a sheet ("nerf
+Lorkin", "reduce HP", "reduce DCs"): shift a creature's HP / AC / attack /
+damage / DCs one band down or up in one click.
+
+**D. Token Art Studio** (replaces the Photoshop step). Drop many images at
+once; for each: the owner's frame drawn on top, drag / scroll to place and
+zoom, the mask applied (circle of the frame, the subject allowed past the
+frame's top if wanted), Enter → next. Saved in the browser as WebP
+`name-like-this-token.webp` (named from the actor) into a chosen folder via
+Foundry's upload, and assigned to the actor's prototype token and its placed
+tokens (the old macro's job). Optional automatic background removal (an
+in-browser model) if the subject has to be cut out, not just masked.
+
+**E. Fix Log** (replaces Discord). A GM key / button "Log fix": a one-line
+box, the context filled in by itself (book, scene, the selected token /
+actor, the open journal page, the item clicked, date). A list window:
+filter by book / chapter, done tick, click jumps to the thing. In the
+adventure template world, sheets, journal pages and scenes with an open fix
+show a badge. Both worlds share the log through one JSON file in the user
+data folder (same Foundry server), matched by UUID (an Adventure import keeps
+ids) or by name. Import of the old Discord text (dates and "Book N"
+headings parsed).
+
+### 23.2 Questions for the owner (Q297–)
+
+- Q297: SF2e in Foundry: the PF2e system with the SF2e modules, or the
+  separate SF2e system? Which version?
+- Q298: The DC sheets: by level (1e DC → 2e DC per level) or one table?
+- Q299: The source text: copied from the PDF (and which reader), or can the
+  tool read the PDF itself? Are the books' bookmarks usable for (B)?
+- Q300: AI for shortening: copy a prompt (no key) or call Claude with your
+  own key from Foundry?
+- Q301: Tokens: what does the frame look like, is it the dynamic ring or a
+  frame painted into the image, and does "cut the mask" mean a circle or
+  cutting the subject out of its background? Send one source image and the
+  finished token. WebP or WebM (animated)?
+- Q302: Fix log: are the play world and the template world on the same
+  Foundry server? Is the template world the source of the Adventure you
+  import (so ids match)?
+- Q303: Which of A–E first? → see §23.4 (files reviewed first).
+
+Answers (2026-11-19): Q297 the separate **SF2e system 1.7.0** (with the
+`sf2e-anachronism` compendiums; PF2e for Pathfinder). Q298 by level (§23.3).
+Q299 read the **PDF directly**; A / B should also *find* every passage with
+a roll (skill, save, attack, flat) and list it per heading for review. Q300
+Foundry + Claude is fine if Foundry alone can't. Q301 **dynamic ring**, PSD
+template sent. Q302 same server, worlds built with the Adventure importer
+(ids match).
+
+### 23.3 What the owner's files show (2026-11-19)
+
+- **DC table** (`DC_Sheets.csv`): perfectly regular. 2e DC = level DC (GM
+  Core: 1→15 … 20→40) + an offset that depends only on (1e DC − level):
+  ≤−3→−10, −2→−9, −1→−8, 0→−7, 1→−6, 2→−5, 3/4→−4, 5/6→−3, 7/8→−2, 9/10→−1,
+  11–13→0, 14/15→+1, 16/17→+2, 18/19→+3, 20/21→+4, 22→+5, 23→+6, 24→+7,
+  25→+8, 26→+9, ≥27→+10 (cap). Rows also give the minimum proficiency
+  (Untrained … Legendary) and difficulty band. A small function, no AI. The
+  second table in the sheet (rows 67–97, "1=9, 2=10 …") is not understood
+  yet (Q305).
+- **Finished conversions** (`sf2e-adv`: 9 books, 296 pages, 265 actors;
+  `2e-cov`: Rise of the Runelords ch. 1–2): one folder per book (one colour
+  per AP), sub-folders per Part for Actors / Items / Scenes, one journal per
+  Part, one page per heading (`A. Main Floor`, `Event 2: … (Severe 7)`), plus
+  a Treasure journal (level pages). Page body: a `<ul>` of checks, then
+  `<h2>` Hazard / Creatures (`<h3>@UUID[Actor…]` + During Combat / Morale) /
+  Treasure (item links). Codes used: `@Check` (skills, saves, lores,
+  `piloting`, `computers`), 21 `[[/act]]` actions (recall-knowledge 105,
+  hack 50, identify-magic 37 …), `@Damage`, `[[/gmr]]`, `[[/r]]`.
+- **An audit of the finished pages already finds Discord-type bugs**:
+  `@Check[intimidate…]` ×7, `@Check[mysticism]`, `[engineering]`,
+  `[computer]`, `@Check[computers|dc:26]]` (the "remove ]" log entry),
+  ~20 (SF) + 9 (PF) unconverted "DC N Skill" left in text,
+  `@Check[crafting] DC 28` (DC outside the code).
+- **Token template** (`Dynamic_token.psd`): 1024×1024; portrait group masked
+  by a circle Ø 682 px, centred (⅔ of the image, the dynamic ring's subject
+  area); a green guide circle layer (Círculo); a 50 % inner shadow arc at the
+  lower right (Sombra, drop shadow). Files: `Starfinder/Adventures/<ap-slug>/
+  actors/<name>.webp` art, `<name>-token.webp` token = ring subject texture,
+  scale 1.
+
+### 23.4 Proposed architecture (owner to confirm, Q304)
+
+One converter (plain ES module; runs in Foundry and in Node, so the numbers
+are the same everywhere): DC table, skill maps (SF1e / PF1e), the action
+rules, damage / duration / bonus / critical formatting, and the audit.
+
+1. **Reading the PDF: a Claude Code session** (the owner's Claude plan, no
+   API key). The owner uploads the book PDF; Claude keeps the heading tree
+   (Part → area / event), finds every passage with a roll (skills, saves,
+   attacks, flat %, damage, durations, break stats, stat blocks), writes the
+   short mechanical sentence and picks skill / action / recall-knowledge
+   statistic; **the converter script**, not the AI, turns 1e DCs into 2e at
+   that heading's level. Output `book.json` (tree, entries, original quote,
+   page number), sent to the owner as a file. **Never committed** (Paizo
+   text; the repo is public).
+   - All in Foundry instead: pdf.js for the text + the Claude API from the
+     browser with the owner's key (GM-only setting; Haiku 5.5 $0.10 / $0.50
+     per M tokens, a book well under $1; Sonnet 5.5 $2 / $10 for better
+     wording). Possible later; API credits are billed apart from the plan,
+     and Paizo's two-column layout is the hard part either way.
+2. **Foundry: Conversion Review + Build** (GM window). Load `book.json`: the
+   tree on the left, entries on the right with the book quote, the converted
+   line (editable, live buttons), the DC maths (1e DC 20 @ L6 → 23, Expert)
+   and flags on uncertain picks; tick to accept. **Build** creates the
+   book / part folders with the colour, a journal per Part, a page per
+   heading in the owner's layout (checks, Hazard, Creatures with During
+   Combat / Morale, Treasure), or merges into an existing page. **Audit** on
+   any journal (the §23.3 findings).
+3. Then on the same rails: NPC drafts from the stat blocks found (C), Token
+   Art Studio (D, the PSD's numbers), Fix Log (E).
+
+### 23.5 Questions for the owner (Q304–)
+
+- Q304: OK with the split (a Claude session reads the PDF and writes
+  `book.json`; Foundry reviews and builds)? Or all in Foundry (API key and
+  credits)?
+- Q305: The second table in the sheet (rows 67–97, "1=9, 2=10 …"): what is
+  it?
+- Q306: Which level converts a heading's DCs: the level in its title
+  ("(Moderate 8)"), else the Part's level from the book? Is the party level
+  the same as the 1e book's level?
+- Q307: Tokens: is the green guide circle hidden on export? Do subjects
+  ever go past the circle (head over the ring) or always clipped? Shadow arc
+  on every token? `name-token.webp` next to the art, art untouched?
+- Q308: First test book: one not converted yet, or one already done so we
+  compare with your version?
+
+### 23.6 Owner's answers (Q304–Q308) and what was built (2026-11-19)
+
+- Q304: **split OK**: Claude session first, then Foundry. Owner: turn the PDF
+  into Markdown with a script first (agreed: repeatable, strips the
+  personalised watermark, Claude then reads clean text with headings).
+- Q305: the small "1=9, 2=10" table was a paste helper for the old AI
+  prompt; not needed.
+- Q306: always the same level (the party level = the book's level).
+- Q307 tokens: the green guide circle is hidden on export. Subjects often go
+  past the circle; bigger tokens use a **150–200 % canvas** (the worlds show
+  ring subject scale 1 / 1.5 / 2 with texture scale to match, so the canvas
+  is 1024 × scale and the circle stays 682 px). The shadow arc is on every
+  token but **under the parts that stick out** (today masked by hand), so
+  the layers are: portrait clipped to the circle → shadow arc → the
+  sticking-out part on top. Names: `<name>.webp` art and `<name>-token.webp`
+  token, folders as in the worlds (`Starfinder/Adventures/<ap-slug>/actors/`
+  or `/art/`). (Owner wrote "webm"; the worlds use **.webp**, Q310.)
+- Q308: first test book: **Attack of the Swarm 6, The God Host Ascends**
+  (in `sf2e-adv`: 3 parts, 13 pages, 18 actors under
+  `ap24-the-god-host-ascends/art/`, tokens not made yet: token = art file).
+
+**The DC workbook** (`DC_Sheets.xlsx`, more than the CSV):
+- `DC` (PF1e) and `SF DC` (SF1e): same table; SF1e 1e DCs are **4 higher**
+  for the same 2e DC, except at levels 14, 17, 19 where the sheet has a hand
+  edit `+4-1` (shift 3; Q309). Proficiency: colour bands end at the label
+  row (1e DC − level ≤ 6 untrained, ≤ 11 trained, ≤ 16 expert, ≤ 21 master,
+  else legendary; the sheet's example L6 DC 20 → 23 Expert); difficulty
+  bands start at the label rows (L+2 very easy … L+27 incredibly hard).
+- `CR`: 1e CR → XP and the encounter mapping (APL −1 Easy → Trivial … APL +3
+  Epic → Extreme; 40 / 60 / 80 / 120 / 160 XP). `GP`: 1e → 2e treasure by
+  level (Paizo's conversion guide; median ratio, 19 % at 17+). For NPC (C)
+  and loot conversion later.
+
+**Built** (no Foundry code, no version bump):
+- `tools/pdf-to-md/pdf_to_md.py` (PyMuPDF): two-column reading order,
+  headings by font size (#–###, bold body lines ####), drops lines repeated
+  in the page margins (running headers, page numbers, the buyer watermark),
+  `<!-- p. N -->` per page. Tested on a made-up PDF only; tune on Book 6.
+- `scripts/conversion/dc.js` (plain ES module, runs in Foundry and Node):
+  `convertDc(dc1e, level, "pf1e"|"sf1e")` → `{ dc, proficiency, difficulty,
+  capped }`; checked against every cell of both sheets (620 + 620, 0
+  mismatches). CLI: `node tools/convert/dc.mjs sf1e 6 24`.
+
+**Found on the way**: the module's PF2e features declare `systems:
+["pf2e"]` and `isAvailable` compares with `game.system.id`, so **none of them
+run in the SF2e world** (system id `sf2e`) (Q311).
+
+### 23.7 Questions (Q309–)
+
+- Q309: SF DC sheet, levels 14 / 17 / 19 use shift 3 instead of 4: meant,
+  or a leftover edit? (The code follows the sheet for now.)
+- Q310: tokens are `.webp` (still image) as in the worlds, not `.webm`
+  (video)?
+- Q311: should the PF2e features also run in SF2e (same engine, a fork)?
+  Each would need a check in Foundry; a separate pass.
+
+### 23.8 Owner's answers (Q309–Q311) and SF2e support (v0.79.0)
+
+- Q309: the SF sheet's shift 3 at levels 14 / 17 / 19 is meant (kept).
+- Q310: tokens are `.webp`.
+- Q311: **everything for PF2e also runs in SF2e.** Built in v0.79.0:
+  - `core/constants.js`: `SYSTEM_FAMILY = { sf2e: "pf2e" }`,
+    `systemMatches(id)`, `systemFamily()`. Catalog entries, feature
+    settings (`system:`), every system adapter (Dice Stats, Damage Log,
+    Damage Estimate, Roll Chances, Modifiers Matter, GM Vision, Shortcuts,
+    Token Reactions, Locked Door Alert, Loot Pile, Signature Spells) and
+    the Token Tooltip preset use them, so a `"pf2e"` declaration applies in
+    an `sf2e` world.
+  - `systems/pf2e/sys.js`: `sysId()` (settings / flags namespace = the
+    active system's id; SF2e worlds store `sf2e.*` settings and
+    `flags.sf2e` on messages, checked in the owner's world), `sysApi()`
+    (`game.pf2e` / `game.sf2e`), `sysConfig()` (`CONFIG.PF2E` /
+    `CONFIG.SF2E`), `sysPack(name)` (the system's pack, else PF2e's),
+    `sysSetting()`. Every `flags.pf2e`, `game.pf2e`, `CONFIG.PF2E`,
+    `"pf2e.<pack>"` and `pf2e` setting in `systems/pf2e/` goes through them;
+    Riding's size-link flags too. Creature Scale also listens to
+    `renderActorSheetSF2e`.
+  - v0.79.1: 0.79.0 failed to load (two wrong import paths, in Signature
+    Spells' registry and Token Tooltip's presets); fixed. Harness test 67
+    loads the module as `sf2e`, `pf2e` and `dnd4e` and checks which features
+    register, `flags.sf2e`, `CONFIG.SF2E` and `sf2e.gmVision`; the harness
+    page mocks SF2e like PF2e under its own id.
+  - (verify) in SF2e 1.7: the API / config object names, the sheet class
+    name, and each feature in play. If one does nothing in SF2e, check
+    `sysApi()` / `sysConfig()` in the console first.
+
+### 23.9 First test: Book 6, The God-Host Ascends (2026-11-19)
+
+Pipeline run end to end on the PDF (book text and conversions kept out of
+the repository):
+1. `tools/pdf-to-md/pdf_to_md.py` now has style profiles. `paizo-1e` is
+   picked by its fonts (Xirod + GoodOT): Xirod 12+ = `#` part, TradeGothic
+   14 = `##` event / area group, TradeGothic SC 13 = `###` room (small caps
+   rebuilt: "A1. L"+"anding" → "A1. Landing Pads"), Xirod 11 = `###`
+   sidebar, GoodOT-CondBold 12 / AxionSSF 14 = `#### Stat:` (name and CR
+   merged), map labels and the contents page dropped, bold / italic kept.
+   Other books fall back to font sizes.
+2. `tools/convert/find_rolls.py`: every sentence with a DC, save, skill
+   check, %, attack or damage dice, by heading; stat blocks apart (a run-in
+   label such as **Treasure:** ends a stat block); sentences cut by page /
+   column breaks are joined. Book 6: 81 passages outside stat blocks in 32
+   headings, every "DC N" in the adventure caught.
+3. Claude wrote the 2e lines (owner's style and skill choices; 1e DCs as
+   placeholders), `scripts/conversion/dc.js` filled the DCs at the party
+   level.
+4. Compared with the owner's finished Book 6 pages: of 84 lines, 38 have
+   the same DCs, 24 are not on the owner's pages (mostly extra checks the
+   book has: wreckage fields, the avalanche, acid water, the
+   monk beetle…), 18 "differ" (many are wrong pairings by the word
+   matcher or extra skill options; real ones: Storm the Spaceport 27 vs
+   29, B7 recordings 29 vs 25), 4 skipped (starship placement, rule notes).
+   Review page sent to the owner.
+
+Learned:
+- **Level changes inside a book.** The owner used 11 through area B and 12
+  from C1 (the book: "reach 12th level during the missions"). The review
+  needs a "level from this heading" control, defaulting to the book's
+  milestones.
+- The owner's journals give the condition UUIDs (`pf2e.conditionitems`
+  ids), to turn "stunned for 1 round" into links automatically.
+- Attack bonuses and SF1e damage dice are not DCs: flagged for the owner
+  (attack bonus by hand; damage left as written, as on the owner's pages).
+
+### 23.10 Owner's feedback on Book 6, round 1 (2026-11-19)
+
+Recorded as rules in **`docs/conversion-guide.md`** (the instructions,
+built book by book). In short: the misses the owner wants caught (travel
+dice, rule consequences, Treasure / Development checks, hazards, sidebars);
+skip 1e starship combat, chases, 1-round conditions outside combat; lines
+say what the check does with context ("… to determine that …"); review rows
+numbered. Round 2 of the Book 6 review sent.
+
+Next (owner): tune on more books before the Foundry side. The owner's books
+in conversion order: Attack of the Swarm 1–4, Rise of the Runelords 1–2,
+Signal of Screams 1–2, AotS 5, SoS 3, AotS 6 (all in the worlds sent).
+Proposed: AotS 5 (recent SF1e, the owner's current style) and RotR 2 (PF1e,
+a different layout for the PDF profile).
+
+### 23.11 Owner's answers (2026-11-19)
+
+Doors: convert the Break DC as in Book 6 (no presets). 1e conditions and
+ability damage: as proposed. Book 5's Mental Mirage is a **hazard actor**
+(level 10, Psychic Lure / Psychic Invitation): events that work like hazards
+become hazard actors, skipped in the journal. **Lores are good** (skipped by
+hand only for the time): list a matching Lore next to the skill. All in
+`docs/conversion-guide.md`.
+
+## 24. Multiple Checks — `pf2eMultiCheck` (owner, 2026-11-19; built v0.80.0)
+
+Owner: "Many times something can use more than one check with different
+DCs and it is hard to put it all on the chat. … drag and drop (or create)
+the @Check buttons into a Multiple Check window, then send to the chat. In
+the chat it doesn't show the DC but the DC differences: DC 20 Athletics or
+DC 18 Stealth shows: Athletics; Stealth (DC is 2 lower)."
+
+Proposal (Q312–Q316 for the owner):
+- **Window** (GM): a list of checks, each a skill / save / Lore / action
+  (Recall Knowledge, Seek, Hack…) and a DC; add by dropping an inline
+  check (from a journal, a chat card, an item), by pasting `@Check[...]` /
+  `[[/act ...]]` text, or with a "+" row (skill picker + DC). Order by drag.
+  An optional title line ("The cracked wall").
+- **Journal shortcut**: hovering a journal list item with two or more
+  checks shows a small "send as one" icon that fills the window (or posts
+  directly, Q313).
+- **Chat card**: one button per check, in the order given; the DC hidden
+  from players; the first check is the reference and each other one says
+  how it compares: "Athletics · Stealth (DC 2 lower)". Equal DCs say
+  nothing. The GM sees the DCs. A player clicks a button to roll it with
+  their selected token's actor (PF2e's own inline check with
+  `showDC:gm`, so the system rolls against the real DC and shows the
+  outcome per its "show DCs" setting).
+- PF2e and SF2e (systems: pf2e); 4e later if wanted.
+
+Questions:
+- Q312: the reference: the first check (the example) or the lowest DC?
+- Q313: the journal shortcut: open the window prefilled, or post at once?
+- Q314: who can make a card: GM only, or players too (without seeing DCs)?
+- Q315: save groups for reuse (a list in the window), or one-off cards?
+- Q316: "or" / "and": show the book's word between checks (either check vs
+  both needed), or just the list?
+
+Owner's answers: Q312 the reference is the **highest DC** ("Stealth (DC 2
+lower)"; the hardest check says nothing). Q313 **edit first**: the window,
+opened by **Shift-clicking an inline check's "send to chat" icon** (owner's
+idea). Q314 everyone sees the card, only the GM the DCs; the window is GM
+only. Q315 one-off cards (the window keeps its list until Clear). Q316 just
+a list.
+
+**Built (v0.80.0)**, `systems/pf2e/multi-check.js`, Core Rules → Tools,
+GM only, on by default (PF2e and SF2e):
+- Shift + PF2e's repost icon (`i[data-pf2-repost]`, caught in the capture
+  phase before PF2e's own document listener) adds that check, or every
+  check of a check group, to the window; a plain click still reposts.
+- The window: title, rows (label, editable DC, "DC n lower", move up,
+  remove), a "+" row (Perception, saves, the system's skills, or a Lore by
+  name), a paste box (selected journal text: its inline links are read;
+  or `@Check[…]` / `[[/act …]]` codes, multi-type checks with adjustments
+  included), drop selected text anywhere on the window; Clear, Send. Also a
+  chat-controls button.
+- The card: a list of PF2e's own links (`data-pf2-check` /
+  `data-pf2-action`, `data-pf2-show-dc="gm"`), the DC inside
+  `<span data-visibility="gm">`, "(DC n lower)" for players; clicking rolls
+  with PF2e's handler against the real DC.
+- Harness test 68. (verify) in Foundry: the repost icon and the action
+  link's dataset in PF2e 8.7 / SF2e 1.7, that `data-visibility="gm"` hides
+  the DC from players in chat, and the click on a posted action link.
+
+v0.80.1 (owner's test: Shift-click, hidden DCs and action buttons work in
+Foundry): a GM-only **Reveal DCs** button on the card; it edits the message
+so everyone sees the DCs (`data-visibility` and `data-pf2-show-dc` → all)
+and removes itself. Harness test 68 covers it.
+
+## 25. Adventure conversion: where we stopped (2026-11-19)
+
+Everything needed to continue the conversion work (§23) in a new session.
+Rules for writing lines: **`docs/conversion-guide.md`** (read it first).
+
+### 25.1 The pipeline (all in the repository)
+
+| Step | Tool | Notes |
+|---|---|---|
+| World zip → JSON | `tools/convert/dump_world.mjs <world> <out>` | needs `npm install classic-level` in a scratch folder (run node from there); for comparing with the owner's finished books |
+| PDF → Markdown | `tools/pdf-to-md/pdf_to_md.py book.pdf -o book.md` | PyMuPDF (`pip install pymupdf`); profiles `paizo-1e` (Starfinder 1e APs: Xirod / GoodOT fonts) and `paizo-pf1e` (RotR Anniversary: CartaMarina / NexusSerif; room keys run-in "A1 VERANDA:" or 13.5 pt headings; stat blocks quoted `> `), picked by fonts; else font sizes. A book split over PDFs: join the chapter's pages first (bookmarks via `get_toc()`) |
+| Find the rolls | `tools/convert/find_rolls.py book.md --from "PART 1" --to "<first back-matter heading>" -o rolls.json` | stat blocks apart; sentences joined across page / column breaks |
+| Party level | `grep` for the book's milestones; `tools/convert/infer_level.py <dump> "<folder>" rolls.json sf1e` | infers the level the owner used from finished DCs |
+| Write the lines | Claude (or an agent) → `conv.py` | `C = {index: line or None}`, `"12a"` sub-lines, `NOTES = {index: reason}`; 1e DCs as `{N}` |
+| DCs | `scripts/conversion/dc.js` `convertDc(dc, level, "sf1e"\|"pf1e")` | the owner's sheets, exact (620 + 620 cells); SF1e = PF1e + 4, shift 3 at levels 14 / 17 / 19 (owner: intended); CLI `node tools/convert/dc.mjs sf1e 6 24` |
+| Review page | `tools/convert/build_review.py <dir> --source sf1e --title "…" --level "PART 1=9" --level "PART 2=10" [--world <dump> --folder "…"] [--round N]` | numbered rows (#1 …), the owner refers to them; compares with the owner's list items, table rows and paragraphs |
+
+Book text, dumps, `rolls.json`, `conv.py` and review pages **never go into
+the repository** (public). The working set of 2026-11-19 was given to the
+owner as `conversion-work-2026-11-19.zip` (book6 / book5 / rotr: rolls.json,
+conv.py, review.html, a README with the levels and compare folders); to
+continue, the owner uploads it with the PDFs and world zips. `conv.py` is
+keyed by `rolls.json` indexes: keep that exact file (re-running
+`find_rolls.py` after a pattern change renumbers).
+
+### 25.2 State of each book
+
+| Book | Lines by | Round | Levels | vs the owner's pages |
+|---|---|---|---|---|
+| Attack of the Swarm 6, The God-Host Ascends (sf1e) | Claude | 2 (owner's round-1 feedback applied) | 11 from Part 1, 12 from C1 | 84 rows: 38 same DCs, 18 differ, 17 not on the owner's pages, 11 skipped |
+| Attack of the Swarm 5, Hive of Minds (sf1e) | agent, guide only | 2 (Mental Mirage = hazard actor) | 9 from Part 1, 10 from Part 2 | 106 rows: 18 same, 33 differ, 46 new, 9 skipped; the owner built the chases as 2e chase tables |
+| Rise of the Runelords Ch. 2, The Skinsaw Murders (pf1e) | agent + 16 by Claude | 1 | 4 Parts 1–3, 6 Part 4, 7 Parts 5–7 (owner's DCs; the book says 5th "early") | 125 rows: 50 same, 30 differ, 40 new, 5 skipped; an early conversion (old style) |
+
+Waiting on the owner: corrections by row number on the three review pages
+(Book 6 round 2, Book 5 round 2, RotR round 1).
+
+The owner's books (in the worlds sent, conversion order): Attack of the
+Swarm 1–4, Rise of the Runelords 1–2, Signal of Screams 1–2 (Diaspora
+Strain, Penumbra Protocol), AotS 5, SoS 3 (Heart of Night, partly done),
+AotS 6. Worlds: `sf2e-adv` (SF2e 1.7.0: AotS + SoS) and `2e-cov` (PF2e 8.7:
+RotR ch. 1–2). Folder layout, journal / page layout and art paths: §23.3.
+
+### 25.3 What the owner decided (all in the guide)
+
+- Convert everything mechanical, especially what is easy to miss (travel
+  dice, consequences, Treasure / Development checks, hazards, sidebars).
+- Skip: 1e starship combat, chases (built by hand as 2e chase tables),
+  1-round conditions outside combat, GM advice, stat blocks; events that
+  work like hazards become hazard actors.
+- Lines: the check first, then "to …" with enough context to read without
+  the book.
+- Level: the book's level at that point, set per heading.
+- Break DCs converted (no door presets); 1e conditions and ability damage
+  mapped as in the guide; Lores are welcome next to the skill.
+
+### 25.4 What the agent test showed
+
+Two agents converted Book 5 and RotR ch. 2 from the guide alone. Output
+usable; every gap they reported was turned into a rule (condition ids,
+percentages, bonus types, Seek vs Perception, Recall Knowledge vs a check,
+basic saves, action costs, 1e conditions, chases, haunts). So a new
+session (or agent per book) can do the writing step from the guide.
+
+### 25.5 Left to build, in order (proposal)
+
+1. **Finder: bonus / penalty lines** with no dice or DC ("−2 to attack and
+   damage until …", "maximum Stamina −15"): add a pattern at the start of
+   the next book. Better: give passages **stable ids** (page + hash of the
+   text) so new patterns don't renumber `conv.py`.
+2. **Foundry: Conversion Review + Build** (§23.4 step 2): a GM window that
+   loads the book's JSON (rows, levels, lines), lets the owner edit and tick
+   each line, set "level from here", then builds folders (book / part, the
+   AP colour), a journal per Part, a page per heading in the owner's layout
+   (`<ul>` of checks, then Hazard / Creatures / Treasure) or merges into an
+   existing page. Needs: an export step from `conv.py` + `rolls.json` to that
+   JSON (book text: the owner keeps the file), the owner's journal layout
+   (§23.3).
+3. **Audit** on any journal: codes with 1e skill names (`intimidate`,
+   `mysticism`, `engineering`, `computer`), `]]` typos, "DC N" left in text,
+   DCs outside the code; listed in §23.3 from the owner's worlds.
+4. **NPC drafts** from the stat blocks (`find_rolls` keeps them apart; the
+   CR sheet for encounter levels, Creature Scale's tables for numbers).
+5. **Token Art Studio** (§23.6 Q307): 1024 × scale canvas, circle Ø 682 px
+   centred, shadow arc at the lower right under any part that sticks out
+   past the circle, `<name>-token.webp`, ring subject scale = canvas scale,
+   assign to the actor and its tokens.
+6. **Fix Log** in Foundry (replaces the Discord log; §23.1 E): quick "log
+   fix" with context, a list per book, badges in the template world, shared
+   between the two worlds through one JSON file (same server; Adventure
+   imports keep ids).
+7. The GP sheet (treasure by level) and CR sheet (encounter XP) are in
+   `DC_Sheets.xlsx`, not yet in code.
+
+Also parked from §22.2: Battle Medicine HUD, Flanking overlay, Dice Stats
+per turn / per creature, Sell, Hero start area.

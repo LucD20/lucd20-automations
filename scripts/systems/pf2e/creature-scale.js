@@ -263,6 +263,7 @@ defineFeature({
   enable(f) {
     feature = f;
     f.on("renderActorSheetPF2e", onRender);
+    f.on("renderActorSheetSF2e", onRender); // SF2e (Q311): (verify) its sheet class name in SF2e 1.7
     rerenderSheets();
     f.onCleanup(() => setTimeout(rerenderSheets, 0));
   },

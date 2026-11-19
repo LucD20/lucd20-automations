@@ -1,6 +1,7 @@
 import { MODULE_ID, error, localize } from "../../core/constants.js";
 import { distanceText } from "../../features/instant-range.js";
 import { defineFeature } from "../../core/registry.js";
+import { sysId, sysApi } from "./sys.js";
 
 /**
  * Rule 19 (docs/pf2e-rules.md): PF2e cover for attack rolls (owner, Q228–Q232; the owner's diagram):
@@ -145,13 +146,13 @@ export function coverFromPoint(from, target, { walls = blockingWalls() } = {}) {
 export function areaOrigin(itemUuid, target) {
 	// Foundry V14 / PF2e 8.7: effect areas are Regions (flags.pf2e.areaShape, origin, messageId); the shape's x / y
 	// is the area's origin.
-	const regions = (canvas.regions?.placeables ?? []).map((r) => r.document ?? r).filter((d) => d.flags?.pf2e?.areaShape && d.shapes?.length);
+	const regions = (canvas.regions?.placeables ?? []).map((r) => r.document ?? r).filter((d) => d.flags?.[sysId()]?.areaShape && d.shapes?.length);
 	const c = centerOf(rectOf(target));
-	const byItem = regions.filter((d) => itemUuid && (d.flags.pf2e.origin?.uuid === itemUuid || d.flags.pf2e.origin?.item === itemUuid));
+	const byItem = regions.filter((d) => itemUuid && (d.flags[sysId()].origin?.uuid === itemUuid || d.flags[sysId()].origin?.item === itemUuid));
 	const region = byItem.at(-1) ?? regions.filter((d) => d.testPoint?.({ ...c, elevation: 0 }) ?? reachesSquare(d, rectOf(target))).at(-1);
 	if (region) return areaPoint(region);
 	const templates = (canvas.templates?.placeables ?? []).map((t) => ({ doc: t.document ?? t, obj: t }));
-	const mine = templates.filter(({ doc }) => itemUuid && (doc.flags?.pf2e?.origin?.uuid === itemUuid || doc.flags?.pf2e?.origin?.item === itemUuid));
+	const mine = templates.filter(({ doc }) => itemUuid && (doc.flags?.[sysId()]?.origin?.uuid === itemUuid || doc.flags?.[sysId()]?.origin?.item === itemUuid));
 	let found = mine.at(-1);
 	if (!found) {
 		const c = centerOf(rectOf(target));
@@ -299,7 +300,7 @@ function prepareSave(context, check) {
 
 function setSaveModifier(check, context, level) {
 	check.delete?.(MOD_SLUG);
-	const Modifier = game.pf2e?.Modifier;
+	const Modifier = sysApi()?.Modifier;
 	if (BONUS[level] && Modifier) check.push(new Modifier({ slug: MOD_SLUG, label: L(`Level.${level}`), modifier: BONUS[level], type: "circumstance" }));
 	check.calculateTotal?.(optionsOf(context));
 }
@@ -347,7 +348,7 @@ export function fitWindow(app) {
 }
 
 function onCard(message, html) {
-	const c = message.flags?.pf2e?.context?.[KEY];
+	const c = message.flags?.[sysId()]?.context?.[KEY];
 	if (!c || html.querySelector?.(".lucd20-cover-note")) return;
 	if (c.chosen === "none" && c.auto === "none") return;
 	const text = c.chosen === c.auto ? L("Note", { level: L(`Level.${c.chosen}`), bonus: BONUS[c.chosen] })
@@ -412,7 +413,7 @@ defineFeature({
 	},
 
 	enable(feature) {
-		const Check = game.pf2e?.Check;
+		const Check = sysApi()?.Check;
 		if (Check?.roll) {
 			feature.wrap(Check, "roll", function (original, check, context = {}, ...rest) {
 				try { prepare(context, check); } catch (err) { error("Cover failed.", err); }

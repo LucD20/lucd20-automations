@@ -103,7 +103,7 @@ sets `game.system.id`.
 | `test64.js` | Shared Picks: Shove squares and Demoralizing Charge shared, hidden tokens GM-only, the GM's Take over (66) |
 | `test65.js` | Shared Picks: D&D 4e push / shift picker shared, Take over sends the path back (66) |
 | `test66.js` | PF2e Combat Assessment (Recall Knowledge at once, the fallback card, the 1-day immunity), Recall Knowledge (the GM's card, attempts, lores, might-apply, no-target mode, DCs without PF2e's data) and Guardian's Deflection (+2 AC degrees, who gets a card, Deflect / Skip, panache) (67) |
+| `test67.js` | SF2e runs the PF2e features (`?system=sf2e`), PF2e and 4e unchanged (v0.79.1) |
 
 For a new feature, copy the closest test, keep its mock setup and replace the
 checks.
-| `test67.js` | SF2e runs the PF2e features (`?system=sf2e`), PF2e and 4e unchanged (v0.79.1) |

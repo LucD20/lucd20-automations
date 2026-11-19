@@ -9,7 +9,8 @@ import { sysConfig } from "./sys.js";
  *   "send to chat" icon of an inline check (a journal, an item, a chat card; a check group adds all of its
  *   checks), by pasting or dropping selected journal text (its inline checks are read) or `@Check[…]` /
  *   `[[/act …]]` codes, or with the "+" row (a skill, save or Lore and a DC).
- * - The card lists one button per check, in order. Players don't see the DCs: each check but the hardest says
+ * - The card lists one button per check, in order, and a GM-only "Reveal DCs" button (edits the message so
+ *   everyone sees the DCs; owner, v0.80.1). Players don't see the DCs: each check but the hardest says
  *   how much lower its DC is ("Stealth (DC 2 lower)"); the GM sees the DCs. The buttons are PF2e's own inline
  *   check / action links (`data-pf2-check` / `data-pf2-action`, `data-pf2-show-dc="gm"`), so clicking one rolls
  *   with the system's own handler against the real DC.
@@ -106,7 +107,7 @@ export function cardHTML({ title = "", checks = [] }) {
   const items = checks.map(c => {
     const dcData = Number.isFinite(c.dc) ? ` data-pf2-dc="${c.dc}" data-pf2-show-dc="gm"` : "";
     const traits = c.traits ? ` data-pf2-traits="${esc(c.traits)}"` : "";
-    const dcText = Number.isFinite(c.dc) ? `<span data-visibility="gm">${esc(t("DC", { dc: c.dc }))}</span> ` : "";
+    const dcText = Number.isFinite(c.dc) ? `<span class="lucd20-mc-dc" data-visibility="gm">${esc(t("DC", { dc: c.dc }))}</span> ` : "";
     const link = c.kind === "action"
       ? `<a class="inline-action" data-pf2-action="${esc(c.type)}"${c.skill ? ` data-pf2-skill="${esc(c.skill)}"` : ""}${c.variant ? ` data-pf2-variant="${esc(c.variant)}"` : ""}${dcData}${traits}><i class="fa-solid fa-person-running icon"></i><span class="label">${dcText}${esc(c.label)}</span></a>`
       : `<a class="inline-check" data-pf2-check="${esc(c.type)}"${dcData}${traits} data-pf2-label="${esc(c.label)}"><i class="fa-solid ${SAVES.includes(c.type) ? { fortitude: "fa-heart-pulse", reflex: "fa-person-running", will: "fa-brain" }[c.type] : c.type === "perception" ? "fa-eye" : "fa-dice-d20"} icon"></i><span class="label">${dcText}${esc(c.label)}</span></a>`;
@@ -114,7 +115,25 @@ export function cardHTML({ title = "", checks = [] }) {
     return `<li>${link}${lower}</li>`;
   }).join("");
   const heading = title ? `<p class="lucd20-mc-title"><strong>${esc(title)}</strong></p>` : "";
-  return `<div class="lucd20-multi-check">${heading}<ul>${items}</ul></div>`;
+  const reveal = dcs.length ? `<button type="button" class="lucd20-mc-reveal" data-lucd20-mc-reveal data-visibility="gm"><i class="fa-solid fa-eye"></i> ${esc(t("Reveal"))}</button>` : "";
+  return `<div class="lucd20-multi-check">${heading}<ul>${items}</ul>${reveal}</div>`;
+}
+
+/** The card's content with every DC shown to everyone and the Reveal button gone. */
+export function revealedHTML(content) {
+  return String(content)
+    .replace(/<span class="lucd20-mc-dc" data-visibility="gm">/g, '<span class="lucd20-mc-dc">')
+    .replace(/data-pf2-show-dc="gm"/g, 'data-pf2-show-dc="all"')
+    .replace(/<button type="button" class="lucd20-mc-reveal"[\s\S]*?<\/button>/, "");
+}
+
+/** The GM's Reveal DCs button on a card. */
+async function onReveal(event) {
+  const button = event.target?.closest?.("[data-lucd20-mc-reveal]");
+  if (!button || !game.user.isGM) return;
+  event.preventDefault();
+  const message = game.messages.get(button.closest("[data-message-id]")?.dataset.messageId ?? "");
+  if (message) await message.update({ content: revealedHTML(message.content) });
 }
 
 export async function postCard(data = state) {
@@ -313,7 +332,11 @@ defineFeature({
   enable(feature) {
     if (!game.user.isGM) return;
     document.addEventListener("click", onClick, true);
-    feature.onCleanup(() => document.removeEventListener("click", onClick, true));
+    document.addEventListener("click", onReveal);
+    feature.onCleanup(() => {
+      document.removeEventListener("click", onClick, true);
+      document.removeEventListener("click", onReveal);
+    });
     feature.onCleanup(addChatControl({
       id: "multiCheck",
       icon: "fa-solid fa-list-check",

@@ -2853,3 +2853,4 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-multi-check li { margin: 2px 0; }
 .lucd20-multi-check .lucd20-mc-title { margin: 0 0 4px; }
 .lucd20-multi-check .lucd20-mc-diff { opacity: 0.8; font-size: 0.9em; }
+.lucd20-multi-check .lucd20-mc-reveal { margin-top: 4px; width: 100%; }

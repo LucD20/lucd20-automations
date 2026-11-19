@@ -2226,7 +2226,8 @@
       "PastePlaceholder": "Paste selected journal text or @Check[…] / [[/act …]] codes here",
       "Clear": "Clear",
       "Send": "Send to chat",
-      "Added": "Multiple Checks: {n} added."
+      "Added": "Multiple Checks: {n} added.",
+    "Reveal": "Reveal DCs"
     },
     "Shortcuts": {
       "ElevationUp": "Elevation: raise",

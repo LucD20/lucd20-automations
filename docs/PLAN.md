@@ -3267,3 +3267,8 @@ GM only, on by default (PF2e and SF2e):
 - Harness test 68. (verify) in Foundry: the repost icon and the action
   link's dataset in PF2e 8.7 / SF2e 1.7, that `data-visibility="gm"` hides
   the DC from players in chat, and the click on a posted action link.
+
+v0.80.1 (owner's test: Shift-click, hidden DCs and action buttons work in
+Foundry): a GM-only **Reveal DCs** button on the card; it edits the message
+so everyone sees the DCs (`data-visibility` and `data-pf2-show-dc` → all)
+and removes itself. Harness test 68 covers it.

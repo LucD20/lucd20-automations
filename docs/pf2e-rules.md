@@ -33,6 +33,7 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 | 22 | Swashbuckler: Guardian's Deflection | built v0.77.0 | `pf2eGuardiansDeflection` |
 | 23 | Battle Medicine: who used it on whom, on the Token HUD | planned | `pf2eBattleMedicine` |
 | 24 | Flanking overlay | planned | `pf2eFlanking` |
+| 25 | Recall Knowledge (replaces PF2e Workbench's macro) | built v0.78.0 | `pf2eRecallKnowledge` |
 
 Commander (Battlecry!): research notes in `docs/pf2e-commander.md`; rules to
 automate come from the owner, one at a time.
@@ -846,6 +847,9 @@ one that leaves fewer squares next to enemies (see PLAN).
   the macro's first chat message (or 15 s). No card on that path. Without
   Workbench, or that client not answering: the skill-button card as before.
   (verify) the macro picks up the effect's modifier and rolls blind.
+- v0.78.0: replaced by our own Recall Knowledge (rule 25), run on the GM's
+  client with +2 passed as a modifier on a critical hit (no effect, no
+  Workbench, no query to the player's client).
 
 ## 22. Swashbuckler: Guardian's Deflection
 
@@ -907,3 +911,33 @@ one that leaves fewer squares next to enemies (see PLAN).
   opposite sides or corners of the target; both able to act and with the
   target in melee reach); during a drag, worked out for the drag's end
   square. Only this user's own selected token and tokens they see.
+
+## 25. Recall Knowledge (built v0.78.0)
+
+- Owner: "I would like to assimilate that macro [PF2e Workbench's
+  Recall_Knowledge] into our module. With any improvements you deem
+  necessary." The macro (a community macro in symonsch/my-foundryvtt-macros,
+  no licence) was read for what it does; `recall-knowledge.js` is our own.
+- One d20 for everything (shown as a blind roll, GMs only; the player gets
+  "X tries to remember…"). With targets (creatures, hazards): per target
+  the identifying skills with total, proficiency letter and the degree
+  against each attempt's DC (1st–4th, PF2e's `identificationDCs`
+  progression), then every Lore against the unspecific and specific lore
+  DCs; Recall Knowledge modifiers that didn't apply ("might apply");
+  degree-of-success adjustments from rule elements (struck through, the
+  new degree with its reason); Unified Theory adds Arcana for Nature /
+  Occultism / Religion; Dubious Knowledge and Unmistakable Lore noted.
+  Without targets: every Recall Knowledge skill and Lore with its total.
+- Totals: PF2e works them out (a roll without a message, with the target's
+  roll options), so trait-based bonuses count; `modifiers` add to every
+  total (Combat Assessment's +2).
+- Improvements over the macro: PF2e's own DCs and attempt progression (and
+  the same calculation without them), no temporary effect for bonuses,
+  degree adjustments take the best one, our CSS, localized text, the message
+  flagged `secret` / `action:recall-knowledge`.
+- Started from: Combat Assessment (rule 21), the shortcut "PF2e: Recall
+  Knowledge" (unbound), `game.modules.get("lucd20-automations").api.pf2e.recallKnowledge({ actor, targets })`.
+- (verify) in PF2e 8.7: `Statistic#roll({ createMessage: false, skipDialog:
+  true, callback })` calls back with the roll and an unsaved message;
+  `roll.options.totalModifier`; `actor.getSelfRollOptions("target")`;
+  `actor.synthetics.degreeOfSuccessAdjustments`.

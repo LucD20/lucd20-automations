@@ -4,6 +4,7 @@ import { executeAsGM, onGMRequest } from "../../core/socket.js";
 import { waitForDice } from "../../core/dice.js";
 import { pf2eCard, wireOpen, sourceUuid, itemBySlug, compactCard, nameForPlayers } from "./card.js";
 import { addImmunity, immunitiesOf, timeLeft } from "./immunity.js";
+import { recallKnowledge } from "./recall-knowledge.js";
 
 /**
  * Rule 21 (docs/pf2e-rules.md): Combat Assessment (Commander / Fighter feat 1, owner's AoN link).
@@ -13,12 +14,10 @@ import { addImmunity, immunitiesOf, timeLeft } from "./immunity.js";
  *
  * - The action's card (slug `combat-assessment`) marks the creature; its next melee Strike within 2 minutes is
  *   the assessment (active GM's client, after Dice So Nice).
- * - A hit (v0.77.1, owner: "just roll the recall knowledge automatically"): PF2e Workbench's Recall Knowledge
- *   macro runs on the striker's own client (the user who rolled the Strike), with the striker's token
- *   selected and the target targeted; on a critical hit a short-lived effect gives +2 circumstance to skill
- *   checks while it rolls. Without Workbench (or that client not answering): a card to the striker's players
- *   and the GM with a button per skill that identifies the target (PF2e's `identificationDCs.skills`, else the
- *   usual identification skills); a click rolls that skill as a secret Recall Knowledge.
+ * - A hit (owner: "just roll the recall knowledge automatically"): our Recall Knowledge (recall-knowledge.js,
+ *   v0.78.0, replacing PF2e Workbench's macro) runs at once on the GM's client against the target, +2 on a
+ *   critical hit; the result goes to the GMs only. If that fails (the target not on the scene): a card to
+ *   the striker's players and the GM with a button per identifying skill, a click rolls it secretly.
  * - The target becomes immune for a day (our tracker, no PF2e effect; rule 23 shows it on the Token HUD).
  *   A target already immune: the card says so, no buttons. A miss: no card, the immunity still starts.
  */
@@ -29,9 +28,6 @@ const NAME = /^combat assessment$/i;
 const KIND = "combatAssessment";
 const WINDOW_MS = 120000;
 const FALLBACK_SKILLS = ["arcana", "crafting", "medicine", "nature", "occultism", "religion", "society"];
-const RK_PACK = "xdy-pf2e-workbench.asymonous-benefactor-macros-internal";
-const RK_MACRO = "XDY DO_NOT_IMPORT Recall_Knowledge";
-const QUERY = `${MODULE_ID}.caRecall`;
 const pending = new Map(); // actor id → time the action was used
 const seen = new Set();
 
@@ -94,67 +90,20 @@ export async function onMessage(message) {
 	});
 }
 
-/** GM: ask the client of whoever rolled the Strike to run Recall Knowledge. True if it ran. */
-async function askRecall(message, payload) {
-	const author = message.author ?? game.users.get(message.user?.id ?? message.user);
-	if (!payload.striker || !author?.active) return false;
-	if (author.id === game.user.id) return runRecall(payload);
+/** GM's client: our Recall Knowledge (recall-knowledge.js) against the target. True if it was rolled. */
+async function askRecall(message, { striker, target, critical, label }) {
+	const sDoc = striker ? fromUuidSync(striker) : null, tDoc = target ? fromUuidSync(target) : null;
+	if (!sDoc?.actor || !tDoc?.object) return false;
 	try {
-		return !!(await author.query(QUERY, payload, { timeout: 30_000 }));
+		await recallKnowledge({ actor: sDoc.actor, token: sDoc.object ?? null, targets: [tDoc.object], label, modifiers: critical ? [{ label: L("CriticalBonus"), value: 2 }] : [] });
+		return true;
 	} catch (err) {
+		error("Combat Assessment: Recall Knowledge failed.", err);
 		return false;
 	}
 }
 
-/** Workbench's macro, or null when it isn't installed. */
-async function recallMacro() {
-	const pack = game.packs?.get(RK_PACK);
-	if (!pack) return null;
-	let macro = (await pack.getDocuments({ name: RK_MACRO }))?.[0] ?? null;
-	if (macro && !macro.canExecute) {
-		macro = new macro.constructor(foundry.utils.mergeObject(macro.toObject(), { "-=_id": null, "ownership.default": CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER }, { performDeletions: true, inplace: true }));
-	}
-	return macro;
-}
-
-/** The striker's client: select the striker, target the foe, run the macro (+2 circumstance on a critical hit). */
-export async function runRecall({ striker, target, critical, label, img }) {
-	const macro = await recallMacro();
-	const sDoc = striker ? fromUuidSync(striker) : null, tDoc = target ? fromUuidSync(target) : null;
-	if (!macro || !sDoc?.object || !tDoc?.object || !sDoc.actor?.isOwner) return false;
-	sDoc.object.control?.({ releaseOthers: true });
-	tDoc.object.setTarget?.(true, { releaseOthers: true, groupSelection: false });
-	let bonus = null;
-	if (critical) {
-		[bonus] = await sDoc.actor.createEmbeddedDocuments("Item", [{
-			type: "effect", name: L("CriticalEffect", { name: label }), img: img ?? "icons/svg/book.svg",
-			system: { rules: [{ key: "FlatModifier", selector: "skill-check", type: "circumstance", value: 2, label }], duration: { value: -1, unit: "unlimited", expiry: null, sustained: false }, tokenIcon: { show: false } }
-		}]) ?? [];
-	}
-	try {
-		const posted = bonus ? nextMessage(15000) : null;
-		await macro.execute();
-		await posted;
-	} finally {
-		if (bonus) await bonus.delete().catch(() => {});
-	}
-	return true;
-}
-
-/** Resolves when this user's next chat message is created (the macro's rolls), or after `ms`. */
-function nextMessage(ms) {
-	return new Promise((resolve) => {
-		const id = Hooks.on("createChatMessage", (m) => {
-			if ((m.author?.id ?? m.user?.id) !== game.user.id) return;
-			Hooks.off("createChatMessage", id);
-			clearTimeout(timer);
-			setTimeout(resolve, 500);
-		});
-		const timer = setTimeout(() => { Hooks.off("createChatMessage", id); resolve(); }, ms);
-	});
-}
-
-/** The striker's client: roll the chosen skill as a secret Recall Knowledge (no Workbench). */
+/** The striker's client: roll the chosen skill as a secret Recall Knowledge (fallback card). */
 async function onClick(card, button) {
 	const data = card.getFlag(MODULE_ID, "combatAssessment");
 	const actor = data ? fromUuidSync(data.striker) : null;
@@ -200,7 +149,6 @@ defineFeature({
 
 	init(feature) {
 		onGMRequest("pf2eCA.claim", (payload) => (feature.active ? claim(payload) : false));
-		if (CONFIG.queries) CONFIG.queries[QUERY] = (payload) => (feature.active ? runRecall(payload).catch((err) => { error("Combat Assessment: Recall Knowledge failed.", err); return false; }) : false);
 	},
 
 	enable(feature) {
@@ -222,4 +170,4 @@ defineFeature({
 	}
 });
 
-export const _test = { onMessage, onClick, claim, pending, seen, identifySkills, runRecall };
+export const _test = { onMessage, onClick, claim, pending, seen, identifySkills };

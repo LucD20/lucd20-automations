@@ -849,9 +849,13 @@
           }
         }
       },
+      "pf2eRecallKnowledge": {
+        "Name": "Recall Knowledge",
+        "Hint": "Recall Knowledge in one secret roll (replaces PF2e Workbench's macro): for each target, the skills that identify it and every Lore, with the result against each attempt's DC, the lore DCs and modifiers that might apply. Only the GM sees it. From the Recall Knowledge shortcut, Combat Assessment, or api.pf2e.recallKnowledge()."
+      },
       "pf2eCombatAssessment": {
         "Name": "Combat Assessment",
-        "Hint": "After Combat Assessment, the next melee Strike that hits rolls Recall Knowledge about the target at once with PF2e Workbench's macro (+2 on a critical hit); without Workbench, a card with a button per identifying skill. The target is then immune for a day (shown on the Token HUD's Battle Medicine button)."
+        "Hint": "After Combat Assessment, the next melee Strike that hits rolls Recall Knowledge about the target at once (+2 on a critical hit); only the GM sees the result. The target is then immune for a day (shown on the Token HUD's Battle Medicine button)."
       },
       "pf2eGuardiansDeflection": {
         "Name": "Guardian's Deflection",
@@ -2010,10 +2014,31 @@
         "Critical": "(+2, critical hit)",
         "Immune": "{name} is immune to Combat Assessment ({left} left).",
         "RollLabel": "Recall Knowledge ({skill}), Combat Assessment",
-        "CriticalEffect": "{name} (critical hit: +2 to Recall Knowledge)",
+        "CriticalBonus": "Critical hit",
         "ACreature": "a creature",
         "NotYours": "That card is for someone else.",
         "NoSkill": "That skill isn't on the sheet."
+      },
+      "Recall": {
+        "Title": "Recall Knowledge",
+        "Versus": "vs. {name}",
+        "Skill": "Skill",
+        "Lore": "Lore",
+        "Total": "Total",
+        "Attempt": "Try {n}",
+        "DC": "DC {dc}",
+        "Unspecific": "Unspecific",
+        "Specific": "Specific",
+        "NoSkill": "No skill identifies it (only Lore, or ask the GM).",
+        "NoLore": "No Lore.",
+        "Maybe": "Might apply:",
+        "HasFeat": "{name} has {feat}.",
+        "NoActor": "Select a token or assign a character first.",
+        "Trying": "{name} tries to remember…",
+        "criticalSuccess": "Crit",
+        "success": "Success",
+        "failure": "Fail",
+        "criticalFailure": "Crit fail"
       },
       "Deflection": {
         "Title": "Guardian's Deflection",
@@ -2221,6 +2246,8 @@
         "CoverHint": "Toggle the Cover effect (Take Cover / situational cover) on the token under the mouse, else the selected ones, else your character.",
         "Browser": "PF2e: Compendium Browser",
         "Search": "PF2e: search the compendiums",
+        "Recall": "PF2e: Recall Knowledge",
+        "RecallHint": "Your selected token (else your character) recalls knowledge about your targets (every skill when nothing is targeted). The result goes to the GM.",
         "Alliance": "PF2e: cycle alliance",
         "AllianceHint": "Party → opposition → neutral, for flanking; your selected token, else your character.",
         "AllianceNow": "{name} is now {alliance}.",

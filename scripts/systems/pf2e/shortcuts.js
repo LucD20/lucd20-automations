@@ -1,4 +1,5 @@
 import { registerShortcuts } from "../../features/shortcuts.js";
+import { recallKnowledge } from "./recall-knowledge.js";
 
 /**
  * PF2e for Shortcuts (replaces F is for Flatfooted; Q270: all of it). Off-Guard on O for the hovered token;
@@ -116,6 +117,7 @@ registerShortcuts({
     add("pf2e-cover", { name: t("PF2e.Cover"), hint: t("PF2e.CoverHint"), run: () => toggleCover(targetActors()), from: ff("takeCover") });
     add("pf2e-browser", { name: t("PF2e.Browser"), run: toggleBrowser, from: ff("compendiumBrowser") });
     add("pf2e-search", { name: t("PF2e.Search"), run: focusCompendiumSearch, from: ff("goToSearch") });
+    add("pf2e-recall", { name: t("PF2e.Recall"), hint: t("PF2e.RecallHint"), run: () => recallKnowledge({ actor: actingActor() }) });
     add("pf2e-alliance", { name: t("PF2e.Alliance"), hint: t("PF2e.AllianceHint"), run: () => cycleAlliance(actingActor(), t), from: ff("cycleAlliance") });
 
     for (const a of systemActions()) {

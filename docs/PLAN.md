@@ -2878,7 +2878,7 @@ no longer match the module); not touched.
    Classes.
 **Parked (owner, 2026-11-19): steps 5–7 wait until after §23's drafting.**
 
-5. **Battle Medicine HUD** (Q291), **Flanking overlay** (Q292).
+5. **Battle Medicine HUD** (Q291), **Flanking overlay** (Q292). **Built v0.81.0** (rules 23, 24 in the ledger; test 69).
 6. **Dice Stats**: damage per turn tab, dice per creature and the end card
    (Q293–Q294), one per-encounter record for both.
 7. **Sell** (Q295), **Hero start area** (Q296).
@@ -3366,5 +3366,5 @@ session (or agent per book) can do the writing step from the guide.
 7. The GP sheet (treasure by level) and CR sheet (encounter XP) are in
    `DC_Sheets.xlsx`, not yet in code.
 
-Also parked from §22.2: Battle Medicine HUD, Flanking overlay, Dice Stats
-per turn / per creature, Sell, Hero start area.
+Also parked from §22.2: Dice Stats per turn / per creature, Sell, Hero
+start area (Battle Medicine HUD and Flanking overlay: built v0.81.0).

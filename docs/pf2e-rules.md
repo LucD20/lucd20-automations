@@ -31,8 +31,8 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 | 20 | Effect areas: targeting window, hover cover, exact reach | built v0.61.3 | `pf2eAreas` |
 | 21 | Commander / Fighter: Combat Assessment | built v0.77.0 | `pf2eCombatAssessment` |
 | 22 | Swashbuckler: Guardian's Deflection | built v0.77.0 | `pf2eGuardiansDeflection` |
-| 23 | Battle Medicine: who used it on whom, on the Token HUD | planned | `pf2eBattleMedicine` |
-| 24 | Flanking overlay | planned | `pf2eFlanking` |
+| 23 | Battle Medicine: who used it on whom, on the Token HUD | built v0.81.0 | `pf2eBattleMedicine` |
+| 24 | Flanking overlay | built v0.81.0 | `pf2eFlanking` |
 | 25 | Recall Knowledge (replaces PF2e Workbench's macro) | built v0.78.0 | `pf2eRecallKnowledge` |
 
 Commander (Battlecry!): research notes in `docs/pf2e-commander.md`; rules to
@@ -885,7 +885,7 @@ one that leaves fewer squares next to enemies (see PLAN).
   `pf2e.feat-effects` under that name; `context.dc.value` is the target's
   AC on a Strike.
 
-## 23. Battle Medicine on the Token HUD (planned)
+## 23. Battle Medicine on the Token HUD (built v0.81.0)
 
 - Owner: "A simple hover that says who already used Battle Medicine is
   enough. On the target, who already used it on it and how long until it can
@@ -899,8 +899,27 @@ one that leaves fewer squares next to enemies (see PLAN).
   Amiri (18 h)". Entries older than 1 day go. Combat Assessment's immunity
   (rule 21) is shown the same way. Players see only tokens they see, and
   hidden NPC names as players see them.
+- Built v0.81.0 (`battle-medicine.js`, test 69), Core Rules → Actions, on
+  by default. PF2e has no Battle Medicine roll option of its own (the feat
+  is a Medicine check at Treat Wounds' DCs; its source has no rules), so a
+  use is: a Medicine skill check (`context.domains` has `medicine`) whose
+  options or origin item say `battle-medicine`, or whose flavor / content
+  names "Battle Medicine"; the patient is `context.target.actor`, else the
+  roller's single target, added by the roller's client in
+  `preCreateChatMessage` (`flags.lucd20-automations.bmTarget`). Also PF2e's
+  "Effect: Battle Medicine Immunity" (slug
+  `effect-battle-medicine-immunity`) appearing on an actor, the healer from
+  `system.context.origin.actor`. Stored with `immunity.js` (kind
+  `battleMedicine`), 1 day, 1 hour if the healer has Paragon Battle
+  Medicine. HUD button (`fa-kit-medical`, after Riding's horse) for tokens
+  whose actor has the feat or anything to show; HTML tooltip lines
+  "Treated by Kyra: again in 18 h", "Treated Amiri (18 h)", "Combat
+  Assessment: immune to Kyra (18 h)"; actors the user can't see are left
+  out. (verify) how the owner rolls Battle Medicine (the feat's chat card →
+  the Treat Wounds link, a macro) and that the message has the marks
+  above; `data-tooltip-html` in V14.
 
-## 24. Flanking overlay (planned)
+## 24. Flanking overlay (built v0.81.0)
 
 - Owner: "When your token is selected, you have a creature targeted and are
   flanking: a 'broken shield' icon on the target, with a line from you to the
@@ -911,6 +930,19 @@ one that leaves fewer squares next to enemies (see PLAN).
   opposite sides or corners of the target; both able to act and with the
   target in melee reach); during a drag, worked out for the drag's end
   square. Only this user's own selected token and tokens they see.
+- Built v0.81.0 (`flanking.js`, test 69), Core Rules → Battlefield, per
+  player, on by default: for each of the user's controlled, owned tokens
+  and each target it can see, PF2e's `canFlank` (the flanking automation
+  setting, reach, enemies, hidden tokens) and `onOppositeSides` with every
+  visible ally that can flank too; a line to each such ally (black under
+  the "controlled" disposition colour) and a broken shield (two halves
+  split by a zigzag) over the target's top edge. While dragging, the drag
+  preview (`canvas.tokens.preview`, same id) is used instead and the
+  original token is left out of the allies; gang-up abilities are not
+  counted (PF2e's `isFlanking` would count them, but also the original).
+  Redrawn on target, control, token refresh (the preview's too), delete,
+  canvas ready. (verify) in V14 the preview's `refreshToken` while dragging,
+  and its `canFlank` at the preview's position.
 
 ## 25. Recall Knowledge (built v0.78.0)
 

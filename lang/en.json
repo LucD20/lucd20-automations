@@ -849,6 +849,14 @@
           }
         }
       },
+      "pf2eBattleMedicine": {
+        "Name": "Battle Medicine",
+        "Hint": "A first-aid button in the Token HUD (under Riding's) for creatures with Battle Medicine or treated with it. Hover it: who treated this creature and when they can again, whom this creature treated, and Combat Assessment immunity. Read from Battle Medicine's Medicine checks (with a target) or PF2e's immunity effect; 1 day by world time (1 hour with Paragon Battle Medicine). No PF2e effect is added."
+      },
+      "pf2eFlanking": {
+        "Name": "Flanking Overlay",
+        "Hint": "With your token selected and a creature targeted that you flank: a broken shield over the target and a line to each ally you flank it with. While dragging your token, the same for where it would end. PF2e's own flanking rules decide. Per player."
+      },
       "pf2eMultiCheck": {
         "Name": "Multiple Checks",
         "Hint": "Post several checks as one chat card. Shift-click an inline check's \"send to chat\" icon to collect it (a check group adds all of its checks), paste or drop selected journal text or @Check codes, or add a skill and DC by hand; then Send. Players see one button per check and how much lower each DC is than the hardest (\"Stealth (DC 2 lower)\"); only the GM sees the DCs. GM only; the window also opens from the chat's buttons."
@@ -2208,6 +2216,14 @@
       "Placed": "Stairs {n} placed: each end teleports to the other.",
       "PlacedOneWay": "Stairs {n} placed: the first end teleports to the second.",
       "Failed": "The stairs could not be placed (see the console)."
+    },
+    "BattleMedicine": {
+      "Name": "Battle Medicine",
+      "Title": "Battle Medicine",
+      "TreatedBy": "Treated by {name}: again in {time}",
+      "Treated": "Treated {name} ({time})",
+      "AssessedBy": "Combat Assessment: immune to {name} ({time})",
+      "None": "Battle Medicine: no one treated yet"
     },
     "MultiCheck": {
       "Title": "Multiple Checks",

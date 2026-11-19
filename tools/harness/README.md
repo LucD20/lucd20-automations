@@ -100,8 +100,8 @@ sets `game.system.id`.
 | `test62.js` | Signature Spells: PF2e Chain Lightning read from its damage roll, a mock Dice So Nice (hooks, dice list, screen positions): arcs while rolling, the bolt through the dice, the chain in Target Helper's order, the electricity reaction per target, hidden and unseen targets skipped for a player, secret rolls, Token Reactions not playing twice, Less motion, no Dice So Nice, the switches, the GM's preview, overlay removed (64) |
 | `test63.js` | Swashbuckler finisher (a signature on a Strike's damage roll): what starts it (the `finisher` roll option; not an ordinary Strike, not Chain Lightning), the order and timing with a mock Dice So Nice (dice flourish → strip → lunge → sigil → impact frame and screen slash → throw), Dual's two targets, the GM's parts / sigil / confetti options, Less motion, Token Reactions off, no second reaction when the damage is applied, hidden names and portraits, an attacker or target a player can't see, secret rolls, everything put back (overlay, containers, stage, token drawings), switched off or torn down mid-sequence, the GM's preview (65) |
 | `test39.js` | D&D 4e HUD: data from the owner's sheets, columns and tabs, dock, clicks, dying, condition icons, party and selection cards, window sizes, players list and hotbar moved and put back (39); the monster HUD: role block, resistances, recharge roll, traits (40) |
+| `test64.js` | Shared Picks: Shove squares and Demoralizing Charge shared, hidden tokens GM-only, the GM's Take over (66) |
+| `test65.js` | Shared Picks: D&D 4e push / shift picker shared, Take over sends the path back (66) |
 
 For a new feature, copy the closest test, keep its mock setup and replace the
 checks.
-| `test64.js` | Shared Picks: Shove squares and Demoralizing Charge shared, hidden tokens GM-only, the GM's Take over (66) |
-| `test65.js` | Shared Picks: D&D 4e push / shift picker shared, Take over sends the path back (66) |

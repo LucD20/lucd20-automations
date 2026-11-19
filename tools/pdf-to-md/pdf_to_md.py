@@ -2,16 +2,21 @@
 """
 PDF -> Markdown for adventure books (PLAN §23).
 
-    python3 tools/pdf-to-md/pdf_to_md.py book.pdf [-o book.md] [--pages 3-70]
+    python3 tools/pdf-to-md/pdf_to_md.py book.pdf [-o book.md] [--pages 5-41] [--profile auto|paizo-1e|size]
 
-- Reads text with font size / weight / position (PyMuPDF: pip install pymupdf).
-- Two-column pages: blocks are read left column top to bottom, then right.
-- Headings: the font sizes larger than the body text become #, ##, ### ...
-  (largest first); bold body-size lines that stand alone become ####.
-- Lines repeated on many pages (running headers, page numbers, the
-  personalised watermark with the buyer's name / order) are dropped.
-- Every page starts with an HTML comment <!-- p. N --> so entries can cite
-  their page.
+- Reads text with font, size, weight and position (PyMuPDF: pip install pymupdf).
+- Two-column pages: left column top to bottom, then right; full-width blocks
+  split the page into bands.
+- Headings come from a style profile: Paizo's 1e Adventure Path layout
+  (fonts Xirod / TradeGothic / GoodOT, picked automatically) maps each
+  heading font to a level and drops map labels; other books fall back to
+  font sizes (larger than the body text = #, ##, ###).
+- Small-caps titles ("A1. L" + "anding" in a smaller size) are rebuilt in
+  normal case; bold and italic runs are kept as **bold** / *italic*.
+- Lines repeated in the page margins on many pages (running headers, page
+  numbers, the personalised watermark with the buyer's name / order) are
+  dropped.
+- Every page starts with <!-- p. N --> so entries can cite their page.
 
 The output contains the book's text: keep it out of the repository.
 """
@@ -22,6 +27,25 @@ import re
 import sys
 
 import pymupdf
+
+# A profile: rules tried in order, (font regex, min size, max size, role).
+# Roles: h1..h4 (heading levels), stat (stat block name: ####, "Stat:"),
+# label (bold run-in label kept as **text**), drop (map labels, TOC), text.
+PROFILES = {
+    "paizo-1e": [
+        (r"^Xirod", 11.5, 30, "h1"),             # PART 1: THE BEST-LAID PLANS, back-matter chapters
+        (r"^TradeGothic.*BdCn20$", 13.5, 15, "h2"),  # EVENT 1: … (CR 12), A. BRINNOA STARPORT
+        (r"^TradeGothic.*SC700", 12, 14, "h3"),   # A1. Landing Pads
+        (r"^TradeGothic", 0, 13.5, "drop"),       # map labels, compass, scale
+        (r"^Xirod", 10.5, 11.5, "h3"),            # sidebars: MISSION UPDATES, SETTING THE CHARGES
+        (r"^Xirod", 0, 10.5, "drop"),             # contents page, page numbers
+        (r"^GoodOT-CondBold", 11, 13, "stat"),    # SWARM CORROVOX GUERRILLAS (4) / CR 7
+        (r"^AxionSSF", 13, 15, "stat"),           # Alien Archive entries
+        (r"^GoodOT-Bold", 10.5, 12, "h4"),        # rules sub-headings
+        (r"^GoodOT-Bold", 8.8, 9.5, "label"),     # XP / DEFENSE / OFFENSE / STATISTICS / CREW
+    ],
+}
+FONT_SIGNS = {"paizo-1e": ("Xirod", "GoodOT")}
 
 
 def parse_pages(spec, count):
@@ -36,9 +60,55 @@ def norm(text):
     return re.sub(r"\s+", " ", re.sub(r"\d+", "#", text)).strip().lower()
 
 
-def page_lines(page):
-    """Yield (block_bbox, [ (text, size, bold) per line ]) for text blocks."""
-    data = page.get_text("dict", flags=pymupdf.TEXT_PRESERVE_WHITESPACE)
+def is_bold(span):
+    return bool(span["flags"] & 16) or any(w in span["font"] for w in ("Bold", "Black", "Semibold"))
+
+
+def is_italic(span):
+    return bool(span["flags"] & 2) or "Italic" in span["font"]
+
+
+def line_text(spans, markup=True):
+    """A line's text: small caps rebuilt, bold / italic runs marked."""
+    top = max(s["size"] for s in spans if s["text"].strip())
+    parts = []
+    for s in spans:
+        t = s["text"]
+        if "SC" in s["font"] and s["size"] < top * 0.85:
+            t = t.lower()  # small caps: the smaller letters are lowercase
+        if markup and t.strip():
+            lead, core, trail = re.match(r"^(\s*)(.*?)(\s*)$", t).groups()
+            if is_bold(s):
+                core = f"**{core}**"
+            elif is_italic(s):
+                core = f"*{core}*"
+            t = lead + core + trail
+        parts.append(t)
+    text = "".join(parts).strip()
+    return re.sub(r"\*\*\s*\*\*|\*\*(\s+)\*\*", lambda m: m.group(1) or "", text).replace("****", "")
+
+
+SMALL_WORDS = {"a", "an", "and", "at", "by", "for", "in", "of", "on", "or", "the", "to", "with"}
+
+
+def title_case(text):
+    """Small-caps titles: "c1. front drive (cr 12)" → "C1. Front Drive (CR 12)"."""
+    words = text.split(" ")
+    out = []
+    for i, w in enumerate(words):
+        if i == 0 or re.fullmatch(r"[a-z]\d+\.?", w):
+            out.append(w.upper())
+        elif w.lower() in SMALL_WORDS and i > 1:
+            out.append(w.lower())
+        else:
+            out.append(w[:1].upper() + w[1:])
+    return " ".join(out)
+
+
+def page_blocks(page):
+    """[(block_bbox, [line dict]) ] for the text blocks of a page."""
+    data = page.get_text("dict")
+    out = []
     for block in data["blocks"]:
         if block.get("type") != 0:
             continue
@@ -47,12 +117,16 @@ def page_lines(page):
             spans = [s for s in line["spans"] if s["text"].strip()]
             if not spans:
                 continue
-            text = "".join(s["text"] for s in line["spans"]).strip()
-            size = round(max(s["size"] for s in spans), 1)
-            bold = all((s["flags"] & 16) or "Bold" in s["font"] or "Black" in s["font"] for s in spans)
-            lines.append((text, size, bold, line["bbox"]))
+            first = spans[0]
+            lines.append({
+                "spans": line["spans"], "bbox": line["bbox"],
+                "font": first["font"], "size": round(max(s["size"] for s in spans), 1),
+                "bold": all(is_bold(s) for s in spans),
+                "plain": line_text(line["spans"], markup=False),
+            })
         if lines:
-            yield block["bbox"], lines
+            out.append((block["bbox"], lines))
+    return out
 
 
 def in_margin(bbox, rect, share=0.08):
@@ -63,17 +137,14 @@ def in_margin(bbox, rect, share=0.08):
 
 
 def column_order(blocks, width):
-    """Full-width blocks keep their place; others: left column, then right."""
+    """Full-width blocks keep their place; others: left column, then right, band by band."""
     mid = width / 2
-    full = [b for b in blocks if b[0][0] < mid and b[0][2] > mid + width * 0.1]
-    left = sorted([b for b in blocks if b not in full and b[0][2] <= mid + width * 0.1 and b[0][0] < mid], key=lambda b: (b[0][1], b[0][0]))
-    right = sorted([b for b in blocks if b not in full and b not in left], key=lambda b: (b[0][1], b[0][0]))
-    if not full:
-        return left + right
-    # Split at full-width blocks: each band is read left then right.
-    out, full = [], sorted(full, key=lambda b: b[0][1])
-    top = -1
-    for f in full + [None]:
+    full = [b for b in blocks if b[0][0] < mid - width * 0.05 and b[0][2] > mid + width * 0.05]
+    rest = [b for b in blocks if b not in full]
+    left = sorted([b for b in rest if (b[0][0] + b[0][2]) / 2 < mid], key=lambda b: (b[0][1], b[0][0]))
+    right = sorted([b for b in rest if (b[0][0] + b[0][2]) / 2 >= mid], key=lambda b: (b[0][1], b[0][0]))
+    out, top = [], -1
+    for f in sorted(full, key=lambda b: b[0][1]) + [None]:
         bottom = f[0][1] if f else 1e9
         out += [b for b in left if top <= b[0][1] < bottom] + [b for b in right if top <= b[0][1] < bottom]
         if f:
@@ -82,67 +153,114 @@ def column_order(blocks, width):
     return out
 
 
+def pick_profile(doc, wanted):
+    if wanted != "auto":
+        return wanted
+    fonts = set()
+    for n in range(min(doc.page_count, 12)):
+        for f in doc[n].get_fonts():
+            fonts.add(f[3])
+    for name, signs in FONT_SIGNS.items():
+        if all(any(sign in f for f in fonts) for sign in signs):
+            return name
+    return "size"
+
+
+def role_of(line, rules, size_levels):
+    if rules is not None:
+        for font, lo, hi, role in rules:
+            if re.search(font, line["font"]) and lo <= line["size"] < hi:
+                return role
+        return "text"
+    return f"h{size_levels[line['size']]}" if line["size"] in size_levels else "text"
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("pdf")
     ap.add_argument("-o", "--out")
-    ap.add_argument("--pages", help="e.g. 3-70 (1-based, inclusive)")
-    ap.add_argument("--repeat", type=float, default=0.3, help="drop lines found on this share of pages")
+    ap.add_argument("--pages", help="e.g. 5-41 (1-based, inclusive)")
+    ap.add_argument("--profile", default="auto", choices=["auto", "size", *PROFILES])
+    ap.add_argument("--repeat", type=float, default=0.3, help="drop margin lines found on this share of pages")
     args = ap.parse_args()
 
     doc = pymupdf.open(args.pdf)
     pages = list(parse_pages(args.pages, doc.page_count))
-    raw = []
-    sizes = collections.Counter()
-    seen = collections.Counter()
+    profile = pick_profile(doc, args.profile)
+    rules = PROFILES.get(profile)
+
+    raw, sizes, seen = [], collections.Counter(), collections.Counter()
     for n in pages:
         page = doc[n]
-        blocks = column_order(list(page_lines(page)), page.rect.width)
-        raw.append((n + 1, blocks))
+        blocks = column_order(page_blocks(page), page.rect.width)
+        raw.append((n, blocks))
         keys = set()
         for _, lines in blocks:
-            for text, size, bold, bbox in lines:
-                sizes[size] += len(text)
-                if in_margin(bbox, page.rect):
-                    keys.add(norm(text))
+            for line in lines:
+                sizes[line["size"]] += len(line["plain"])
+                if in_margin(line["bbox"], page.rect):
+                    keys.add(norm(line["plain"]))
         seen.update(keys)
-
     repeated = {k for k, c in seen.items() if c >= max(3, args.repeat * len(pages))}
     body = sizes.most_common(1)[0][0] if sizes else 10
     heading_sizes = sorted({s for s in sizes if s >= body + 1.5}, reverse=True)
-    level = {s: min(i + 1, 3) for i, s in enumerate(heading_sizes)}
+    size_levels = {s: min(i + 1, 3) for i, s in enumerate(heading_sizes)}
 
     out = []
-    for (pno, blocks), n in zip(raw, pages):
+    last = None  # (role, y1) of the previous heading line, to merge titles broken over lines
+
+    def emit_heading(role, text, y0, y1):
+        nonlocal last
+        marks = {"h1": "#", "h2": "##", "h3": "###", "h4": "####", "stat": "####"}[role]
+        if last and last[0] == role and -25 <= y0 - last[1] < 30 and out and out[-1].lstrip("\n").startswith(marks + " "):
+            out[-1] = out[-1].rstrip("\n") + " " + text + "\n"  # same heading continued (or a stat block's CR)
+        else:
+            prefix = "Stat: " if role == "stat" else ""
+            out.append(f"\n{marks} {prefix}{text}\n")
+        last = (role, y1)
+
+    for n, blocks in raw:
         rect = doc[n].rect
-        out.append(f"\n<!-- p. {pno} -->\n")
+        out.append(f"\n<!-- p. {n + 1} -->\n")
+        last = None
         for _, lines in blocks:
             para = []
+
             def flush():
                 if para:
-                    text = " ".join(para)
-                    text = re.sub(r"(\w)- (\w)", r"\1\2", text)  # hyphenated line breaks
+                    text = re.sub(r"(\w)- (\w)", r"\1\2", " ".join(para))  # hyphenated line breaks
                     out.append(text + "\n")
                     para.clear()
-            for text, size, bold, bbox in lines:
-                if in_margin(bbox, rect) and (norm(text) in repeated or re.fullmatch(r"\d{1,3}", text)):
+
+            for line in lines:
+                plain = line["plain"]
+                if in_margin(line["bbox"], rect) and (norm(plain) in repeated or re.fullmatch(r"\d{1,3}", plain)):
                     continue
-                if size in level:
+                role = role_of(line, rules, size_levels)
+                if role == "drop":
+                    continue
+                if role in ("h1", "h2", "h3", "h4", "stat"):
                     flush()
-                    out.append(f"\n{'#' * level[size]} {text}\n")
-                elif bold and abs(size - body) < 1 and len(text) < 80 and not para:
-                    out.append(f"\n#### {text}\n")
+                    text = plain if role != "h1" else plain.upper()
+                    if any("SC" in sp["font"] for sp in line["spans"]):
+                        text = title_case(text)
+                    text = re.sub(r"\((cr|tier) ([\d+]+)\)", lambda m: f"({m.group(1).upper()} {m.group(2)})", text, flags=re.I)
+                    emit_heading(role, text, line["bbox"][1], line["bbox"][3])
+                    continue
+                last = None
+                text = line_text(line["spans"])
+                if role == "label" or (rules is None and line["bold"] and abs(line["size"] - body) < 1 and len(plain) < 80 and not para):
+                    flush()
+                    out.append(f"**{plain}**\n")
                 else:
                     para.append(text)
             flush()
-            out.append("")
 
     md = re.sub(r"\n{3,}", "\n\n", "\n".join(out)).strip() + "\n"
-    # Merge headings broken over two lines ("# Part 2:" + "# Sand in the Gears").
-    md = re.sub(r"^(#+) (.+)\n\n\1 (.+)$", r"\1 \2 \3", md, flags=re.M)
+    md = re.sub(r"\*\*([^*\n]+?)\*\* \*\*([^*\n]+?)\*\*", r"**\1 \2**", md)  # adjacent bold runs
     if args.out:
         open(args.out, "w", encoding="utf-8").write(md)
-        print(f"{args.out}: {len(pages)} pages, body {body}pt, headings {heading_sizes[:6]}", file=sys.stderr)
+        print(f"{args.out}: {len(pages)} pages, profile {profile}, body {body}pt", file=sys.stderr)
     else:
         sys.stdout.write(md)
 

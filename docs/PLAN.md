@@ -3146,3 +3146,40 @@ run in the SF2e world** (system id `sf2e`) (Q311).
   - (verify) in SF2e 1.7: the API / config object names, the sheet class
     name, and each feature in play. If one does nothing in SF2e, check
     `sysApi()` / `sysConfig()` in the console first.
+
+### 23.9 First test: Book 6, The God-Host Ascends (2026-11-19)
+
+Pipeline run end to end on the PDF (book text and conversions kept out of
+the repository):
+1. `tools/pdf-to-md/pdf_to_md.py` now has style profiles. `paizo-1e` is
+   picked by its fonts (Xirod + GoodOT): Xirod 12+ = `#` part, TradeGothic
+   14 = `##` event / area group, TradeGothic SC 13 = `###` room (small caps
+   rebuilt: "A1. L"+"anding" → "A1. Landing Pads"), Xirod 11 = `###`
+   sidebar, GoodOT-CondBold 12 / AxionSSF 14 = `#### Stat:` (name and CR
+   merged), map labels and the contents page dropped, bold / italic kept.
+   Other books fall back to font sizes.
+2. `tools/convert/find_rolls.py`: every sentence with a DC, save, skill
+   check, %, attack or damage dice, by heading; stat blocks apart (a run-in
+   label such as **Treasure:** ends a stat block); sentences cut by page /
+   column breaks are joined. Book 6: 81 passages outside stat blocks in 32
+   headings, every "DC N" in the adventure caught.
+3. Claude wrote the 2e lines (owner's style and skill choices; 1e DCs as
+   placeholders), `scripts/conversion/dc.js` filled the DCs at the party
+   level.
+4. Compared with the owner's finished Book 6 pages: of 84 lines, 38 have
+   the same DCs, 24 are not on the owner's pages (mostly extra checks the
+   book has: wreckage fields, the avalanche, acid water, the
+   monk beetle…), 18 "differ" (many are wrong pairings by the word
+   matcher or extra skill options; real ones: Storm the Spaceport 27 vs
+   29, B7 recordings 29 vs 25), 4 skipped (starship placement, rule notes).
+   Review page sent to the owner.
+
+Learned:
+- **Level changes inside a book.** The owner used 11 through area B and 12
+  from C1 (the book: "reach 12th level during the missions"). The review
+  needs a "level from this heading" control, defaulting to the book's
+  milestones.
+- The owner's journals give the condition UUIDs (`pf2e.conditionitems`
+  ids), to turn "stunned for 1 round" into links automatically.
+- Attack bonuses and SF1e damage dice are not DCs: flagged for the owner
+  (attack bonus by hand; damage left as written, as on the owner's pages).

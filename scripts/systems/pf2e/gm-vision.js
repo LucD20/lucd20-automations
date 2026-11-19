@@ -1,4 +1,5 @@
 import { registerGMVisionBackend } from "../../features/gm-vision.js";
+import { sysConfig, sysSetting, sysSetSetting } from "./sys.js";
 
 /**
  * PF2e has its own GM vision (client setting "pf2e.gmVision", Ctrl+G, lit
@@ -10,7 +11,7 @@ import { registerGMVisionBackend } from "../../features/gm-vision.js";
 let original = null;
 
 function applyIfOn(color) {
-  if (!game.user.isGM || !game.settings.get("pf2e", "gmVision")) return;
+  if (!game.user.isGM || !sysSetting("gmVision")) return;
   CONFIG.Canvas.darknessColor = color;
   if (!canvas?.ready) return;
   canvas.environment?.initialize?.();
@@ -19,18 +20,18 @@ function applyIfOn(color) {
 
 registerGMVisionBackend({
   system: "pf2e",
-  isOn: () => !!game.settings.get("pf2e", "gmVision"),
-  setOn: value => game.settings.set("pf2e", "gmVision", !!value),
-  defaultDarkness: () => CONFIG.PF2E?.Canvas?.darkness?.default ?? CONFIG.Canvas.darknessColor,
+  isOn: () => !!sysSetting("gmVision"),
+  setOn: value => sysSetSetting("gmVision", !!value),
+  defaultDarkness: () => sysConfig()?.Canvas?.darkness?.default ?? CONFIG.Canvas.darknessColor,
   setColor(color) {
-    const darkness = CONFIG.PF2E?.Canvas?.darkness;
+    const darkness = sysConfig()?.Canvas?.darkness;
     if (!darkness) return;
     original ??= darkness.gmVision;
     darkness.gmVision = color;
     applyIfOn(color);
   },
   restoreColor() {
-    const darkness = CONFIG.PF2E?.Canvas?.darkness;
+    const darkness = sysConfig()?.Canvas?.darkness;
     if (!darkness || original === null) return;
     darkness.gmVision = original;
     applyIfOn(original);

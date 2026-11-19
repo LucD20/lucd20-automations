@@ -1,4 +1,4 @@
-import { MODULE_ID, error, localize } from "../core/constants.js";
+import { MODULE_ID, error, localize, systemMatches } from "../core/constants.js";
 import { defineFeature } from "../core/registry.js";
 import { appElement } from "../core/dom.js";
 import { watchDOM } from "../core/dom-watch.js";
@@ -39,7 +39,7 @@ export function registerDiceStatsAdapter(adapter) {
   adapters.push(adapter);
 }
 
-const activeAdapter = () => adapters.find(a => !a.system || a.system === game.system.id) ?? null;
+const activeAdapter = () => adapters.find(a => !a.system || systemMatches(a.system)) ?? null;
 
 /* -------------------------------------------- */
 /*  Data                                        */

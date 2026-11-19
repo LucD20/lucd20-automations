@@ -3,6 +3,7 @@ import { defineFeature } from "../../core/registry.js";
 import { waitForDice } from "../../core/dice.js";
 import { nameForPlayers, itemBySlug } from "./card.js";
 import { feetBetween } from "./reactive-strike.js";
+import { sysId } from "./sys.js";
 
 /**
  * Rule 12 (docs/pf2e-rules.md): flat checks, replacing the "PF2e Flat Check" module (owner, Q185–Q195, as
@@ -50,7 +51,7 @@ const cellsOf = (doc) => {
  * The flat-check case of a chat message, or null: { kind: "strike"|"spell"|"action", item, targets (token docs), area }.
  */
 export function caseOf(message) {
-	const flags = message?.flags?.pf2e ?? {};
+	const flags = message?.flags?.[sysId()] ?? {};
 	const context = flags.context ?? null;
 	const item = message?.item ?? null;
 	if (context?.isReroll) return null;

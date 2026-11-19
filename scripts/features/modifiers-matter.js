@@ -1,4 +1,4 @@
-import { localize } from "../core/constants.js";
+import { localize, systemMatches } from "../core/constants.js";
 import { defineFeature } from "../core/registry.js";
 
 /**
@@ -58,6 +58,6 @@ defineFeature({
 	defaultEnabled: true,
 
 	enable(feature) {
-		for (const a of adapters) if (a.system === game.system.id) a.enable(feature);
+		for (const a of adapters) if (systemMatches(a.system)) a.enable(feature);
 	}
 });

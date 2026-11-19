@@ -1,4 +1,4 @@
-import { MODULE_ID, localize } from "../core/constants.js";
+import { MODULE_ID, localize, systemMatches } from "../core/constants.js";
 import { defineFeature } from "../core/registry.js";
 import { executeAsGM, onGMRequest } from "../core/socket.js";
 import { addMoveRule } from "../core/movement-block.js";
@@ -99,8 +99,9 @@ async function mount({ sceneId, riderIds, mountId }, senderId) {
     const corner = [0, 1, 2, 3].find(c => !used.has(c)) ?? 0;
     used.add(corner);
     const pos = riderPosition(mountDoc, rider, corner);
-    const pf2e = game.system.id === "pf2e"
-      ? { linkToActorSize: rider.flags?.pf2e?.linkToActorSize, autoscale: rider.flags?.pf2e?.autoscale }
+    const sys = game.system.id; // PF2e or SF2e: the size-linked scale flags live under the system's id
+    const pf2e = systemMatches("pf2e")
+      ? { linkToActorSize: rider.flags?.[sys]?.linkToActorSize, autoscale: rider.flags?.[sys]?.autoscale }
       : null;
     const update = {
       ...pos,
@@ -118,7 +119,7 @@ async function mount({ sceneId, riderIds, mountId }, senderId) {
       }
     };
     // PF2e would otherwise put the size-linked scale back.
-    if (pf2e) Object.assign(update, { "flags.pf2e.linkToActorSize": false, "flags.pf2e.autoscale": false });
+    if (pf2e) Object.assign(update, { [`flags.${sys}.linkToActorSize`]: false, [`flags.${sys}.autoscale`]: false });
     await rider.update(update, { [OPT]: true });
     mounted++;
   }
@@ -140,8 +141,8 @@ async function dismount(rider, { place = true } = {}) {
   if (data.pf2e) {
     // Put PF2e's own values back; if there were none, remove ours so PF2e's defaults apply.
     for (const key of ["linkToActorSize", "autoscale"]) {
-      if (data.pf2e[key] === undefined || data.pf2e[key] === null) update[`flags.pf2e.-=${key}`] = null;
-      else update[`flags.pf2e.${key}`] = data.pf2e[key];
+      if (data.pf2e[key] === undefined || data.pf2e[key] === null) update[`flags.${game.system.id}.-=${key}`] = null;
+      else update[`flags.${game.system.id}.${key}`] = data.pf2e[key];
     }
   }
   if (place) {

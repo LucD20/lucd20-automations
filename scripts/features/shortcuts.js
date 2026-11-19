@@ -1,4 +1,4 @@
-import { MODULE_ID, localize, warn } from "../core/constants.js";
+import { MODULE_ID, localize, warn, systemMatches } from "../core/constants.js";
 import { defineFeature } from "../core/registry.js";
 
 /**
@@ -314,7 +314,7 @@ defineFeature({
     registerGeneric();
     // System shortcuts need the system's data and our texts: at `setup`, still before keybindings are fixed.
     Hooks.once("setup", () => {
-      const mine = adapters.filter(a => a.system === game.system.id);
+      const mine = adapters.filter(a => systemMatches(a.system));
       for (const a of mine) {
         try { a.register(add, { targetTokens, targetActors, actingActor, hoveredToken, t }); }
         catch (err) { warn(`Shortcuts for ${a.system} failed.`, err); }

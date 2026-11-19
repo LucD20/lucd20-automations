@@ -3,6 +3,7 @@ import { defineFeature } from "../../core/registry.js";
 import { executeAsGM, onGMRequest } from "../../core/socket.js";
 import { onTurns } from "./rules.js";
 import { nameForPlayers } from "./card.js";
+import { sysId } from "./sys.js";
 
 /**
  * Merge 3 (docs/pf2e-rules.md §14): sustained spells, replacing "PF2e Sustain Reminder" (owner, Q202–Q206):
@@ -45,7 +46,7 @@ const sustained = (actor) => (actor?.itemTypes?.effect ?? []).filter((e) => e.ge
 async function onCast(message) {
 	const spell = message.item;
 	if (message.flags?.[MODULE_ID]?.[REPOST]) return; // our own repost of a sustained spell
-	if (!message.flags?.pf2e?.casting || spell?.type !== "spell" || !spell.system?.duration?.sustained) return;
+	if (!message.flags?.[sysId()]?.casting || spell?.type !== "spell" || !spell.system?.duration?.sustained) return;
 	const actor = message.actor;
 	if (!actor) return;
 	const limit = limitRounds(spell.system.duration.value);
@@ -60,7 +61,7 @@ async function onCast(message) {
 			slug,
 			description: { value: spell.system?.description?.value ?? "" },
 			duration: limit ? { value: limit, unit: "rounds", expiry: "turn-start", sustained: true } : { value: -1, unit: "unlimited", expiry: null, sustained: true },
-			level: { value: message.flags?.pf2e?.origin?.castRank ?? spell.rank ?? 1 },
+			level: { value: message.flags?.[sysId()]?.origin?.castRank ?? spell.rank ?? 1 },
 			tokenIcon: { show: true }
 		},
 		// sustained: this turn (the turn it was cast needs no Sustain).

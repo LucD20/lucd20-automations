@@ -1,3 +1,4 @@
+import { systemFamily } from "../core/constants.js";
 /**
  * Default Token Tooltip rows per game system, ported from the owner's Token
  * Tooltip Alt setups (PF2e, SWADE, Wrath & Glory). Icons are Font Awesome
@@ -100,5 +101,5 @@ export const PRESETS = {
 };
 
 export function presetFor(systemId) {
-  return foundry.utils.deepClone(PRESETS[systemId] ?? PRESETS.default);
+  return foundry.utils.deepClone(PRESETS[systemId] ?? PRESETS[systemFamily(systemId)] ?? PRESETS.default);
 }

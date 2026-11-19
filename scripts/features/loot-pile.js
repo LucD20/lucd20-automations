@@ -1,4 +1,4 @@
-import { MODULE_ID, error, localize } from "../core/constants.js";
+import { MODULE_ID, error, localize, systemMatches } from "../core/constants.js";
 import { defineFeature } from "../core/registry.js";
 import { findFreeSpot, snapTopLeft } from "../core/placement.js";
 import { broadcast, executeAsGM, onBroadcast, onGMRequest } from "../core/socket.js";
@@ -81,7 +81,7 @@ const genericAdapter = {
 };
 
 function adapter() {
-  return { ...genericAdapter, ...(adapters.find(a => a.system === game.system.id) ?? {}) };
+  return { ...genericAdapter, ...(adapters.find(a => systemMatches(a.system)) ?? {}) };
 }
 
 /** Actor type for piles/stash in systems without a loot type: prefer loot, then npc. */

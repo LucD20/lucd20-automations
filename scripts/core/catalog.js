@@ -1,3 +1,4 @@
+import { systemMatches } from "./constants.js";
 /**
  * The settings layout from docs/PLAN.md §2.
  *
@@ -117,7 +118,7 @@ export const FEATURE_ORDER = [
 
 /** Whether a category / feature entry applies to the active game system. */
 export function isAvailableForSystem(entry) {
-  return !entry.systems?.length || entry.systems.includes(game.system.id);
+  return !entry.systems?.length || entry.systems.some(systemMatches);
 }
 
 /* -------------------------------------------- */

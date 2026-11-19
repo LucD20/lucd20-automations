@@ -1,4 +1,5 @@
 import { registerChancesAdapter, chances, d20Of, barHTML, label } from "../../features/roll-chances.js";
+import { sysId, sysApi } from "./sys.js";
 
 /**
  * PF2e for Roll Chances: the four degrees of success of a check against its DC, as PF2e works them out
@@ -42,13 +43,13 @@ const opposerOf = (context) => {
 export function canSee(context, { blind = false } = {}) {
 	if (game.user.isGM) return true;
 	if (blind) return false;
-	if (game.pf2e?.settings?.metagame?.dcs) return true;
+	if (sysApi()?.settings?.metagame?.dcs) return true;
 	if (context?.dc?.visible || context?.dc?.visibility === "all") return true;
 	return !!opposerOf(context)?.hasPlayerOwner;
 }
 
 function onCard(message, html) {
-	const context = message.flags?.pf2e?.context;
+	const context = message.flags?.[sysId()]?.context;
 	const dc = Number(context?.dc?.value);
 	if (!context || !Number.isFinite(dc) || context.type === "flat-check" || html.querySelector?.(".lucd20-ch-bar")) return;
 	const roll = message.rolls?.[0];

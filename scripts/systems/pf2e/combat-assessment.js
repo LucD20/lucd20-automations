@@ -5,6 +5,7 @@ import { waitForDice } from "../../core/dice.js";
 import { pf2eCard, wireOpen, sourceUuid, itemBySlug, compactCard, nameForPlayers } from "./card.js";
 import { addImmunity, immunitiesOf, timeLeft } from "./immunity.js";
 import { recallKnowledge } from "./recall-knowledge.js";
+import { sysId, sysApi, sysConfig } from "./sys.js";
 
 /**
  * Rule 21 (docs/pf2e-rules.md): Combat Assessment (Commander / Fighter feat 1, owner's AoN link).
@@ -42,11 +43,11 @@ export function identifySkills(actor) {
 	return Array.isArray(skills) && skills.length ? [...new Set(skills)] : FALLBACK_SKILLS;
 }
 
-const skillLabel = (actor, slug) => actor?.skills?.[slug]?.label ?? game.i18n?.localize?.(CONFIG.PF2E?.skills?.[slug]?.label ?? "") ?? slug;
+const skillLabel = (actor, slug) => actor?.skills?.[slug]?.label ?? game.i18n?.localize?.(sysConfig()?.skills?.[slug]?.label ?? "") ?? slug;
 
 /** Is this message a melee Strike (attack roll)? */
 function meleeStrike(message) {
-	const context = message?.flags?.pf2e?.context;
+	const context = message?.flags?.[sysId()]?.context;
 	if (context?.type !== "attack-roll" || context.isReroll) return false;
 	const options = context.options ?? [];
 	if (options.includes("ranged") || options.includes("item:ranged")) return false;
@@ -58,13 +59,13 @@ export async function onMessage(message) {
 	if (!game.user.isActiveGM) return;
 	const actor = message?.actor;
 	if (!actor) return;
-	if (isAssessment(message.item) && !message.flags?.pf2e?.context) return void pending.set(actor.id, Date.now());
+	if (isAssessment(message.item) && !message.flags?.[sysId()]?.context) return void pending.set(actor.id, Date.now());
 	if (!meleeStrike(message) || seen.has(message.id)) return;
 	const armed = pending.get(actor.id);
 	if (!armed || Date.now() - armed > WINDOW_MS) return;
 	pending.delete(actor.id);
 	seen.add(message.id);
-	const context = message.flags.pf2e.context;
+	const context = message.flags[sysId()].context;
 	const target = context.target?.token ? fromUuidSync(context.target.token) : null;
 	if (!target?.actor) return;
 	await waitForDice(message.id);
@@ -114,7 +115,7 @@ async function onClick(card, button) {
 	if (!ok) return;
 	const skill = actor.skills?.[button.dataset.lucd20Ca];
 	if (!skill?.roll) return ui.notifications.warn(L("NoSkill"));
-	const Modifier = game.pf2e?.Modifier;
+	const Modifier = sysApi()?.Modifier;
 	const modifiers = data.critical && Modifier ? [new Modifier({ slug: "combat-assessment", label: data.title, modifier: 2, type: "circumstance" })] : [];
 	const dc = target?.actor?.identificationDCs?.standard?.dc;
 	await skill.roll({

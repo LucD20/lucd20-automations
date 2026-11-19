@@ -114,7 +114,7 @@ const slug = text => String(text).toLowerCase().replace(/[^a-z0-9]+/g, "-").repl
 
 /** Settings that belong to the world they were made in: stored ids, logs, clocks, migration marks. */
 const WORLD_BOUND = new Set([
-  "core.compendiumConfiguration", "core.time", "pf2e.activeParty", "pf2e.worldClock.worldCreatedOn",
+  "core.compendiumConfiguration", "core.time", "pf2e.activeParty", "pf2e.worldClock.worldCreatedOn", "sf2e.activeParty", "sf2e.worldClock.worldCreatedOn",
   ...["lootPile_stashId", "skillChallenge_runs", "skillChallenge_public", "diceStats_data", "damageLog_entries", "dnd4eMigrated", "forceSettings_appliedDefaults"]
     .map(key => `${MODULE_ID}.${key}`)
 ]);

@@ -1,4 +1,5 @@
 import { registerDamageLogAdapter } from "../../features/damage-log.js";
+import { sysId } from "./sys.js";
 
 /**
  * PF2e detail for the Damage Log: when PF2e applies damage or healing it posts
@@ -20,7 +21,7 @@ function plainText(html) {
 registerDamageLogAdapter({
   system: "pf2e",
   causeFromMessage(message) {
-    const applied = message.flags?.pf2e?.appliedDamage;
+    const applied = message.flags?.[sysId()]?.appliedDamage;
     if (!applied?.uuid) return null;
     const text = plainText(message.content);
     if (!text) return null;

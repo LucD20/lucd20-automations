@@ -5,6 +5,7 @@ import { waitForDice } from "../../core/dice.js";
 import { pf2eCard, wireOpen, sourceUuid, compactCard, nameForPlayers } from "./card.js";
 import { onTurns, audience } from "./rules.js";
 import { feetBetween } from "./reactive-strike.js";
+import { sysId, sysApi } from "./sys.js";
 
 /**
  * Rule 10 (docs/pf2e-rules.md): Roaring Heart (animist feat 6, War of Immortals p. 25; 2 actions).
@@ -92,7 +93,7 @@ async function startFor(message) {
 
 /** The animist's Shoves during Roaring Heart: the first two count; a success against an enemy is a hit. */
 async function onShove(message) {
-	const context = message.flags?.pf2e?.context;
+	const context = message.flags?.[sysId()]?.context;
 	if (context?.type !== "skill-check" || !(context.options ?? []).includes("action:shove")) return;
 	const state = open.get(message.actor?.id);
 	if (!state || state.shoves.length >= 2) return;
@@ -167,8 +168,8 @@ function rollShove({ actorId, token }) {
 	if (!actor?.isOwner) return;
 	if (!game.user.targets?.size) return ui.notifications.warn(L("TargetFirst"));
 	// (verify) PF2e 8.7: game.pf2e.actions is a Collection of Actions ("shove" → use()), with the legacy macro as a property.
-	const action = game.pf2e?.actions?.get?.("shove");
-	const run = action?.use ? action.use({ actors: [actor] }) : game.pf2e?.actions?.shove?.({ actors: [actor] });
+	const action = sysApi()?.actions?.get?.("shove");
+	const run = action?.use ? action.use({ actors: [actor] }) : sysApi()?.actions?.shove?.({ actors: [actor] });
 	Promise.resolve(run).catch((err) => error("Roaring Heart failed.", err));
 }
 
@@ -188,7 +189,7 @@ defineFeature({
 		feature.on("createChatMessage", (message) => {
 			if (!game.user.isActiveGM) return;
 			const item = message.item;
-			const run = (item?.slug ?? item?.system?.slug) === SLUG && !message.flags?.pf2e?.context ? startFor(message) : onShove(message);
+			const run = (item?.slug ?? item?.system?.slug) === SLUG && !message.flags?.[sysId()]?.context ? startFor(message) : onShove(message);
 			Promise.resolve(run).catch((err) => error("Roaring Heart failed.", err));
 		});
 		// The temporary HP end at the animist's next turn; an unanswered card stays open (Confirm or Cancel).

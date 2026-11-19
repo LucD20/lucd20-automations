@@ -3116,3 +3116,28 @@ run in the SF2e world** (system id `sf2e`) (Q311).
   (video)?
 - Q311: should the PF2e features also run in SF2e (same engine, a fork)?
   Each would need a check in Foundry; a separate pass.
+
+### 23.8 Owner's answers (Q309–Q311) and SF2e support (v0.79.0)
+
+- Q309: the SF sheet's shift 3 at levels 14 / 17 / 19 is meant (kept).
+- Q310: tokens are `.webp`.
+- Q311: **everything for PF2e also runs in SF2e.** Built in v0.79.0:
+  - `core/constants.js`: `SYSTEM_FAMILY = { sf2e: "pf2e" }`,
+    `systemMatches(id)`, `systemFamily()`. Catalog entries, feature
+    settings (`system:`), every system adapter (Dice Stats, Damage Log,
+    Damage Estimate, Roll Chances, Modifiers Matter, GM Vision, Shortcuts,
+    Token Reactions, Locked Door Alert, Loot Pile, Signature Spells) and
+    the Token Tooltip preset use them, so a `"pf2e"` declaration applies in
+    an `sf2e` world.
+  - `systems/pf2e/sys.js`: `sysId()` (settings / flags namespace = the
+    active system's id; SF2e worlds store `sf2e.*` settings and
+    `flags.sf2e` on messages, checked in the owner's world), `sysApi()`
+    (`game.pf2e` / `game.sf2e`), `sysConfig()` (`CONFIG.PF2E` /
+    `CONFIG.SF2E`), `sysPack(name)` (the system's pack, else PF2e's),
+    `sysSetting()`. Every `flags.pf2e`, `game.pf2e`, `CONFIG.PF2E`,
+    `"pf2e.<pack>"` and `pf2e` setting in `systems/pf2e/` goes through them;
+    Riding's size-link flags too. Creature Scale also listens to
+    `renderActorSheetSF2e`.
+  - (verify) in SF2e 1.7: the API / config object names, the sheet class
+    name, and each feature in play. If one does nothing in SF2e, check
+    `sysApi()` / `sysConfig()` in the console first.

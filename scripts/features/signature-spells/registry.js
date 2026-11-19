@@ -1,3 +1,4 @@
+import { systemFamily } from "../core/constants.js";
 /**
  * Signature Spells: the list of spells with an effect of their own (docs/PLAN.md §20).
  *
@@ -50,7 +51,7 @@ export const signatureById = id => signatures.find(s => s.id === id) ?? null;
 /** The signature a system's reading of a message starts, or null. */
 export function signatureFor(info, message, systemId = game.system?.id) {
   if (!info) return null;
-  const matchers = signatures.map(sig => [sig, typeof sig.match === "function" ? sig.match : sig.match?.[systemId]]).filter(([, m]) => m);
+  const matchers = signatures.map(sig => [sig, typeof sig.match === "function" ? sig.match : sig.match?.[systemId] ?? sig.match?.[systemFamily(systemId)]]).filter(([, m]) => m);
   // A spell's own slug first: a broader match (a function) never takes a spell that has its own signature.
   for (const [sig, m] of matchers) if (typeof m !== "function" && m.slug && m.slug === info.slug && (!m.roll || m.roll === info.roll)) return sig;
   for (const [sig, m] of matchers) if (typeof m === "function" && m(info, message)) return sig;

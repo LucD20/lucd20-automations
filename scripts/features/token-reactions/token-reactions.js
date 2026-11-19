@@ -1,4 +1,4 @@
-import { MODULE_ID, error, localize } from "../../core/constants.js";
+import { MODULE_ID, error, localize, systemMatches } from "../../core/constants.js";
 import { defineFeature } from "../../core/registry.js";
 import { broadcast, onBroadcast } from "../../core/socket.js";
 import { readHP } from "../../core/hp.js";
@@ -54,7 +54,7 @@ export function registerReactionAdapter(adapter) {
   adapters.push(adapter);
 }
 
-const activeAdapters = () => adapters.filter(a => !a.system || a.system === game.system.id);
+const activeAdapters = () => adapters.filter(a => !a.system || systemMatches(a.system));
 
 function onChatMessage(message) {
   if (!game.user.isGM) return;

@@ -1,5 +1,6 @@
 import { registerReactionAdapter } from "../../features/token-reactions/token-reactions.js";
 import { damageTargets } from "./shield-block.js";
+import { sysId } from "./sys.js";
 
 /**
  * PF2e detail for Token Reactions: a damage roll's message tells the damage type (the instance that deals the
@@ -25,7 +26,7 @@ export function mainType(roll) {
 }
 
 export function fromMessage(message) {
-	const context = message?.flags?.pf2e?.context;
+	const context = message?.flags?.[sysId()]?.context;
 	if (context?.type !== "damage-roll") return null;
 	const roll = message.rolls?.[0];
 	const kinds = roll?.kinds;

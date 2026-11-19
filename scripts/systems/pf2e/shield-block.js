@@ -3,6 +3,7 @@ import { defineFeature, getFeature } from "../../core/registry.js";
 import { executeAsGM, onGMRequest } from "../../core/socket.js";
 import { hasReaction, spendReaction } from "./reactions.js";
 import { pf2eCard, wireOpen, sourceUuid, itemBySlug, compactCard, nameForPlayers } from "./card.js";
+import { sysId } from "./sys.js";
 
 /**
  * Rule 8 (docs/pf2e-rules.md): Shield Block prompts. Owner's choices (Q169–Q172): damage is applied with
@@ -27,7 +28,7 @@ export function damageTargets(message) {
 	const api = game.modules?.get(TOOLBELT)?.api?.targetHelper;
 	const fromHelper = api?.getMessageTargets?.(message);
 	if (fromHelper?.length) return fromHelper;
-	const uuid = message?.flags?.pf2e?.context?.target?.token;
+	const uuid = message?.flags?.[sysId()]?.context?.target?.token;
 	const doc = uuid ? fromUuidSync(uuid) : null;
 	return doc ? [doc] : [];
 }
@@ -55,7 +56,7 @@ function canBlock(tokenDoc) {
 export async function onDamage(message) {
 	if (!game.user.isActiveGM) return;
 	const roll = message?.rolls?.[0];
-	if (message?.flags?.pf2e?.context?.type !== "damage-roll" || !roll || !isPhysical(roll)) return;
+	if (message?.flags?.[sysId()]?.context?.type !== "damage-roll" || !roll || !isPhysical(roll)) return;
 	const secret = !!message.blind || (message.whisper?.length ?? 0) > 0;
 	for (const doc of damageTargets(message)) {
 		const key = `${message.id}:${doc.id}`;
@@ -93,7 +94,7 @@ async function onClick(card, button) {
 	button.disabled = true;
 	const done = await executeAsGM("pf2eRules.sbClaim", { card: card.id, damage: damage.id, token: doc.id, block: button.dataset.lucd20Sb === "block" });
 	if (!done || button.dataset.lucd20Sb !== "block") return;
-	const context = damage.flags?.pf2e?.context ?? {};
+	const context = damage.flags?.[sysId()]?.context ?? {};
 	await doc.actor.applyDamage({
 		damage: damage.rolls[0], token: doc, item: damage.item, rollOptions: new Set(context.options ?? []), shieldBlockRequest: true, outcome: context.outcome ?? null
 	});

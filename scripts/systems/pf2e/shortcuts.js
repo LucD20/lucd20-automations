@@ -1,5 +1,6 @@
 import { registerShortcuts } from "../../features/shortcuts.js";
 import { recallKnowledge } from "./recall-knowledge.js";
+import { sysApi, sysConfig } from "./sys.js";
 
 /**
  * PF2e for Shortcuts (replaces F is for Flatfooted; Q270: all of it). Off-Guard on O for the hovered token;
@@ -15,12 +16,12 @@ const ATTITUDES = new Set(["helpful", "friendly", "indifferent", "unfriendly", "
 const VALUED = new Set(["clumsy", "doomed", "drained", "dying", "enfeebled", "frightened", "sickened", "slowed", "stunned", "stupefied", "wounded"]);
 const COVER_UUID = "Compendium.pf2e.other-effects.Item.I9lfZUiCwMiGogVi";
 
-const sluggify = (s) => game.pf2e?.system?.sluggify?.(s) ?? String(s).replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
+const sluggify = (s) => sysApi()?.system?.sluggify?.(s) ?? String(s).replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
 const spaced = (key) => key.replace(/([A-Z])/g, " $1").replace(/^./, c => c.toUpperCase());
 
 /** Whether a condition has a value (Frightened 2), from the system when it says so. */
 function isValued(slug) {
-  const known = game.pf2e?.ConditionManager?.getCondition?.(slug)?.system?.value?.isValued;
+  const known = sysApi()?.ConditionManager?.getCondition?.(slug)?.system?.value?.isValued;
   return typeof known === "boolean" ? known : VALUED.has(slug);
 }
 
@@ -44,7 +45,7 @@ async function cycleAlliance(actor, t) {
 }
 
 function toggleBrowser() {
-  const browser = game.pf2e?.compendiumBrowser;
+  const browser = sysApi()?.compendiumBrowser;
   if (!browser) return;
   return browser.rendered ? browser.close() : browser.render(true);
 }
@@ -63,7 +64,7 @@ async function focusCompendiumSearch() {
 
 /** Every system action: the Collection's Actions (with variants) and the legacy macros it still carries. */
 function systemActions() {
-  const actions = game.pf2e?.actions;
+  const actions = sysApi()?.actions;
   if (!actions) return [];
   const bySlug = new Map();
   for (const key of Object.keys(actions)) if (typeof actions[key] === "function") bySlug.set(sluggify(key), { key });
@@ -103,7 +104,7 @@ registerShortcuts({
       run: onActors(a => a.toggleCondition?.("off-guard")), from: ff("flatfooted")
     });
 
-    const types = CONFIG.PF2E?.conditionTypes ?? {};
+    const types = sysConfig()?.conditionTypes ?? {};
     const conditions = Object.keys(types).filter(s => !ATTITUDES.has(s) && s !== "off-guard")
       .map(slug => ({ slug, name: game.i18n.localize(types[slug]) }))
       .sort((a, b) => a.name.localeCompare(b.name));

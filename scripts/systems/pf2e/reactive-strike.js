@@ -5,6 +5,7 @@ import { waitForDice } from "../../core/dice.js";
 import { hasReaction } from "./reactions.js";
 import { pf2eCard, wireOpen, sourceUuid, itemBySlug, compactCard, nameForPlayers } from "./card.js";
 import { shing } from "../../core/sound.js";
+import { sysId } from "./sys.js";
 
 /**
  * Rule 7 (docs/pf2e-rules.md): Reactive Strike prompts. Trigger (PF2e): "A creature within your reach
@@ -232,7 +233,7 @@ export function onMoveToken(doc, movement, operation) {
 
 /** What a chat message triggers: "ranged", "manipulate", "moveAction" or null, with a detail. */
 export function messageTrigger(message) {
-	const context = message?.flags?.pf2e?.context;
+	const context = message?.flags?.[sysId()]?.context;
 	const item = message?.item ?? null;
 	if (["attack-roll", "spell-attack-roll"].includes(context?.type)) {
 		const ranged = (context.options ?? []).includes("item:ranged") || item?.isRanged === true;

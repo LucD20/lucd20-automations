@@ -2,6 +2,7 @@ import { MODULE_ID } from "../../core/constants.js";
 import { registerModifiersMatterAdapter, mattered, lineHTML, L } from "../../features/modifiers-matter.js";
 import { d20Of } from "../../features/roll-chances.js";
 import { degreeFor, canSee } from "./chances.js";
+import { sysId } from "./sys.js";
 
 /**
  * PF2e for Modifiers Matter. The roll's own modifiers (flags.pf2e.modifiers: enabled, not ignored; not the
@@ -39,14 +40,14 @@ function dcModifiers(context) {
 }
 
 function onPreCreate(message) {
-	const context = message.flags?.pf2e?.context;
+	const context = message.flags?.[sysId()]?.context;
 	if (!context?.dc || context.type === "flat-check" || message.flags?.[MODULE_ID]?.mm) return;
 	const dcMods = dcModifiers(context);
 	if (dcMods.length) message.updateSource({ [`flags.${MODULE_ID}.mm`]: { dcMods } });
 }
 
 function onCard(message, html) {
-	const flags = message.flags?.pf2e;
+	const flags = message.flags?.[sysId()];
 	const context = flags?.context;
 	const dc = Number(context?.dc?.value);
 	if (!context || !Number.isFinite(dc) || context.type === "flat-check" || html.querySelector?.(".lucd20-mm-line, .lucd20-mm-good, .lucd20-mm-bad")) return;

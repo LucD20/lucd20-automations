@@ -7,6 +7,7 @@ import { pf2eCard, answered, wireOpen, sourceUuid, compactCard, nameForPlayers }
 import { grantDrilledReaction, revokeDrilledReaction } from "./reactions.js";
 import { onTurns, audience } from "./rules.js";
 import { feetBetween } from "./reactive-strike.js";
+import { sysId, sysApi } from "./sys.js";
 
 /**
  * Rule 9 (docs/pf2e-rules.md): the Commander's Demoralizing Charge (expert tactic, 2 actions, brandish).
@@ -73,7 +74,7 @@ export function savesFrom(strikes) {
 
 async function onCommanderMessage(message) {
 	const item = message?.item;
-	if ((message?.author?.id ?? message?.user?.id) !== game.user.id || (item?.slug ?? item?.system?.slug) !== SLUG || message.flags?.pf2e?.context) return;
+	if ((message?.author?.id ?? message?.user?.id) !== game.user.id || (item?.slug ?? item?.system?.slug) !== SLUG || message.flags?.[sysId()]?.context) return;
 	const actor = message.actor;
 	const token = message.token?.object ?? actor?.getActiveTokens?.()?.[0];
 	if (!actor || !token) return;
@@ -162,7 +163,7 @@ async function start({ commander, allies, item, drilled: drilledTo = null }) {
 /** An ally's Strike (GM's client): record its target and outcome; their card shows only the tactic. */
 async function onStrike(message) {
 	if (!game.user.isActiveGM) return;
-	const context = message?.flags?.pf2e?.context;
+	const context = message?.flags?.[sysId()]?.context;
 	if (!["attack-roll", "spell-attack-roll"].includes(context?.type) || context.isReroll) return;
 	const actorId = message.actor?.id;
 	for (const state of tactics.values()) {
@@ -214,7 +215,7 @@ async function rollSave(card) {
 	const target = fromUuidSync(data.target);
 	const actor = target?.actor;
 	if (!actor) return;
-	const Modifier = game.pf2e?.Modifier;
+	const Modifier = sysApi()?.Modifier;
 	const modifiers = data.penalty && Modifier ? [new Modifier({ label: data.title, modifier: data.penalty, type: "circumstance" })] : [];
 	// (verify) Statistic#roll's `modifiers` and `dc` in PF2e 8.7.
 	const roll = await actor.saves?.will?.roll({ dc: { value: data.dc }, modifiers, extraRollOptions: ["emotion", "fear", "mental"], traits: ["emotion", "fear", "mental"], skipDialog: true });

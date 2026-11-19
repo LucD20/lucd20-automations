@@ -1,4 +1,5 @@
 import { registerDiceStatsAdapter } from "../../features/dice-stats.js";
+import { sysId } from "./sys.js";
 
 /**
  * PF2e detail for Dice Stats: PF2e marks each check message with
@@ -27,7 +28,7 @@ registerDiceStatsAdapter({
     flat: "LUCD20.DiceStats.Type.flat"
   },
   check(message) {
-    const context = message.flags?.pf2e?.context;
+    const context = message.flags?.[sysId()]?.context;
     const type = TYPES[context?.type];
     if (!type) return null;
     return { type, outcome: context.outcome ?? null };

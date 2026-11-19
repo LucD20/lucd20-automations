@@ -2776,7 +2776,7 @@ yet; build in the order of §22.2. PF2e rules get their rows in
 
 | # | Item | What was found / decided |
 |---|---|---|
-| Q282 | Turn marker doesn't fit a scale-2 token | Size is `grid × max(w,h) × (1 + scale) × artScale` (`turn-markers.js:223`): the margin is multiplied by the art scale too; dynamic-ring tokens may keep their scale in `ring.subject.scale`. **Open**: too big, too small or off-centre? (screenshot). Proposal: only the footprint × art scale, the margin added on top. |
+| Q282 | Turn marker doesn't fit a scale-2 token | Size is `grid × max(w,h) × (1 + scale) × artScale` (`turn-markers.js:223`). Owner's screenshots: dynamic-ring tokens at Scale 2 (ring subject correction 2) and at 1.2 are both drawn about one square across, but the marker follows the 2 and is ~2.4 squares. Fix: with the dynamic ring enabled, the art scale is ignored (the marker fits the ring = the footprint); without a ring, footprint × art scale, the margin added on top instead of multiplied. (verify) in Foundry that the ring's drawn size is the footprint for any Scale; if not, measure the ring mesh instead. |
 | Q283 | "Didn't trigger on Large PCs" | Owner: **Reactive Strike of a PC under Enlarge**. The footprint maths handles 2×2 tokens; suspect the reach: `reachOf` (`reactive-strike.js:61`) may not see Enlarge's +5 ft (the CreatureSize rule element). Fix: reach = the largest of `getReach({action:"attack"})`, `attributes.reach.base` and the melee strikes' reach; a debug log of the reach used; harness test with an enlarged 2×2 PC with 10 ft reach. (verify) what PF2e 8.7 reports for an enlarged PC. |
 | — | Right-click drag shows "Describe" | `describe.js:188` only checks that *some* text is selected; an old selection stays, so a right-drag on the map opens the menu. Fix: only when the click is on the selection (its range rects contain the point), never on the canvas board, never after the pointer moved (a drag); the chat-menu entry the same. |
 | Q284 | Everyone sees the pick ("All actions show to all"), GM takes over | One core layer for `pickSquare` / `pickSeveral` (and 4e's `movement/picker.mjs`, **pushes, pulls and Shift included**): the chooser's highlights, hover arrow and choice are broadcast; other clients draw **only the indicator** (no bar, no warning, nothing else), read-only; squares / tokens a player can't see are never sent to them. Only the chooser and the GM can act; the GM gets **Take over** (the chooser's picker closes, the GM's opens with the same state). Users: Shove, Demoralizing Charge (and its Drilled Reactions pick), Punishing Shove, 4e forced movement and Shift. |
@@ -2794,7 +2794,6 @@ yet; build in the order of §22.2. PF2e rules get their rows in
 | Q296 | Hero start area | Creating an encounter asks the GM "Click on the map to create the start area \| Cancel". Click or click-and-drag marks squares; the drag is **wall-aware** (only squares reachable from where the drag started without crossing a wall). On the first area, **all PC tokens are teleported into it**, one per free square; with no room left they stack. The GM can keep adding squares. Starting the encounter deletes the area. |
 
 Still to settle while building (proposals):
-- Q282 needs the owner's screenshot.
 - Q284: which clients see the indicator: everyone who sees the tokens involved.
 - Q295: a stack sells one item, or asks how many (proposal: a number field
   when quantity > 1); "price" is the item's price ÷ 2 (treasure too, as
@@ -2810,7 +2809,7 @@ Still to settle while building (proposals):
    creatures (Q285), Reactive Strike reach under Enlarge (Q283), Sustain
    duplicate line (Q288), the avoid-AoO key Q → **Ctrl** (`pathfinding.js`
    lines 70, 331, 343; (verify) Ctrl during a V14 token drag does nothing
-   else), Frightened on one line (Q286), turn marker (Q282, once answered).
+   else), Frightened on one line (Q286), turn marker on ring tokens (Q282).
 2. **Shared picks + GM Take over** (Q284): core, before anything else picks.
 3. **Sustain re-post**: Earth's Bile (Q289).
 4. **Combat Assessment**, **Guardian's Deflection** (Q290); Combat Assessment's

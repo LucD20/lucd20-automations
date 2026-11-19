@@ -51,7 +51,10 @@ actors), but rolls written in the room text around them are converted.
 Skip, with the reason on the review page:
 - **1e starship combat** mechanics (placement, wreckage fields, gunnery):
   the owner builds SF2e starship encounters separately.
-- **Chase** rules and obstacles (the owner runs chases separately).
+- **Chase** rules and obstacles: the owner builds chases as 2e chase tables
+  by hand (Book 5: Connection Storm, Desert of the Mind, Connection Rift).
+  List a chase's passages under one "chase: build separately" note instead
+  of converting them one by one.
 - **Short conditions outside combat** ("stunned for 1 round" in a room):
   not worth converting; convert them when they last.
 - GM advice and rule notes with no roll ("you can roll these in secret":
@@ -120,6 +123,19 @@ Skip, with the reason on the review page:
   (wooden door: hardness 5, hp 20, force open 17; reinforced wooden: 10 / 40
   / 22; iron: 16 / 60 / 30): ask the owner which to use.
 - Leave 1e hit point amounts and falling damage as written; flag them.
+- "Save for half" → a basic save: `@Check[reflex|dc:N|basic]`.
+- 1e action costs: standard action → 2 actions, move action → 1 action,
+  full-round → 3 actions, swift / immediate → 1 action or a reaction.
+- A DC given as a formula ("DC 10 + the creature's CR", "identify the
+  creature") → Recall Knowledge without a DC (the creature's own DC applies).
+- 1e conditions with no 2e match *(proposals, flag them)*: shaken →
+  frightened 1; entangled → immobilized (or clumsy 1 when it can still
+  move); staggered → slowed 1; exhausted → fatigued (note "exhausted");
+  sickened / nauseated for rounds → sickened 1; stunned 1 round in combat →
+  stunned 1.
+- Starfinder Stamina Points have no SF2e equivalent: fold them into HP.
+- 1e AC, EAC / KAC and save-bonus targets are not DCs: flag them, like
+  attack bonuses.
 - Break stats: `hardness X, HP Y, [[/act force-open dc=…]]` (Break DC
   converted like any DC).
 
@@ -199,6 +215,13 @@ Religion: divine agents, theology, celestials, fiends, undead. Medicine:
 bodies, wounds, diseases, biology. Crafting: devices, machines, structures.
 Computers: code, data. List every one that applies.
 
+## Known gaps in the tools
+
+- `find_rolls.py` misses lines with a bonus / penalty and no dice or DC
+  ("−2 to attack and damage until …", "maximum Stamina −15", "ability DCs
+  +1"). Add a pattern for them when starting a new book (it changes the
+  passage numbers, so not in the middle of a book's review).
+
 ## Owner's feedback log
 
 - Book 6, round 1 (2026-11-19): convert the travel / downtime dice, rule
@@ -206,3 +229,8 @@ Computers: code, data. List every one that applies.
   by hand: the point of the tool); skip 1e starship combat, chase
   obstacles, 1-round conditions outside combat; write lines with context
   ("to determine that …"); number the review rows.
+- Books 5 and RotR 2, written by agents from this guide alone (2026-11-19):
+  the gaps they reported are filled above (conditions, percentages, bonus
+  types, Seek vs Perception, Recall Knowledge vs a check, basic saves,
+  action costs, 1e conditions, chases). Owner's RotR pages used door
+  presets; Book 6 converted the Break DC (owner to choose).

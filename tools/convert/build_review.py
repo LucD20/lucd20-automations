@@ -52,7 +52,10 @@ def owner_lines(world, folder):
         for pid in j["pages"]:
             p = P.get(pid)
             if p and p.get("text", {}).get("content"):
-                lis = [re.sub(r"<[^>]+>", "", l) for l in re.findall(r"<li><p>(.*?)</p>", p["text"]["content"])]
+                # One line per list item, table row or paragraph (the owner also puts checks in tables).
+                text = re.sub(r"</(p|li|tr|h\d)>|<br\s*/?>", "\n", p["text"]["content"])
+                text = re.sub(r"</t[dh]>", " | ", text)
+                lis = [re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", l)).strip(" |") for l in text.split("\n")]
                 lis = [l for l in lis if re.search(r"@Check|\[\[/|@Damage", l)]
                 if lis:
                     pages[f'{j["name"]} / {p["name"]}'] = lis

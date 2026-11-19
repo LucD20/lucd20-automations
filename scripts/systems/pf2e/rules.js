@@ -291,20 +291,36 @@ function shoveSquares(message) {
   const centre = doc => ({ x: doc.x / size + doc.width / 2, y: doc.y / size + doc.height / 2 });
   const width = target.width * size;
   const height = target.height * size;
-  const from = { x: target.x + width / 2, y: target.y + height / 2 };
   const viewed = scene === canvas.scene;
   const rect = viewed ? canvas.dimensions?.sceneRect : null;
   const others = [...scene.tokens].filter(d => d !== target && !d.hidden);
-  return shoveOffsets(centre(shover), centre(target), critical).map(o => ({
-    x: target.x + o.dx * size, y: target.y + o.dy * size, width, height, steps: o.steps, color: o.steps === 1 ? GREEN : BLUE
-  })).filter(s => {
-    if (rect && (s.x < rect.x || s.y < rect.y || s.x + width > rect.x + rect.width || s.y + height > rect.y + rect.height)) return false;
-    // Not through a wall, and not onto another creature.
-    const to = { x: s.x + width / 2, y: s.y + height / 2 };
-    const backend = viewed ? CONFIG.Canvas?.polygonBackends?.move : null;
-    if (backend?.testCollision?.(from, to, { type: "move", mode: "any" })) return false;
-    return !others.some(d => s.x < d.x + d.width * size && s.x + width > d.x && s.y < d.y + d.height * size && s.y + height > d.y);
-  });
+  const backend = viewed ? CONFIG.Canvas?.polygonBackends?.move : null;
+  const at = o => ({ x: target.x + o.dx * size, y: target.y + o.dy * size });
+  const mid = o => ({ x: target.x + o.dx * size + width / 2, y: target.y + o.dy * size + height / 2 });
+  const wall = (a, b) => !!backend?.testCollision?.(mid(a), mid(b), { type: "move", mode: "any" });
+  // The target's whole footprint at offset o: inside the scene and on no other creature.
+  const free = o => {
+    const { x, y } = at(o);
+    if (rect && (x < rect.x || y < rect.y || x + width > rect.x + rect.width || y + height > rect.y + rect.height)) return false;
+    return !others.some(d => x < d.x + d.width * size && x + width > d.x && y < d.y + d.height * size && y + height > d.y);
+  };
+  const HOME = { dx: 0, dy: 0 };
+  // v0.75.1 (owner): a push can't go through creatures. 10 ft: one of the squares half-way along the
+  // push (rounded either way) must be free, and no wall on either leg.
+  const halves = o => {
+    const xs = [Math.floor(o.dx / 2), Math.ceil(o.dx / 2)], ys = [Math.floor(o.dy / 2), Math.ceil(o.dy / 2)];
+    const out = [];
+    for (const dx of new Set(xs)) for (const dy of new Set(ys)) if (dx || dy) out.push({ dx, dy });
+    return out;
+  };
+  const reachable = o => {
+    if (!free(o)) return false;
+    if (o.steps === 1) return !wall(HOME, o);
+    return halves(o).some(h => free(h) && !wall(HOME, h) && !wall(h, o));
+  };
+  return shoveOffsets(centre(shover), centre(target), critical).filter(reachable).map(o => ({
+    ...at(o), width, height, steps: o.steps, color: o.steps === 1 ? GREEN : BLUE
+  }));
 }
 
 /** The roller's client: after the dice, choose a square and ask the GM's client to move the target. */

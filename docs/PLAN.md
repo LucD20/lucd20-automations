@@ -2805,6 +2805,38 @@ Still to settle while building (proposals):
 
 ### 22.2 Build order
 
+**Step 1 built v0.75.1** (harness tests 5, 19, 27, 37, 41, 48 updated):
+- Describe: the menu only on a right click *on* the selected text (not on
+  `#board` / a canvas, not after a right-drag of more than 4 px); Describe
+  from the menu (ours or Foundry's chat menu) also posts the text to chat as
+  a narration line (speaker "Narrator", public), option `postToChat`
+  (default on).
+- Shove: every square of the push is checked for creatures; for 10 ft, one of
+  the half-way squares (the half of the offset rounded either way) must be
+  free and no wall on either leg.
+- Reactive Strike: reach = max(`getReach({ action: "attack" })`, base reach).
+  PF2e's source: Enlarge sets the base reach (CreatureSize rule element,
+  `reach.override` 10 / 15) and `getReach` returns it, and the 2×2 footprint
+  maths was already right (new harness checks), so the cause is still
+  unknown. `CONFIG.debug.lucd20Rules = true` now logs, for each move, every
+  creature with Reactive Strike: footprint, reach, `getReach`, base reach,
+  enemy, down, in combat, reaction left, square left. **Owner**: run that
+  with the Enlarged PC and send the console line.
+- Sustain: the duplicate line ("X: duplicate effect?" Yes / No; card kind
+  `dup`).
+- Pathfinding: hold **Ctrl** (or Cmd) instead of Q to keep away from
+  enemies; the hint says Ctrl. (verify) Ctrl held during a V14 token drag
+  does nothing else.
+- Rule notes (Frightened, sustain endings, Reactive Strike disruption,
+  Demoralizing Charge result, reactions): no message header, one line
+  (ellipsis if the chat is too narrow); Frightened's text shortened
+  ("Amiri: Frightened 2 → 1", "Amiri: no longer Frightened").
+- Turn marker: size = footprint × (art + margin); art = 1 for a token with
+  a dynamic ring (`doc.ring.enabled`).
+
+Harness: tests 4, 11 and 13 fail before and after this change (their mocks
+no longer match the module); not touched.
+
 1. **Fix release**: Describe right-click (and → chat, Q287), Shove through
    creatures (Q285), Reactive Strike reach under Enlarge (Q283), Sustain
    duplicate line (Q288), the avoid-AoO key Q → **Ctrl** (`pathfinding.js`

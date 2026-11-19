@@ -2075,6 +2075,27 @@ li:has(> .lucd20-scene-nav) {
   background: rgba(255, 255, 255, 0.1);
 }
 
+/* Describe posted to chat: narration */
+.lucd20-describe-chat {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-style: italic;
+}
+
+.lucd20-describe-chat > i {
+  margin-top: 3px;
+  opacity: 0.7;
+}
+
+.lucd20-describe-chat p {
+  margin: 0 0 4px;
+}
+
+.lucd20-describe-chat p:last-child {
+  margin-bottom: 0;
+}
+
 /* PF2e door locks: card and wall settings ------------------------------ */
 
 .lucd20-lock-card .lucd20-lock-title {
@@ -2656,6 +2677,11 @@ li:has(> .lucd20-scene-nav) {
 /* v0.50.1 (owner): no message header on these cards (the creature's name is in the card's own header). */
 .chat-message:has(.lucd20-pf2e-card) > .message-header { display: none; }
 .chat-message:has(.lucd20-pf2e-card) .message-content { margin-top: 0; }
+/* v0.75.1 (owner: "just write it in a single line"): rule notes (Frightened, sustain endings …) are one
+   line: no message header, the text on one line (cut with … if the chat is too narrow). */
+.chat-message:has(> .message-content > .lucd20-rule-note:only-child) > .message-header { display: none; }
+.chat-message:has(> .message-content > .lucd20-rule-note:only-child) .message-content { margin-top: 0; }
+.chat-message .lucd20-rule-note { margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* v0.51.1 (owner): one line per target, like the PF2e Flat Check module: the die, a green or red background. */
 /* v0.53.0 (owner): the hand is a small button covering the link's right end, easy to hit. */
 /* v0.69.2 (owner: the divider stuck out above and below the link): no vertical padding or margin, so the hand

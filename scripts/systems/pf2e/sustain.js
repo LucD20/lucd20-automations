@@ -12,6 +12,8 @@ import { nameForPlayers } from "./card.js";
  *   players and the GM; the GM only for a hidden token). The limit reached: the effect ends, one line says so.
  * - The end of the caster's turn, a spell not sustained: "Was X sustained?" Yes / No (owner, Q205: ask before
  *   removing). No ends it. Using the Sustain action from the sheet sustains the only spell waiting.
+ * - v0.75.1 (owner): a second cast of a spell already being sustained keeps both effects and posts one line
+ *   "X: duplicate effect?" Yes (the new effect goes, nothing else said) / No (both kept).
  * The cards go once every line is answered. On the active GM's client.
  */
 
@@ -40,12 +42,14 @@ async function onCast(message) {
 	if (!actor) return;
 	const limit = limitRounds(spell.system.duration.value);
 	const round = game.combat?.started ? game.combat.round : null;
-	await actor.createEmbeddedDocuments("Item", [{
+	const slug = `sustaining-${spell.slug ?? spell.system?.slug ?? "spell"}`;
+	const already = sustained(actor).some((e) => (e.slug ?? e.system?.slug) === slug);
+	const [created] = await actor.createEmbeddedDocuments("Item", [{
 		type: "effect",
 		name: L("Effect", { spell: spell.name }),
 		img: spell.img,
 		system: {
-			slug: `sustaining-${spell.slug ?? spell.system?.slug ?? "spell"}`,
+			slug,
 			description: { value: spell.system?.description?.value ?? "" },
 			duration: limit ? { value: limit, unit: "rounds", expiry: "turn-start", sustained: true } : { value: -1, unit: "unlimited", expiry: null, sustained: true },
 			level: { value: message.flags?.pf2e?.origin?.castRank ?? spell.rank ?? 1 },
@@ -54,6 +58,10 @@ async function onCast(message) {
 		// sustained: this turn (the turn it was cast needs no Sustain).
 		flags: { [MODULE_ID]: { [FLAG]: { spell: spell.uuid, name: spell.name, ends: limit && round !== null ? round + limit : null, sustained: true } } }
 	}]);
+	if (already && created) {
+		const token = message.token ?? actor.getActiveTokens?.()?.[0]?.document ?? null;
+		await postCard({ actor, token }, [created], "dup");
+	}
 }
 
 /** The Sustain action used from the sheet: the only spell waiting is sustained. */
@@ -97,8 +105,11 @@ function row(effect, kind) {
 	const data = effect.getFlag(MODULE_ID, FLAG);
 	const buttons = kind === "ask"
 		? [["yes", "fa-check", L("Yes")], ["no", "fa-xmark", L("No")]]
-		: [["sustain", "fa-hourglass-half", L("SustainButton")], ["end", "fa-xmark", L("End")]];
-	return `<div class="lucd20-sus-row" data-lucd20-sus-row="${esc(effect.uuid)}"><img src="${esc(effect.img)}" alt="" /><span>${esc(kind === "ask" ? L("Ask", { name: data.name }) : data.name)}</span>${buttons.map(([v, icon, label]) => `<button type="button" data-lucd20-sus="${v}" data-effect="${esc(effect.uuid)}"><i class="fa-solid ${icon}"></i> ${esc(label)}</button>`).join("")}</div>`;
+		: kind === "dup"
+			? [["dupYes", "fa-check", L("Yes")], ["dupNo", "fa-xmark", L("No")]]
+			: [["sustain", "fa-hourglass-half", L("SustainButton")], ["end", "fa-xmark", L("End")]];
+	const text = kind === "ask" ? L("Ask", { name: data.name }) : kind === "dup" ? L("Duplicate", { name: data.name }) : data.name;
+	return `<div class="lucd20-sus-row" data-lucd20-sus-row="${esc(effect.uuid)}"><img src="${esc(effect.img)}" alt="" /><span>${esc(text)}</span>${buttons.map(([v, icon, label]) => `<button type="button" data-lucd20-sus="${v}" data-effect="${esc(effect.uuid)}"><i class="fa-solid ${icon}"></i> ${esc(label)}</button>`).join("")}</div>`;
 }
 
 async function postCard(combatant, effects, kind) {
@@ -152,6 +163,8 @@ async function answer({ effect, value }, senderId) {
 	if (value === "sustain" || value === "yes") return markSustained(fx);
 	if (value === "end") return endSpell(fx, "Ended");
 	if (value === "no") return endSpell(fx, "NotSustained");
+	if (value === "dupYes") { await fx.delete(); return dropLine(effect); }
+	if (value === "dupNo") return dropLine(effect);
 	return false;
 }
 

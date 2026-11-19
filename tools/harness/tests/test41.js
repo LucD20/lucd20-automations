@@ -50,9 +50,24 @@ const assert = require("assert");
     // Geometry: PF2e counting; 10-ft reach takes two squares diagonally.
     const box = (x, y) => ({ x0: x, y0: y, x1: x, y1: y });
     out.geometry = [rs.feetBetween(box(0, 0), box(1, 1)), rs.feetBetween(box(0, 0), box(2, 2)), rs.withinReach(box(0, 0), box(2, 2), 10), rs.withinReach(box(0, 0), box(2, 0), 5), rs.withinReach(box(0, 0), box(3, 3), 10)];
+    // v0.75.1 (owner: no card for an Enlarged PC): Enlarge makes the PC 2×2 with base reach 10 (PF2e's
+    // CreatureSize rule element), and getReach({ action: "attack" }) returns it. Enemies leaving squares at
+    // 10 ft (straight and two diagonally) and at 5 ft from any side of the 2×2 footprint count.
+    {
+      const big = { document: { x: 1000, y: 1000, width: 2, height: 2 }, actor: { getReach: ({ action }) => (action === "attack" ? 10 : 10), system: { attributes: { reach: { base: 10 } } } } };
+      const walker = { document: { width: 1, height: 1 } };
+      const left = (from, to) => rs.leftReach(walker, { x: from[0] * 100, y: from[1] * 100 }, [{ x: to[0] * 100, y: to[1] * 100, action: "walk" }], [big]).size;
+      out.enlarged = [left([13, 10], [14, 10]), left([12, 12], [13, 13]), left([9, 11], [8, 11]), left([12, 8], [12, 7]), left([14, 10], [15, 10]), left([14, 13], [15, 13])];
+      // Old data where getReach is missing or says less: the base reach is used when larger.
+      out.reachFallback = [rs.reachOf({ system: { attributes: { reach: { base: 10 } } } }), rs.reachOf({ getReach: () => 5, system: { attributes: { reach: { base: 10 } } } })];
+    }
 
-    // Amiri walks away from the ogre: the ogre's card, to the GM only (a monster).
+    // Amiri walks away from the ogre: the ogre's card, to the GM only (a monster). The debug log runs without error.
+    (CONFIG.debug ??= {}).lucd20Rules = true;
+    const logged = []; const log = console.log; console.log = (...a) => { logged.push(a); };
     rs._test.onMoveToken(tAmiri.document, { origin: { x: 500, y: 600 }, passed: { waypoints: [{ x: 500, y: 700, action: "walk" }, { x: 500, y: 800, action: "walk" }] } }, {}); await settle();
+    console.log = log; CONFIG.debug.lucd20Rules = false;
+    out.debug = logged.filter(a => String(a[0]).includes("Reactive Strike move")).map(a => a[1].reactors.map(r => [r.name, r.reach, !!r.left]));
     const c1 = cards().at(-1);
     // PF2e's card layout; a click on the card (not a button) opens the item's compendium entry.
     ogreA.items[0]._stats = { compendiumSource: "Compendium.pf2e.actionspf2e.Item.rs" };
@@ -127,6 +142,9 @@ const assert = require("assert");
     return out;
   });
   console.log(JSON.stringify(r, null, 1));
+  assert.deepStrictEqual(r.enlarged, [1, 1, 1, 1, 0, 0], "an Enlarged (2×2, 10 ft) reactor: squares 10 ft away straight and two diagonally count; 15 ft don't");
+  assert.deepStrictEqual(r.debug, [[["Ogre", 5, true]]], "the debug log names each creature with Reactive Strike, its reach and whether the move left it");
+  assert.deepStrictEqual(r.reachFallback, [10, 10], "the base reach when getReach is missing or smaller");
   assert.deepStrictEqual(r.geometry, [5, 15, true, false, false], "PF2e distances; 10-ft reach takes two diagonal squares");
   assert.deepStrictEqual(r.moveCard, [1, ["u1"], "Reactive Strike Ogre Amiri left your reach (not if a Step). Club Skip", ["0", "skip"]], "leaving reach: the monster's card to the GM, melee Strikes only, the Step reminder");
   assert.deepStrictEqual(r.layout, [true, true], "PF2e's card layout, buttons side by side");

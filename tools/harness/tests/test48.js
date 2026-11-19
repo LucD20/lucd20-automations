@@ -29,7 +29,7 @@ const assert = require("assert");
       get itemTypes() { return { effect: this.effects }; },
       async createEmbeddedDocuments(t, list) { for (const d of list) { const e = { id: `e${++eid}`, uuid: `Actor.ez.Item.e${eid}`, parent: this, ...d,
         getFlag(ns, k) { return this.flags[ns]?.[k]; }, async setFlag(ns, k, v) { this.flags[ns][k] = v; }, async delete() { ezren.effects = ezren.effects.filter(x => x !== this); delete registry[this.uuid]; } };
-        registry[e.uuid] = e; this.effects.push(e); } } };
+        registry[e.uuid] = e; this.effects.push(e); out.lastCreated = e; } return [out.lastCreated]; } };
     const tokenDoc = { id: "t", name: "Ezren", hidden: false, actor: ezren };
     ezren.getActiveTokens = () => [{ document: tokenDoc }];
     const c = { id: "c-ez", actor: ezren, token: tokenDoc }, other = { id: "c-o", actor: { name: "Ogre", effects: [], itemTypes: { effect: [] } } };
@@ -44,6 +44,10 @@ const assert = require("assert");
     // Cast: one effect per cast; posted or not sustained: nothing.
     await cast(spell("Laughing Fit", "1 minute")); await cast(spell("Laughing Fit", "1 minute")); await cast(spell("Fireball", "", false)); await cast(spell("Figment", "1 minute"), false); await settle();
     out.effects = ezren.effects.map(e => [e.name, e.system.duration.value, e.system.level.value, e.flags[M].sustain.ends, e.flags[M].sustain.sustained]);
+    // v0.75.1: the second Laughing Fit: one line "duplicate effect?"; No keeps both.
+    out.dup = [cards().length, txt(cards()[0]?.content), cards()[0]?.flags[M].sustainCard.effects[0] === ezren.effects[1].uuid];
+    await click(cards()[0], "dupNo");
+    out.dupNo = [cards().length, ezren.effects.length];
     // The turn it was cast ends: no question.
     turn(1, 1, other); await settle(120); out.noAsk = cards().length;
     // Next turn: the reminder, two lines; Sustain one, End the other.
@@ -72,11 +76,20 @@ const assert = require("assert");
     ezren.effects[0].flags[M].sustain.ends = 6;
     turn(5, 1, other); await settle(120); turn(6, 0, c); await settle(120);
     out.expired = [ezren.effects.length, txt(game.messages.filter(m => !m.flags[M]?.sustainCard).at(-1).content)];
+    // Duplicate, Yes: the new effect goes, nothing said.
+    await cast(spell("Figment", "1 minute")); await cast(spell("Figment", "1 minute")); await settle();
+    const said = game.messages.length;
+    await click(cards().at(-1), "dupYes");
+    out.dupYes = [ezren.effects.length, cards().filter(m => m.flags[M].sustainCard.kind === "dup").length, game.messages.length - said];
+    delete out.lastCreated;
     return out;
   });
   console.log(JSON.stringify(r));
   assert.deepStrictEqual(r.limits, [10, 10, 100, 3, null, null], "limits in rounds");
   assert.deepStrictEqual(r.effects, [["Sustaining: Laughing Fit", 10, 3, 11, true], ["Sustaining: Laughing Fit", 10, 3, 11, true]], "one effect per cast, the limit, the cast rank; not posted or unsustained spells");
+  assert.deepStrictEqual(r.dup, [1, "Laughing Fit: duplicate effect? Yes No", true], "a second cast of a sustained spell: one duplicate line about the new effect");
+  assert.deepStrictEqual(r.dupNo, [0, 2], "No keeps both; the line goes");
+  assert.deepStrictEqual(r.dupYes, [1, 0, -1], "Yes deletes the new effect; the line goes, nothing else is posted");
   assert.strictEqual(r.noAsk, 0, "the turn it was cast needs no Sustain");
   assert.deepStrictEqual(r.remind, [1, "Laughing Fit Sustain End Laughing Fit Sustain End", ["p1", "u1"]], "the reminder: one line per spell, to the player and the GM");
   assert.deepStrictEqual(r.afterSustain, ["Laughing Fit Sustain End", [true, false]], "Sustain: its line goes");

@@ -74,9 +74,9 @@ const out = __dirname;
   // Threats: enemy right in the middle of a corridor-free straight line (1,3) → (5,3), enemy at (3,3) blocks the line itself
   await page.evaluate(() => { __enemy.document.x = 300; __enemy.document.y = 200; Hooks.callAll("updateToken", __enemy.document, {}, {}); });
   // v0.39.0: keeping away from enemies is the exception, done while Q is held.
-  await page.evaluate(() => game.keyboard.downKeys.add("KeyQ"));
+  await page.evaluate(() => game.keyboard.downKeys.add("ControlLeft"));
   r = await route(page, [4, 3]);
-  await page.evaluate(() => game.keyboard.downKeys.delete("KeyQ"));
+  await page.evaluate(() => game.keyboard.downKeys.delete("ControlLeft"));
   console.log("around the enemy (Q held):", JSON.stringify(r));
   const cells = [];
   for (let k = 1; k < r.length; k++) {
@@ -113,14 +113,14 @@ const out = __dirname;
     drag();
     const el = () => document.querySelector(".lucd20-drag-hint");
     const out = { text: el()?.textContent, above: el() && el().getBoundingClientRect().bottom <= bar.getBoundingClientRect().top, on: el()?.classList.contains("is-on") };
-    game.keyboard.downKeys.add("KeyQ"); drag(); out.onWithQ = el()?.classList.contains("is-on"); game.keyboard.downKeys.delete("KeyQ");
+    game.keyboard.downKeys.add("ControlLeft"); drag(); out.onWithQ = el()?.classList.contains("is-on"); game.keyboard.downKeys.delete("ControlLeft");
     window.dispatchEvent(new Event("pointerup")); out.afterDrop = !!el();
     await game.settings.set("lucd20-automations", "pathfinding_dragHint", false); drag(); out.switchedOff = !!el();
     await game.settings.set("lucd20-automations", "pathfinding_dragHint", true);
     return out;
   });
   console.log("hint:", JSON.stringify(hint));
-  assert.deepStrictEqual(hint, { text: "QHold Q to go around enemies", above: true, on: false, onWithQ: true, afterDrop: false, switchedOff: false });
+  assert.deepStrictEqual(hint, { text: "CtrlHold Ctrl to go around enemies", above: true, on: false, onWithQ: true, afterDrop: false, switchedOff: false });
 
   // An enemy standing on the line: its square is closed, so the route goes around the token itself (no Q needed).
   await page.evaluate(() => { __enemy.document.x = 300; __enemy.document.y = 300; Hooks.callAll("updateToken", __enemy.document, {}, {}); });

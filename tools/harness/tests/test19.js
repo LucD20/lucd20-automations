@@ -21,6 +21,12 @@ async function setup(page) {
     chat.style.cssText = "position:fixed;right:10px;top:20px;width:300px;background:#222;color:#ddd";
     chat.innerHTML = `<li class="chat-message message" data-message-id="m1"><header class="message-header">GM</header><div class="message-content"><p id="ctext">Something moves in the dark.</p></div></li>`;
     document.body.append(chat);
+    window.__chat = [];
+    window.ChatMessage = { create: async d => { __chat.push(d); return d; } };
+    const board = document.createElement("canvas");
+    board.id = "board";
+    board.style.cssText = "position:fixed;left:0;top:300px;width:600px;height:300px;background:#363";
+    document.body.append(board);
     window.__select = id => { const r = document.createRange(); r.selectNodeContents(document.getElementById(id)); const s = getSelection(); s.removeAllRanges(); s.addRange(r); };
   });
 }
@@ -81,8 +87,39 @@ async function setup(page) {
   await page.click("#lucd20-describe-menu .context-item");
   await page.waitForTimeout(100);
   assert.ok((await page.$eval(".lucd20-describe-text", e => e.textContent)).startsWith("The door creaks open."));
+  await page.waitForTimeout(50);
+  assert.strictEqual(await page.evaluate(() => __chat.length), 1, "right-click Describe posts to chat");
+  assert.ok(await page.evaluate(() => __chat[0].content.includes("The door creaks open.") && __chat[0].content.includes("lucd20-describe-chat")), "narration card");
   await page.click("[data-describe='close']");
   await page.waitForTimeout(700);
+  // option off → no chat post
+  await set(page, "describe_postToChat", false);
+  await page.waitForTimeout(50);
+  await page.evaluate(() => __select("jtext"));
+  await page.click("#jtext", { button: "right" });
+  await page.click("#lucd20-describe-menu .context-item");
+  await page.waitForTimeout(100);
+  assert.strictEqual(await page.evaluate(() => __chat.length), 1, "postToChat off: nothing posted");
+  await page.click("[data-describe='close']");
+  await page.waitForTimeout(700);
+  await set(page, "describe_postToChat", true);
+  await page.waitForTimeout(50);
+  // owner's bug: text still selected, right-click (or right-drag) on the map → no menu
+  await page.evaluate(() => __select("jtext"));
+  await page.click("#board", { button: "right", position: { x: 300, y: 150 } });
+  assert.strictEqual(await page.$$eval("#lucd20-describe-menu", e => e.length), 0, "no menu on the map");
+  // right-click elsewhere (not on the selection)
+  await page.mouse.click(900, 600, { button: "right" });
+  assert.strictEqual(await page.$$eval("#lucd20-describe-menu", e => e.length), 0, "no menu away from the selection");
+  assert.strictEqual(await page.evaluate(() => { const o = []; Hooks.callAll("getChatMessageContextOptions", {}, o); return o.find(x => x.name === "LUCD20.Describe.Menu").condition(); }), false, "chat entry off after a click away from the selection");
+  // a right-drag that ends on the selected text → no menu
+  const box = await page.$eval("#jtext", e => { const r = e.getBoundingClientRect(); return { x: r.left + 30, y: r.top + 8 }; });
+  await page.mouse.move(box.x + 200, box.y + 300);
+  await page.mouse.down({ button: "right" });
+  await page.mouse.move(box.x, box.y, { steps: 5 });
+  await page.mouse.up({ button: "right" });
+  await page.waitForTimeout(50);
+  assert.strictEqual(await page.$$eval("#lucd20-describe-menu", e => e.length), 0, "no menu after a right-drag");
   // no selection → no menu
   await page.evaluate(() => getSelection().removeAllRanges());
   await page.click("#jtext", { button: "right" });

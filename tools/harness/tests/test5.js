@@ -103,18 +103,24 @@ const M = "modules/lucd20-automations/assets/markers";
   await page.evaluate(() => __turn(4));
   await page.waitForTimeout(200);
   s = await state(page);
-  assert.strictEqual(s.find(x => x.alpha === 1).on, "amiri"); assert.strictEqual(s.find(x => x.alpha === 1).w, 240, "follows art scale 2 by default");
+  assert.strictEqual(s.find(x => x.alpha === 1).on, "amiri"); assert.strictEqual(s.find(x => x.alpha === 1).w, 220, "follows art scale 2 by default (margin added, not multiplied)");
   assert.strictEqual(s.find(x => x.alpha === 0.5).on, "valeros", "wraps to next round");
   // next marker shares turn marker size: change turn scale → both change
   await set(page, "turnMarker_scale", 0.9);
   await page.waitForTimeout(500);
   s = await state(page);
   console.log("after turn scale 0.9:", JSON.stringify(s.map(x => [x.on, x.w])));
-  assert.ok(s.every(x => x.w === (x.on === "amiri" ? 380 : 190)), "both markers use the Turn Marker scale");
+  assert.ok(s.every(x => x.w === (x.on === "amiri" ? 290 : 190)), "both markers use the Turn Marker scale");
   await set(page, "turnMarker_scale", 0.2);
   await page.waitForTimeout(400);
 
 
+  // v0.75.1 (owner's screenshots): a dynamic-ring token is drawn at its footprint, whatever its scale.
+  await page.evaluate(() => { __t.amiri.document.ring = { enabled: true }; });
+  await page.waitForTimeout(200);
+  s = await state(page);
+  assert.strictEqual(s.find(x => x.on === "amiri").w, 120, "ring token: art scale ignored");
+  await page.evaluate(() => { delete __t.amiri.document.ring; });
   await set(page, "turnMarker_followArtScale", false);
   await page.waitForTimeout(400);
   s = await state(page);

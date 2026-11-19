@@ -44,6 +44,9 @@ const state = { feature: null, versions: 0, context: null, logged: new Set() };
 /* -------------------------------------------- */
 
 const keyDown = code => !!game.keyboard?.downKeys?.has?.(code);
+/** v0.75.1 (owner): Ctrl (Cmd on a Mac) held while dragging keeps away from enemies (was Q). */
+const AVOID_KEYS = ["ControlLeft", "ControlRight", "MetaLeft", "MetaRight"];
+const avoidDown = () => AVOID_KEYS.some(keyDown);
 
 /** Tell other features which path a token is about to take (hook `lucd20MovementPath`: token, search). */
 function announce(token, search) {
@@ -53,7 +56,7 @@ function announce(token, search) {
 }
 
 /**
- * "Hold Q to go around enemies", just above the macro bar while a token is being dragged. Shown by
+ * "Hold Ctrl to go around enemies", just above the macro bar while a token is being dragged. Shown by
  * each path search of a drag and taken away when the drag ends (or a few seconds after the last one).
  */
 function showHint() {
@@ -62,12 +65,12 @@ function showHint() {
   if (!hint) {
     hint = document.createElement("div");
     hint.className = "lucd20-drag-hint";
-    hint.innerHTML = `<kbd>Q</kbd><span>${localize("LUCD20.Pathfinding.HintQ")}</span>`;
+    hint.innerHTML = `<kbd>Ctrl</kbd><span>${localize("LUCD20.Pathfinding.HintQ")}</span>`;
     document.body.append(hint);
   }
   const bar = (document.getElementById("lucd20-hud4e") ?? document.getElementById("hotbar"))?.getBoundingClientRect();
   hint.style.bottom = `${bar?.height ? Math.max(8, window.innerHeight - bar.top + 8) : 90}px`;
-  hint.classList.toggle("is-on", keyDown("KeyQ"));
+  hint.classList.toggle("is-on", avoidDown());
   clearTimeout(state.hintTimer);
   state.hintTimer = setTimeout(hideHint, 6000);
 }
@@ -328,7 +331,7 @@ function gridOrigin() {
 
 function context(token, { ignoreCost = false } = {}) {
   const size = canvas.grid.size;
-  const flags = `${keyDown("KeyQ")}|${keyDown("KeyT")}|${ignoreCost}`;
+  const flags = `${avoidDown()}|${keyDown("KeyT")}|${ignoreCost}`;
   const key = `${canvas.scene?.id}|${token.id}|${state.versions}|${flags}`;
   const now = Date.now();
   if (state.context?.key === key && now - state.context.time < 1500) return state.context;
@@ -340,7 +343,7 @@ function context(token, { ignoreCost = false } = {}) {
     blocked: wallIndex(size),
     wallHits: new Map(),
     terrain: feature.get("avoidTerrain") && !keyDown("KeyT") && !ignoreCost ? terrainGrid(token.document, size) : new Map(),
-    threats: feature.get("avoidThreats") && keyDown("KeyQ") ? threatGrid(token, size) : new Set(),
+    threats: feature.get("avoidThreats") && avoidDown() ? threatGrid(token, size) : new Set(),
     near: threatGrid(token, size), // squares next to a visible enemy, for the tie-break
     // Squares enemies stand on cannot be walked through (PF2e, D&D 4e). Slipping diagonally between
     // two of them stays possible: only the squares themselves are closed.

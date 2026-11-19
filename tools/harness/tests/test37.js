@@ -113,6 +113,10 @@ const assert = require("assert");
     CONFIG.Canvas.polygonBackends = { move: { testCollision: (a, b) => b.x > 600 } }; // a wall east of column 5
     const shove = post("shove1", { context: { type: "skill-check", options: ["action:shove", "attack"], outcome: "criticalSuccess", actor: "amiri", origin: { actor: "Actor.amiri", token: "Scene.s.Token.amiri" }, target: { actor: "Actor.ogre", token: "Scene.s.Token.ogre" } } });
     out.offered = mod._test.shoveSquares(shove).map(s => `${s.x / 100},${s.y / 100}${s.steps === 2 ? "*" : ""}`).sort();
+    // v0.75.1: not through creatures: the bystander straight ahead blocks the square behind it too.
+    Object.assign(tBy, { x: 500, y: 400 });
+    out.offeredBlocked = mod._test.shoveSquares(shove).map(s => `${s.x / 100},${s.y / 100}${s.steps === 2 ? "*" : ""}`).sort();
+    Object.assign(tBy, { x: 400, y: 400 });
     Hooks.callAll("createChatMessage", shove); await settle();
     out.bar = document.querySelector(".lucd20-pick-bar")?.textContent;
     out.highlights = canvas.interface.children[0]?.children.length;
@@ -166,7 +170,7 @@ const assert = require("assert");
   assert.strictEqual(r.frightenedAtStart, 2, "1. nothing ends when the encounter begins");
   assert.deepStrictEqual(r.frightened, [1, 1, 0], "1. Frightened: −1 at the end of the creature's own turn only");
   assert.strictEqual(r.noLineForOthers, 0, "2. no retch line for a creature that is not sickened");
-  assert.deepStrictEqual(r.frightenedChat, ["Amiri : Frightened 2 → 1 (end of turn).", "public", "Amiri is no longer Frightened (end of turn)."], "1. chat says what changed");
+  assert.deepStrictEqual(r.frightenedChat, ["Amiri : Frightened 2 → 1", "public", "Amiri : no longer Frightened"], "1. chat says what changed");
   assert.strictEqual(r.waitsForTurnCard, 0, "2. the retch line waits for the turn card when the Turn Announcer is on");
   assert.deepStrictEqual(r.fromSave, [{ dc: 21, source: "save" }, "Rules text. Retch: Fortitude DC 21 (the DC of the save)"], "2. the DC of the save the creature just rolled, noted on the condition");
   assert.deepStrictEqual([r.fromSpell, r.fromLevel, r.fromNothing], [{ dc: 23, source: "spell" }, { dc: 20, source: "level" }, { dc: 18, source: "own" }], "2. spell DC, else level-based DC of the source, else of the creature");
@@ -178,6 +182,7 @@ const assert = require("assert");
   assert.deepStrictEqual(r.shoveDiagonal, ["-1,-1:1", "-1,0:1", "0,-1:1"], "3. diagonal: the far corner");
   assert.deepStrictEqual(r.shoveDiagonalCrit, ["-1,-2:2", "-2,-1:2", "-2,0:2", "0,-2:2"], "3. diagonal, critical: two above and two to the side, not the corner");
   assert.deepStrictEqual(r.offered, ["3,4*", "4,3*", "5,3*", "5,4"].sort(), "3. on the map: no square behind the wall (column 6 and 7) or under the bystander (4,4)");
+  assert.deepStrictEqual(r.offeredBlocked, ["3,4*", "4,3*", "4,4"].sort(), "3. a creature in the way: not its square nor the one behind it (5,3); around it is fine");
   assert.deepStrictEqual([r.bar, r.highlights, r.stillChoosing], ["Shove: click a green or blue square to push ogre. Cancel", 5, true]);
   assert.deepStrictEqual(r.moved, [["ogre", 5, 3], false, 0, true], "3. the click moves the target; the highlights go");
   assert.deepStrictEqual([r.twice, r.failure, r.cheat, r.cancelled], ["That Shove was already resolved.", false, "That Shove can no longer be resolved.", [false, false]], "3. once per Shove; nothing on a failure; a square that was not offered is refused; the Cancel button calls it off");

@@ -1,14 +1,17 @@
-import { localize } from "../core/constants.js";
+import { error, localize } from "../core/constants.js";
 import { defineFeature } from "../core/registry.js";
 import { broadcast, onBroadcast } from "../core/socket.js";
 
 /**
  * Describe (replaces Narrator Tools' "describe"). GM only (owner's decision).
  *
- * - Select text anywhere and right-click → Describe. On chat messages it is an
- *   entry in Foundry's own message menu; elsewhere (journals, item
- *   descriptions …) a small menu in Foundry's context-menu style appears,
- *   only while text is selected.
+ * - Select text anywhere and right-click it → Describe. On chat messages it is
+ *   an entry in Foundry's own message menu; elsewhere (journals, item
+ *   descriptions …) a small menu in Foundry's context-menu style appears.
+ *   Only when the right click is on the selected text: never on the map, never
+ *   at the end of a right-drag (v0.75.1, owner: dragging the map showed it).
+ * - Describe from the right-click menu also posts the text to chat (owner,
+ *   v0.75.1; option `postToChat`). `/describe` posts nothing.
  * - `/describe Text` in chat does the same; no chat message is posted.
  * - Everyone sees the text across the middle of the screen on a dark band
  *   (fading out at its top and bottom edges), fading in and out.
@@ -16,9 +19,11 @@ import { broadcast, onBroadcast } from "../core/socket.js";
  *   it; the GM's click dismisses it for everyone.
  */
 
+const esc = value => Handlebars.escapeExpression(String(value ?? ""));
 const COMMAND = /^\/describe(?:\s+([\s\S]*))?$/i;
 const FADE_MS = 600;
-const state = { feature: null, current: null, selection: "", menu: null };
+const state = { feature: null, current: null, selection: "", menu: null, rightDown: null };
+const DRAG_PX = 4;
 
 export function describeDuration(text) {
   const words = String(text).trim().split(/\s+/).filter(Boolean).length;
@@ -124,6 +129,18 @@ onBroadcast("describe.show", payload => {
 onBroadcast("describe.hide", payload => hide(payload?.id));
 onBroadcast("describe.pause", payload => setPaused(payload?.id, !!payload?.paused));
 
+/** Right-click → Describe: shown on every screen and (option) posted to chat as narration. */
+async function describeAndPost(text) {
+  describe(text);
+  const clean = String(text ?? "").replace(/\r/g, "").trim();
+  if (!clean || !game.user.isGM || !state.feature?.get("postToChat")) return;
+  const html = clean.split(/\n{2,}/).map(p => `<p>${esc(p).replace(/\n/g, "<br>")}</p>`).join("");
+  await ChatMessage.create({
+    content: `<div class="lucd20-describe-chat"><i class="fa-solid fa-scroll"></i><div>${html}</div></div>`,
+    speaker: { alias: localize("LUCD20.Describe.Narrator") }
+  });
+}
+
 /* -------------------------------------------- */
 /*  /describe                                   */
 /* -------------------------------------------- */
@@ -172,7 +189,7 @@ function openMenu(x, y, text) {
     event.preventDefault();
     event.stopPropagation();
     closeMenu();
-    describe(text);
+    describeAndPost(text).catch(err => error("Describe failed.", err));
   });
   document.body.append(nav);
   const rect = nav.getBoundingClientRect();
@@ -186,12 +203,32 @@ function inChatMessage(target) {
   return !!target.closest("[data-message-id]");
 }
 
+/** Is the point on the selected text (one of its line boxes)? */
+function onSelection(x, y) {
+  const selection = window.getSelection?.();
+  if (!selection?.rangeCount) return false;
+  for (let i = 0; i < selection.rangeCount; i++) {
+    for (const r of selection.getRangeAt(i).getClientRects()) {
+      if (x >= r.left - 2 && x <= r.right + 2 && y >= r.top - 2 && y <= r.bottom + 2) return true;
+    }
+  }
+  return false;
+}
+
+/** A right-drag (the map is dragged with the right button): not a right click. */
+function wasDragged(event) {
+  const down = state.rightDown;
+  state.rightDown = null;
+  return !!down && Math.hypot(event.clientX - down.x, event.clientY - down.y) > DRAG_PX;
+}
+
 function onContextMenu(event) {
   if (!game.user.isGM) return;
-  const text = selectedText();
-  state.selection = text;
   const target = event.target instanceof Element ? event.target : null;
-  if (!text || !target || inChatMessage(target)) return;
+  const text = selectedText();
+  const ok = !!text && !!target && !wasDragged(event) && !target.closest("#board, canvas") && onSelection(event.clientX, event.clientY);
+  state.selection = ok ? text : "";
+  if (!ok || inChatMessage(target)) return;
   if (target.closest("input, textarea, [contenteditable='true'], prose-mirror, .editor-content")) return; // editing: keep the editor's menu
   event.preventDefault();
   event.stopPropagation();
@@ -199,6 +236,7 @@ function onContextMenu(event) {
 }
 
 function onOutside(event) {
+  if (event.button === 2) state.rightDown = { x: event.clientX, y: event.clientY };
   if (state.menu && !state.menu.contains(event.target)) closeMenu();
 }
 
@@ -212,6 +250,9 @@ defineFeature({
   scope: "world",
   gmOnly: true,
   defaultEnabled: false,
+  settings: {
+    postToChat: { kind: "boolean", default: true }
+  },
 
   enable(feature) {
     state.feature = feature;
@@ -222,7 +263,7 @@ defineFeature({
         name: "LUCD20.Describe.Menu",
         icon: '<i class="fa-solid fa-scroll"></i>',
         condition: () => !!state.selection,
-        callback: () => describe(state.selection)
+        callback: () => describeAndPost(state.selection).catch(err => error("Describe failed.", err))
       });
     });
     document.addEventListener("contextmenu", onContextMenu, true);

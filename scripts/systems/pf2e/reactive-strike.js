@@ -57,13 +57,17 @@ export function withinReach(a, b, reach) {
 	return feetBetween(a, b) <= reach;
 }
 
-/** A creature's melee reach in feet. (verify) `actor.getReach` in PF2e 8.7. */
+/**
+ * A creature's melee reach in feet: PF2e's `getReach({ action: "attack" })` (its ready Strikes, reach traits),
+ * never less than the base reach (v0.75.1: Enlarge sets the base reach to 10 through CreatureSize).
+ */
 export function reachOf(actor) {
+	const base = Number(actor?.system?.attributes?.reach?.base) || 0;
+	let attack = 0;
 	try {
-		const r = Number(actor?.getReach?.({ action: "attack" }));
-		if (r > 0) return r;
+		attack = Number(actor?.getReach?.({ action: "attack" })) || 0;
 	} catch (err) { /* fall through */ }
-	return Number(actor?.system?.attributes?.reach?.base) || 5;
+	return Math.max(attack, base) || 5;
 }
 
 const enemies = (a, b) => {
@@ -198,6 +202,21 @@ async function onCardClick(message, button) {
 /*  Triggers                                    */
 /* -------------------------------------------- */
 
+/** CONFIG.debug.lucd20Rules = true: why each creature with Reactive Strike does or doesn't get a card. */
+function debugMove(mover, origin, movement) {
+	const waypoints = movement?.passed?.waypoints ?? [];
+	const rows = (canvas.tokens?.placeables ?? []).filter((t) => t !== mover && t.actor && hasReactiveStrike(t.actor)).map((t) => {
+		const c = combatantOfToken(t);
+		return {
+			name: t.name, footprint: cellsOf(t.document), reach: reachOf(t.actor), getReach: (() => { try { return t.actor.getReach?.({ action: "attack" }); } catch (err) { return String(err); } })(),
+			baseReach: t.actor.system?.attributes?.reach?.base, enemy: enemies(mover, t), down: down(t.actor), inCombat: !!c,
+			reaction: !getFeature("pf2eReactions")?.isEnabled || (c ? hasReaction(c) : false),
+			left: leftReach(mover, origin, waypoints, [t]).get(t) ?? null
+		};
+	});
+	console.log(`${MODULE_ID} | Reactive Strike move`, { mover: mover.name, moverFootprint: cellsOf(mover.document), origin, waypoints, method: movement?.method, reactors: rows });
+}
+
 /** A move in combat (active GM): cards for every reactor whose reach it left. */
 export function onMoveToken(doc, movement, operation) {
 	if (!game.user.isActiveGM || !game.combat?.started || doc.parent !== canvas.scene) return;
@@ -205,6 +224,7 @@ export function onMoveToken(doc, movement, operation) {
 	const mover = doc.object;
 	if (!mover) return;
 	const origin = movement?.origin ?? movement?.passed?.waypoints?.[0];
+	if (CONFIG.debug?.lucd20Rules) debugMove(mover, origin, movement);
 	for (const [reactor] of leftReach(mover, origin, movement?.passed?.waypoints ?? [], reactors(mover))) {
 		postCard(reactor, mover, "move").catch((err) => error("Reactive Strike card failed.", err));
 	}

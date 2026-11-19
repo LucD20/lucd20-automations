@@ -6,10 +6,13 @@ import { HALO_SORT, haloActive } from "./effects-halo.js";
  * Turn Marker and Next-Turn Marker (replace Combat Booster's markers).
  *
  * A rotating image under the token of the current (or next) combatant.
- * - Size follows the token's footprint: grid size × max(width, height) × (1 + scale).
- *   Scale 0 = exactly the token's size, 0.45 = 45 % larger, the same for every
- *   token of that size. "Follow token art scale" (on by default) also multiplies
- *   by the art scale, so art drawn bigger (e.g. PF2e Scale 2) gets a bigger marker.
+ * - Size follows the token's footprint: grid size × max(width, height) × (art + scale).
+ *   Scale 0 = exactly the token's size, 0.45 = 45 % of the footprint larger, the
+ *   same for every token of that size. "Follow token art scale" (on by default):
+ *   art = the art scale, so art drawn bigger gets a bigger marker; the margin is
+ *   added on top, not multiplied (v0.75.1). A token with a dynamic ring is drawn
+ *   at its footprint whatever its scale (owner's screenshots, v0.75.1), so its
+ *   art scale is ignored.
  * - Drawn on the same layer as token art, just below the token, at the
  *   token's elevation; with Effects Halo on, below the halo's badges (and so below every token there). "Draw above tokens" attaches it to the token instead.
  * - Only visible while combat is running and only when the token itself is
@@ -220,8 +223,9 @@ class MarkerRenderer {
       }
     }
 
-    let size = canvas.dimensions.size * Math.max(doc.width, doc.height) * (1 + opts.scale);
-    if (opts.followArtScale) size *= (Math.abs(doc.texture.scaleX ?? 1) + Math.abs(doc.texture.scaleY ?? 1)) / 2;
+    const ring = !!(doc.ring?.enabled || token.hasDynamicRing);
+    const art = opts.followArtScale && !ring ? (Math.abs(doc.texture?.scaleX ?? 1) + Math.abs(doc.texture?.scaleY ?? 1)) / 2 : 1;
+    const size = canvas.dimensions.size * Math.max(doc.width, doc.height) * (art + opts.scale);
     if (sprite.width !== size) sprite.width = size;
     if (sprite.height !== size) sprite.height = size;
 

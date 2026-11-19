@@ -3208,7 +3208,7 @@ become hazard actors, skipped in the journal. **Lores are good** (skipped by
 hand only for the time): list a matching Lore next to the skill. All in
 `docs/conversion-guide.md`.
 
-## 24. Multiple Checks — `multiCheck` (owner, 2026-11-19; spec, not built)
+## 24. Multiple Checks — `pf2eMultiCheck` (owner, 2026-11-19; built v0.80.0)
 
 Owner: "Many times something can use more than one check with different
 DCs and it is hard to put it all on the chat. … drag and drop (or create)
@@ -3241,3 +3241,29 @@ Questions:
 - Q315: save groups for reuse (a list in the window), or one-off cards?
 - Q316: "or" / "and": show the book's word between checks (either check vs
   both needed), or just the list?
+
+Owner's answers: Q312 the reference is the **highest DC** ("Stealth (DC 2
+lower)"; the hardest check says nothing). Q313 **edit first**: the window,
+opened by **Shift-clicking an inline check's "send to chat" icon** (owner's
+idea). Q314 everyone sees the card, only the GM the DCs; the window is GM
+only. Q315 one-off cards (the window keeps its list until Clear). Q316 just
+a list.
+
+**Built (v0.80.0)**, `systems/pf2e/multi-check.js`, Core Rules → Tools,
+GM only, on by default (PF2e and SF2e):
+- Shift + PF2e's repost icon (`i[data-pf2-repost]`, caught in the capture
+  phase before PF2e's own document listener) adds that check, or every
+  check of a check group, to the window; a plain click still reposts.
+- The window: title, rows (label, editable DC, "DC n lower", move up,
+  remove), a "+" row (Perception, saves, the system's skills, or a Lore by
+  name), a paste box (selected journal text: its inline links are read;
+  or `@Check[…]` / `[[/act …]]` codes, multi-type checks with adjustments
+  included), drop selected text anywhere on the window; Clear, Send. Also a
+  chat-controls button.
+- The card: a list of PF2e's own links (`data-pf2-check` /
+  `data-pf2-action`, `data-pf2-show-dc="gm"`), the DC inside
+  `<span data-visibility="gm">`, "(DC n lower)" for players; clicking rolls
+  with PF2e's handler against the real DC.
+- Harness test 68. (verify) in Foundry: the repost icon and the action
+  link's dataset in PF2e 8.7 / SF2e 1.7, that `data-visibility="gm"` hides
+  the DC from players in chat, and the click on a posted action link.

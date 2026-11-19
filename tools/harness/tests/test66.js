@@ -116,6 +116,19 @@ const assert = require("assert");
     game.time.worldTime += 86401;
     use(); await settle(); strike("failure"); await settle(80);
     out.caMiss = [caCards().length, imm.isImmune(ogreA, "combatAssessment")];
+    // v0.77.1: with PF2e Workbench, a hit runs its Recall Knowledge macro on the striker's client at once
+    // (striker selected, target targeted; +2 circumstance effect while it rolls on a critical hit); no card.
+    game.time.worldTime += 86401;
+    const ran = [];
+    const ctrl = [];
+    tCmd.document.object = { control: o => ctrl.push(["control", o.releaseOthers]) };
+    tOgre.document.object = { setTarget: (on, o) => ctrl.push(["target", on, o.releaseOthers]) };
+    commanderA.createEmbeddedDocuments = async (t, list) => { const docs = list.map(d => ({ ...d, async delete() { commanderA.effects = commanderA.effects.filter(e => e !== this); ran.push("effect gone"); } })); commanderA.effects.push(...docs); return docs; };
+    const macro = { canExecute: true, async execute() { ran.push(["macro", commanderA.effects.map(e => e.system.rules[0].value)]); const rk = await ChatMessage.create({ author: game.user, content: "RK" }); Hooks.callAll("createChatMessage", rk); } };
+    game.packs.set("xdy-pf2e-workbench.asymonous-benefactor-macros-internal", { getDocuments: async ({ name }) => (name === "XDY DO_NOT_IMPORT Recall_Knowledge" ? [macro] : []) });
+    const before = caCards().length;
+    use(); await settle(); strike("criticalSuccess", { author: game.users.get("u1") }); await settle(900);
+    out.auto = [caCards().length - before, ctrl, ran, commanderA.effects.length, imm.isImmune(ogreA, "combatAssessment")];
     return out;
   });
   console.log(JSON.stringify(r, null, 1));
@@ -134,6 +147,7 @@ const assert = require("assert");
   assert.deepStrictEqual(r.caDone, [true, "Combat Assessment 1"], "answered: only the feat's name");
   assert.ok(/^Combat Assessment 1 Brannoc Ogre is immune to Combat Assessment \(24 h left\)\.$/.test(r.caImmune), `immune: said, no buttons (${r.caImmune})`);
   assert.deepStrictEqual(r.caMiss, [2, true], "a miss: no card, the immunity starts");
+  assert.deepStrictEqual(r.auto, [0, [["control", true], ["target", true, true]], [["macro", [2]], "effect gone"], 0, true], "Workbench: the macro runs at once with +2 on a crit, the effect goes after; no card; immunity starts");
   assert.deepStrictEqual(errors, [], "no page errors");
   await browser.close();
   console.log("PHASE 67 CHECKS PASSED");

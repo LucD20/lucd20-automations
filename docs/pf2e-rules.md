@@ -835,6 +835,17 @@ one that leaves fewer squares next to enemies (see PLAN).
   starts on every use, hit or miss; immune: the card says so, no buttons.
   (verify) `identificationDCs` on PF2e 8.7 NPCs; `Statistic#roll` taking
   `dc`, `modifiers`, `rollMode: "blindroll"`, `traits`.
+- v0.77.1 (owner, sent the Workbench macro "Recall_Knowledge": "On a hit,
+  just roll the recall knowledge automatically"): on a hit (not immune) the
+  GM's client asks the client of whoever rolled the Strike (`User#query`) to
+  run PF2e Workbench's internal macro "XDY DO_NOT_IMPORT Recall_Knowledge"
+  (pack `xdy-pf2e-workbench.asymonous-benefactor-macros-internal`, as the
+  owner's link macro does), with the striker's token controlled and the
+  target targeted. A critical hit: an effect with FlatModifier +2
+  circumstance to `skill-check` on the striker while it rolls, deleted after
+  the macro's first chat message (or 15 s). No card on that path. Without
+  Workbench, or that client not answering: the skill-button card as before.
+  (verify) the macro picks up the effect's modifier and rolls blind.
 
 ## 22. Swashbuckler: Guardian's Deflection
 

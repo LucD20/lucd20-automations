@@ -851,7 +851,7 @@
       },
       "pf2eCombatAssessment": {
         "Name": "Combat Assessment",
-        "Hint": "After Combat Assessment, the next melee Strike that hits gives the striker a card with a button per skill that identifies the target: a secret Recall Knowledge (+2 on a critical hit). The target is then immune for a day (shown on the Token HUD's Battle Medicine button)."
+        "Hint": "After Combat Assessment, the next melee Strike that hits rolls Recall Knowledge about the target at once with PF2e Workbench's macro (+2 on a critical hit); without Workbench, a card with a button per identifying skill. The target is then immune for a day (shown on the Token HUD's Battle Medicine button)."
       },
       "pf2eGuardiansDeflection": {
         "Name": "Guardian's Deflection",
@@ -2010,6 +2010,7 @@
         "Critical": "(+2, critical hit)",
         "Immune": "{name} is immune to Combat Assessment ({left} left).",
         "RollLabel": "Recall Knowledge ({skill}), Combat Assessment",
+        "CriticalEffect": "{name} (critical hit: +2 to Recall Knowledge)",
         "ACreature": "a creature",
         "NotYours": "That card is for someone else.",
         "NoSkill": "That skill isn't on the sheet."

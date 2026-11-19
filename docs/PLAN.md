@@ -3198,3 +3198,46 @@ in conversion order: Attack of the Swarm 1–4, Rise of the Runelords 1–2,
 Signal of Screams 1–2, AotS 5, SoS 3, AotS 6 (all in the worlds sent).
 Proposed: AotS 5 (recent SF1e, the owner's current style) and RotR 2 (PF1e,
 a different layout for the PDF profile).
+
+### 23.11 Owner's answers (2026-11-19)
+
+Doors: convert the Break DC as in Book 6 (no presets). 1e conditions and
+ability damage: as proposed. Book 5's Mental Mirage is a **hazard actor**
+(level 10, Psychic Lure / Psychic Invitation): events that work like hazards
+become hazard actors, skipped in the journal. **Lores are good** (skipped by
+hand only for the time): list a matching Lore next to the skill. All in
+`docs/conversion-guide.md`.
+
+## 24. Multiple Checks — `multiCheck` (owner, 2026-11-19; spec, not built)
+
+Owner: "Many times something can use more than one check with different
+DCs and it is hard to put it all on the chat. … drag and drop (or create)
+the @Check buttons into a Multiple Check window, then send to the chat. In
+the chat it doesn't show the DC but the DC differences: DC 20 Athletics or
+DC 18 Stealth shows: Athletics; Stealth (DC is 2 lower)."
+
+Proposal (Q312–Q316 for the owner):
+- **Window** (GM): a list of checks, each a skill / save / Lore / action
+  (Recall Knowledge, Seek, Hack…) and a DC; add by dropping an inline
+  check (from a journal, a chat card, an item), by pasting `@Check[...]` /
+  `[[/act ...]]` text, or with a "+" row (skill picker + DC). Order by drag.
+  An optional title line ("The cracked wall").
+- **Journal shortcut**: hovering a journal list item with two or more
+  checks shows a small "send as one" icon that fills the window (or posts
+  directly, Q313).
+- **Chat card**: one button per check, in the order given; the DC hidden
+  from players; the first check is the reference and each other one says
+  how it compares: "Athletics · Stealth (DC 2 lower)". Equal DCs say
+  nothing. The GM sees the DCs. A player clicks a button to roll it with
+  their selected token's actor (PF2e's own inline check with
+  `showDC:gm`, so the system rolls against the real DC and shows the
+  outcome per its "show DCs" setting).
+- PF2e and SF2e (systems: pf2e); 4e later if wanted.
+
+Questions:
+- Q312: the reference: the first check (the example) or the lowest DC?
+- Q313: the journal shortcut: open the window prefilled, or post at once?
+- Q314: who can make a card: GM only, or players too (without seeing DCs)?
+- Q315: save groups for reuse (a list in the window), or one-off cards?
+- Q316: "or" / "and": show the book's word between checks (either check vs
+  both needed), or just the list?

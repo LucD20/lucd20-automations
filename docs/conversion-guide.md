@@ -46,7 +46,10 @@ water, vents), conditions with lasting effect, critical thresholds, sidebar
 checks (Firewatch Station, Temple of Hylax).
 
 Haunts and hazards: their own stat blocks are skipped (they become hazard
-actors), but rolls written in the room text around them are converted.
+actors), but rolls written in the room text around them are converted. An
+**event that works like a hazard** (repeated saves, damage each round: Book
+5's Mental Mirage) becomes a hazard actor too: skip its rolls in the journal
+with the note "hazard actor".
 
 Skip, with the reason on the review page:
 - **1e starship combat** mechanics (placement, wreckage fields, gunnery):
@@ -102,8 +105,7 @@ Skip, with the reason on the review page:
   | Stupefied | e1XGnhKNSQIm5IXg | Unconscious | fBnFDH2MTzgFijKf |
   | Undetected | VRSef5y1LmL2Hkjf | Wounded | Yl48xTdMh3aeQYL2 |
 
-  1e conditions without a value (sickened, frightened…) become value 1
-  *(proposal)*.
+  1e conditions without a value (sickened, frightened…) become value 1.
 - Percent chances: flat check with DC = 21 − X/5 (`50%` → `@Check[flat|dc:11]`,
   `25%` → 16, `20%` → 17, `75%` → 6).
 - Bonuses and penalties without a type, and morale / profane / sacred /
@@ -115,20 +117,18 @@ Skip, with the reason on the review page:
   (`@Check[diplomacy]`) and note "no DC in the book: set by hand".
 - Checks a creature rolls (a ghoul's Perception, a rat escaping a tub):
   the same codes.
-- Ability damage / drain → the matching condition at value 1 *(proposal)*:
-  Str → enfeebled, Dex → clumsy, Con → drained, Int / Wis / Cha →
-  stupefied; flag it.
+- Ability damage / drain → the matching condition at value 1 (owner:
+  agreed): Str → enfeebled, Dex → clumsy, Con → drained, Int / Wis / Cha →
+  stupefied.
 - Doors and objects to break: keep the 1e hardness and HP as written and
-  convert the Break DC (Book 6). *Owner's older books used presets instead*
-  (wooden door: hardness 5, hp 20, force open 17; reinforced wooden: 10 / 40
-  / 22; iron: 16 / 60 / 30): ask the owner which to use.
+  convert the Break DC (owner, as in Book 6; the older presets are not used).
 - Leave 1e hit point amounts and falling damage as written; flag them.
 - "Save for half" → a basic save: `@Check[reflex|dc:N|basic]`.
 - 1e action costs: standard action → 2 actions, move action → 1 action,
   full-round → 3 actions, swift / immediate → 1 action or a reaction.
 - A DC given as a formula ("DC 10 + the creature's CR", "identify the
   creature") → Recall Knowledge without a DC (the creature's own DC applies).
-- 1e conditions with no 2e match *(proposals, flag them)*: shaken →
+- 1e conditions with no 2e match (owner: agreed): shaken →
   frightened 1; entangled → immobilized (or clumsy 1 when it can still
   move); staggered → slowed 1; exhausted → fatigued (note "exhausted");
   sickened / nauseated for rounds → sickened 1; stunned 1 round in combat →
@@ -185,7 +185,7 @@ arcana / occultism / religion by context (magic theory → arcana; the
 planes and psychic → occultism; gods, temples, faith → religion; elementals
 → arcana or nature); Perception → perception / seek; Physical Science →
 crafting or nature; Piloting → piloting; Profession (soldier, mercenary) →
-society *(proposal: or a matching Lore)*; Sense Motive → sense-motive;
+society or a matching Lore (`mercenary-lore`, `warfare-lore`); Sense Motive → sense-motive;
 Sleight of Hand → thievery; Stealth → stealth; Survival → survival.
 
 **Pathfinder 1e → PF2e**: the owner's sheet: Acrobatics, Fly → acrobatics;
@@ -202,8 +202,11 @@ Disable Device, Escape Artist, Sleight of Hand → thievery.
 Where the table lists a 1e skill under several 2e skills (Knowledge
 [planes], Spellcraft, Appraise, Sleight of Hand, Mysticism), pick by the
 subject (next section) and list every one that fits. **Knowledge checks are
-always Recall Knowledge with the subject's skill, never a Lore**, unless the
-owner says otherwise. Linguistics to decipher → `[[/act decipher-writing statistic=society dc=N]]`
+Recall Knowledge with the subject's skill, plus a matching Lore when one
+fits** (owner: "Lores are good", skipped by hand only because they took
+time): Profession (sailor) → `statistic=sailing-lore`, Knowledge (local)
+about Sandpoint → society or `sandpoint-lore`. Lore slugs: lower case, ending
+in `-lore`. Linguistics to decipher → `[[/act decipher-writing statistic=society dc=N]]`
 *(proposal; the agent used @Check[society])*.
 
 ## Recall Knowledge statistic by subject

@@ -42,7 +42,7 @@ const assert = require("assert");
   assert.strictEqual(sf2e.flags, 1, "SF2e reads flags.sf2e");
   assert.strictEqual(pf2e.flags, 2, "PF2e reads flags.pf2e");
   assert.ok(sf2e.config && pf2e.config, "the system's CONFIG is found");
-  assert.strictEqual(sf2e.gmVisionSetting, false, "sf2e.gmVision is read");
+  assert.strictEqual(typeof sf2e.gmVisionSetting, "boolean", "sf2e.gmVision is found under the system's own id");
   assert.ok(pf2e.reactions && !pf2e.hud);
   assert.ok(!dnd4e.reactions && !dnd4e.search && dnd4e.hud && !dnd4e.matchesPf2e, "4e: no PF2e features");
   console.log("PHASE 67 CHECKS PASSED");

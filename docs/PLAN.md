@@ -3183,3 +3183,18 @@ Learned:
   ids), to turn "stunned for 1 round" into links automatically.
 - Attack bonuses and SF1e damage dice are not DCs: flagged for the owner
   (attack bonus by hand; damage left as written, as on the owner's pages).
+
+### 23.10 Owner's feedback on Book 6, round 1 (2026-11-19)
+
+Recorded as rules in **`docs/conversion-guide.md`** (the instructions,
+built book by book). In short: the misses the owner wants caught (travel
+dice, rule consequences, Treasure / Development checks, hazards, sidebars);
+skip 1e starship combat, chases, 1-round conditions outside combat; lines
+say what the check does with context ("… to determine that …"); review rows
+numbered. Round 2 of the Book 6 review sent.
+
+Next (owner): tune on more books before the Foundry side. The owner's books
+in conversion order: Attack of the Swarm 1–4, Rise of the Runelords 1–2,
+Signal of Screams 1–2, AotS 5, SoS 3, AotS 6 (all in the worlds sent).
+Proposed: AotS 5 (recent SF1e, the owner's current style) and RotR 2 (PF1e,
+a different layout for the PDF profile).

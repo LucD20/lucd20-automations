@@ -17,12 +17,18 @@ and conversions never go into this repository (it is public).
    `{N}`; the converter fills them in.
 4. **DCs**: `scripts/conversion/dc.js` `convertDc(dc1e, level, "sf1e"|"pf1e")`
    (the owner's DC sheets, exact). Never pick a DC by hand.
-5. **Review page** for the owner: every row numbered (#1, #2 …) so the owner
-   can refer to lines; book quote, the 2e line with the DC working, and the
-   owner's existing line when there is one.
+5. **Review page** for the owner: `python3 tools/convert/build_review.py <dir> --source sf1e --title "…" --level "PART 1=9" --level "PART 2=10"`
+   (`<dir>` holds `rolls.json` and `conv.py`; add `--world <dump> --folder "…"`
+   to compare with a finished world). Every row is numbered (#1, #2 …) so
+   the owner can refer to lines.
+
+A book split over several PDFs (Rise of the Runelords Anniversary Edition):
+join the chapter's pages into one PDF first (PyMuPDF `insert_pdf`); the
+PDF's bookmarks (`get_toc()`) give the chapter's page range.
 
 ## Party level
 
+- Look for the book's milestones: `grep -n -iE "begin this adventure at|should (reach|be) [0-9]+th level|[0-9]TH LEVEL:" book.md`.
 - The party level is the book's level at that point ("always the same
   level"). Levels change inside a book: Book 6 (The God-Host Ascends) was
   converted at 11 through area B and 12 from C1, where the book only says

@@ -44,8 +44,21 @@ PROFILES = {
         (r"^GoodOT-Bold", 10.5, 12, "h4"),        # rules sub-headings
         (r"^GoodOT-Bold", 8.8, 9.5, "label"),     # XP / DEFENSE / OFFENSE / STATISTICS / CREW
     ],
+    # Pathfinder 1e Adventure Path (Rise of the Runelords Anniversary Edition).
+    "paizo-pf1e": [
+        (r"^CartaMarinaBold$", 20, 40, "h1"),     # PART ONE: MURDER MOST FOUL
+        (r"^CartaMarinaBold$", 14.5, 16, "h2"),   # Sandpoint Lumber Mill, Meeting the Doctor
+        (r"^CartaMarina", 0, 100, "drop"),        # running headers, page numbers, map labels, drop caps
+        (r"^TradeGothic.*BdCn20$", 13, 14.5, "room"),  # B1 RUINED SERVANTS’ QUARTERS (CR 5)
+        (r"^TradeGothic.*BdCn20$", 11.5, 13, "stat"),  # GORTUS AND GURNAK / ERIN HABE
+        (r"^TradeGothic.*BdCn20$", 9.5, 11, "runin"),  # A1 VERANDA: The old floorboards… (room keys)
+        (r"^TradeGothic.*BdCn20$", 0, 8, "drop"),      # side tabs, contents
+        (r"^NexusSansOT", 12, 20, "drop"),        # the chapter's contents page
+        (r"^Dax-Black", 0, 100, "label"),         # DEFENSE / OFFENSE / TACTICS / STATISTICS
+        (r"^(Gene|P22DaVinci|BibleScript|BakerScript|CCTreacherous)", 0, 100, "handout"),  # handouts, letters
+    ],
 }
-FONT_SIGNS = {"paizo-1e": ("Xirod", "GoodOT")}
+FONT_SIGNS = {"paizo-1e": ("Xirod", "GoodOT"), "paizo-pf1e": ("CartaMarina", "NexusSerif")}
 
 
 def parse_pages(spec, count):
@@ -103,6 +116,17 @@ def title_case(text):
         else:
             out.append(w[:1].upper() + w[1:])
     return " ".join(out)
+
+
+def fix_cr(text):
+    return re.sub(r"\((cr|tier) ([\d+/]+)\)", lambda m: f"({m.group(1).upper()} {m.group(2)})", text, flags=re.I)
+
+
+def room_title(code, name):
+    """"A5", "ORDERLIES’ ROOMS (CR 1)" → "A5. Orderlies’ Rooms (CR 1)"."""
+    words = name.lower().split()
+    out = [w if i and w in SMALL_WORDS else w[:1].upper() + w[1:] for i, w in enumerate(words)]
+    return f"{code}. " + " ".join(out)
 
 
 def page_blocks(page):
@@ -239,12 +263,34 @@ def main():
                 role = role_of(line, rules, size_levels)
                 if role == "drop":
                     continue
+                m = re.match(r"^([A-Z]\d+[a-z]?)\.?\s+([^:]{2,60}):\s*(.*)$", plain) if role == "runin" else None
+                if m:
+                    flush()
+                    emit_heading("h3", fix_cr(room_title(m.group(1), m.group(2))), line["bbox"][1], line["bbox"][3])
+                    last = None
+                    if m.group(3):
+                        para.append(m.group(3))
+                    continue
+                if role == "room":
+                    r = re.match(r"^([A-Z]\d+[a-z]?)\.?\s+(.+)$", plain)
+                    flush()
+                    emit_heading("h3", fix_cr(room_title(r.group(1), r.group(2)) if r else plain), line["bbox"][1], line["bbox"][3])
+                    continue
+                if role == "runin" and re.fullmatch(r"(?:[A-Z]\d*[a-z]?\s*)+", plain):
+                    continue  # map labels: only room codes
+                if role == "runin":
+                    flush()
+                    emit_heading("h4", plain, line["bbox"][1], line["bbox"][3])
+                    continue
+                if role == "handout":
+                    para.append(f"*{plain}*")
+                    continue
                 if role in ("h1", "h2", "h3", "h4", "stat"):
                     flush()
                     text = plain if role != "h1" else plain.upper()
                     if any("SC" in sp["font"] for sp in line["spans"]):
                         text = title_case(text)
-                    text = re.sub(r"\((cr|tier) ([\d+]+)\)", lambda m: f"({m.group(1).upper()} {m.group(2)})", text, flags=re.I)
+                    text = fix_cr(text)
                     emit_heading(role, text, line["bbox"][1], line["bbox"][3])
                     continue
                 last = None

@@ -7,6 +7,12 @@ and conversions never go into this repository (it is public).
 
 ## Steps
 
+(Where the work stopped and the full tool list: PLAN §25.)
+
+0. **Compare material** (optional): dump the owner's finished world with
+   `node tools/convert/dump_world.mjs <world> <out>` and infer the levels
+   they used with `python3 tools/convert/infer_level.py <out> "<folder>" rolls.json sf1e`.
+
 1. **PDF → Markdown**: `python3 tools/pdf-to-md/pdf_to_md.py book.pdf -o book.md`
    (Paizo 1e AP layout detected by its fonts; check the `#`/`##`/`###`
    headings with `grep -n "^#" book.md`).

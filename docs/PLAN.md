@@ -3272,3 +3272,99 @@ v0.80.1 (owner's test: Shift-click, hidden DCs and action buttons work in
 Foundry): a GM-only **Reveal DCs** button on the card; it edits the message
 so everyone sees the DCs (`data-visibility` and `data-pf2-show-dc` → all)
 and removes itself. Harness test 68 covers it.
+
+## 25. Adventure conversion: where we stopped (2026-11-19)
+
+Everything needed to continue the conversion work (§23) in a new session.
+Rules for writing lines: **`docs/conversion-guide.md`** (read it first).
+
+### 25.1 The pipeline (all in the repository)
+
+| Step | Tool | Notes |
+|---|---|---|
+| World zip → JSON | `tools/convert/dump_world.mjs <world> <out>` | needs `npm install classic-level` in a scratch folder (run node from there); for comparing with the owner's finished books |
+| PDF → Markdown | `tools/pdf-to-md/pdf_to_md.py book.pdf -o book.md` | PyMuPDF (`pip install pymupdf`); profiles `paizo-1e` (Starfinder 1e APs: Xirod / GoodOT fonts) and `paizo-pf1e` (RotR Anniversary: CartaMarina / NexusSerif; room keys run-in "A1 VERANDA:" or 13.5 pt headings; stat blocks quoted `> `), picked by fonts; else font sizes. A book split over PDFs: join the chapter's pages first (bookmarks via `get_toc()`) |
+| Find the rolls | `tools/convert/find_rolls.py book.md --from "PART 1" --to "<first back-matter heading>" -o rolls.json` | stat blocks apart; sentences joined across page / column breaks |
+| Party level | `grep` for the book's milestones; `tools/convert/infer_level.py <dump> "<folder>" rolls.json sf1e` | infers the level the owner used from finished DCs |
+| Write the lines | Claude (or an agent) → `conv.py` | `C = {index: line or None}`, `"12a"` sub-lines, `NOTES = {index: reason}`; 1e DCs as `{N}` |
+| DCs | `scripts/conversion/dc.js` `convertDc(dc, level, "sf1e"\|"pf1e")` | the owner's sheets, exact (620 + 620 cells); SF1e = PF1e + 4, shift 3 at levels 14 / 17 / 19 (owner: intended); CLI `node tools/convert/dc.mjs sf1e 6 24` |
+| Review page | `tools/convert/build_review.py <dir> --source sf1e --title "…" --level "PART 1=9" --level "PART 2=10" [--world <dump> --folder "…"] [--round N]` | numbered rows (#1 …), the owner refers to them; compares with the owner's list items, table rows and paragraphs |
+
+Book text, dumps, `rolls.json`, `conv.py` and review pages **never go into
+the repository** (public). The working set of 2026-11-19 was given to the
+owner as `conversion-work-2026-11-19.zip` (book6 / book5 / rotr: rolls.json,
+conv.py, review.html, a README with the levels and compare folders); to
+continue, the owner uploads it with the PDFs and world zips. `conv.py` is
+keyed by `rolls.json` indexes: keep that exact file (re-running
+`find_rolls.py` after a pattern change renumbers).
+
+### 25.2 State of each book
+
+| Book | Lines by | Round | Levels | vs the owner's pages |
+|---|---|---|---|---|
+| Attack of the Swarm 6, The God-Host Ascends (sf1e) | Claude | 2 (owner's round-1 feedback applied) | 11 from Part 1, 12 from C1 | 84 rows: 38 same DCs, 18 differ, 17 not on the owner's pages, 11 skipped |
+| Attack of the Swarm 5, Hive of Minds (sf1e) | agent, guide only | 2 (Mental Mirage = hazard actor) | 9 from Part 1, 10 from Part 2 | 106 rows: 18 same, 33 differ, 46 new, 9 skipped; the owner built the chases as 2e chase tables |
+| Rise of the Runelords Ch. 2, The Skinsaw Murders (pf1e) | agent + 16 by Claude | 1 | 4 Parts 1–3, 6 Part 4, 7 Parts 5–7 (owner's DCs; the book says 5th "early") | 125 rows: 50 same, 30 differ, 40 new, 5 skipped; an early conversion (old style) |
+
+Waiting on the owner: corrections by row number on the three review pages
+(Book 6 round 2, Book 5 round 2, RotR round 1).
+
+The owner's books (in the worlds sent, conversion order): Attack of the
+Swarm 1–4, Rise of the Runelords 1–2, Signal of Screams 1–2 (Diaspora
+Strain, Penumbra Protocol), AotS 5, SoS 3 (Heart of Night, partly done),
+AotS 6. Worlds: `sf2e-adv` (SF2e 1.7.0: AotS + SoS) and `2e-cov` (PF2e 8.7:
+RotR ch. 1–2). Folder layout, journal / page layout and art paths: §23.3.
+
+### 25.3 What the owner decided (all in the guide)
+
+- Convert everything mechanical, especially what is easy to miss (travel
+  dice, consequences, Treasure / Development checks, hazards, sidebars).
+- Skip: 1e starship combat, chases (built by hand as 2e chase tables),
+  1-round conditions outside combat, GM advice, stat blocks; events that
+  work like hazards become hazard actors.
+- Lines: the check first, then "to …" with enough context to read without
+  the book.
+- Level: the book's level at that point, set per heading.
+- Break DCs converted (no door presets); 1e conditions and ability damage
+  mapped as in the guide; Lores are welcome next to the skill.
+
+### 25.4 What the agent test showed
+
+Two agents converted Book 5 and RotR ch. 2 from the guide alone. Output
+usable; every gap they reported was turned into a rule (condition ids,
+percentages, bonus types, Seek vs Perception, Recall Knowledge vs a check,
+basic saves, action costs, 1e conditions, chases, haunts). So a new
+session (or agent per book) can do the writing step from the guide.
+
+### 25.5 Left to build, in order (proposal)
+
+1. **Finder: bonus / penalty lines** with no dice or DC ("−2 to attack and
+   damage until …", "maximum Stamina −15"): add a pattern at the start of
+   the next book. Better: give passages **stable ids** (page + hash of the
+   text) so new patterns don't renumber `conv.py`.
+2. **Foundry: Conversion Review + Build** (§23.4 step 2): a GM window that
+   loads the book's JSON (rows, levels, lines), lets the owner edit and tick
+   each line, set "level from here", then builds folders (book / part, the
+   AP colour), a journal per Part, a page per heading in the owner's layout
+   (`<ul>` of checks, then Hazard / Creatures / Treasure) or merges into an
+   existing page. Needs: an export step from `conv.py` + `rolls.json` to that
+   JSON (book text: the owner keeps the file), the owner's journal layout
+   (§23.3).
+3. **Audit** on any journal: codes with 1e skill names (`intimidate`,
+   `mysticism`, `engineering`, `computer`), `]]` typos, "DC N" left in text,
+   DCs outside the code; listed in §23.3 from the owner's worlds.
+4. **NPC drafts** from the stat blocks (`find_rolls` keeps them apart; the
+   CR sheet for encounter levels, Creature Scale's tables for numbers).
+5. **Token Art Studio** (§23.6 Q307): 1024 × scale canvas, circle Ø 682 px
+   centred, shadow arc at the lower right under any part that sticks out
+   past the circle, `<name>-token.webp`, ring subject scale = canvas scale,
+   assign to the actor and its tokens.
+6. **Fix Log** in Foundry (replaces the Discord log; §23.1 E): quick "log
+   fix" with context, a list per book, badges in the template world, shared
+   between the two worlds through one JSON file (same server; Adventure
+   imports keep ids).
+7. The GP sheet (treasure by level) and CR sheet (encounter XP) are in
+   `DC_Sheets.xlsx`, not yet in code.
+
+Also parked from §22.2: Battle Medicine HUD, Flanking overlay, Dice Stats
+per turn / per creature, Sell, Hero start area.

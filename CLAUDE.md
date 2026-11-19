@@ -28,3 +28,6 @@
 - Every feature is togglable. Prefer enabling/disabling without reload.
 - Never leak hidden information to players (hidden tokens, secret rolls,
   hidden NPC names, HP bars they can't see).
+- Converting 1e adventures (PLAN §23, §25): follow `docs/conversion-guide.md`;
+  tools in `tools/pdf-to-md/` and `tools/convert/`; book text never goes into
+  the repository.

@@ -29,8 +29,8 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 | 18 | Damage Estimate, PF2e and 4e (replaces PF2e Damage Estimate) | built v0.57.0 | `damageEstimate` |
 | 19 | Cover for attack rolls and area saves; areas reach past wall ends | built v0.61.0 | `pf2eCover` |
 | 20 | Effect areas: targeting window, hover cover, exact reach | built v0.61.3 | `pf2eAreas` |
-| 21 | Commander / Fighter: Combat Assessment | planned | `pf2eCombatAssessment` |
-| 22 | Swashbuckler: Guardian's Deflection | planned | `pf2eGuardiansDeflection` |
+| 21 | Commander / Fighter: Combat Assessment | built v0.77.0 | `pf2eCombatAssessment` |
+| 22 | Swashbuckler: Guardian's Deflection | built v0.77.0 | `pf2eGuardiansDeflection` |
 | 23 | Battle Medicine: who used it on whom, on the Token HUD | planned | `pf2eBattleMedicine` |
 | 24 | Flanking overlay | planned | `pf2eFlanking` |
 
@@ -809,7 +809,7 @@ one that leaves fewer squares next to enemies (see PLAN).
   default 16, 8–48), drawn at twice that and scaled by the zoom, so it reads
   the same at any zoom. (verify) the Font Awesome family name on the canvas.
 
-## 21. Commander / Fighter: Combat Assessment (planned)
+## 21. Commander / Fighter: Combat Assessment
 
 - Owner: the AoN link (Feats ID 4768). The feat: one action; a melee Strike;
   on a hit you may at once attempt Recall Knowledge about the target, +2
@@ -823,8 +823,20 @@ one that leaves fewer squares next to enemies (see PLAN).
   (no PF2e effect) and shown there; a target immune: the card says so.
 - (verify) how PF2e 8.7 marks a Strike made through Combat Assessment
   (`item:slug:combat-assessment` / an `action:` option on the Strike).
+- Built v0.77.0 (`combat-assessment.js`, `immunity.js`, test 66): the
+  action's card (slug `combat-assessment`) arms the creature; its next melee
+  Strike within 2 minutes is the assessment. A hit: a card (the striker's
+  players + GM) with a button per skill from the target's
+  `identificationDCs.skills` (else Arcana, Crafting, Medicine, Nature,
+  Occultism, Religion, Society); a click rolls it blind with the target's
+  `identificationDCs.standard.dc`, `action:recall-knowledge`, +2
+  circumstance on a critical hit; the card then shows only the feat. The
+  immunity (1 day of world time, any Combat Assessment, as the feat says)
+  starts on every use, hit or miss; immune: the card says so, no buttons.
+  (verify) `identificationDCs` on PF2e 8.7 NPCs; `Statistic#roll` taking
+  `dc`, `modifiers`, `rollMode: "blindroll"`, `traits`.
 
-## 22. Swashbuckler: Guardian's Deflection (planned)
+## 22. Swashbuckler: Guardian's Deflection
 
 - Owner: the AoN link (Feats ID 6147). Reaction; trigger: an ally within
   your melee reach is hit by an attack, you can see the attacker, and +2
@@ -843,6 +855,20 @@ one that leaves fewer squares next to enemies (see PLAN).
   swashbuckler (the system's Panache effect). Monsters never get it.
 - (verify) whether the attack message's outcome can be changed so PF2e's
   damage buttons follow it; else the line tells the attacker what to roll.
+- Built v0.77.0 (`guardians-deflection.js`, test 66): the change is worked
+  out with PF2e's degrees (natural 20 / 1 counted) against the roll's
+  `context.dc` (else the target's AC). Deflectors: the feat (slug
+  `guardians-deflection*` or the name; the Fighter's version too, without
+  panache), same disposition as the ally, not hidden or down, reaction left
+  (rule 6), the ally in reach, exactly one held item, a one-handed melee
+  weapon (rule 15's reading of hands). Deflect: the card turns compact for
+  everyone, the reaction is spent, a one-line note "Amiri: Guardian's
+  Deflection, Ogre's Club is a miss." (GM only if a token is hidden), and
+  "Effect: Panache" from `pf2e.feat-effects` for 1 round, ending at turn end,
+  unless panache is already there. The attack's own card is **not** changed
+  (the line says what to roll). (verify) `Effect: Panache` is in
+  `pf2e.feat-effects` under that name; `context.dc.value` is the target's
+  AC on a Strike.
 
 ## 23. Battle Medicine on the Token HUD (planned)
 

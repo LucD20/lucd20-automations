@@ -2872,7 +2872,10 @@ no longer match the module); not touched.
    token is hidden); the end-of-turn "Yes" posts nothing. Matched by slug
    `earths-bile` or the name. (verify) the slug in PF2e 8.7.
 4. **Combat Assessment**, **Guardian's Deflection** (Q290); Combat Assessment's
-   1-day immunity shares the tracker of step 5.
+   1-day immunity shares the tracker of step 5. **Built v0.77.0**: rules 21,
+   22 in the ledger; `systems/pf2e/immunity.js` is the shared tracker
+   (flags on the target actor, world time); a Swashbuckler section under
+   Classes.
 5. **Battle Medicine HUD** (Q291), **Flanking overlay** (Q292).
 6. **Dice Stats**: damage per turn tab, dice per creature and the end card
    (Q293–Q294), one per-encounter record for both.

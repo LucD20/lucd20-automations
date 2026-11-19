@@ -55,7 +55,7 @@
     },
     "Section": {
       "conditions": "Conditions", "actions": "Actions & Checks", "reactions": "Reactions", "battlefield": "Battlefield & Spells", "tools": "Tools",
-      "animist": "Animist", "commander": "Commander", "guardian": "Guardian", "oracle": "Oracle"
+      "animist": "Animist", "commander": "Commander", "guardian": "Guardian", "oracle": "Oracle", "swashbuckler": "Swashbuckler"
     },
     "Category": {
       "combat": {
@@ -848,6 +848,14 @@
             "Hint": "A short metallic sound when the move you are planning starts to provoke another enemy. Follows Foundry's interface volume."
           }
         }
+      },
+      "pf2eCombatAssessment": {
+        "Name": "Combat Assessment",
+        "Hint": "After Combat Assessment, the next melee Strike that hits gives the striker a card with a button per skill that identifies the target: a secret Recall Knowledge (+2 on a critical hit). The target is then immune for a day (shown on the Token HUD's Battle Medicine button)."
+      },
+      "pf2eGuardiansDeflection": {
+        "Name": "Guardian's Deflection",
+        "Hint": "When an ally in a swashbuckler's reach is hit and +2 AC would turn the hit into a miss (or a critical hit into a hit), the swashbuckler gets a card: Deflect spends the reaction, says the new result in chat and gives panache until the end of their next turn. Needs one one-handed melee weapon and the other hand free."
       },
       "pf2eFrightened": {
         "Name": "Frightened",
@@ -1995,6 +2003,30 @@
         "Restrained": "{name} is Restrained: {item} has the manipulate trait.",
         "Rage": "{name} is raging: {item} has the concentrate trait.",
         "Buckler": "{name} raises a buckler with both hands busy (it needs a free hand or one holding a light item)."
+      },
+      "CombatAssessment": {
+        "Title": "Combat Assessment",
+        "Recall": "Recall Knowledge about {name}:",
+        "Critical": "(+2, critical hit)",
+        "Immune": "{name} is immune to Combat Assessment ({left} left).",
+        "RollLabel": "Recall Knowledge ({skill}), Combat Assessment",
+        "ACreature": "a creature",
+        "NotYours": "That card is for someone else.",
+        "NoSkill": "That skill isn't on the sheet."
+      },
+      "Deflection": {
+        "Title": "Guardian's Deflection",
+        "Line": "{attacker}'s {item} hits {ally}: +2 AC makes the {from} a {to}.",
+        "Result": "{ally}: Guardian's Deflection, {attacker}'s {item} is a {to}.",
+        "criticalSuccess": "critical hit",
+        "success": "hit",
+        "failure": "miss",
+        "criticalFailure": "critical miss",
+        "Deflect": "Deflect",
+        "Skip": "Skip",
+        "ACreature": "a creature",
+        "NotYours": "That card is for someone else.",
+        "NoPanache": "Effect: Panache wasn't found in the PF2e feat effects; add panache by hand."
       },
       "Sustain": {
         "Effect": "Sustaining: {spell}",

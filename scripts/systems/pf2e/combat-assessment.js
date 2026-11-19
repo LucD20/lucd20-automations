@@ -1,0 +1,156 @@
+import { MODULE_ID, error, localize } from "../../core/constants.js";
+import { defineFeature } from "../../core/registry.js";
+import { executeAsGM, onGMRequest } from "../../core/socket.js";
+import { waitForDice } from "../../core/dice.js";
+import { pf2eCard, wireOpen, sourceUuid, itemBySlug, compactCard, nameForPlayers } from "./card.js";
+import { addImmunity, immunitiesOf, timeLeft } from "./immunity.js";
+
+/**
+ * Rule 21 (docs/pf2e-rules.md): Combat Assessment (Commander / Fighter feat 1, owner's AoN link).
+ * "You make a telegraphed attack to learn about your foe": a melee Strike; if it hits, you can immediately
+ * attempt a check to Recall Knowledge about the target, +2 circumstance on a critical hit. The target is then
+ * temporarily immune to Combat Assessment for 1 day.
+ *
+ * - The action's card (slug `combat-assessment`) marks the creature; its next melee Strike within 2 minutes is
+ *   the assessment (active GM's client, after Dice So Nice).
+ * - A hit: a card to the striker's players and the GM with a button per skill that identifies the target
+ *   (PF2e's `identificationDCs.skills`, else the usual identification skills); a click rolls that skill as a
+ *   secret Recall Knowledge (blind roll, the target's identification DC, +2 circumstance on a critical hit).
+ * - The target becomes immune for a day (our tracker, no PF2e effect; rule 23 shows it on the Token HUD).
+ *   A target already immune: the card says so, no buttons. A miss: no card, the immunity still starts.
+ */
+
+const L = (key, data) => localize(`LUCD20.PF2eRules.CombatAssessment.${key}`, data);
+const SLUGS = ["combat-assessment"];
+const NAME = /^combat assessment$/i;
+const KIND = "combatAssessment";
+const WINDOW_MS = 120000;
+const FALLBACK_SKILLS = ["arcana", "crafting", "medicine", "nature", "occultism", "religion", "society"];
+const pending = new Map(); // actor id → time the action was used
+const seen = new Set();
+
+const gmIds = () => game.users.filter((u) => u.isGM).map((u) => u.id);
+const ownersOf = (actor) => (actor?.hasPlayerOwner ? game.users.filter((u) => !u.isGM && u.active && actor.testUserPermission?.(u, "OWNER")).map((u) => u.id) : []);
+const slugOf = (item) => item?.slug ?? item?.system?.slug ?? "";
+const isAssessment = (item) => SLUGS.includes(slugOf(item)) || NAME.test(item?.name ?? "");
+
+/** The skills that identify this creature. */
+export function identifySkills(actor) {
+	const skills = actor?.identificationDCs?.skills;
+	return Array.isArray(skills) && skills.length ? [...new Set(skills)] : FALLBACK_SKILLS;
+}
+
+const skillLabel = (actor, slug) => actor?.skills?.[slug]?.label ?? game.i18n?.localize?.(CONFIG.PF2E?.skills?.[slug]?.label ?? "") ?? slug;
+
+/** Is this message a melee Strike (attack roll)? */
+function meleeStrike(message) {
+	const context = message?.flags?.pf2e?.context;
+	if (context?.type !== "attack-roll" || context.isReroll) return false;
+	const options = context.options ?? [];
+	if (options.includes("ranged") || options.includes("item:ranged")) return false;
+	return message.item?.isMelee !== false;
+}
+
+/** Active GM's client: the action card arms it; the next melee Strike is the assessment. */
+export async function onMessage(message) {
+	if (!game.user.isActiveGM) return;
+	const actor = message?.actor;
+	if (!actor) return;
+	if (isAssessment(message.item) && !message.flags?.pf2e?.context) return void pending.set(actor.id, Date.now());
+	if (!meleeStrike(message) || seen.has(message.id)) return;
+	const armed = pending.get(actor.id);
+	if (!armed || Date.now() - armed > WINDOW_MS) return;
+	pending.delete(actor.id);
+	seen.add(message.id);
+	const context = message.flags.pf2e.context;
+	const target = context.target?.token ? fromUuidSync(context.target.token) : null;
+	if (!target?.actor) return;
+	await waitForDice(message.id);
+	const striker = message.token ?? actor.getActiveTokens?.()?.[0]?.document ?? null;
+	const immune = immunitiesOf(target.actor, { kind: KIND });
+	if (!immune.length) await addImmunity(target.actor, { kind: KIND, by: actor.uuid, name: striker?.name ?? actor.name });
+	const hit = ["success", "criticalSuccess"].includes(context.outcome);
+	if (!hit && !immune.length) return;
+	const item = itemBySlug(actor, SLUGS, NAME);
+	const whom = nameForPlayers(target, L("ACreature"));
+	const critical = context.outcome === "criticalSuccess";
+	const body = immune.length
+		? `<p>${L("Immune", { name: Handlebars.escapeExpression(whom), left: timeLeft(immune[0]) })}</p>`
+		: `<p>${L("Recall", { name: Handlebars.escapeExpression(whom) })}${critical ? ` <span class="lucd20-card-note">${L("Critical")}</span>` : ""}</p>`;
+	const buttons = immune.length ? [] : identifySkills(target.actor).map((slug) => ({ data: "lucd20-ca", value: slug, label: skillLabel(actor, slug) }));
+	await ChatMessage.create({
+		content: pf2eCard({ img: item?.img, title: item?.name ?? L("Title"), glyph: "1", who: striker?.name ?? actor.name, open: sourceUuid(item), body, buttons, extraClass: "lucd20-ca-card" }),
+		speaker: { alias: striker?.name ?? actor.name },
+		whisper: [...new Set([...ownersOf(actor), ...gmIds()])],
+		flags: { [MODULE_ID]: { combatAssessment: { striker: actor.uuid, target: target.uuid, critical, img: item?.img ?? null, title: item?.name ?? L("Title"), open: sourceUuid(item), done: !buttons.length } } }
+	});
+}
+
+/** The striker's client: roll the chosen skill as a secret Recall Knowledge. */
+async function onClick(card, button) {
+	const data = card.getFlag(MODULE_ID, "combatAssessment");
+	const actor = data ? fromUuidSync(data.striker) : null;
+	const target = data ? fromUuidSync(data.target) : null;
+	if (!actor || data.done) return;
+	if (!(game.user.isGM || actor.isOwner)) return ui.notifications.warn(L("NotYours"));
+	const ok = await executeAsGM("pf2eCA.claim", { card: card.id });
+	if (!ok) return;
+	const skill = actor.skills?.[button.dataset.lucd20Ca];
+	if (!skill?.roll) return ui.notifications.warn(L("NoSkill"));
+	const Modifier = game.pf2e?.Modifier;
+	const modifiers = data.critical && Modifier ? [new Modifier({ slug: "combat-assessment", label: data.title, modifier: 2, type: "circumstance" })] : [];
+	const dc = target?.actor?.identificationDCs?.standard?.dc;
+	await skill.roll({
+		label: L("RollLabel", { skill: skill.label ?? button.textContent.trim() }),
+		dc: dc ? { value: dc } : undefined,
+		modifiers,
+		rollMode: "blindroll",
+		traits: ["secret"],
+		extraRollOptions: ["action:recall-knowledge", "secret", "combat-assessment"]
+	});
+}
+
+/** GM's client: once per card; it then shows only the feat's name. */
+async function claim({ card }) {
+	const m = game.messages.get(card);
+	const data = m?.getFlag(MODULE_ID, "combatAssessment");
+	if (!data || data.done) return false;
+	await m.update({
+		content: compactCard({ img: data.img, title: data.title, glyph: "1", open: data.open, extraClass: "lucd20-ca-card" }),
+		[`flags.${MODULE_ID}.combatAssessment.done`]: true
+	});
+	return true;
+}
+
+defineFeature({
+	id: "pf2eCombatAssessment",
+	category: "pf2e",
+	systems: ["pf2e"],
+	scope: "world",
+	gmOnly: true,
+	defaultEnabled: true,
+
+	init(feature) {
+		onGMRequest("pf2eCA.claim", (payload) => (feature.active ? claim(payload) : false));
+	},
+
+	enable(feature) {
+		feature.on("createChatMessage", (message) => { onMessage(message).catch((err) => error("Combat Assessment failed.", err)); });
+		feature.on("renderChatMessageHTML", (message, html) => {
+			const data = message.getFlag?.(MODULE_ID, "combatAssessment");
+			if (!data) return;
+			wireOpen(html);
+			for (const button of html.querySelectorAll?.("[data-lucd20-ca]") ?? []) {
+				if (data.done) { button.disabled = true; continue; }
+				button.addEventListener("click", (event) => {
+					event.preventDefault();
+					button.disabled = true;
+					if (feature.active) onClick(message, button).catch((err) => error("Combat Assessment failed.", err));
+				});
+			}
+		});
+		feature.onCleanup(() => pending.clear());
+	}
+});
+
+export const _test = { onMessage, onClick, claim, pending, seen, identifySkills };

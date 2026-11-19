@@ -91,6 +91,8 @@ export const FEATURE_ORDER = [
   { id: "pf2eCover", category: "pf2e", phase: 54, systems: ["pf2e"] },
   { id: "pf2eAreas", category: "pf2e", phase: 55, systems: ["pf2e"] },
   { id: "pf2eCreatureScale", category: "pf2e", phase: 62, systems: ["pf2e"] },
+  { id: "pf2eCombatAssessment", category: "pf2e", phase: 67, systems: ["pf2e"] },
+  { id: "pf2eGuardiansDeflection", category: "pf2e", phase: 67, systems: ["pf2e"] },
   { id: "dnd4eClassFeatures", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
   { id: "dnd4eCover", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
   { id: "dnd4eActionTracker", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
@@ -136,7 +138,7 @@ export const NAV = [
   ] },
   { id: "pf2e", systems: ["pf2e"], pages: [
     { id: "pf2eCore", icon: "fa-solid fa-book", from: ["pf2e"], sections: ["conditions", "actions", "reactions", "battlefield", "tools"] },
-    { id: "pf2eClasses", icon: "fa-solid fa-users", sections: ["animist", "commander", "guardian", "oracle"], tree: true },
+    { id: "pf2eClasses", icon: "fa-solid fa-users", sections: ["animist", "commander", "guardian", "oracle", "swashbuckler"], tree: true },
     { id: "pf2eExploration", icon: "fa-solid fa-magnifying-glass", from: ["exploration"] },
     { id: "pf2eChat", icon: "fa-solid fa-dice", features: ["rollChances", "modifiersMatter", "damageEstimate"] }
   ] },
@@ -170,6 +172,8 @@ export const PLACE = {
   pf2eCreatureScale: { page: "pf2eCore", section: "tools" },
   pf2eRoaringHeart: { page: "pf2eClasses", section: "animist" },
   pf2eDemoralizingCharge: { page: "pf2eClasses", section: "commander" },
+  pf2eCombatAssessment: { page: "pf2eClasses", section: "commander" },
+  pf2eGuardiansDeflection: { page: "pf2eClasses", section: "swashbuckler" },
   pf2ePunishingShove: { page: "pf2eClasses", section: "guardian" },
   pf2eTemporalDistortion: { page: "pf2eClasses", section: "oracle" },
   dnd4eClassFeatures: { page: "dnd4eClasses" },

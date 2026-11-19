@@ -102,6 +102,7 @@ sets `game.system.id`.
 | `test39.js` | D&D 4e HUD: data from the owner's sheets, columns and tabs, dock, clicks, dying, condition icons, party and selection cards, window sizes, players list and hotbar moved and put back (39); the monster HUD: role block, resistances, recharge roll, traits (40) |
 | `test64.js` | Shared Picks: Shove squares and Demoralizing Charge shared, hidden tokens GM-only, the GM's Take over (66) |
 | `test65.js` | Shared Picks: D&D 4e push / shift picker shared, Take over sends the path back (66) |
+| `test66.js` | PF2e Combat Assessment (the card, the secret Recall Knowledge, the 1-day immunity) and Guardian's Deflection (+2 AC degrees, who gets a card, Deflect / Skip, panache) (67) |
 
 For a new feature, copy the closest test, keep its mock setup and replace the
 checks.

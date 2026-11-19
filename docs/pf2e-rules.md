@@ -535,6 +535,11 @@ one that leaves fewer squares next to enemies (see PLAN).
   Sustain action's slug "sustain"; PF2e removing the effect by its own
   duration at the same moment (harmless).
 
+- v0.75.1 (owner): a second cast of a spell already sustained keeps both
+  effects and posts "X: duplicate effect? Yes | No" (Yes deletes the new one).
+- v0.76.1 (owner): sustaining **Earth's Bile** (Sustain button or the Sustain
+  action) posts its card again at the cast rank; only that spell for now.
+
 ## 15. Hand reminders
 
 - The original: notices for more than two hands, Strikes with a weapon not

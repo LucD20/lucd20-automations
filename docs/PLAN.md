@@ -2865,7 +2865,12 @@ no longer match the module); not touched.
      token and the source): push, pull, slide, shift, free shifts, charge.
    - (verify) in Foundry: `User#query` to players (V13+ queries are not
      GM-only), and that the throttle is smooth enough over the network.
-3. **Sustain re-post**: Earth's Bile (Q289).
+3. **Sustain re-post**: Earth's Bile (Q289). **Built v0.76.1**: the Sustain
+   button and the Sustain action post the spell's card again
+   (`spell.toMessage(null, { create: false, data: { castRank } })`, our flag
+   `sustainRepost` so it isn't read as a new cast; GM-only when the caster's
+   token is hidden); the end-of-turn "Yes" posts nothing. Matched by slug
+   `earths-bile` or the name. (verify) the slug in PF2e 8.7.
 4. **Combat Assessment**, **Guardian's Deflection** (Q290); Combat Assessment's
    1-day immunity shares the tracker of step 5.
 5. **Battle Medicine HUD** (Q291), **Flanking overlay** (Q292).

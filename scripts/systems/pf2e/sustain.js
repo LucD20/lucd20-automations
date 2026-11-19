@@ -14,6 +14,9 @@ import { nameForPlayers } from "./card.js";
  *   removing). No ends it. Using the Sustain action from the sheet sustains the only spell waiting.
  * - v0.75.1 (owner): a second cast of a spell already being sustained keeps both effects and posts one line
  *   "X: duplicate effect?" Yes (the new effect goes, nothing else said) / No (both kept).
+ * - v0.76.1 (owner): sustaining Earth's Bile (the Sustain button, or the Sustain action from the sheet) posts
+ *   its spell card again at the cast rank, so its effect can be used again. Not the end-of-turn "Yes" (that
+ *   only says it was sustained earlier). The card carries our flag, so it is not taken for a new cast.
  * The cards go once every line is answered. On the active GM's client.
  */
 
@@ -22,6 +25,10 @@ const esc = (v) => Handlebars.escapeExpression(String(v ?? ""));
 const FLAG = "sustain";
 const CARD = "sustainCard";
 const UNIT_ROUNDS = { round: 1, minute: 10, hour: 600, day: 14400 };
+const REPOST = "sustainRepost";
+/** Spells whose card is posted again when sustained (owner: "for now, just that one"). */
+const REPOST_SLUGS = new Set(["earths-bile"]);
+const REPOST_NAMES = /^earth['’]?s bile$/i;
 
 const gmIds = () => game.users.filter((u) => u.isGM).map((u) => u.id);
 const ownersOf = (actor) => (actor?.hasPlayerOwner ? game.users.filter((u) => !u.isGM && u.active && actor.testUserPermission?.(u, "OWNER")).map((u) => u.id) : []);
@@ -37,6 +44,7 @@ const sustained = (actor) => (actor?.itemTypes?.effect ?? []).filter((e) => e.ge
 /** A sustained spell was cast: its effect on the caster. */
 async function onCast(message) {
 	const spell = message.item;
+	if (message.flags?.[MODULE_ID]?.[REPOST]) return; // our own repost of a sustained spell
 	if (!message.flags?.pf2e?.casting || spell?.type !== "spell" || !spell.system?.duration?.sustained) return;
 	const actor = message.actor;
 	if (!actor) return;
@@ -69,12 +77,34 @@ async function onSustainAction(message) {
 	const item = message.item;
 	if ((item?.slug ?? item?.system?.slug) !== "sustain" || item?.type !== "action") return;
 	const waiting = sustained(message.actor).filter((e) => !e.getFlag(MODULE_ID, FLAG).sustained);
-	if (waiting.length === 1) await markSustained(waiting[0]);
+	if (waiting.length === 1) await markSustained(waiting[0], { repost: true });
 }
 
-async function markSustained(effect) {
+async function markSustained(effect, { repost = false } = {}) {
 	await effect.setFlag(MODULE_ID, FLAG, { ...effect.getFlag(MODULE_ID, FLAG), sustained: true });
 	await dropLine(effect.uuid);
+	if (repost) await repostSpell(effect).catch((err) => error("Sustain: posting the spell again failed.", err));
+}
+
+export function repostsWhenSustained(spell) {
+	return REPOST_SLUGS.has(spell?.slug ?? spell?.system?.slug ?? "") || REPOST_NAMES.test(String(spell?.name ?? "").trim());
+}
+
+/** The spell's card again, at the rank it was cast; private like the cast when the caster's token is hidden. */
+async function repostSpell(effect) {
+	const data = effect.getFlag(MODULE_ID, FLAG);
+	const spell = data?.spell ? fromUuidSync(data.spell) : null;
+	if (!spell || !repostsWhenSustained(spell) || typeof spell.toMessage !== "function") return;
+	const actor = effect.parent;
+	const token = actor?.getActiveTokens?.()?.[0]?.document ?? null;
+	const rollMode = token?.hidden ? "gmroll" : "publicroll";
+	const castRank = Number(effect.system?.level?.value) || spell.rank;
+	const message = await spell.toMessage(null, { create: false, data: { castRank }, rollMode });
+	if (!message) return;
+	const source = typeof message.toObject === "function" ? message.toObject() : message;
+	foundry.utils.setProperty(source, `flags.${MODULE_ID}.${REPOST}`, true);
+	if (rollMode === "gmroll") source.whisper = gmIds();
+	await ChatMessage.create(source, { rollMode });
 }
 
 async function endSpell(effect, why) {
@@ -160,7 +190,8 @@ async function answer({ effect, value }, senderId) {
 	if (!fx) return dropLine(effect);
 	const sender = game.users.get(senderId);
 	if (sender && !sender.isGM && !fx.parent?.testUserPermission?.(sender, "OWNER")) return false;
-	if (value === "sustain" || value === "yes") return markSustained(fx);
+	if (value === "sustain") return markSustained(fx, { repost: true });
+	if (value === "yes") return markSustained(fx);
 	if (value === "end") return endSpell(fx, "Ended");
 	if (value === "no") return endSpell(fx, "NotSustained");
 	if (value === "dupYes") { await fx.delete(); return dropLine(effect); }

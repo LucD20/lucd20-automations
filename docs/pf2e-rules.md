@@ -29,6 +29,10 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 | 18 | Damage Estimate, PF2e and 4e (replaces PF2e Damage Estimate) | built v0.57.0 | `damageEstimate` |
 | 19 | Cover for attack rolls and area saves; areas reach past wall ends | built v0.61.0 | `pf2eCover` |
 | 20 | Effect areas: targeting window, hover cover, exact reach | built v0.61.3 | `pf2eAreas` |
+| 21 | Commander / Fighter: Combat Assessment | planned | `pf2eCombatAssessment` |
+| 22 | Swashbuckler: Guardian's Deflection | planned | `pf2eGuardiansDeflection` |
+| 23 | Battle Medicine: who used it on whom, on the Token HUD | planned | `pf2eBattleMedicine` |
+| 24 | Flanking overlay | planned | `pf2eFlanking` |
 
 Commander (Battlecry!): research notes in `docs/pf2e-commander.md`; rules to
 automate come from the owner, one at a time.
@@ -799,3 +803,65 @@ one that leaves fewer squares next to enemies (see PLAN).
   distance; the label is sized in screen pixels (per-player "Text size",
   default 16, 8–48), drawn at twice that and scaled by the zoom, so it reads
   the same at any zoom. (verify) the Font Awesome family name on the canvas.
+
+## 21. Commander / Fighter: Combat Assessment (planned)
+
+- Owner: the AoN link (Feats ID 4768). The feat: one action; a melee Strike;
+  on a hit you may at once attempt Recall Knowledge about the target, +2
+  circumstance on a critical hit; the target is then temporarily immune to
+  your Combat Assessment for 1 day.
+- Proposal: the Strike's message from the Combat Assessment action (its
+  roll options) → on a hit, a card to the striker (and the GM) with
+  **Recall Knowledge** buttons for the skills that fit the target (PF2e's
+  identification skills), +2 circumstance on a crit, the GM-secret roll as
+  PF2e does it; the 1-day immunity is kept in the same tracker as rule 23
+  (no PF2e effect) and shown there; a target immune: the card says so.
+- (verify) how PF2e 8.7 marks a Strike made through Combat Assessment
+  (`item:slug:combat-assessment` / an `action:` option on the Strike).
+
+## 22. Swashbuckler: Guardian's Deflection (planned)
+
+- Owner: the AoN link (Feats ID 6147). Reaction; trigger: an ally within
+  your melee reach is hit by an attack, you can see the attacker, and +2
+  circumstance to AC would turn the critical hit into a hit or the hit into
+  a miss. Requirement: a single one-handed melee weapon, other hand(s) free.
+  The ally gets +2 circumstance to AC against that attack; you gain panache
+  until the end of your next turn.
+- Proposal, as Shield Block (rule 8): on an attack roll that hits an ally
+  (GM's client reads total, the ally's AC, the d20), a card to the
+  swashbuckler when +2 would change the degree (total < AC + 2 for a hit;
+  total < AC + 12 for a critical, and not a natural 20 / 1 adjustment
+  that keeps it), they have the reaction (rule 6), the attacker is visible
+  to them, the ally is in their reach (rule 7's geometry) and the hands
+  match (rule 15's hand reading). **Deflect**: spends the reaction, a chat
+  line "Hit → miss" / "Critical → hit" on the attack, panache to the
+  swashbuckler (the system's Panache effect). Monsters never get it.
+- (verify) whether the attack message's outcome can be changed so PF2e's
+  damage buttons follow it; else the line tells the attacker what to roll.
+
+## 23. Battle Medicine on the Token HUD (planned)
+
+- Owner: "A simple hover that says who already used Battle Medicine is
+  enough. On the target, who already used it on it and how long until it can
+  be used again; on who has Battle Medicine, who it already used it on;
+  someone with both shows both. Don't add a PF2e effect; a button on the
+  token HUD, likely under rideable."
+- Proposal: read Battle Medicine's check messages (`action:battle-medicine`
+  / the feat's slug): healer, target, world time. Stored in flags on the
+  actors (GM's client). A HUD button (under Riding's) when there is anything
+  to show; hover: "Used on it: Kyra — again in 18 h" and "Used it on:
+  Amiri (18 h)". Entries older than 1 day go. Combat Assessment's immunity
+  (rule 21) is shown the same way. Players see only tokens they see, and
+  hidden NPC names as players see them.
+
+## 24. Flanking overlay (planned)
+
+- Owner: "When your token is selected, you have a creature targeted and are
+  flanking: a 'broken shield' icon on the target, with a line from you to the
+  ally flanking. When moving, the placement shows the same, so when you are
+  dragging your token you can see where you are going to flank."
+- Proposal: PF2e's flanking (`TokenPF2e#isFlanking` where it can be used,
+  else the same geometry: the line between the two centres passes through
+  opposite sides or corners of the target; both able to act and with the
+  target in melee reach); during a drag, worked out for the drag's end
+  square. Only this user's own selected token and tokens they see.

@@ -3060,3 +3060,59 @@ rules, damage / duration / bonus / critical formatting, and the audit.
   on every token? `name-token.webp` next to the art, art untouched?
 - Q308: First test book: one not converted yet, or one already done so we
   compare with your version?
+
+### 23.6 Owner's answers (Q304–Q308) and what was built (2026-11-19)
+
+- Q304: **split OK**: Claude session first, then Foundry. Owner: turn the PDF
+  into Markdown with a script first (agreed: repeatable, strips the
+  personalised watermark, Claude then reads clean text with headings).
+- Q305: the small "1=9, 2=10" table was a paste helper for the old AI
+  prompt; not needed.
+- Q306: always the same level (the party level = the book's level).
+- Q307 tokens: the green guide circle is hidden on export. Subjects often go
+  past the circle; bigger tokens use a **150–200 % canvas** (the worlds show
+  ring subject scale 1 / 1.5 / 2 with texture scale to match, so the canvas
+  is 1024 × scale and the circle stays 682 px). The shadow arc is on every
+  token but **under the parts that stick out** (today masked by hand), so
+  the layers are: portrait clipped to the circle → shadow arc → the
+  sticking-out part on top. Names: `<name>.webp` art and `<name>-token.webp`
+  token, folders as in the worlds (`Starfinder/Adventures/<ap-slug>/actors/`
+  or `/art/`). (Owner wrote "webm"; the worlds use **.webp**, Q310.)
+- Q308: first test book: **Attack of the Swarm 6, The God Host Ascends**
+  (in `sf2e-adv`: 3 parts, 13 pages, 18 actors under
+  `ap24-the-god-host-ascends/art/`, tokens not made yet: token = art file).
+
+**The DC workbook** (`DC_Sheets.xlsx`, more than the CSV):
+- `DC` (PF1e) and `SF DC` (SF1e): same table; SF1e 1e DCs are **4 higher**
+  for the same 2e DC, except at levels 14, 17, 19 where the sheet has a hand
+  edit `+4-1` (shift 3; Q309). Proficiency: colour bands end at the label
+  row (1e DC − level ≤ 6 untrained, ≤ 11 trained, ≤ 16 expert, ≤ 21 master,
+  else legendary; the sheet's example L6 DC 20 → 23 Expert); difficulty
+  bands start at the label rows (L+2 very easy … L+27 incredibly hard).
+- `CR`: 1e CR → XP and the encounter mapping (APL −1 Easy → Trivial … APL +3
+  Epic → Extreme; 40 / 60 / 80 / 120 / 160 XP). `GP`: 1e → 2e treasure by
+  level (Paizo's conversion guide; median ratio, 19 % at 17+). For NPC (C)
+  and loot conversion later.
+
+**Built** (no Foundry code, no version bump):
+- `tools/pdf-to-md/pdf_to_md.py` (PyMuPDF): two-column reading order,
+  headings by font size (#–###, bold body lines ####), drops lines repeated
+  in the page margins (running headers, page numbers, the buyer watermark),
+  `<!-- p. N -->` per page. Tested on a made-up PDF only; tune on Book 6.
+- `scripts/conversion/dc.js` (plain ES module, runs in Foundry and Node):
+  `convertDc(dc1e, level, "pf1e"|"sf1e")` → `{ dc, proficiency, difficulty,
+  capped }`; checked against every cell of both sheets (620 + 620, 0
+  mismatches). CLI: `node tools/convert/dc.mjs sf1e 6 24`.
+
+**Found on the way**: the module's PF2e features declare `systems:
+["pf2e"]` and `isAvailable` compares with `game.system.id`, so **none of them
+run in the SF2e world** (system id `sf2e`) (Q311).
+
+### 23.7 Questions (Q309–)
+
+- Q309: SF DC sheet, levels 14 / 17 / 19 use shift 3 instead of 4: meant,
+  or a leftover edit? (The code follows the sheet for now.)
+- Q310: tokens are `.webp` (still image) as in the worlds, not `.webm`
+  (video)?
+- Q311: should the PF2e features also run in SF2e (same engine, a fork)?
+  Each would need a check in Foundry; a separate pass.

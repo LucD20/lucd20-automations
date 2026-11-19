@@ -1,6 +1,7 @@
 import { MODULE_ID, SOCKET } from "../constants.mjs";
 import { F, L, log } from "../utils.mjs";
 import { reachable, rectAt, pointOf, key } from "./reach.mjs";
+import { registerTakeover, sharePick } from "../../../core/shared-pick.js";
 
 /*
  * Click-to-move: highlights the squares a token can reach, shows the path under the cursor, and
@@ -17,6 +18,9 @@ import { reachable, rectAt, pointOf, key } from "./reach.mjs";
  * sidebar/chat, shrinking with the window (text is cut with "…", the buttons stay on the right).
  *
  * Only one picker is open at a time; further requests wait in a queue.
+ *
+ * v0.76.0 (owner, docs/PLAN.md §22 Q284): everyone else sees the squares and the path live (only that), and
+ * the GM can take over: the GM's choice comes back here and the move is made from this client as before.
  */
 
 const ORANGE = 0xef6c00;
@@ -155,6 +159,13 @@ class Picker {
 	/* ---------------------------------------- */
 
 	open() {
+		this.session = this.remote ? sharePick({ tokens: this.shareTokens(), hint: this.barText() })
+			: sharePick({ tokens: this.shareTokens(), hint: this.barText(), takeover: { type: "move4e", data: this.takeoverData() } });
+		this.session.onTaken = () => this.teardown();
+		this.session.onResult = (value) => {
+			if (value?.path?.length) this.finish(value.path, value.steps);
+			else this.close({ moved: false, squares: 0 });
+		};
 		this.minimized = minimizeWindows();
 		this.layer = new PIXI.Container();
 		this.layer.name = `${MODULE_ID}-move-picker`;
@@ -164,23 +175,72 @@ class Picker {
 		this.layer.addChild(this.fill, this.path);
 		canvas.interface.addChild(this.layer);
 		this.drawSquares();
+		this.shareState();
 		this.openBar();
 		this.listen();
 		canvas.animatePan?.({ ...this.token.center, duration: 250 });
 		log("move picker", this.mode, this.token.name, this.squares, `${this.destinations.size} squares`);
 	}
 
-	close(result) {
-		if (this.closed) return;
-		this.closed = true;
+	/** The UI goes (also when the GM takes over; the result then comes later). */
+	teardown() {
+		if (this.tornDown) return;
+		this.tornDown = true;
 		for (const [target, type, fn, opts] of this.handlers) target.removeEventListener(type, fn, opts);
 		this.layer?.destroy({ children: true });
 		clearInterval(this.layoutTimer);
 		window.removeEventListener("resize", this.layoutFn);
 		this.bar?.remove();
 		restoreWindows(this.minimized);
-		active = null;
+		if (active === this) active = null;
+	}
+
+	close(result) {
+		if (this.closed) return;
+		this.closed = true;
+		this.teardown();
+		this.session?.end();
 		this.resolve(result);
+	}
+
+	/* ---------------------------------------- */
+	/*  Shared with the other clients            */
+	/* ---------------------------------------- */
+
+	shareTokens() {
+		return [this.token.document.uuid, this.source?.document?.uuid].filter(Boolean);
+	}
+
+	barText() {
+		const what = F(`Move.Bar.${this.mode}`, { name: this.token.name, squares: this.squares, target: this.targetName ?? "" });
+		return this.power ? `${this.power}: ${what}` : what;
+	}
+
+	/** What the GM needs to open the same picker. */
+	takeoverData() {
+		return {
+			token: this.token.document.uuid, source: this.source?.document?.uuid ?? null, mode: this.mode, squares: this.squares,
+			power: this.power ?? "", targetName: this.targetName ?? "", action: this.action, moveOptions: this.moveOptions ?? {},
+			destinations: this.fixed ? [...this.fixed.values()] : null
+		};
+	}
+
+	/** The squares, the path and the end square, as plain shapes. */
+	shareState() {
+		if (!this.session) return;
+		const s = canvas.grid.size;
+		const color = COLORS[this.mode];
+		const rects = [...(this.cells ?? new Map())].map(([c, stop]) => {
+			const [i, j] = c.split(",").map(Number);
+			return { x: j * s, y: i * s, w: s, h: s, color, fill: stop ? 0.22 : 0.08, line: 2 };
+		});
+		const { w, h } = this.size;
+		const center = (p) => ({ x: (p.j + w / 2) * s, y: (p.i + h / 2) * s });
+		const all = [...this.fullPath, ...(this.hover?.path ?? [])];
+		const start = center({ i: Math.round(this.token.document.y / s), j: Math.round(this.token.document.x / s) });
+		const end = this.hover?.pos ?? this.planEnd;
+		if (end) rects.push({ x: end.j * s, y: end.i * s, w: w * s, h: h * s, color, fill: 0.35, line: 4 });
+		this.session.draw({ rects, path: all.length ? { points: [start, ...all.map(center)], color: 0xffffff, dot: Math.max(4, s * 0.06) } : null });
 	}
 
 	/* ---------------------------------------- */
@@ -204,6 +264,7 @@ class Picker {
 				cells.set(k, cells.get(k) || d.canStop !== false);
 			}
 		}
+		this.cells = cells;
 		g.clear();
 		for (const [c, stop] of cells) {
 			const [i, j] = c.split(",").map(Number);
@@ -233,6 +294,7 @@ class Picker {
 		const end = this.hover?.pos ?? this.planEnd;
 		if (end) g.lineStyle(4, color, 1).beginFill(color, 0.35).drawRect(end.j * s + 3, end.i * s + 3, w * s - 6, h * s - 6).endFill();
 		this.setCount(this.used + (this.hover?.steps ?? 0));
+		this.shareState();
 	}
 
 	/* ---------------------------------------- */
@@ -359,6 +421,7 @@ class Picker {
 	async finish(path, steps) {
 		if (this.busy || !path.length) return;
 		this.busy = true;
+		if (this.remote) return this.close({ moved: false, squares: steps, path, remote: true });
 		const ok = await moveTokenAlong(this.token.document, path, this.moveOptions, this.action);
 		this.close({ moved: ok, squares: steps, path });
 	}
@@ -415,6 +478,26 @@ class Picker {
 		if (el) el.textContent = steps ? F("Move.Count", { steps, squares: this.squares }) : "";
 	}
 }
+
+/* -------------------------------------------- */
+/*  The GM takes over                            */
+/* -------------------------------------------- */
+
+/** The GM's picker for someone else's move: the chosen path goes back to the chooser, who moves. */
+registerTakeover("move4e", (data) => new Promise((resolve) => {
+	const token = fromUuidSync(data.token)?.object;
+	if (!canvas.ready || !token) return resolve(null);
+	const source = data.source ? fromUuidSync(data.source)?.object ?? null : null;
+	const destinations = data.destinations ? new Map(data.destinations.map((d) => [key(d.pos), d])) : undefined;
+	const picker = new Picker({
+		source, power: data.power, moveOptions: data.moveOptions ?? {}, action: data.action ?? "shift", targetName: data.targetName,
+		token, mode: data.mode, squares: data.squares, destinations, remote: true,
+		resolve: (result) => resolve(result?.remote ? { path: result.path, steps: result.squares } : null)
+	});
+	if (!picker.recompute()) return resolve(null);
+	active = picker;
+	picker.open();
+}));
 
 /* -------------------------------------------- */
 /*  Bar layout                                    */

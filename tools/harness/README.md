@@ -103,3 +103,5 @@ sets `game.system.id`.
 
 For a new feature, copy the closest test, keep its mock setup and replace the
 checks.
+| `test64.js` | Shared Picks: Shove squares and Demoralizing Charge shared, hidden tokens GM-only, the GM's Take over (66) |
+| `test65.js` | Shared Picks: D&D 4e push / shift picker shared, Take over sends the path back (66) |

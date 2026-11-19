@@ -520,6 +520,10 @@
         "Name": "Combat Movement",
         "Hint": "During combat, players can only move the token whose turn it is; tokens not in the combat move freely. A button in the combat tracker header switches between turn order and free movement."
       },
+      "sharedPicks": {
+        "Name": "Shared Picks",
+        "Hint": "While someone chooses on the map (where a Shove pushes, Demoralizing Charge's squadmates, a 4e push, pull, slide, shift or charge), everyone who sees the creatures sees the same highlights. The GM gets Take over: the choice moves to the GM's screen and is carried out as if the chooser had made it."
+      },
       "describe": {
         "Name": "Describe",
         "Hint": "Select text anywhere and right-click it → Describe, or type /describe Text in chat: everyone sees it on a dark band across the screen for a few seconds. The GM can pause or close it for everyone.",
@@ -1370,6 +1374,11 @@
       "Unknown": "Unknown track",
       "Hidden": "Name hidden from players (click to reveal)",
       "Revealed": "Name shown to players (click to hide)"
+    },
+    "SharedPicks": {
+      "Watching": "{user}: {hint}",
+      "TakeOver": "Take over",
+      "Taken": "{user} took over the choice."
     },
     "Describe": {
       "Menu": "Describe",

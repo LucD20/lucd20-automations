@@ -2843,6 +2843,28 @@ no longer match the module); not touched.
    lines 70, 331, 343; (verify) Ctrl during a V14 token drag does nothing
    else), Frightened on one line (Q286), turn marker on ring tokens (Q282).
 2. **Shared picks + GM Take over** (Q284): core, before anything else picks.
+   **Built v0.76.0** (`core/shared-pick.js`, feature `sharedPicks` under
+   Combat, default on; tests 64, 65):
+   - The pickers (`pickSquare`, `pickSeveral`, 4e's movement picker) send
+     what they draw as plain shapes (rects, the hover arrow, the path) with
+     `User#query` to each other active user, throttled to 80 ms; only to the
+     GMs when a token involved is hidden. The hint (it may name a creature)
+     and the take over data go to the GMs only.
+   - Watchers draw them (a little fainter) only on the same scene and while
+     they see every token involved; players get nothing else. The GM gets a
+     bar "Kyra: <hint> · Take over".
+   - Take over: the chooser's picker closes (a notice "GM took over the
+     choice"), the GM's opens with the same choices (shared with everyone,
+     no second take over); the GM's choice goes back to the chooser's client
+     (a square's index, the chosen values, or the 4e path) and the flow goes
+     on there exactly as if clicked (Shove asks the GM to move, the 4e
+     picker moves, Demoralizing Charge signals). Only the GM who took over
+     can answer. The GM cancelling = the chooser cancels.
+   - Users: Shove (shover + target), Demoralizing Charge and its Drilled
+     Reactions pick (the commander), every 4e `pickMovement` (the moved
+     token and the source): push, pull, slide, shift, free shifts, charge.
+   - (verify) in Foundry: `User#query` to players (V13+ queries are not
+     GM-only), and that the throttle is smooth enough over the network.
 3. **Sustain re-post**: Earth's Bile (Q289).
 4. **Combat Assessment**, **Guardian's Deflection** (Q290); Combat Assessment's
    1-day immunity shares the tracker of step 5.

@@ -12,6 +12,7 @@ import "./hud-combat-lock.js";
 import "./encounter-visibility.js";
 import "./defeat-automation.js";
 import "./combat-movement.js";
+import "./shared-picks.js";
 import "./turn-markers.js";
 import "./multi-token-edit.js";
 import "./folder-drop.js";

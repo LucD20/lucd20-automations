@@ -1,3 +1,5 @@
+import { drawArrow as paintArrow, registerTakeover, sharePick } from "./shared-pick.js";
+
 /**
  * Pick one of a few highlighted squares on the map.
  *
@@ -7,10 +9,15 @@
  * click does not: it is how the map is dragged). With `from` (a point), hovering a square draws an
  * arrow from that point to it. Clicks on a square are taken before Foundry sees them, so picking
  * never selects or moves a token.
+ *
+ * `share: { tokens }` (token uuids involved): everyone else sees the squares and the arrow live, and the GM
+ * can take over (core/shared-pick.js); the GM's choice resolves this promise as if clicked here.
  */
-export function pickSquare(squares, { hint = "", cancel = "Cancel", from = null } = {}) {
+export function pickSquare(squares, { hint = "", cancel = "Cancel", from = null, share = null } = {}) {
   return new Promise(resolve => {
     if (!squares.length || !canvas?.ready) return resolve(null);
+    const session = share ? sharePick({ tokens: share.tokens ?? [], hint, takeover: share.noTakeover ? null : { type: "square", data: { squares: squares.map(plain), hint, cancel, from } } }) : null;
+    const shapes = () => ({ rects: squares.map(s => ({ x: s.x, y: s.y, w: s.width, h: s.height, color: s.color, fill: 0.35 })), arrow: hovered && from ? { from, to: centre(hovered), head: Math.min(hovered.width, hovered.height) * 0.28 } : null });
     const layer = new PIXI.Container();
     layer.eventMode = "none";
     layer.zIndex = 10000;
@@ -52,26 +59,30 @@ export function pickSquare(squares, { hint = "", cancel = "Cancel", from = null 
       if (square === hovered) return;
       hovered = square;
       arrow.clear();
+      session?.draw(shapes());
       if (!square || !from) return;
-      const to = { x: square.x + square.width / 2, y: square.y + square.height / 2 };
-      const angle = Math.atan2(to.y - from.y, to.x - from.x);
-      const head = Math.min(square.width, square.height) * 0.28;
-      arrow.lineStyle(9, 0x000000, 0.55).moveTo(from.x, from.y).lineTo(to.x, to.y);
-      arrow.lineStyle(5, 0xffffff, 1).moveTo(from.x, from.y).lineTo(to.x, to.y);
-      arrow.lineStyle(2, 0x000000, 0.7).beginFill(0xffffff, 1)
-        .moveTo(to.x + Math.cos(angle) * head * 0.5, to.y + Math.sin(angle) * head * 0.5)
-        .lineTo(to.x - Math.cos(angle - 0.55) * head, to.y - Math.sin(angle - 0.55) * head)
-        .lineTo(to.x - Math.cos(angle + 0.55) * head, to.y - Math.sin(angle + 0.55) * head)
-        .closePath().endFill();
+      paintArrow(arrow, from, centre(square), Math.min(square.width, square.height) * 0.28);
     };
-    const done = value => {
+    session?.draw(shapes());
+    let closed = false;
+    const closeUI = () => {
+      if (closed) return;
+      closed = true;
       window.removeEventListener("pointerdown", onDown, true);
       window.removeEventListener("pointermove", onMove, true);
       window.removeEventListener("keydown", onKey, true);
       layer.destroy({ children: true });
       bar.remove();
+    };
+    const done = value => {
+      closeUI();
+      session?.end();
       resolve(value);
     };
+    if (session) {
+      session.onTaken = closeUI;
+      session.onResult = index => resolve(Number.isInteger(index) ? squares[index] ?? null : null);
+    }
     const swallow = event => {
       event.preventDefault();
       event.stopImmediatePropagation();
@@ -104,10 +115,11 @@ export function pickSquare(squares, { hint = "", cancel = "Cancel", from = null 
  * [{ x, y, width, height, color, value }]; resolves the chosen entries' values, in click order.
  * `preselected`: values chosen to begin with. `auto`: a click that reaches `max` ends the choice at once.
  */
-export function pickSeveral(entries, { max = 2, hint = "", confirm = "OK", cancel = "Cancel", preselected = [], auto = false } = {}) {
+export function pickSeveral(entries, { max = 2, hint = "", confirm = "OK", cancel = "Cancel", preselected = [], auto = false, share = null } = {}) {
   return new Promise(resolve => {
     if (!entries.length || !canvas?.ready) return resolve(null);
     const CHOSEN = 0x3b82f6;
+    const session = share ? sharePick({ tokens: share.tokens ?? [], hint, takeover: share.noTakeover ? null : { type: "several", data: { entries: entries.map(plain), max, hint, confirm, cancel, preselected, auto } } }) : null;
     const layer = new PIXI.Container();
     layer.eventMode = "none";
     layer.zIndex = 10000;
@@ -124,6 +136,7 @@ export function pickSeveral(entries, { max = 2, hint = "", confirm = "OK", cance
         box.lineStyle(on ? 4 : 3, color, 0.95).beginFill(color, on ? 0.4 : 0.25).drawRect(e.x + 2, e.y + 2, e.width - 4, e.height - 4).endFill();
         layer.addChild(box);
       }
+      session?.draw({ rects: entries.map(e => { const on = chosen.includes(e); return { x: e.x, y: e.y, w: e.width, h: e.height, color: on ? CHOSEN : e.color, fill: on ? 0.4 : 0.25, line: on ? 4 : 3 }; }) });
     };
     draw();
 
@@ -157,13 +170,24 @@ export function pickSeveral(entries, { max = 2, hint = "", confirm = "OK", cance
       return entries.find(e => point.x >= e.x && point.x < e.x + e.width && point.y >= e.y && point.y < e.y + e.height) ?? null;
     };
     const overUI = event => !!event.target.closest?.(".application, #sidebar, #ui-left, #hotbar, .lucd20-pick-bar");
-    const done = value => {
+    let closed = false;
+    const closeUI = () => {
+      if (closed) return;
+      closed = true;
       window.removeEventListener("pointerdown", onDown, true);
       window.removeEventListener("keydown", onKey, true);
       layer.destroy({ children: true });
       bar.remove();
+    };
+    const done = value => {
+      closeUI();
+      session?.end();
       resolve(value);
     };
+    if (session) {
+      session.onTaken = closeUI;
+      session.onResult = values => resolve(Array.isArray(values) ? values.filter(v => entries.some(e => e.value === v)) : null);
+    }
     function onDown(event) {
       if (event.button !== 0 || overUI(event)) return;
       const entry = at(event);
@@ -194,3 +218,24 @@ export function pickSeveral(entries, { max = 2, hint = "", confirm = "OK", cance
     window.addEventListener("keydown", onKey, true);
   });
 }
+
+/* -------------------------------------------- */
+/*  Shared picks: what is sent, the GM's side   */
+/* -------------------------------------------- */
+
+const centre = s => ({ x: s.x + s.width / 2, y: s.y + s.height / 2 });
+
+/** An entry without functions or class instances, to send. */
+function plain(e) {
+  const out = {};
+  for (const [k, v] of Object.entries(e)) if (["string", "number", "boolean"].includes(typeof v) || v === null) out[k] = v;
+  return out;
+}
+
+// The GM took over: the same picker here (shared with the others, no second take over); the choice goes back
+// as an index (squares) or the chosen values (several).
+registerTakeover("square", async ({ squares, hint, cancel, from }, { share }) => {
+  const choice = await pickSquare(squares, { hint, cancel, from, share: { ...share, noTakeover: true } });
+  return choice ? squares.indexOf(choice) : null;
+});
+registerTakeover("several", async ({ entries, ...opts }, { share }) => pickSeveral(entries, { ...opts, share: { ...share, noTakeover: true } }));

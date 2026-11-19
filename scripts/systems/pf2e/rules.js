@@ -337,7 +337,9 @@ async function onShoveMessage(message) {
     hint: L(outcome === "criticalSuccess" ? "ShoveHintCritical" : "ShoveHint", { name: target?.name ?? "" }),
     cancel: L("Cancel"),
     // Hovering a square shows the push: an arrow from where the target stands.
-    from: { x: target.x + (target.width * size) / 2, y: target.y + (target.height * size) / 2 }
+    from: { x: target.x + (target.width * size) / 2, y: target.y + (target.height * size) / 2 },
+    // v0.76.0 (owner): everyone sees the squares and the arrow; the GM can take over.
+    share: { tokens: [contextOf(message).origin?.token, contextOf(message).target?.token].filter(Boolean) }
   });
   if (!choice) return;
   try {

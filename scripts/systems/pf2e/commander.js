@@ -94,7 +94,7 @@ async function onCommanderMessage(message) {
 	if (!entries.length) return ui.notifications.info(L("NoAllies"));
 	// v0.48.1 (owner): the last squadmates start chosen when they are still in range; the second click signals.
 	const last = actor.getFlag?.(MODULE_ID, "dcLast") ?? [];
-	const chosen = await pickSeveral(entries, { max: 2, hint: L("Pick"), confirm: L("Signal"), cancel: L("Cancel"), preselected: last, auto: true });
+	const chosen = await pickSeveral(entries, { max: 2, hint: L("Pick"), confirm: L("Signal"), cancel: L("Cancel"), preselected: last, auto: true, share: { tokens: [token.document.uuid] } });
 	if (!chosen?.length) return;
 	await actor.setFlag?.(MODULE_ID, "dcLast", chosen).catch?.(() => {});
 	// Drilled Reactions (owner): the commander chooses who gets the extra reaction, once a round.
@@ -104,7 +104,7 @@ async function onCommanderMessage(message) {
 	const drilledFree = redo || token.document.combatant?.getFlag?.(MODULE_ID, "drilledRound") !== roundKey();
 	if (drilledFree) {
 		const picks = entries.filter((e) => chosen.includes(e.value)).map((e) => ({ ...e, color: 0xd9b26a }));
-		drilled = (await pickSeveral(picks, { max: 1, hint: L("PickDrilled"), confirm: L("Give"), cancel: L("NoOne"), auto: true }))?.[0] ?? null;
+		drilled = (await pickSeveral(picks, { max: 1, hint: L("PickDrilled"), confirm: L("Give"), cancel: L("NoOne"), auto: true, share: { tokens: [token.document.uuid] } }))?.[0] ?? null;
 	}
 	await executeAsGM("pf2eRules.dcStart", { commander: token.document.uuid, allies: chosen, item: item.uuid, drilled });
 }

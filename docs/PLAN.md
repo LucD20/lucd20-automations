@@ -3385,3 +3385,7 @@ v0.81.0 the flanking overlay threw when `game.user.targets` was missing
 (harness tests 25–26).
 
 v0.81.3: the flanking overlay also threw on token moves when `canvas.tokens.controlled` was missing (harness tests 12, 23); full suite: all pass but the three old failures (4, 11, 13).
+
+Battle Medicine tooltip design (owner: the 0.81.3 line "doesn't look great"): mockups A–E in
+`docs/mockups/bm-tooltip.html` / `.png` (compact cell, footer line, token badge, chips, "can I treat
+it?" for the selected healer, E + B). Waiting on the owner's pick.

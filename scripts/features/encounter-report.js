@@ -21,7 +21,7 @@ const dbg = (...args) => { if (CONFIG.debug?.lucd20Report || CONFIG.debug?.lucd2
  *
  * The report window (v0.84.3; was a chat card): opens for everyone at the end (option: GM only), with a
  * list of past encounters; reopened from the chat's buttons. One row per creature on the players' side that took part,
- * best first:
+ * by name (v0.84.6; was best first):
  *   Damage (dealt by itself to enemies; minions' / companions' damage also shown added to their master,
  *   "45 +12") | % of enemy HP (its damage ÷ the HP the enemies had when the combat started) | On its turn
  *   (damage to enemies by anyone on its side during its turn: the commander case) | Friendly fire | Taken |
@@ -199,18 +199,18 @@ export function buildReport(data) {
   const out = Object.values(rows)
     .filter(r => side(r.uuid) === FRIENDLY && !p[r.uuid]?.hidden)
     .map(r => ({ ...r, pct: enemyHP(side(r.uuid)) ? Math.round((r.damage / enemyHP(side(r.uuid))) * 100) : 0 }))
-    .sort((a, b) => b.damage + b.companions - (a.damage + a.companions) || a.name.localeCompare(b.name));
+    .sort((a, b) => a.name.localeCompare(b.name));
   return { rows: out, missed };
 }
 
 /**
- * The report (v0.84.5, restyled in the Loot Pile's look): totals on top, then one card per creature, best first:
- * portrait, name, damage with a bar (its share of the best), % of enemy HP, and the small stats. Zeros are faded.
+ * The report (v0.84.5, restyled in the Loot Pile's look): totals on top, then one card per creature, by name
+ * (v0.84.6, owner: no crown, no bars, no ranking: "this will cause feels bad"; just the stats): portrait, name,
+ * damage, % of enemy HP, and the small stats. Zeros are faded.
  */
 export function reportHTML(report, { rounds = null } = {}) {
   const rows = report.rows ?? [];
   const sum = key => rows.reduce((n, r) => n + (r[key] || 0), 0);
-  const best = Math.max(1, ...rows.map(r => r.damage + r.companions));
   const tile = (key, value, icon) => `<div class="lpr-tile" data-tooltip="${esc(t(`Tile.${key}Hint`))}"><i class="fa-solid ${icon}"></i><b>${value}</b><span>${esc(t(`Tile.${key}`))}</span></div>`;
   const tiles = `<div class="lpr-tiles">
       ${tile("Damage", sum("damage"), "fa-burst")}
@@ -219,17 +219,14 @@ export function reportHTML(report, { rounds = null } = {}) {
       ${rounds != null ? tile("Rounds", rounds, "fa-hourglass-half") : ""}
     </div>`;
   const stat = (key, value, icon) => `<span class="lpr-stat ${value ? "" : "is-zero"}" data-col="${key}" data-tooltip="${esc(t(`Col.${key}Hint`))}"><i class="fa-solid ${icon}"></i><b>${value || 0}</b><span>${esc(t(`Col.${key}`))}</span></span>`;
-  const cards = rows.map((r, n) => {
-    const total = r.damage + r.companions;
-    const own = Math.round((r.damage / best) * 100), comp = Math.round((r.companions / best) * 100);
+  const cards = rows.map(r => {
     const img = r.img ? `<img src="${esc(r.img)}" alt="">` : `<i class="fa-solid fa-user"></i>`;
-    return `<li class="lpr-row ${n === 0 && total ? "is-top" : ""}" data-uuid="${esc(r.uuid)}">
-      <span class="lpr-portrait">${img}${n === 0 && total ? `<i class="fa-solid fa-crown lpr-crown" data-tooltip="${esc(t("Top"))}"></i>` : ""}</span>
+    return `<li class="lpr-row" data-uuid="${esc(r.uuid)}">
+      <span class="lpr-portrait">${img}</span>
       <div class="lpr-main">
         <div class="lpr-line"><span class="lpr-name" data-col="Name">${esc(r.name)}</span>
           <span class="lpr-dmg" data-col="Damage" data-tooltip="${esc(t("Col.DamageHint"))}"><b>${r.damage}</b>${r.companions ? ` <span class="lpr-plus">+${r.companions}</span>` : ""}</span>
           <span class="lpr-pct" data-col="Percent" data-tooltip="${esc(t("Col.PercentHint"))}">${r.pct}%</span></div>
-        <div class="lpr-bar" aria-hidden="true"><span class="own" style="width:${own}%"></span><span class="comp" style="width:${comp}%"></span></div>
         <div class="lpr-stats">${stat("OnTurn", r.onTurn, "fa-hourglass-start")}${stat("Friendly", r.friendly, "fa-people-arrows")}${stat("Taken", r.taken, "fa-shield-halved")}${stat("Healed", r.healed, "fa-heart-pulse")}</div>
       </div>
     </li>`;

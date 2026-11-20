@@ -2245,7 +2245,6 @@
     "NoReports": "No encounter reports yet.",
     "Encounter": "Encounter",
     "Entry": "{scene} · {rounds} rounds · {when}",
-    "Top": "Most damage",
     "MissedHint": "Damage whose source wasn't known (no attack or damage card for it)",
     "Tile": {
       "Damage": "Dealt",

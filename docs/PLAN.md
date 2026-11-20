@@ -3602,7 +3602,11 @@ v0.84.2: the Battle Medicine badge mirrors the reaction badge (same size, bottom
   Healed; zeros faded). The best gets a crown and an accent border.
   "Missed damage" faded at the bottom. Screenshot:
   `docs/mockups/report-sell-0.84.5.png`.
-- Next (owner): "Title / Combat Role": picture, then the role this combat
+- v0.84.6 (owner: "dont do a crown for most damage nor a 'progress bar'.
+  This will cause feels bad. Show just stats"): no crown, no top highlight,
+  no bars; cards sorted by name, not by damage.
+- Next (owner): stats first, then "Hallmark cards" (name to decide): every
+  player always gets one. Was "Title / Combat Role": picture, then the role this combat
   (e.g. "DPS: you dealt X damage", "Meat shield: you took X damage", …).
   To plan with the owner after the window is approved.
 

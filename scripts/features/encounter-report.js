@@ -98,17 +98,20 @@ function sideOf(token) {
 /** Snapshot the participants when the combat starts: HP, side, name, master. */
 async function startRecording(combat) {
   if (!game.user.isActiveGM || !combat?.started || typeof combat.getFlag !== "function" || combat.getFlag(MODULE_ID, FLAG)) return;
-  const participants = {};
+  // An array, not keyed by UUID: Foundry reads the dots in "Actor.x" / "Scene.y.Token.z.Actor.x" keys as
+  // nested paths when the flag is saved, and the lookups then find nobody (v0.84.4: "didn't track anything").
+  const participants = [];
   for (const c of combat.combatants) {
     const actor = c.actor;
     if (!actor) continue;
     const hp = readHP(actor);
     const master = activeAdapters().map(a => a.masterOf?.(actor)).find(Boolean) ?? null;
-    participants[actor.uuid] = { name: c.token?.name ?? c.name ?? actor.name, side: sideOf(c.token), hp: hp ? hp.value + hp.temp : 0, master, hidden: !!c.hidden || !!c.token?.hidden };
+    if (participants.some(x => x.uuid === actor.uuid)) continue;
+    participants.push({ uuid: actor.uuid, name: c.token?.name ?? c.name ?? actor.name, side: sideOf(c.token), hp: hp ? hp.value + hp.temp : 0, master, hidden: !!c.hidden || !!c.token?.hidden });
     if (hp) state.cache.set(actor.uuid, hp);
   }
   await combat.setFlag(MODULE_ID, FLAG, { participants, events: [] });
-  dbg("recording", combat.id, Object.values(participants).map(p => `${p.name} (side ${p.side}, ${p.hp} HP)`));
+  dbg("recording", combat.id, participants.map(p => `${p.name} (side ${p.side}, ${p.hp} HP)`));
 }
 
 function onUpdateActor(actor) {
@@ -167,7 +170,8 @@ async function flushSaves() {
  * → { rows: [{ uuid, name, damage, companions, pct, onTurn, friendly, taken, healed }], missed }
  */
 export function buildReport(data) {
-  const p = data?.participants ?? {};
+  const list = data?.participants ?? [];
+  const p = Array.isArray(list) ? Object.fromEntries(list.map(x => [x.uuid, x])) : list;
   const side = uuid => p[uuid]?.side ?? 0;
   const row = uuid => (rows[uuid] ??= { uuid, name: p[uuid]?.name ?? "?", damage: 0, companions: 0, onTurn: 0, friendly: 0, taken: 0, healed: 0 });
   const rows = {};

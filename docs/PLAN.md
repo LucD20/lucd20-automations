@@ -3577,7 +3577,19 @@ v0.84.2: the Battle Medicine badge mirrors the reaction badge (same size, bottom
   `updateCombat` to round 1).
 - Debug: `CONFIG.debug.lucd20Report = true` (or `lucd20Rules`) logs the
   start, every HP change seen (with whether it is recorded), hints, events
-  and the end. (verify) with the owner why nothing was recorded.
+  and the end.
+
+### 26.6 v0.84.4 (the owner's debug log: why nothing was recorded)
+
+- The log showed recording, HP changes, events and their sources all
+  working. The bug was in the saved data: the participants were keyed by
+  actor UUID (`Actor.x`, `Scene.y.Token.z.Actor.x`), and Foundry expands
+  dotted keys in an update into nested objects, so the report looked up
+  nobody (no rows; all damage "missed"). Participants are now an array of
+  `{ uuid, … }`; `buildReport` also accepts the old keyed form.
+- Lesson for the harness: test 72's mock `setFlag` now expands dotted keys
+  like Foundry does (the old code fails it). Never use UUIDs as keys in
+  flags or other document data.
 
 ### 22.4 Sell (v0.84.3)
 
@@ -3588,4 +3600,4 @@ many, in the same dialog, with the price each). Characters / NPCs /
 familiars get "Sell items" after "Sell all treasure": a window listing
 sellable priced items (checkbox, how many for stacks, half price each),
 Select all / none, the total, "Sell selected" (confirmed; one chat card).
-Test 70.
+v0.84.4: a Cancel button closes the window (owner). Test 70.

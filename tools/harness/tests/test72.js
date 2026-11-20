@@ -41,12 +41,25 @@ const assert = require("assert");
     // 2. Recording: a combat; HP changes with hints after (PF2e message) and before (4e buttons) the change.
     const mkActor = (id, name, hp) => ({ id, name, uuid: `Actor.${id}`, system: { attributes: { hp: { value: hp, max: hp, temp: 0 } } } });
     const kyra = mkActor("kyra", "Kyra", 30), ogre = mkActor("ogre", "Ogre", 60);
+    // As Foundry saves an update: a JSON copy whose dotted keys become nested objects.
+    const expand = v => {
+      if (Array.isArray(v)) return v.map(expand);
+      if (!v || typeof v !== "object") return v;
+      const o = {};
+      for (const [key, val] of Object.entries(v)) {
+        const parts = key.split(".");
+        let at = o;
+        for (const part of parts.slice(0, -1)) at = (at[part] ??= {});
+        at[parts.at(-1)] = expand(val);
+      }
+      return o;
+    };
     const flags = {};
     const combat = {
       id: "c1", started: false, active: true, round: 0, scene: { name: "Cave" }, flags,
       combatants: [{ actor: kyra, token: { name: "Kyra", disposition: 1 } }, { actor: ogre, token: { name: "Ogre", disposition: -1 } }],
       get combatant() { return this.combatants[0]; },
-      getFlag(ns, k) { return flags[ns]?.[k]; }, async setFlag(ns, k, v) { (flags[ns] ??= {})[k] = v; }
+      getFlag(ns, k) { return flags[ns]?.[k]; }, async setFlag(ns, k, v) { (flags[ns] ??= {})[k] = expand(v); }
     };
     game.combat = combat;
     game.combats = Object.assign([combat], { get: id => (id === "c1" ? combat : null) });

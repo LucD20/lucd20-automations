@@ -137,7 +137,7 @@ export class SellWindow extends ApplicationV2 {
     classes: ["lucd20-loot-app", "lucd20-sell-app"],
     window: { title: "LUCD20.Sell.WindowTitle", icon: "fa-solid fa-hand-holding-dollar", resizable: true },
     position: { width: 440, height: "auto" },
-    actions: { sell: SellWindow.#onSell, all: SellWindow.#onAll, none: SellWindow.#onNone }
+    actions: { cancel: SellWindow.#onCancel, sell: SellWindow.#onSell, all: SellWindow.#onAll, none: SellWindow.#onNone }
   };
 
   static open(actor) {
@@ -188,6 +188,7 @@ export class SellWindow extends ApplicationV2 {
       <footer class="lucd20-sell-footer">
         <button type="button" data-action="all">${esc(t("SelectAll"))}</button>
         <button type="button" data-action="none">${esc(t("SelectNone"))}</button>
+        <button type="button" data-action="cancel"><i class="fa-solid fa-xmark"></i> ${esc(t("Cancel"))}</button>
         <button type="button" data-action="sell" ${this.picked.size ? "" : "disabled"}><i class="fa-solid fa-hand-holding-dollar"></i> ${esc(t("SellSelected"))}</button>
       </footer></div>`;
   }
@@ -212,6 +213,10 @@ export class SellWindow extends ApplicationV2 {
   static #onAll() {
     for (const i of this.items()) this.picked.set(i.id, i.quantity ?? i.system?.quantity ?? 1);
     this.render();
+  }
+
+  static #onCancel() {
+    this.close();
   }
 
   static #onNone() {

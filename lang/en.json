@@ -2290,6 +2290,7 @@
     "HalfPrice": "(half price)",
     "SelectAll": "Select all",
     "SelectNone": "Select none",
+    "Cancel": "Cancel",
     "SellSelected": "Sell selected",
     "SellSelectedConfirm": "Sell {count} items for {price}?"
     },

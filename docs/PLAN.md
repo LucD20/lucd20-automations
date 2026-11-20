@@ -3482,6 +3482,14 @@ card is chosen, (3) build. Mockup: `docs/mockups/combat-cards.html/.png`
 - C. Spotlight: full-width lineup of slanted panels sliding in, light rays,
   big numbers; then shrinks into the report.
 
+Owner's pick: "A with B, I like the rarity and the card look, but the
+titles and stuff from A": the foil card (rarity edge, glow, badge, shine
+on the art) with A's ribbon title, numeral, name, big stat and flavour
+quote. Two variants in the mockup (top of the page,
+`docs/mockups/combat-cards-ab.png`): the ribbon tinted by rarity, or gold
+on every card. Rarity tiers drafted: Legendary, Epic, Rare, Common (from
+how far the number stands out from the party).
+
 Draft card list (from what the report records; names to decide):
 The Hammer (most damage), One Punch (biggest single hit), The Wall (most
 damage taken), Lifeline (most healing), Tactician (most on-turn damage by

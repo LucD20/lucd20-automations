@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Combat Cards: mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Cinzel+Decorative:wght@700&family=Signika:wght@400;600;700&family=Teko:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../tools/harness/node_modules/@fortawesome/fontawesome-free/css/all.min.css">
+<style>
+  :root { --bg: #15141a; --text: #efe6d8; --muted: #b5ab9d; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #2b2a30; color: var(--text); font-family: Signika, "Segoe UI", sans-serif; }
+  h2.dir { margin: 0; padding: 18px 28px 6px; font: 600 15px Signika; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  h2.dir b { color: #f3b469; }
+  .stage { position: relative; margin: 0 20px 26px; padding: 36px 24px 30px; border-radius: 8px; overflow: hidden;
+    background: radial-gradient(ellipse at 50% 0%, rgba(80, 60, 110, .45), transparent 60%), linear-gradient(#101015, #0b0a0e); }
+  .stage .heading { text-align: center; margin-bottom: 26px; }
+  .stage .heading .kicker { font: 600 12px Signika; letter-spacing: .3em; text-transform: uppercase; color: var(--muted); }
+  .stage .heading .title { font: 800 30px Cinzel, serif; letter-spacing: .06em; color: #f4e3c1; text-shadow: 0 2px 12px rgba(238, 155, 58, .35); }
+  .row { display: flex; justify-content: center; gap: 22px; flex-wrap: wrap; }
+
+  /* Hero art: an SVG silhouette over a coloured light. */
+  .art { position: relative; overflow: hidden; }
+  .art svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  /* ---------------- A. Tarot ---------------- */
+  .tarot { position: relative; width: 210px; height: 362px; padding: 10px; border-radius: 12px;
+    background: linear-gradient(160deg, #3a2a1a, #1c140d 60%, #2e2012); box-shadow: 0 12px 30px rgba(0,0,0,.6), inset 0 0 0 1px #6b5130;
+    animation: deal .7s cubic-bezier(.2,.8,.2,1.2) both; }
+  .tarot:nth-child(2) { animation-delay: .25s } .tarot:nth-child(3) { animation-delay: .5s } .tarot:nth-child(4) { animation-delay: .75s }
+  .tarot .frame { position: absolute; inset: 7px; border: 2px solid #c9a35a; border-radius: 8px; pointer-events: none; }
+  .tarot .frame::before, .tarot .frame::after { content: "\2726"; position: absolute; left: 50%; transform: translateX(-50%); color: #e8c77d; font-size: 14px; background: #2a1d11; padding: 0 6px; }
+  .tarot .frame::before { top: -11px } .tarot .frame::after { bottom: -11px }
+  .tarot .numeral { text-align: center; font: 700 13px "Cinzel Decorative", serif; color: #e8c77d; letter-spacing: .2em; margin-top: 6px; }
+  .tarot .art { height: 170px; margin: 6px 10px 0; border-radius: 90px 90px 6px 6px; border: 2px solid #c9a35a; }
+  .tarot .banner { position: relative; margin: -14px 2px 0; padding: 6px 4px 5px; text-align: center; font: 800 17px Cinzel, serif; letter-spacing: .06em; color: #2a1a0c;
+    background: linear-gradient(#f0d48e, #c9a35a); clip-path: polygon(0 0, 100% 0, 94% 50%, 100% 100%, 0 100%, 6% 50%); }
+  .tarot .who { text-align: center; margin-top: 7px; font: 600 13px Signika; color: var(--muted); }
+  .tarot .stat { text-align: center; margin-top: 4px; font: 800 26px Cinzel, serif; color: #f4e3c1; line-height: 1; }
+  .tarot .stat small { display: block; font: 400 12px Signika; color: var(--muted); margin-top: 3px; }
+  .tarot .flavor { position: absolute; left: 18px; right: 18px; bottom: 18px; text-align: center; font: italic 11.5px Signika; color: #cdb98f; }
+
+  /* ---------------- B. Foil ---------------- */
+  .foil { position: relative; width: 210px; height: 320px; border-radius: 14px; padding: 3px;
+    background: var(--edge); box-shadow: 0 0 22px var(--glow), 0 14px 30px rgba(0,0,0,.6);
+    animation: flip .9s cubic-bezier(.2,.8,.2,1) both; transform-style: preserve-3d; }
+  .foil:nth-child(2) { animation-delay: .3s } .foil:nth-child(3) { animation-delay: .6s } .foil:nth-child(4) { animation-delay: .9s }
+  .foil.epic { --edge: linear-gradient(135deg, #f7d37a, #b06bff, #6be3ff, #f7d37a); --glow: rgba(176, 107, 255, .55); }
+  .foil.rare { --edge: linear-gradient(135deg, #6be3ff, #3a7bff, #6be3ff); --glow: rgba(70, 150, 255, .45); }
+  .foil.common { --edge: linear-gradient(135deg, #d9d2c3, #8a8577, #d9d2c3); --glow: rgba(220, 210, 190, .25); }
+  .foil .inner { position: relative; height: 100%; border-radius: 11px; overflow: hidden; background: #0f0e13; }
+  .foil .art { position: absolute; inset: 0; }
+  .foil .sheen { position: absolute; inset: 0; mix-blend-mode: color-dodge; opacity: .55; pointer-events: none;
+    background: linear-gradient(115deg, transparent 30%, rgba(255,120,220,.55) 42%, rgba(120,255,240,.55) 50%, rgba(255,240,120,.55) 58%, transparent 70%);
+    background-size: 250% 100%; animation: sheen 3.2s ease-in-out infinite; }
+  .foil .rarity { position: absolute; top: 10px; right: 10px; padding: 2px 8px; border-radius: 10px; font: 700 10px Signika; letter-spacing: .14em; text-transform: uppercase;
+    background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.35); }
+  .foil .panel { position: absolute; left: 8px; right: 8px; bottom: 8px; padding: 10px 12px 11px; border-radius: 9px;
+    background: rgba(14, 12, 20, .72); backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,.14); }
+  .foil .panel .t { font: 800 19px Cinzel, serif; letter-spacing: .04em; }
+  .foil .panel .w { font: 600 12px Signika; color: var(--muted); }
+  .foil .panel .n { display: flex; align-items: baseline; gap: 6px; margin-top: 6px; }
+  .foil .panel .n b { font: 600 34px Teko, sans-serif; line-height: .9; color: #fff; }
+  .foil .panel .n span { font: 12px Signika; color: var(--muted); }
+
+  /* ---------------- C. Spotlight lineup ---------------- */
+  .lineup { display: flex; justify-content: center; gap: 0; height: 360px; }
+  .spot { position: relative; width: 230px; margin: 0 -14px; clip-path: polygon(14% 0, 100% 0, 86% 100%, 0 100%);
+    animation: slide .6s cubic-bezier(.2,.8,.2,1) both; }
+  .spot:nth-child(2) { animation-delay: .2s } .spot:nth-child(3) { animation-delay: .4s } .spot:nth-child(4) { animation-delay: .6s }
+  .spot .art { position: absolute; inset: 0; }
+  .spot .rays { position: absolute; inset: -40%; background: repeating-conic-gradient(from 0deg at 50% 60%, rgba(255,255,255,.07) 0 6deg, transparent 6deg 18deg); animation: spin 30s linear infinite; }
+  .spot .shade { position: absolute; inset: 0; background: linear-gradient(transparent 35%, rgba(0,0,0,.92) 82%); }
+  .spot .top { position: absolute; top: 18px; left: 0; right: 0; text-align: center; font: 600 22px Teko, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--c); text-shadow: 0 0 14px var(--c); }
+  .spot .bottom { position: absolute; left: 34px; right: 34px; bottom: 22px; text-align: center; }
+  .spot .bottom .n { font: 600 56px Teko, sans-serif; line-height: .85; color: #fff; text-shadow: 0 0 18px var(--c); }
+  .spot .bottom .l { font: 600 12px Signika; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .spot .bottom .w { margin-top: 6px; font: 800 18px Cinzel, serif; color: #f4e3c1; }
+  .spot .edge { position: absolute; inset: 0; border-top: 3px solid var(--c); border-bottom: 3px solid var(--c); opacity: .9; }
+
+  .me { outline: none; }
+  .badge-me { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); z-index: 3; padding: 2px 10px; border-radius: 10px; font: 700 10px Signika; letter-spacing: .14em; text-transform: uppercase; background: #ee9b3a; color: #1b1a21; box-shadow: 0 2px 8px rgba(0,0,0,.6); }
+  .footer-note { text-align: center; margin-top: 24px; font: 13px Signika; color: var(--muted); }
+  .footer-note button { margin-left: 10px; padding: 5px 14px; border-radius: 4px; border: 1px solid #5c596a; background: #26252e; color: var(--text); font: 600 13px Signika; }
+
+
+  /* ---------------- A+B. Foil card, Tarot titles (owner's pick) ---------------- */
+  .ab { position: relative; width: 220px; height: 360px; border-radius: 14px; padding: 3px; background: var(--edge);
+    box-shadow: 0 0 22px var(--glow), 0 14px 30px rgba(0,0,0,.6); animation: flip .9s cubic-bezier(.2,.8,.2,1) both; }
+  .ab:nth-child(2) { animation-delay: .3s } .ab:nth-child(3) { animation-delay: .6s } .ab:nth-child(4) { animation-delay: .9s }
+  .ab.legendary { --edge: linear-gradient(135deg, #fff1b8, #f7b733, #ff7a3d, #f7b733, #fff1b8); --glow: rgba(247, 183, 51, .6); --ribbon: linear-gradient(#fff0b5, #e0a83a); --ink: #3a2306; }
+  .ab.epic { --edge: linear-gradient(135deg, #f7d37a, #b06bff, #6be3ff, #f7d37a); --glow: rgba(176, 107, 255, .55); --ribbon: linear-gradient(#e7cdff, #a36ae6); --ink: #24093f; }
+  .ab.rare { --edge: linear-gradient(135deg, #6be3ff, #3a7bff, #6be3ff); --glow: rgba(70, 150, 255, .45); --ribbon: linear-gradient(#cfeaff, #5f9ae8); --ink: #071c3a; }
+  .ab.common { --edge: linear-gradient(135deg, #f0d48e, #8a6a32, #f0d48e); --glow: rgba(240, 212, 142, .25); --ribbon: linear-gradient(#f0d48e, #c9a35a); --ink: #2a1a0c; }
+  .ab.gold { --ribbon: linear-gradient(#f0d48e, #c9a35a); --ink: #2a1a0c; }
+  .ab .inner { position: relative; height: 100%; border-radius: 11px; overflow: hidden; background: linear-gradient(#17141d, #0e0c12); }
+  .ab .art { position: absolute; left: 0; right: 0; top: 0; height: 210px; }
+  .ab .art::after { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 60%, #15121b); }
+  .ab .sheen { position: absolute; inset: 0; mix-blend-mode: color-dodge; opacity: .5; pointer-events: none;
+    background: linear-gradient(115deg, transparent 30%, rgba(255,120,220,.55) 42%, rgba(120,255,240,.55) 50%, rgba(255,240,120,.55) 58%, transparent 70%);
+    background-size: 250% 100%; animation: sheen 3.2s ease-in-out infinite; }
+  .ab.common .sheen { opacity: .18; }
+  .ab .numeral { position: absolute; top: 9px; left: 12px; font: 700 14px "Cinzel Decorative", serif; color: #f4e3c1; letter-spacing: .15em; text-shadow: 0 1px 4px #000; }
+  .ab .rarity { position: absolute; top: 10px; right: 10px; padding: 2px 8px; border-radius: 10px; font: 700 10px Signika; letter-spacing: .14em; text-transform: uppercase;
+    background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.35); }
+  .ab .banner { position: absolute; left: 6px; right: 6px; top: 192px; padding: 7px 4px 6px; text-align: center; font: 800 18px Cinzel, serif; letter-spacing: .06em; color: var(--ink);
+    background: var(--ribbon); clip-path: polygon(0 0, 100% 0, 94% 50%, 100% 100%, 0 100%, 6% 50%); filter: drop-shadow(0 3px 4px rgba(0,0,0,.6)); }
+  .ab .body { position: absolute; left: 12px; right: 12px; top: 236px; bottom: 10px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .ab .who { font: 600 13px Signika; color: var(--muted); }
+  .ab .stat { margin-top: 3px; font: 800 30px Cinzel, serif; color: #f4e3c1; line-height: 1; }
+  .ab .stat small { display: block; font: 400 12px Signika; color: var(--muted); margin-top: 3px; }
+  .ab .flavor { margin-top: auto; font: italic 11.5px Signika; color: #cdb98f; }
+
+  @keyframes deal { from { opacity: 0; transform: translateY(-60px) rotate(-8deg) scale(.9); } to { opacity: 1; transform: none; } }
+  @keyframes flip { from { opacity: 0; transform: rotateY(180deg) scale(.85); } 60% { opacity: 1; } to { transform: none; } }
+  @keyframes sheen { 0%, 100% { background-position: 120% 0; } 50% { background-position: -20% 0; } }
+  @keyframes slide { from { opacity: 0; transform: translateX(80px); } to { opacity: 1; transform: none; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  body.still *, body.still *::before, body.still *::after { animation-delay: -10s !important; animation-play-state: paused !important; }
+
+  .ab { margin-top: 0; }
+  .ab .fill { position: absolute; left: 0; right: 0; top: 0; height: 214px; overflow: hidden; border-radius: 11px 11px 0 0; }
+  .ab .fill img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 12%; display: block; }
+  .ab .fill::after { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 55%, #15121b 98%), radial-gradient(ellipse at 50% 35%, transparent 55%, rgba(0,0,0,.45)); }
+  .ab .fill.light img { mix-blend-mode: multiply; }
+  .ab .fill.light { background: radial-gradient(circle at 50% 40%, #e9dcc0, #8b7a5c 90%); }
+  .ab .fill .ico { position: absolute; inset: 0; display: grid; place-items: center; font-size: 64px; color: rgba(255,255,255,.18); }
+  .ab .sheen2 { position: absolute; left: 3px; right: 3px; top: 3px; bottom: 3px; z-index: 1; border-radius: 11px; mix-blend-mode: color-dodge; opacity: .45; pointer-events: none;
+    background: linear-gradient(115deg, transparent 30%, rgba(255,120,220,.55) 42%, rgba(120,255,240,.55) 50%, rgba(255,240,120,.55) 58%, transparent 70%);
+    background-size: 250% 100%; animation: sheen 3.2s ease-in-out infinite; }
+  .ab.plain .sheen2 { display: none; }
+  .ab.plain { box-shadow: 0 0 10px var(--glow), 0 14px 30px rgba(0,0,0,.6); }
+  .ab.foil::before { content: ""; position: absolute; inset: 0; border-radius: 14px; z-index: 0; background: conic-gradient(from 0deg, #ff7ad9, #7affef, #fff27a, #ff7ad9); filter: blur(10px); opacity: .45; }
+  .ab .tag { position: absolute; z-index: 5; bottom: -11px; left: 50%; transform: translateX(-50%); padding: 2px 10px; border-radius: 10px; font: 700 10px Signika; letter-spacing: .14em; text-transform: uppercase; white-space: nowrap; }
+  .ab.foil .tag { background: linear-gradient(90deg, #ffb3ec, #b3fff6, #fff6b3); color: #2a1d3a; }
+  .ab.plain .tag { background: #26252e; color: var(--muted); border: 1px solid #5c596a; }
+  .ab .rule { position: absolute; left: 0; right: 0; top: calc(100% + 18px); text-align: center; font: 12.5px/1.35 Signika; color: var(--muted); }
+  .ab .rule b { color: #f3b469; }
+  .grid { display: grid; grid-template-columns: repeat(5, 220px); justify-content: center; gap: 96px 22px; padding-bottom: 70px; }
+  .tier { margin: 26px 0 18px; text-align: center; font: 800 20px Cinzel, serif; letter-spacing: .1em; }
+  .tier.common { color: #f0d48e } .tier.rare { color: #6be3ff } .tier.epic { color: #c99bff } .tier.legendary { color: #f7b733 }
+  .tier small { display: block; font: 13px Signika; letter-spacing: 0; color: var(--muted); }
+  .ab .body .flavor { font-size: 11px; }
+</style>
+</head>
+<body><h2 class="dir"><b>Combat Cards</b> · all 30 · odd numbers shown foil (first time), even numbers as a repeat (rarity colour, no foil)</h2>
+<div class="stage" style="padding-top: 20px"><div class="tier common">Common<small>Someone earns most of these every fight · 10 cards</small></div><div class="grid"><div class="ab common gold foil"><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-hammer"></i></span></div><div class="banner" style="">The Hammer</div>
+  <div class="body"><div class="who">Schmekcho</div><div class="stat">62<small>damage dealt</small></div><div class="flavor">“They felt that one in the next village.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#1</span><span class="rarity" style="z-index:4">Common</span>
+  <span class="tag">First time · foil</span>
+  <div class="rule"><b>#1</b> Most damage dealt to enemies.<br><i>also: “Subtlety is overrated.”</i></div></div><div class="ab common gold plain"><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-shield-halved"></i></span></div><div class="banner" style="">The Wall</div>
+  <div class="body"><div class="who">Uri</div><div class="stat">48<small>damage taken</small></div><div class="flavor">“Nothing got past. Nothing.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#2</span><span class="rarity" style="z-index:4">Common</span>
+  <span class="tag">Earned before</span>
+  <div class="rule"><b>#2</b> Most damage taken.<br><i>also: “Is that all you&#x27;ve got?”</i></div></div><div class="ab common gold foil"><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-heart-pulse"></i></span></div><div class="banner" style="">Lifeline</div>
+  <div class="body"><div class="who">Madzoog</div><div class="stat">30<small>HP healed</small></div><div class="flavor">“Not today.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#3</span><span class="rarity" style="z-index:4">Common</span>
+  <span class="tag">First time · foil</span>
+  <div class="rule"><b>#3</b> Most healing given.<br><i>also: “Hold still, this will sting.”</i></div></div><div class="ab common gold plain"><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-droplet"></i></span></div><div class="banner" style="">First Blood</div>
+  <div class="body"><div class="who">Schmekcho</div><div class="stat">Round 1<small>first hit</small></div><div class="flavor">“Someone had to start it.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#4</span><span class="rarity" style="z-index:4">Common</span>
+  <span class="tag">Earned before</span>
+  <div class="rule"><b>#4</b> Dealt the first damage of the fight.<br><i>also: “Ladies first.”</i></div></div><div class="ab common gold foil"><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-skull"></i></span></div><div class="banner" style="">Finisher</div>
+  <div class="body"><div class="who">Uri</div><div class="stat">2<small>final blows</small></div><div class="flavor">“Last one standing? Not anymore.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#5</span><span class="rarity" style="z-index:4">Common</span>
+  <span class="tag">First time · foil</span>
+  <div class="rule"><b>#5</b> Most final blows.<br><i>also: “Leave that one to me.”</i></div></div><div class="ab common gold plain"><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-crosshairs"></i></span></div><div class="banner" style="">Sharpshooter</div>
+  <div class="body"><div class="who">Madzoog</div><div class="stat">4/5<small>attacks hit</small></div><div class="flavor">“Aim small, miss small.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#6</span><span class="rarity" style="z-index:4">Common</span>
+  <span class="tag">Earned before</span>
+  <div class="rule"><b>#6</b> Best hit rate (2 or more attacks).<br><i>also: “Right where I wanted it.”</i></div></div><div class="ab common gold foil"><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-flag"></i></span></div><div class="banner" style="">Commander</div>
+  <div class="body"><div class="who">Schmekcho</div><div class="stat">38<small>damage on your turn</small></div><div class="flavor">“On my mark.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#7</span><span class="rarity" style="z-index:4">Common</span>
+  <span class="tag">First time · foil</span>
+  <div class="rule"><b>#7</b> Most damage dealt by allies during your turn.<br><i>also: “Everyone, now!”</i></div></div><div class="ab common gold plain"><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-paw"></i></span></div><div class="banner" style="">Pack Leader</div>
+  <div class="body"><div class="who">Uri</div><div class="stat">21<small>companion damage</small></div><div class="flavor">“Good dog.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#8</span><span class="rarity" style="z-index:4">Common</span>
+  <span class="tag">Earned before</span>
+  <div class="rule"><b>#8</b> Most damage by your companion, familiar or summons.<br><i>also: “We hunt together.”</i></div></div><div class="ab common gold foil"><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-person"></i></span></div><div class="banner" style="">Steadfast</div>
+  <div class="body"><div class="who">Madzoog</div><div class="stat">3<small>rounds standing</small></div><div class="flavor">“Still here.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#9</span><span class="rarity" style="z-index:4">Common</span>
+  <span class="tag">First time · foil</span>
+  <div class="rule"><b>#9</b> Fought the whole fight without going down (anyone can get it).<br><i>also: “Steady as stone.”</i></div></div><div class="ab common gold plain"><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-people-group"></i></span></div><div class="banner" style="font-size:14px;padding-top:9px;padding-bottom:8px">Shoulder to Shoulder</div>
+  <div class="body"><div class="who">Schmekcho</div><div class="stat">3<small>rounds fought</small></div><div class="flavor">“Together, or not at all.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#10</span><span class="rarity" style="z-index:4">Common</span>
+  <span class="tag">Earned before</span>
+  <div class="rule"><b>#10</b> Fought beside the party (the last resort: everyone can get it).<br><i>also: “I had your back.”</i></div></div></div><div class="tier rare">Rare<small>10 cards</small></div><div class="grid"><div class="ab rare gold foil"><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-hand-fist"></i></span></div><div class="banner" style="">One Punch</div>
+  <div class="body"><div class="who">Uri</div><div class="stat">27<small>in one hit</small></div><div class="flavor">“One was enough.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#11</span><span class="rarity" style="z-index:4">Rare</span>
+  <span class="tag">First time · foil</span>
+  <div class="rule"><b>#11</b> The biggest single hit of the fight, at least twice the party&#x27;s average hit.<br><i>also: “Did you see that?”</i></div></div><div class="ab rare gold plain"><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-star"></i></span></div><div class="banner" style="">Lucky Star</div>
+  <div class="body"><div class="who">Madzoog</div><div class="stat">2<small>crits</small></div><div class="flavor">“The dice love me.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#12</span><span class="rarity" style="z-index:4">Rare</span>
+  <span class="tag">Earned before</span>
+  <div class="rule"><b>#12</b> 2 critical hits.<br><i>also: “Fortune favours the bold.”</i></div></div><div class="ab rare gold foil"><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-heart-crack"></i></span></div><div class="banner" style="">Close Call</div>
+  <div class="body"><div class="who">Schmekcho</div><div class="stat">3 HP<small>lowest</small></div><div class="flavor">“That was too close.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#13</span><span class="rarity" style="z-index:4">Rare</span>
+  <span class="tag">First time · foil</span>
+  <div class="rule"><b>#13</b> Fell below a quarter of your HP and never went down.<br><i>also: “Just a scratch. Mostly.”</i></div></div><div class="ab rare gold plain"><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-wind"></i></span></div><div class="banner" style="">Untouchable</div>
+  <div class="body"><div class="who">Uri</div><div class="stat">0<small>damage taken</small></div><div class="flavor">“Missed me.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#14</span><span class="rarity" style="z-index:4">Rare</span>
+  <span class="tag">Earned before</span>
+  <div class="rule"><b>#14</b> Took no damage in a fight of 3 rounds or more.<br><i>also: “Too slow.”</i></div></div><div class="ab rare gold foil"><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-arrow-up"></i></span></div><div class="banner" style="font-size:14px;padding-top:9px;padding-bottom:8px">Back from the Brink</div>
+  <div class="body"><div class="who">Madzoog</div><div class="stat">1<small>times revived</small></div><div class="flavor">“I&#x27;m not done yet.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#15</span><span class="rarity" style="z-index:4">Rare</span>
+  <span class="tag">First time · foil</span>
+  <div class="rule"><b>#15</b> Went down and got back up.<br><i>also: “Death can wait.”</i></div></div><div class="ab rare gold plain"><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-kit-medical"></i></span></div><div class="banner" style="">Field Medic</div>
+  <div class="body"><div class="who">Schmekcho</div><div class="stat">3<small>allies healed</small></div><div class="flavor">“Next!”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#16</span><span class="rarity" style="z-index:4">Rare</span>
+  <span class="tag">Earned before</span>
+  <div class="rule"><b>#16</b> Healed 2 or more different allies.<br><i>also: “Line up, I&#x27;ve got enough for everyone.”</i></div></div><div class="ab rare gold foil"><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-tornado"></i></span></div><div class="banner" style="">Whirlwind</div>
+  <div class="body"><div class="who">Uri</div><div class="stat">4<small>enemies hit</small></div><div class="flavor">“Who&#x27;s next?”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#17</span><span class="rarity" style="z-index:4">Rare</span>
+  <span class="tag">First time · foil</span>
+  <div class="rule"><b>#17</b> Damaged 3 or more different enemies.<br><i>also: “Everyone gets some.”</i></div></div><div class="ab rare gold plain"><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-bolt"></i></span></div><div class="banner" style="font-size:16px;padding-top:8px">Opening Salvo</div>
+  <div class="body"><div class="who">Madzoog</div><div class="stat">31%<small>in round 1</small></div><div class="flavor">“Hello there.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#18</span><span class="rarity" style="z-index:4">Rare</span>
+  <span class="tag">Earned before</span>
+  <div class="rule"><b>#18</b> Dealt a quarter or more of the enemies&#x27; HP in round 1.<br><i>also: “First impressions matter.”</i></div></div><div class="ab rare gold foil"><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-shield"></i></span></div><div class="banner" style="">Iron Hide</div>
+  <div class="body"><div class="who">Schmekcho</div><div class="stat">45%<small>of the hits</small></div><div class="flavor">“Hit me again, I dare you.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#19</span><span class="rarity" style="z-index:4">Rare</span>
+  <span class="tag">First time · foil</span>
+  <div class="rule"><b>#19</b> Took a third or more of all the party&#x27;s damage and never went down.<br><i>also: “Armour is for using.”</i></div></div><div class="ab rare gold plain"><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-flag-checkered"></i></span></div><div class="banner" style="">Clutch</div>
+  <div class="body"><div class="who">Uri</div><div class="stat">Round 4<small>the last blow</small></div><div class="flavor">“And that&#x27;s the fight.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#20</span><span class="rarity" style="z-index:4">Rare</span>
+  <span class="tag">Earned before</span>
+  <div class="rule"><b>#20</b> Dealt the blow that ended the fight.<br><i>also: “Curtain.”</i></div></div></div><div class="tier epic">Epic<small>5 cards</small></div><div class="grid"><div class="ab epic gold foil"><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-skull-crossbones"></i></span></div><div class="banner" style="">Executioner</div>
+  <div class="body"><div class="who">Madzoog</div><div class="stat">38<small>in one hit</small></div><div class="flavor">“It never stood a chance.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#21</span><span class="rarity" style="z-index:4">Epic</span>
+  <span class="tag">First time · foil</span>
+  <div class="rule"><b>#21</b> Took an enemy from full HP to down in a single hit.<br><i>also: “Clean.”</i></div></div><div class="ab epic gold plain"><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-cloud-bolt"></i></span></div><div class="banner" style="">Crit Storm</div>
+  <div class="body"><div class="who">Schmekcho</div><div class="stat">3<small>crits</small></div><div class="flavor">“Again. And again.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#22</span><span class="rarity" style="z-index:4">Epic</span>
+  <span class="tag">Earned before</span>
+  <div class="rule"><b>#22</b> 3 or more critical hits.<br><i>also: “The stars aligned.”</i></div></div><div class="ab epic gold foil"><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-dove"></i></span></div><div class="banner" style="font-size:16px;padding-top:8px">Guardian Angel</div>
+  <div class="body"><div class="who">Uri</div><div class="stat">Uri<small>saved</small></div><div class="flavor">“Not on my watch.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#23</span><span class="rarity" style="z-index:4">Epic</span>
+  <span class="tag">First time · foil</span>
+  <div class="rule"><b>#23</b> Brought a downed ally back up.<br><i>also: “Breathe. You&#x27;re fine.”</i></div></div><div class="ab epic gold plain"><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-person-military-pointing"></i></span></div><div class="banner" style="">Juggernaut</div>
+  <div class="body"><div class="who">Madzoog</div><div class="stat">61%<small>of the hits</small></div><div class="flavor">“I am the front line.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#24</span><span class="rarity" style="z-index:4">Epic</span>
+  <span class="tag">Earned before</span>
+  <div class="rule"><b>#24</b> Took half or more of all the party&#x27;s damage and never went down.<br><i>also: “Unstoppable.”</i></div></div><div class="ab epic gold foil"><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-dice-three"></i></span></div><div class="banner" style="font-size:16px;padding-top:8px">Triple Threat</div>
+  <div class="body"><div class="who">Schmekcho</div><div class="stat">3<small>final blows</small></div><div class="flavor">“Three for three.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#25</span><span class="rarity" style="z-index:4">Epic</span>
+  <span class="tag">First time · foil</span>
+  <div class="rule"><b>#25</b> 3 or more final blows.<br><i>also: “Keep them coming.”</i></div></div></div><div class="tier legendary">Legendary<small>5 cards</small></div><div class="grid"><div class="ab legendary gold plain"><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-chess-king"></i></span></div><div class="banner" style="font-size:16px;padding-top:8px">One-Hero Army</div>
+  <div class="body"><div class="who">Uri</div><div class="stat">58%<small>of the party&#x27;s damage</small></div><div class="flavor">“Did you all even show up?”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#26</span><span class="rarity" style="z-index:4">Legendary</span>
+  <span class="tag">Earned before</span>
+  <div class="rule"><b>#26</b> Dealt half or more of all the party&#x27;s damage (parties of 3 or more).<br><i>also: “I&#x27;ll handle this.”</i></div></div><div class="ab legendary gold foil"><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-gem"></i></span></div><div class="banner" style="">Flawless</div>
+  <div class="body"><div class="who">Madzoog</div><div class="stat">0<small>party damage taken</small></div><div class="flavor">“Not a scratch on us.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#27</span><span class="rarity" style="z-index:4">Legendary</span>
+  <span class="tag">First time · foil</span>
+  <div class="rule"><b>#27</b> Most damage dealt, and nobody in the party took any damage.<br><i>also: “Textbook.”</i></div></div><div class="ab legendary gold plain"><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-dragon"></i></span></div><div class="banner" style="">Giant Slayer</div>
+  <div class="body"><div class="who">Schmekcho</div><div class="stat">Level +4<small>felled</small></div><div class="flavor">“The bigger they are…”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#28</span><span class="rarity" style="z-index:4">Legendary</span>
+  <span class="tag">Earned before</span>
+  <div class="rule"><b>#28</b> Final blow on an enemy 3 or more levels above the party.<br><i>also: “Timber!”</i></div></div><div class="ab legendary gold foil"><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-ghost"></i></span></div><div class="banner" style="">Ghost</div>
+  <div class="body"><div class="who">Uri</div><div class="stat">0/6<small>attacks on you hit</small></div><div class="flavor">“You can&#x27;t hit what you can&#x27;t catch.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#29</span><span class="rarity" style="z-index:4">Legendary</span>
+  <span class="tag">First time · foil</span>
+  <div class="rule"><b>#29</b> Attacked 5 or more times and never hit.<br><i>also: “Was that meant for me?”</i></div></div><div class="ab legendary gold plain"><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-person-rifle"></i></span></div><div class="banner" style="">Last Stand</div>
+  <div class="body"><div class="who">Madzoog</div><div class="stat">3<small>allies down, still standing</small></div><div class="flavor">“I&#x27;ll finish this myself.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#30</span><span class="rarity" style="z-index:4">Legendary</span>
+  <span class="tag">Earned before</span>
+  <div class="rule"><b>#30</b> Everyone else in the party went down; you didn&#x27;t, and the party won.<br><i>also: “Get up. We won.”</i></div></div></div></div></body></html>

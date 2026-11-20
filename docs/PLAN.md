@@ -3509,16 +3509,62 @@ Decided (owner, 2026-11-20):
   Detected in the browser by sampling the picture's corners on a canvas
   (same origin in Foundry). Mockup checked with the owner's portraits.
 
-Draft card list (from what the report records; names to decide):
-The Hammer (most damage), One Punch (biggest single hit), The Wall (most
-damage taken), Lifeline (most healing), Tactician (most on-turn damage by
-allies), Pack Leader (companions' damage), Finisher (most final blows),
-Sharpshooter (best hit rate), Lucky Star (most crits), Untouchable (took
-no damage), Close Call (lowest HP and still up; needs the lowest HP
-recorded). Fallbacks so everyone gets one: e.g. Steadfast (stood the whole
-fight), Opportunist. Choosing: each card's number against the party
-(share of the party's total); best match first, each player once, each
-card once per fight.
+Owner (2026-11-20): "Full portraits that fit is the way to go." (Only the
+fill mode for PC portraits; the cut-out mode stays for transparent art.)
+"10 common, 10 epic, 5 rare, 5 legendary" — read as 10 Common, 10 Rare,
+5 Epic, 5 Legendary (the usual order is Common < Rare < Epic < Legendary).
+(verify) with the owner.
+
+Rarity is now fixed per card (not from how far a number stands out).
+Foil (owner): the first time a character earns a card it is foil (the
+holographic shine and a rainbow glow); earned again later: the rarity
+colours only, no foil. Kept per actor (a flag: card id → times earned).
+
+Catalog (30; review page `docs/mockups/combat-cards-catalog.html/.png`,
+numbered; each card has 2 quotes that rotate):
+
+| # | Card | Rarity | Earned by |
+|---|---|---|---|
+| 1 | The Hammer | Common | Most damage dealt to enemies. |
+| 2 | The Wall | Common | Most damage taken. |
+| 3 | Lifeline | Common | Most healing given. |
+| 4 | First Blood | Common | Dealt the first damage of the fight. |
+| 5 | Finisher | Common | Most final blows. |
+| 6 | Sharpshooter | Common | Best hit rate (2 or more attacks). |
+| 7 | Commander | Common | Most damage dealt by allies during your turn. |
+| 8 | Pack Leader | Common | Most damage by your companion, familiar or summons. |
+| 9 | Steadfast | Common | Fought the whole fight without going down (anyone can get it). |
+| 10 | Shoulder to Shoulder | Common | Fought beside the party (the last resort: everyone can get it). |
+| 11 | One Punch | Rare | The biggest single hit of the fight, at least twice the party's average hit. |
+| 12 | Lucky Star | Rare | 2 critical hits. |
+| 13 | Close Call | Rare | Fell below a quarter of your HP and never went down. |
+| 14 | Untouchable | Rare | Took no damage in a fight of 3 rounds or more. |
+| 15 | Back from the Brink | Rare | Went down and got back up. |
+| 16 | Field Medic | Rare | Healed 2 or more different allies. |
+| 17 | Whirlwind | Rare | Damaged 3 or more different enemies. |
+| 18 | Opening Salvo | Rare | Dealt a quarter or more of the enemies' HP in round 1. |
+| 19 | Iron Hide | Rare | Took a third or more of all the party's damage and never went down. |
+| 20 | Clutch | Rare | Dealt the blow that ended the fight. |
+| 21 | Executioner | Epic | Took an enemy from full HP to down in a single hit. |
+| 22 | Crit Storm | Epic | 3 or more critical hits. |
+| 23 | Guardian Angel | Epic | Brought a downed ally back up. |
+| 24 | Juggernaut | Epic | Took half or more of all the party's damage and never went down. |
+| 25 | Triple Threat | Epic | 3 or more final blows. |
+| 26 | One-Hero Army | Legendary | Dealt half or more of all the party's damage (parties of 3 or more). |
+| 27 | Flawless | Legendary | Most damage dealt, and nobody in the party took any damage. |
+| 28 | Giant Slayer | Legendary | Final blow on an enemy 3 or more levels above the party. |
+| 29 | Ghost | Legendary | Attacked 5 or more times and never hit. |
+| 30 | Last Stand | Legendary | Everyone else in the party went down; you didn't, and the party won. |
+
+Choosing (draft): every party member gets exactly one card; candidates
+from all cards they qualify for, best rarity first, then how strongly they
+qualify; each card once per fight; "Steadfast" / "Shoulder to Shoulder"
+guarantee one for everyone.
+
+New data the recording needs for some cards: HP after each change and max
+HP (Close Call, Back from the Brink, Guardian Angel, Executioner), attack
+targets (Ghost: PF2e `context.target`), participant levels (Giant Slayer),
+the order of events (First Blood, Clutch).
 
 ## 27. Party bulk (owner, 2026-11-20; built v0.83.0 as `partyLoad`)
 

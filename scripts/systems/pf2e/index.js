@@ -17,6 +17,7 @@ import "./multi-check.js";
 import "./battle-medicine.js";
 import "./flanking.js";
 import "./sell.js";
+import "./party-load.js";
 import "./commander.js";
 import "./combat-assessment.js";
 import "./guardians-deflection.js";

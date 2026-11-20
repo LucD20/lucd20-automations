@@ -3398,7 +3398,7 @@ everyone, green / red badges on allies for the selected healer; the Token
 Tooltip lines removed (its extension point stays, unused).
 v0.81.5: the badge sits higher, clear of the HP bar (owner).
 
-## 26. Encounter report — damage per creature (owner, 2026-11-20; plan, not built)
+## 26. Encounter report — damage per creature (owner, 2026-11-20; plan agreed, not built)
 
 Owner: "Has to kinda be per system. Damage dealt on turn, if dealt by
 allies, counts to your total combat damage, so a commander sees how the
@@ -3444,7 +3444,14 @@ the same table; per creature also the dice it rolled in that encounter.
 
 **Later:** awards (most damage, damage taken, healing done) on the same data.
 
-### 26.2 Questions (Q317–Q321)
+### 26.2 Owner's answers
+
+Q317 damage to allies: counted separately. Q318 "% of enemy HP": of the
+HP they had when the combat started. Q319 the end card: everyone by
+default. Q320 healing and damage taken: in the card now. Q321 minions /
+summons / companions: both (own rows, and added to their master's total).
+
+### 26.3 Questions as asked (Q317–Q321)
 
 - Q317: Damage to allies (friendly fire, splash): not counted, or counted
   separately?
@@ -3457,7 +3464,7 @@ the same table; per creature also the dice it rolled in that encounter.
 - Q321: Minions / summons / companions: their damage counts to their
   master's total, or own rows?
 
-## 27. Party bulk (owner, 2026-11-20; plan, not built)
+## 27. Party bulk (owner, 2026-11-20; built v0.83.0 as `partyLoad`)
 
 Owner: "Total party bulk: the maximum bulk of each creature in the party,
 how much they have together, and how much bulk is in the party stash, like a
@@ -3504,3 +3511,24 @@ half price." Built (`pf2eSell`, Core Rules → Tools, PF2e / SF2e, on):
   every priced item but treasure and coins, half price, after a
   confirmation with the count and total; treasure inside a sold container
   is moved out; unpriced items stay. One chat card with the list.
+
+### 27.1 Answers and what was built (v0.83.0)
+
+Q322: "like PF2e does it, with a bar and the two ticks". Q323: only the
+containers in the party stash. Q324: pounds (4e).
+
+Built: feature `partyLoad` (Sheets & Windows, PF2e / SF2e and D&D 4e, on),
+`features/party-load.js` (the bar: fill = load, ticks at the summed
+encumbered and maximum limits, scale to 112 % of max; orange past the first
+tick, red past max; hover lists members, stash, bags) with adapters:
+- PF2e (`systems/pf2e/party-load.js`): `game.actors.party` members with a
+  bulk limit (PF2e's `inventory.bulk`), the stash = the party actor's
+  inventory; top-level stash containers with `system.bulk.ignored` > 0 add
+  that to both limits, and what they ignore (min(contents, ignored)) is
+  added back to the load. Under the party sheet's "Total bulk" line;
+  redrawn when a member's or the party's items change.
+- 4e (`dnd4e/party-stash.mjs`): player characters' `system.encumbrance`
+  (value, normal load = "encumbered", heavy load = "max"), the stash's items
+  by weight (contents of containers counted), weightless containers in the
+  stash add their capacity; in the Party Stash window under the coins.
+Test 71.

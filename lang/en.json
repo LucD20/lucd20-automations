@@ -865,6 +865,10 @@
         "Name": "Sell",
         "Hint": "A Sell icon on every item that isn't treasure (character, loot and party sheets): half its price, the coins to the same sheet, a chat line. A stack asks how many. Loot sheets also get \"Sell all equipment\" next to \"Sell all treasure\" (half price, everything but treasure and coins, after a confirmation)."
       },
+      "partyLoad": {
+        "Name": "Party Load",
+        "Hint": "The party's encumbrance as one bar, like PF2e's bulk bar: everything the party members carry plus the Party Stash, with two ticks at the members' encumbered and maximum limits added up. Extradimensional containers in the stash (Bag of Holding, Spacious Pouch) add their capacity. Hover it for each member, the stash and each bag. PF2e: on the party sheet's Stash tab; D&D 4e: in the Party Stash window (pounds)."
+      },
       "pf2eMultiCheck": {
         "Name": "Multiple Checks",
         "Hint": "Post several checks as one chat card. Shift-click an inline check's \"send to chat\" icon to collect it (a check group adds all of its checks), paste or drop selected journal text or @Check codes, or add a skill and DC by hand; then Send. Players see one button per check and how much lower each DC is than the hardest (\"Stealth (DC 2 lower)\"); only the GM sees the DCs. GM only; the window also opens from the chat's buttons."
@@ -2225,6 +2229,12 @@
       "Placed": "Stairs {n} placed: each end teleports to the other.",
       "PlacedOneWay": "Stairs {n} placed: the first end teleports to the second.",
       "Failed": "The stairs could not be placed (see the console)."
+    },
+    "PartyLoad": {
+      "Title": "Party load",
+      "Encumbered": "encumbered",
+      "Max": "max",
+      "Stash": "Party Stash"
     },
     "Sell": {
       "Sell": "Sell",

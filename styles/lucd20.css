@@ -2863,3 +2863,13 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-bm-editor .lucd20-bm-add { display: grid; grid-template-columns: 1fr 64px auto; gap: 6px; }
 .lucd20-bm-editor .lucd20-bm-medic { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin: 4px 0; }
 .lucd20-bm-editor .muted { opacity: 0.7; margin: 0; }
+
+/* Party Load (partyLoad): a bar like PF2e's bulk bar, two ticks (encumbered, max) */
+.lucd20-party-load { margin: 6px 0; font-size: 0.9em; }
+.lucd20-party-load .lpl-track { position: relative; height: 10px; border-radius: 5px; background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(0, 0, 0, 0.5); overflow: hidden; }
+.lucd20-party-load .lpl-fill { position: absolute; left: 0; top: 0; bottom: 0; background: #6c8aa5; }
+.lucd20-party-load.is-encumbered .lpl-fill { background: #d9822b; }
+.lucd20-party-load.is-over .lpl-fill { background: #b72b2b; }
+.lucd20-party-load .lpl-tick { position: absolute; top: -1px; bottom: -1px; width: 2px; margin-left: -1px; background: #f0e6d2; box-shadow: 0 0 2px #000; }
+.lucd20-party-load .lpl-tick.lpl-max { background: #ff6b6b; }
+.lucd20-party-load .lpl-label { display: flex; justify-content: space-between; gap: 8px; margin-top: 2px; }

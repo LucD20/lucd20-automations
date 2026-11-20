@@ -5,6 +5,7 @@ import { watchDOM } from "../../core/dom-watch.js";
 import { executeAsGM, onGMRequest } from "../../core/socket.js";
 import { cleanPurse, emptyPurse, isEmptyPurse } from "../../core/coins.js";
 import { lootApi, registerLootAdapter } from "../../features/loot-pile.js";
+import { partyLoadHTML, registerPartyLoadAdapter } from "../../features/party-load.js";
 
 /*
  * D&D 4e: loot, the Party Stash and coin tracking.
@@ -353,6 +354,7 @@ class StashWindow extends ApplicationV2 {
 			<aside>
 				<h1>${L("TitleBreak")}</h1>
 				<div class="ls-boxes">${boxes}</div>
+				${partyLoadHTML()}
 				${gm ? `<div class="ls-gm">
 					<button type="button" class="ls-btn" data-action="splitEven" ${isEmptyPurse(purse) ? "disabled" : ""}>${icon("fa-scale-balanced")} ${L("SplitEven")}</button>
 					<button type="button" class="ls-btn" data-action="splitCustom" ${isEmptyPurse(purse) ? "disabled" : ""}>${icon("fa-sliders")} ${L("SplitCustom")}</button>
@@ -615,3 +617,57 @@ defineFeature({
 });
 
 export const _test = { putInStash, StashWindow, LedgerWindow, entriesOf, coinsOf, emptyPurse };
+
+/* -------------------------------------------- */
+/*  Party Load (PLAN §27, v0.83.0)              */
+/* -------------------------------------------- */
+
+/*
+ * 4e for Party Load: the player characters' encumbrance (the system's own: carried weight, normal load
+ * Str × 10 = "encumbered", heavy load Str × 20 = "max"), plus the stash's weight. A weightless container in the
+ * stash (Bag of Holding: `capacity.weightless`, capacity in pounds) counts its contents in the load and adds
+ * its capacity to both limits (owner Q323: only the stash's). Pounds (Q324).
+ */
+const PHYSICAL_4E = new Set(["weapon", "equipment", "consumable", "tool", "backpack", "loot"]);
+const insideOf = (actor, bag) => actor.items.filter(i => (i.system?.container ?? null) === bag.id);
+function weightOf4e(actor, item) {
+	const own = (Number(item.system?.quantity) || 1) * (Number(item.system?.weight) || 0);
+	if (item.type !== "backpack") return own;
+	return (Number(item.system?.weight) || 0) + insideOf(actor, item).reduce((s, i) => s + weightOf4e(actor, i), 0);
+}
+
+export function partyLoad4e() {
+	const id = game.settings.get(MODULE_ID, "lootPile_stashId");
+	const stash = id ? game.actors.get(id) : null;
+	const members = game.actors.filter(a => a.hasPlayerOwner && a.type === PC && a.system?.encumbrance);
+	const rows = members.map(a => ({ name: a.name, load: Number(a.system.encumbrance.value) || 0, encumbered: Number(a.system.encumbrance.max) || 0, max: Number(a.system.encumbrance.maxHeavy) || 0 }));
+	let stashLoad = 0;
+	const bags = [];
+	if (stash) {
+		for (const item of stash.items) {
+			if (!PHYSICAL_4E.has(item.type) || item.system?.container) continue;
+			stashLoad += weightOf4e(stash, item); // contents of weightless bags count too
+			const cap = item.system?.capacity;
+			if (item.type === "backpack" && cap?.weightless && (cap.type ?? "weight") === "weight" && Number(cap.value) > 0) bags.push({ name: item.name, capacity: Number(cap.value) });
+		}
+	}
+	const extra = bags.reduce((s, b) => s + b.capacity, 0);
+	const sum = key => rows.reduce((s, r) => s + r[key], 0);
+	return { load: sum("load") + stashLoad, encumbered: sum("encumbered") + extra, max: sum("max") + extra, unit: "lb", rows, stash: { load: stashLoad }, bags };
+}
+
+const formatLb = n => `${Math.round(n * 10) / 10} lb`;
+
+registerPartyLoadAdapter({
+	system: "dnd4e",
+	compute: partyLoad4e,
+	format: formatLb,
+	mount(feature) {
+		// Members' gear changing: redraw an open Party Stash window.
+		let timer = null;
+		const soon = () => { clearTimeout(timer); timer = setTimeout(() => { if (StashWindow.instance?.rendered) StashWindow.instance.render(); }, 150); };
+		for (const hook of ["createItem", "updateItem", "deleteItem", "updateActor"]) feature.on(hook, soon);
+		soon();
+		return () => clearTimeout(timer);
+	}
+});

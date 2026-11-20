@@ -63,6 +63,7 @@ export const FEATURE_ORDER = [
   { id: "outOfSightOutlines", category: "vision", phase: 9 },
   { id: "cleanTitleBars", category: "sheets", phase: 3 },
   { id: "headerButtons", category: "sheets", phase: 3 },
+  { id: "partyLoad", category: "sheets", phase: 72, systems: ["pf2e", "dnd4e"] },
   { id: "sceneNavigation", category: "scenes", phase: 16 },
   { id: "scenePalette", category: "scenes", phase: 16 },
   { id: "hiddenTrackNames", category: "scenes", phase: 17 },

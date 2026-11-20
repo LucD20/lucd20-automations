@@ -1,0 +1,90 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Battle Medicine on the token (mockups, round 2)</title>
+<link rel="stylesheet" href="../../tools/harness/node_modules/@fortawesome/fontawesome-free/css/all.min.css">
+<style>
+body { margin: 0; padding: 24px; background: #26231f; color: #e9e4dc; font: 14px "Signika", "Trebuchet MS", sans-serif; }
+h1 { font-size: 20px; margin: 0 0 4px; } .lead { color: #b9b1a5; margin: 0 0 18px; max-width: 1150px; }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.opt { background: #34302a; border: 1px solid #4b453c; border-radius: 8px; padding: 14px; }
+.opt h2 { font-size: 16px; margin: 0 0 2px; } .opt h2 b { color: #f3b469; }
+.opt p { color: #c9c1b5; margin: 4px 0 10px; font-size: 13px; line-height: 1.35; }
+.pro { color: #8fd18f; } .con { color: #e39a7c; }
+.row { display: flex; gap: 10px; }
+.scene { position: relative; flex: 1; height: 150px; border-radius: 6px; background: #8b6a43 radial-gradient(circle at 70% 30%, #a07c52 0 25%, transparent 26%); overflow: hidden; }
+.lab { position: absolute; left: 6px; top: 4px; font-size: 11px; color: #f4ead9; text-shadow: 0 0 3px #000; }
+/* tokens: dynamic-ring style */
+.tok { position: absolute; width: 62px; height: 62px; border-radius: 50%; border: 3px solid #3f8f46; box-shadow: 0 0 0 2px #1d1d1d; background: #5d6b4a radial-gradient(circle at 50% 38%, #b98b5b 0 16%, transparent 17%), radial-gradient(ellipse at 50% 80%, #6a3b2a 0 34%, transparent 35%); }
+.t1 { left: 18px; top: 38px; } .t2 { left: 104px; top: 38px; }
+.nm { position: absolute; width: 90px; text-align: center; font-size: 12px; font-weight: 600; color: #fff; text-shadow: 0 0 3px #000, 0 0 3px #000; top: 108px; }
+.n1 { left: 4px; } .n2 { left: 90px; }
+.sel { outline: 2px dashed #ff9829; outline-offset: 4px; }
+.red { color: #e05252; } .green { color: #4caf50; } .grey { color: #aaa; }
+/* C1 icon only */
+.b-ico { position: absolute; left: -6px; bottom: -4px; width: 20px; height: 20px; border-radius: 50%; background: #1b1b1b; border: 1px solid #e05252; display: grid; place-items: center; font-size: 11px; color: #e05252; }
+/* C2 ring arc */
+.arc { position: absolute; inset: -6px; border-radius: 50%; }
+/* C3 cooldown pie */
+.pie { position: absolute; left: -8px; bottom: -6px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; }
+.pie i { font-size: 10px; color: #fff; position: relative; }
+.pie::before { content: ""; position: absolute; inset: 3px; border-radius: 50%; background: #1b1b1b; }
+/* halo */
+.halo { position: absolute; width: 18px; height: 18px; border-radius: 50%; background: #222; border: 1px solid #888; display: grid; place-items: center; font-size: 10px; }
+.halo .n { position: absolute; right: -6px; bottom: -6px; font-size: 9px; background: #000; border-radius: 6px; padding: 0 2px; color: #fff; }
+.tip { position: absolute; padding: 3px 7px; border-radius: 4px; background: rgba(15,12,20,.9); border: 1px solid #500085; font-size: 12px; color: #fff; white-space: nowrap; }
+.reco { outline: 2px solid #f3b469; } .tag { display: inline-block; font-size: 11px; padding: 1px 6px; border-radius: 8px; background: #f3b469; color: #222; font-weight: 700; margin-left: 6px; }
+.dot { position: absolute; left: -2px; bottom: 0; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; color: #fff; border: 2px solid #1b1b1b; }
+</style></head><body>
+<h1>Battle Medicine on the token: variations on C</h1>
+<p class="lead">Left picture: the map as everyone sees it. Right picture: when it matters (a healer selected, or hovering). Schmekcho was treated by Uri 1 hour ago with a 1-hour immunity; Amiri wasn't treated.</p>
+<div class="grid">
+
+<div class="opt"><h2><b>C1</b> · Icon only, time on hover</h2>
+<p>A small red first-aid dot on the token, no text. Hovering the token shows "Uri · 1 h" in a small label under the name. A healer with Medic ready sees a green dot on themselves.</p>
+<div class="row">
+<div class="scene"><span class="lab">Map</span><div class="tok t1"><div class="b-ico"><i class="fa-solid fa-kit-medical"></i></div></div><div class="nm n1">Schmekcho</div><div class="tok t2"></div><div class="nm n2">Amiri</div></div>
+<div class="scene"><span class="lab">Hover</span><div class="tok t1"><div class="b-ico"><i class="fa-solid fa-kit-medical"></i></div></div><div class="nm n1">Schmekcho</div><div class="tip" style="left:10px;top:126px"><i class="fa-solid fa-kit-medical red"></i> Uri · 1 h</div></div>
+</div>
+<p><span class="pro">+ smallest footprint; still readable at a glance.</span> <span class="con">− the time needs a hover.</span></p></div>
+
+<div class="opt"><h2><b>C2</b> · A cooldown arc on the ring</h2>
+<p>A red arc around the token ring that empties as the immunity runs out, like an ability cooldown. No icon, no text: the ring itself says "not yet".</p>
+<div class="row">
+<div class="scene"><span class="lab">Map (1 h left of 24)</span><div class="tok t1"><div class="arc" style="background: conic-gradient(#e05252 0 30deg, transparent 30deg); -webkit-mask: radial-gradient(circle, transparent 34px, #000 35px); mask: radial-gradient(circle, transparent 34px, #000 35px);"></div></div><div class="nm n1">Schmekcho</div><div class="tok t2"></div><div class="nm n2">Amiri</div></div>
+<div class="scene"><span class="lab">Map (18 h left)</span><div class="tok t1"><div class="arc" style="background: conic-gradient(#e05252 0 270deg, transparent 270deg); -webkit-mask: radial-gradient(circle, transparent 34px, #000 35px); mask: radial-gradient(circle, transparent 34px, #000 35px);"></div></div><div class="nm n1">Schmekcho</div></div>
+</div>
+<p><span class="pro">+ no new icon; time readable from the ring.</span> <span class="con">− an arc can be confused with HP rings / other modules; who isn't shown.</span></p></div>
+
+<div class="opt"><h2><b>C3</b> · A cooldown pie badge</h2>
+<p>C's badge without the text: a small round first-aid badge whose red fill is the time left (a pie, like a game cooldown icon).</p>
+<div class="row">
+<div class="scene"><span class="lab">Map</span><div class="tok t1"><div class="pie" style="background: conic-gradient(#e05252 0 30deg, #555 30deg)"><i class="fa-solid fa-kit-medical"></i></div></div><div class="nm n1">Schmekcho</div><div class="tok t2"></div><div class="nm n2">Amiri</div></div>
+<div class="scene"><span class="lab">18 h left</span><div class="tok t1"><div class="pie" style="background: conic-gradient(#e05252 0 270deg, #555 270deg)"><i class="fa-solid fa-kit-medical"></i></div></div><div class="nm n1">Schmekcho</div></div>
+</div>
+<p><span class="pro">+ one small badge, time at a glance, no text.</span> <span class="con">− "who" still needs the hover / HUD.</span></p></div>
+
+<div class="opt reco"><h2><b>C4</b> · Only for the healer who is selected <span class="tag">Recommended</span></h2>
+<p>Nothing on the map normally. Select your healer: every ally gets a dot: <span class="green">green</span> = you can treat it, <span class="red">red</span> = immune to you (hover: time left). Deselect: gone.</p>
+<div class="row">
+<div class="scene"><span class="lab">Map (nothing selected)</span><div class="tok t1"></div><div class="nm n1">Schmekcho</div><div class="tok t2"></div><div class="nm n2">Amiri</div></div>
+<div class="scene"><span class="lab">Uri selected</span><div class="tok t1"><div class="dot" style="background:#e05252"><i class="fa-solid fa-kit-medical"></i></div></div><div class="nm n1">Schmekcho</div><div class="tok t2"><div class="dot" style="background:#3f9a45"><i class="fa-solid fa-kit-medical"></i></div></div><div class="nm n2">Amiri</div></div>
+</div>
+<p><span class="pro">+ zero clutter in combat; shows exactly "whom can I heal" to the one healing.</span> <span class="con">− others don't see it (GM: the HUD and editor).</span></p></div>
+
+<div class="opt"><h2><b>C5</b> · In the effects halo</h2>
+<p>An icon among the token's effect icons (the module's Effects Halo), with a small number for hours left. Looks like a condition, which is what immunity is.</p>
+<div class="row">
+<div class="scene"><span class="lab">Map</span><div class="tok t1"></div>
+<div class="halo" style="left:12px;top:28px"><i class="fa-solid fa-person-falling" style="color:#ccc"></i></div><div class="halo" style="left:70px;top:28px;border-color:#e05252"><i class="fa-solid fa-kit-medical red"></i><span class="n">1h</span></div>
+<div class="nm n1">Schmekcho</div><div class="tok t2"></div><div class="nm n2">Amiri</div></div>
+<div class="scene"><span class="lab">Hover the icon</span><div class="tok t1"></div><div class="halo" style="left:70px;top:28px;border-color:#e05252"><i class="fa-solid fa-kit-medical red"></i><span class="n">1h</span></div><div class="tip" style="left:8px;top:18px">Immune to Uri · 1 h</div><div class="nm n1">Schmekcho</div></div>
+</div>
+<p><span class="pro">+ fits where players already look for states.</span> <span class="con">− needs Effects Halo on; competes with real conditions.</span></p></div>
+
+<div class="opt"><h2><b>C3 + C4</b> · Pie for everyone, colour for the healer</h2>
+<p>Everyone sees C3's small pie on treated creatures; with a healer selected, the untreated allies also get a small green dot (you can treat them).</p>
+<div class="row">
+<div class="scene"><span class="lab">Map</span><div class="tok t1"><div class="pie" style="background: conic-gradient(#e05252 0 30deg, #555 30deg)"><i class="fa-solid fa-kit-medical"></i></div></div><div class="nm n1">Schmekcho</div><div class="tok t2"></div><div class="nm n2">Amiri</div></div>
+<div class="scene"><span class="lab">Uri selected</span><div class="tok t1"><div class="pie" style="background: conic-gradient(#e05252 0 30deg, #555 30deg)"><i class="fa-solid fa-kit-medical"></i></div></div><div class="nm n1">Schmekcho</div><div class="tok t2"><div class="pie" style="background:#3f9a45"><i class="fa-solid fa-kit-medical"></i></div></div><div class="nm n2">Amiri</div></div>
+</div>
+<p><span class="pro">+ the table sees who is immune; the healer sees whom they can heal.</span> <span class="con">− a few badges on the map after a fight.</span></p></div>
+
+</div></body></html>

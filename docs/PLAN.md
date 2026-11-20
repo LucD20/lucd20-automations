@@ -3389,3 +3389,6 @@ v0.81.3: the flanking overlay also threw on token moves when `canvas.tokens.cont
 Battle Medicine tooltip design (owner: the 0.81.3 line "doesn't look great"): mockups A–E in
 `docs/mockups/bm-tooltip.html` / `.png` (compact cell, footer line, token badge, chips, "can I treat
 it?" for the selected healer, E + B). Waiting on the owner's pick.
+Round 2 (owner: "C is the right direction, not there yet"): `docs/mockups/bm-badge.html` / `.png`:
+C1 icon only + time on hover, C2 cooldown arc on the ring, C3 cooldown pie badge, C4 dots only while a
+healer is selected (green = can treat, red = immune to you), C5 in the Effects Halo, C3 + C4.

@@ -8,8 +8,9 @@ import { isShowing, registerOverlay, show } from "./tactical-overlay.js";
  *   creature, and after your token moves: a line to each ally you already flank the target with, a broken
  *   shield over the target when you do, and **every square you could stand in to flank it** (within your
  *   reach, not occupied, on the opposite side of an ally that can flank it), so there is no guessing.
- * - While you drag your token: those squares stay shown (no timer), and the square under your token gets the
- *   broken shield when it flanks (owner: "on the square itself").
+ * - While you drag your token: those squares stay shown (no timer); the square under your token is filled
+ *   stronger and the target gets the broken shield when it would be flanked from there (v0.81.2, owner: the
+ *   shield on your own token "feels like you are being flanked"; always over the target).
  * - PF2e's own rules where it has them: TokenPF2e#canFlank (the "flanking" automation setting, enemies,
  *   flankable, hidden tokens, reach) and #onOppositeSides for tokens; for empty squares the same geometry
  *   (the line between the two centres passes through opposite sides of the target). Gang-up abilities are
@@ -149,17 +150,17 @@ const snap = v => Math.round(v);
 
 export function draw() {
   clear();
-  if (!canvas?.ready || !game.user.targets.size) return;
+  if (!canvas?.ready || !game.user.targets?.size) return;
   const { controlled, previews } = sources();
   const dragging = previews.length > 0;
   if (!dragging && !isShowing()) return;
   const container = ensureLayer();
   const grid = canvas.grid?.size ?? 100;
   const color = CONFIG.Canvas.dispositionColors?.CONTROLLED ?? 0xff9829;
-  const shields = [];
+  const shields = new Set(); // targets that get the broken shield (always over the target: owner, v0.81.2)
   for (const token of controlled) {
     const preview = previews.find(p => p.id === token.id);
-    for (const target of game.user.targets) {
+    for (const target of game.user.targets ?? []) {
       if (!target.visible || target === token) continue;
       // The squares to flank from (the real token's reach and allies).
       const squares = flankSquares(token, target);
@@ -170,7 +171,7 @@ export function draw() {
         g.beginFill(color, under ? 0.45 : 0.18);
         g.drawRect(sq.x + 2, sq.y + 2, sq.w - 4, sq.h - 4);
         g.endFill();
-        if (under) shields.push([sq.x + sq.w / 2, sq.y + sq.h / 2]);
+        if (under) shields.add(target);
       }
       // Lines to the allies already flanked with (not while dragging: the squares say it).
       if (!dragging) {
@@ -181,13 +182,13 @@ export function draw() {
           g.lineStyle(Math.max(2, grid * 0.025), color, 0.95);
           g.moveTo(token.center.x, token.center.y).lineTo(ally.center.x, ally.center.y);
         }
-        if (allies.length) shields.push([target.center.x, target.bounds.top + Math.max(18, grid * 0.32) * 0.15]);
+        if (allies.length) shields.add(target);
       }
       container.addChild(g);
     }
   }
   const size = Math.max(18, grid * 0.32);
-  for (const [x, y] of shields) container.addChild(brokenShield(x, y, size, color));
+  for (const target of shields) container.addChild(brokenShield(target.center.x, target.bounds.top + size * 0.15, size, color));
 }
 
 function schedule() {
@@ -215,7 +216,7 @@ defineFeature({
     });
     // While dragging (the preview moves) and while the window is open (others move).
     feature.on("refreshToken", token => {
-      if (!game.user.targets.size) return;
+      if (!game.user.targets?.size) return;
       if (token.isPreview || isShowing()) schedule();
     });
     feature.on("deleteToken", schedule);

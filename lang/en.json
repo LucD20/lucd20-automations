@@ -603,6 +603,10 @@
           },
           "fontSize": {
             "Name": "Text size"
+          },
+          "battleMedicine": {
+            "Name": "Battle Medicine",
+            "Hint": "Add Battle Medicine lines (needs the Battle Medicine feature): who treated this creature and for how long it is immune, whom it treated, Medic Dedication. Everyone sees them."
           }
         }
       },
@@ -2232,7 +2236,13 @@
     "EditorFor": "Battle Medicine: {name}",
     "SectionTreatedBy": "Treated by (immune to them)",
     "SectionTreated": "Treated",
-    "SectionAdd": "Add: treated by",
+    "SectionAdd": "Add: {name} treated",
+    "Patient": "Treated creature",
+    "NeedTarget": "Battle Medicine: target the creature you treat (exactly one) so it is tracked.",
+    "TipTreatedBy": "{name}: immune {time}",
+    "TipTreated": "→ {name} {time}",
+    "TipMedicReady": "Medic: ready",
+    "TipMedicUsed": "Medic: {time}",
     "Nobody": "Nobody.",
     "Remove": "Remove",
     "MedicReset": "Make ready",

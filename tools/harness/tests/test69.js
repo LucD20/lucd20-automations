@@ -85,15 +85,37 @@ const assert = require("assert");
     ed.querySelector('[data-action="resetMedic"]').click();
     await settle(150);
     out.medicAfterReset = bm.medicReady(kyra);
-    // Add: Ezren treated by Kyra, 6 hours left (the editor is for the open token: switch to Ezren).
-    bm.BattleMedicineEditor.open(ezren, "Ezren");
-    await settle(150);
+    // Add: Kyra (the token the editor is open for) treated Ezren, 6 hours left.
     const ed2 = foundry.applications.instances.get("lucd20-battle-medicine-editor").element;
-    ed2.querySelector("select.healer").value = "Actor.kyra";
+    out.addHeading = [...ed2.querySelectorAll("h4")].map(h => h.textContent).pop();
+    ed2.querySelector("select.patient").value = "Actor.ezren";
     ed2.querySelector("input.hours").value = "6";
     ed2.querySelector('[data-action="add"]').click();
     await settle(150);
     out.ezrenAdded = bm.hudLines(ezren);
+
+    // The feat card known by its title only (origin item not found), with our target flag.
+    const before = bm.hudLines(ezren).length;
+    ezren.flags[M].immunities = [];
+    Hooks.callAll("createChatMessage", { actor: kyra, speaker: {}, flavor: "", content: '<header class="card-header"><h3>Battle Medicine</h3></header>', flags: { pf2e: { origin: { uuid: "Actor.kyra.Item.unknown", type: "feat" } }, [M]: { bmTarget: ezren.uuid } } });
+    await settle();
+    out.byTitle = bm.hudLines(ezren);
+    // Used without a target: the roller is told.
+    const warns = [];
+    window.ui = Object.assign(window.ui ?? {}, { notifications: { warn: m => warns.push(m), info() {}, error() {} } });
+    game.user.targets = new Set();
+    const fake = { updateSource() {}, flags: {}, content: "" };
+    Hooks.callAll("preCreateChatMessage", fake, { content: "", flags: { pf2e: { origin: { uuid: "Actor.kyra.Item.bm", type: "feat" } } } }, {}, game.user.id);
+    out.warned = warns;
+    // Token Tooltip: the lines everyone sees; off with the tooltip's setting.
+    const tt = await import(`/modules/${M}/scripts/features/token-tooltip/token-tooltip.js`);
+    await game.settings.set(M, "tokenTooltip_enabled", true);
+    await settle();
+    const kyraTok = { actor: kyra, document: { disposition: 1 }, visible: true };
+    out.tooltip = tt.tooltipRows(kyraTok).filter(r => /kit-medical|holding-medical|user-doctor/.test(r.icon)).map(r => r.value);
+    await game.settings.set(M, "tokenTooltip_battleMedicine", false);
+    await settle();
+    out.tooltipOff = tt.tooltipRows(kyraTok).filter(r => /kit-medical|holding-medical|user-doctor/.test(r.icon)).length;
 
     // Flanking: the ogre (1 square) at 3,3; Amiri at 4,3; Kyra selected at 1,1 (not adjacent).
     canvas.ready = true;
@@ -127,7 +149,10 @@ const assert = require("assert");
     canvas.tokens.preview.children = [preview];
     Hooks.callAll("refreshToken", preview);
     await settle(150);
-    out.dragChildren = canvas.controls.children.find(c => c.name?.includes("flanking"))?.children.length ?? 0;
+    const fLayer = canvas.controls.children.find(c => c.name?.includes("flanking"));
+    out.dragChildren = fLayer?.children.length ?? 0;
+    const sb = fLayer?.children[1]?.getBounds?.();
+    out.shieldOverTarget = sb ? sb.x + sb.width / 2 > 300 && sb.x + sb.width / 2 < 400 && sb.y < 400 : null;
     preview.document.x = 100; preview.document.y = 100;
     Hooks.callAll("refreshToken", preview);
     await settle(150);
@@ -154,11 +179,17 @@ const assert = require("assert");
   assert.deepStrictEqual(r.editorRows, ["Treated Amiri (24 h)", "Treated Valeros (1 h)"]);
   assert.deepStrictEqual(r.valerosAfterRemove, [], "removed in the editor");
   assert.strictEqual(r.medicAfterReset, true, "Medic Dedication made ready again");
-  assert.deepStrictEqual(r.ezrenAdded, ["Treated by Kyra: again in 6 h"], "added by hand");
+  assert.deepStrictEqual(r.ezrenAdded, ["Treated by Kyra: again in 6 h"], "added by hand: the open token is the healer");
+  assert.strictEqual(r.addHeading, "Add: Kyra treated");
+  assert.deepStrictEqual(r.byTitle, ["Treated by Kyra: again in 24 h"], "the feat card known by its title");
+  assert.deepStrictEqual(r.warned, ["Battle Medicine: target the creature you treat (exactly one) so it is tracked."]);
+  assert.deepStrictEqual(r.tooltip, ["→ Amiri 24 h", "→ Ezren 24 h", "Medic: ready"], "Token Tooltip lines");
+  assert.strictEqual(r.tooltipOff, 0, "off with the Token Tooltip setting");
+  assert.strictEqual(r.shieldOverTarget, true, "while dragging, the shield is over the target");
   assert.deepStrictEqual(r.squares, ["2,3"], "the square opposite Amiri, within 5 ft of the ogre (diagonals enter top and leave right: not opposite)");
   assert.ok(r.shownChildren >= 1, "shown on show()");
   assert.strictEqual(r.afterTimeout, 0, "gone after the set seconds");
-  assert.strictEqual(r.dragChildren, 2, "while dragging: the squares and the shield on the square under the token");
+  assert.strictEqual(r.dragChildren, 2, "while dragging onto a flank square: the squares and the shield");
   assert.strictEqual(r.dragOffSquare, 1, "off a flank square: the squares only");
   assert.deepStrictEqual(r.allies, ["t-amiri"]);
   console.log("PHASE 69 CHECKS PASSED");

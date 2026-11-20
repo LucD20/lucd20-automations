@@ -945,6 +945,23 @@ one that leaves fewer squares next to enemies (see PLAN).
     (make ready / mark used), add "treated by <healer>" with hours left.
     The GM gets the button on every player character.
 
+- v0.81.2 (owner's first test of 0.81.1: "using the Action didn't show it";
+  "it shouldn't ask who is using it, just get from the origin token"; "it
+  needs to be somewhere anyone can see, could be an extension of the Token
+  tooltip"):
+  - The feat's card is also known by the origin's roll options and by its
+    card title (`<h3>` "Battle Medicine") when the origin item can't be
+    found; used without exactly one target, the roller gets a warning to
+    target the patient (it was silently not tracked). Debug: with
+    `CONFIG.debug.lucd20Rules = true` the GM's console logs each message
+    read and whether it counted.
+  - The GM editor's add row: the token it is open for is the healer; pick
+    the creature it treated (the scene's creatures and every character).
+  - **Token Tooltip** extension (`registerTooltipExtra` in
+    `token-tooltip.js`; option "Battle Medicine" under Token Tooltip, PF2e /
+    SF2e, on by default): everyone hovering a token sees "Kyra: immune
+    18 h", "→ Amiri 18 h", "Medic: ready / 18 h" (needs Token Tooltip on).
+
 ## 24. Flanking overlay (built v0.81.0)
 
 - Owner: "When your token is selected, you have a creature targeted and are
@@ -989,6 +1006,10 @@ one that leaves fewer squares next to enemies (see PLAN).
     preview is filled stronger and gets the broken shield; no lines. After
     the drop the window opens again. A pointer release redraws (cancelled
     drags).
+
+- v0.81.2 (owner: the broken shield on your own token while dragging "feels
+  like you are being flanked"): the shield is always over the target; while
+  dragging onto a flank square the target gets it.
 
 ## 25. Recall Knowledge (built v0.78.0)
 

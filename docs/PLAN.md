@@ -3376,3 +3376,10 @@ ledger): Battle Medicine from the Treat Wounds and Battle Medicine macro and
 the feat's action; Medic Dedication; a GM editor; the flanking overlay as
 flankable squares, shown with the cover line for 5 s (editable) instead of
 the always-on cover preview.
+
+v0.81.2 (owner's test of 0.81.1): feat card known by its title too and a
+warning without a target; the editor adds "<this token> treated …"; Battle
+Medicine lines in the Token Tooltip for everyone (option under Token
+Tooltip); the flanking shield always over the target. Also fixed: since
+v0.81.0 the flanking overlay threw when `game.user.targets` was missing
+(harness tests 25–26).

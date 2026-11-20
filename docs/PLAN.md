@@ -3558,3 +3558,8 @@ card", on) with adapters (`systems/pf2e/encounter-report.js`; 4e in
   world history (`encounterReport_history`, newest 20) for a later tab.
 - Test 72. (verify) in Foundry: the damage-taken message's origin in PF2e
   8.7, persistent damage, eidolons / animal companions as masters.
+
+v0.84.1: Battle Medicine "Roll on use" (the owner's console log showed the
+action is read and recorded since 0.81.2; what was missing was the roll):
+using the feat opens the Workbench macro with Battle Medicine chosen, else
+PF2e's Treat Wounds roll; the roll records the use.

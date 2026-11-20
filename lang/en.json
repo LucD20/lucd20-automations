@@ -853,6 +853,7 @@
         "Name": "Battle Medicine",
         "Setting": {
           "badgesAll": { "Name": "Badges on immune creatures", "Hint": "A small first-aid badge on creatures immune to someone's Battle Medicine; its red fill is the time left. Everyone sees it (on tokens they can see)." },
+          "rollOnUse": { "Name": "Roll on use", "Hint": "Using the feat opens the Battle Medicine roll with its DC choices: PF2e Workbench's Treat Wounds and Battle Medicine macro (Battle Medicine chosen) when it is active, else PF2e's Treat Wounds roll. The roll records the use (cancelled: nothing). Off: the card itself records it (with one target)." },
           "badgesHealer": { "Name": "Badges for the selected healer", "Hint": "With your token selected and it has Battle Medicine, your allies get a badge: green, you can treat it; the red fill, immune to you and for how long." }
         },
         "Hint": "Tracks Battle Medicine: from the Treat Wounds and Battle Medicine macro, the feat's own action (with one target), Medicine checks naming Battle Medicine, or PF2e's immunity effect. 1 day by world time, 1 hour for the macro's exceptions (Baton, Paragon, Forensic Medicine, Godless Healing, Robust Health); a Medic treating someone already immune spends Medic Dedication. Badges on the tokens (see the options); the Token HUD button lists names and times, and the GM clicks it to edit. No PF2e effect is added."

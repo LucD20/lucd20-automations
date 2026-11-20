@@ -3,7 +3,7 @@ import { defineFeature } from "../../core/registry.js";
 import { watchDOM } from "../../core/dom-watch.js";
 import { appElement } from "../../core/dom.js";
 import { addImmunity, DAY, immunitiesOf, removeImmunity, timeLeft, usedBy } from "./immunity.js";
-import { sysFlags } from "./sys.js";
+import { sysApi, sysFlags, sysId } from "./sys.js";
 
 /**
  * Rule 23 (docs/pf2e-rules.md, owner Q291, v0.81.1 additions): Battle Medicine on the Token HUD. PF2e / SF2e.
@@ -106,7 +106,11 @@ export function readUse(message) {
   const healer = message.actor ?? (message.speaker?.actor ? game.actors?.get(message.speaker.actor) : null);
   const originItem = flags.origin?.uuid ? globalThis.fromUuidSync?.(flags.origin.uuid) : null;
   // 2. The feat's own action card (the healer: the card's actor, i.e. its token).
-  if (!context.type && isFeatCard(flags, message.content)) return healer && ours ? { healer, patientUuid: ours } : null;
+  if (!context.type && isFeatCard(flags, message.content)) {
+    // "Roll on use": the roll it opens records the use (cancelled: nothing), not the card.
+    if (message.flags?.["lucd20-automations"]?.bmRoll) return null;
+    return healer && ours ? { healer, patientUuid: ours } : null;
+  }
   // 3. A Medicine check naming Battle Medicine.
   if (context.type && context.type !== "skill-check") return null;
   const options = context.options ?? [];
@@ -168,6 +172,7 @@ function onPreCreateMessage(message, data, options, userId) {
   const medicineCheck = context?.type === "skill-check" && (context.domains ?? []).includes("medicine") && !context.target?.actor;
   const featCard = !context?.type && isFeatCard(pf2, data.content ?? message.content);
   if (!medicineCheck && !featCard) return;
+  if (featCard && badgeFeature?.get("rollOnUse") !== false) message.updateSource({ "flags.lucd20-automations.bmRoll": true });
   const targets = [...(game.user.targets ?? [])];
   if (targets.length !== 1) {
     // The feat used without one target: say so instead of silently not tracking it.
@@ -176,6 +181,77 @@ function onPreCreateMessage(message, data, options, userId) {
   }
   const actorUuid = targets[0].actor?.uuid;
   if (actorUuid) message.updateSource({ "flags.lucd20-automations.bmTarget": actorUuid });
+}
+
+/* -------------------------------------------- */
+/*  Roll on use (v0.84.1)                       */
+/* -------------------------------------------- */
+
+const WB_MACRO = "XDY DO_NOT_IMPORT Treat Wounds and Battle Medicine";
+
+/** PF2e Workbench's internal macro pack (an SF2e variant first in SF2e). */
+function workbenchPack() {
+  if (!game.modules?.get("xdy-pf2e-workbench")?.active) return null;
+  const base = "xdy-pf2e-workbench.asymonous-benefactor-macros-internal";
+  return (sysId() === "sf2e" ? game.packs?.get(`${base}-sf2e`) : null) ?? game.packs?.get(base) ?? null;
+}
+
+/** When the macro's dialog opens, choose "Battle Medicine" in it (it only does so itself in combat). */
+function preselectBattleMedicine() {
+  const pick = (app, html) => {
+    const root = html?.[0] ?? html;
+    const select = root?.querySelector?.('select[name="useBattleMedicine"]');
+    if (!select || ![...select.options].some(o => o.value === "1")) return;
+    select.value = "1";
+    if (window.jQuery) window.jQuery(select).trigger("change");
+    else select.dispatchEvent(new Event("change", { bubbles: true }));
+  };
+  const id = Hooks.on("renderDialog", pick);
+  setTimeout(() => Hooks.off("renderDialog", id), 8000);
+}
+
+/**
+ * Using the feat (its card, on the user's client): open the Battle Medicine roll with its DC choices. The
+ * Workbench's "Treat Wounds and Battle Medicine" macro when it is there (the healer's token selected, "Battle
+ * Medicine" chosen), else PF2e's own Treat Wounds roll with the `action:battle-medicine` option (same DCs and
+ * healing; read as Battle Medicine by this feature).
+ */
+export async function rollBattleMedicine(actor, token = null) {
+  if (!actor) return false;
+  token ??= actor.getActiveTokens?.(true, false)?.[0] ?? null;
+  const pack = workbenchPack();
+  if (pack) {
+    const entry = (await pack.getIndex()).find(e => e.name === WB_MACRO);
+    const macro = entry ? await pack.getDocument(entry._id) : null;
+    if (macro) {
+      if (token?.object && !token.object.controlled) token.object.control({ releaseOthers: true });
+      else if (token?.control && !token.controlled) token.control({ releaseOthers: true });
+      preselectBattleMedicine();
+      await macro.execute({ actor, token: token?.object ?? token });
+      return true;
+    }
+  }
+  const action = sysApi()?.actions?.get?.("treat-wounds");
+  if (action?.use) {
+    await action.use({ actors: [actor], rollOptions: ["action:battle-medicine", "battle-medicine"] });
+    return true;
+  }
+  const legacy = sysApi()?.actions?.treatWounds;
+  if (typeof legacy === "function") {
+    await legacy({ actors: [actor], rollOptions: ["action:battle-medicine"] });
+    return true;
+  }
+  return false;
+}
+
+function onCreateMessageAuthor(message) {
+  if (!message.isAuthor && message.author?.id !== game.user.id) return;
+  if (!message.flags?.["lucd20-automations"]?.bmRoll) return;
+  const flags = sysFlags(message) ?? {};
+  if (flags.context?.type || !isFeatCard(flags, message.content)) return;
+  const actor = message.actor;
+  const token = message.token ?? null;
+  rollBattleMedicine(actor, token).catch(err => console.error("lucd20-automations | Battle Medicine roll", err));
 }
 
 /* -------------------------------------------- */
@@ -452,7 +528,8 @@ defineFeature({
   defaultEnabled: true,
   settings: {
     badgesAll: { kind: "boolean", default: true, scope: "client" },
-    badgesHealer: { kind: "boolean", default: true, scope: "client" }
+    badgesHealer: { kind: "boolean", default: true, scope: "client" },
+    rollOnUse: { kind: "boolean", default: true }
   },
   onSettingChange() {
     scheduleBadges();
@@ -460,6 +537,7 @@ defineFeature({
   enable(feature) {
     badgeFeature = feature;
     feature.on("createChatMessage", onCreateMessage);
+    feature.on("createChatMessage", onCreateMessageAuthor);
     feature.on("preCreateChatMessage", onPreCreateMessage);
     feature.on("createItem", onCreateItem);
     feature.on("updateActor", () => BattleMedicineEditor.refresh());

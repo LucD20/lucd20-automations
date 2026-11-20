@@ -975,6 +975,18 @@ one that leaves fewer squares next to enemies (see PLAN).
     immune only to other healers turn green for you; enemies: nothing new.
   - Names and times stay in the HUD button's hover; the GM edits there.
 
+- v0.84.1 (owner: "using the action applies the immunity but doesn't roll
+  the Battle Medicine roll, with the DC choices"): option "Roll on use"
+  (world, on). Using the feat (its card, on the user's client) opens the
+  roll: PF2e Workbench's internal macro "XDY DO_NOT_IMPORT Treat Wounds and
+  Battle Medicine" (pack `xdy-pf2e-workbench.asymonous-benefactor-macros-internal`,
+  `-sf2e` first in SF2e) with the healer's token selected and "Battle
+  Medicine" chosen in its dialog (`renderDialog`, `select[name=useBattleMedicine]`;
+  it only pre-selects it in combat), else PF2e's `treat-wounds` action with
+  the roll options `action:battle-medicine` (same DCs, Medic bonus). The
+  card is flagged `bmRoll` and records nothing: the roll does (cancelled:
+  no immunity).
+
 ## 24. Flanking overlay (built v0.81.0)
 
 - Owner: "When your token is selected, you have a creature targeted and are

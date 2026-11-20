@@ -100,6 +100,35 @@ const assert = require("assert");
     Hooks.callAll("createChatMessage", { actor: kyra, speaker: {}, flavor: "", content: '<header class="card-header"><h3>Battle Medicine</h3></header>', flags: { pf2e: { origin: { uuid: "Actor.kyra.Item.unknown", type: "feat" } }, [M]: { bmTarget: ezren.uuid } } });
     await settle();
     out.byTitle = bm.hudLines(ezren);
+    // Roll on use: the card is flagged (not recorded) and the Workbench macro runs with Battle Medicine chosen.
+    const executed = [];
+    game.modules = new Map([["xdy-pf2e-workbench", { active: true }]]);
+    game.packs = new Map([["xdy-pf2e-workbench.asymonous-benefactor-macros-internal", {
+      getIndex: async () => [{ _id: "m1", name: "XDY DO_NOT_IMPORT Treat Wounds and Battle Medicine" }],
+      getDocument: async () => ({ execute: async (scope) => {
+        executed.push(scope.actor?.name);
+        const dlg = document.createElement("div");
+        dlg.innerHTML = '<select name="useBattleMedicine"><option value="0">Treat Wounds</option><option value="1">Battle Medicine</option></select>';
+        Hooks.callAll("renderDialog", {}, [dlg]);
+        executed.push(dlg.querySelector("select").value);
+      } })
+    }]]);
+    game.user.targets = new Set([{ actor: amiri }]);
+    const src = { updateSource(u) { Object.assign(this.upd ??= {}, u); }, flags: {}, content: "" };
+    Hooks.callAll("preCreateChatMessage", src, { content: "", flags: { pf2e: { origin: { uuid: "Actor.kyra.Item.bm", type: "feat" } } } }, {}, game.user.id);
+    out.cardFlag = src.upd?.["flags.lucd20-automations.bmRoll"] === true;
+    const amiriBefore = JSON.stringify(amiri.flags[M]?.immunities ?? []);
+    Hooks.callAll("createChatMessage", { isAuthor: true, actor: kyra, token: null, speaker: {}, content: "", flavor: "", flags: { pf2e: { origin: { uuid: "Actor.kyra.Item.bm", type: "feat" } }, [M]: { bmRoll: true, bmTarget: amiri.uuid } } });
+    await settle(150);
+    out.macro = executed;
+    out.cardNotRecorded = JSON.stringify(amiri.flags[M]?.immunities ?? []) === amiriBefore;
+    // Without the Workbench: PF2e's Treat Wounds, as Battle Medicine.
+    game.modules = new Map();
+    const used = [];
+    const api = CONFIG.PF2E ? (game.pf2e ??= {}) : (game.pf2e ??= {});
+    api.actions = { get: slug => (slug === "treat-wounds" ? { use: async o => used.push(o.rollOptions) } : null) };
+    await bm.rollBattleMedicine(kyra);
+    out.fallback = used;
     // Used without a target: the roller is told.
     const warns = [];
     window.ui = Object.assign(window.ui ?? {}, { notifications: { warn: m => warns.push(m), info() {}, error() {} } });
@@ -187,6 +216,10 @@ const assert = require("assert");
   assert.deepStrictEqual(r.ezrenAdded, ["Treated by Kyra: again in 6 h"], "added by hand: the open token is the healer");
   assert.strictEqual(r.addHeading, "Add: Kyra treated");
   assert.deepStrictEqual(r.byTitle, ["Treated by Kyra: again in 24 h"], "the feat card known by its title");
+  assert.ok(r.cardFlag, "the card is flagged for the roll");
+  assert.deepStrictEqual(r.macro, ["Kyra", "1"], "the Workbench macro runs for the healer with Battle Medicine chosen");
+  assert.ok(r.cardNotRecorded, "the card itself records nothing (the roll will)");
+  assert.deepStrictEqual(r.fallback, [["action:battle-medicine", "battle-medicine"]], "else PF2e's Treat Wounds as Battle Medicine");
   assert.deepStrictEqual(r.warned, ["Battle Medicine: target the creature you treat (exactly one) so it is tracked."]);
   assert.deepStrictEqual(r.badgesNobody, ["t-amiri:pie:1.00"], "everyone: the pie on the immune creature");
   assert.deepStrictEqual(r.badgesKyra, ["t-amiri:pie:1.00", "t-val:ready"], "Kyra selected: red for immune to her, green for treatable allies");

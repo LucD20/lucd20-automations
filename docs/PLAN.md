@@ -3464,6 +3464,35 @@ summons / companions: both (own rows, and added to their master's total).
 - Q321: Minions / summons / companions: their damage counts to their
   master's total, or own rows?
 
+
+### 26.8 Combat Cards (owner, 2026-11-20: "the 'Cards' at the end of the fight ... this is more about 'look how cool!' instead of functional")
+
+Every player always gets one card at the end of a fight (owner). Positive
+framing only: no ranking, no "worst" cards (owner on the report: "this will
+cause feels bad"). Owner named Draw Steel's version as the reference ("does
+it but not very well"); ours is our own design.
+
+Plan: (1) pick a look from the mockups, (2) agree the card list and how a
+card is chosen, (3) build. Mockup: `docs/mockups/combat-cards.html/.png`
+(silhouettes stand in for token art):
+- A. Tarot: dealt one by one, gilded frame, arched art, title banner,
+  numeral, big stat, a one-line flavour quote.
+- B. Foil: trading cards flipping over, holographic shine, rarity edge.
+  (Rarity can read as a ranking; e.g. "Common" could feel bad.)
+- C. Spotlight: full-width lineup of slanted panels sliding in, light rays,
+  big numbers; then shrinks into the report.
+
+Draft card list (from what the report records; names to decide):
+The Hammer (most damage), One Punch (biggest single hit), The Wall (most
+damage taken), Lifeline (most healing), Tactician (most on-turn damage by
+allies), Pack Leader (companions' damage), Finisher (most final blows),
+Sharpshooter (best hit rate), Lucky Star (most crits), Untouchable (took
+no damage), Close Call (lowest HP and still up; needs the lowest HP
+recorded). Fallbacks so everyone gets one: e.g. Steadfast (stood the whole
+fight), Opportunist. Choosing: each card's number against the party
+(share of the party's total); best match first, each player once, each
+card once per fight.
+
 ## 27. Party bulk (owner, 2026-11-20; built v0.83.0 as `partyLoad`)
 
 Owner: "Total party bulk: the maximum bulk of each creature in the party,

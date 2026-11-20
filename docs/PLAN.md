@@ -3498,6 +3498,16 @@ Decided (owner, 2026-11-20):
   with a drop shadow; the shine stays behind the art; numeral and rarity
   badge above it. Tested with the owner's art (kept out of the repository).
 - Timing: the cards first; after 5 seconds the report window fades in too.
+- Two art modes, chosen per picture (owner's PC portraits are full
+  paintings, opaque, some on white; NPC art is transparent cut-outs):
+  - transparent (alpha at the edges) → the cut-out stands out past the
+    top of the card;
+  - opaque → fills the art window (cover, focused near the top: faces),
+    a soft vignette and a fade into the card below;
+  - opaque with a light background (bright corners) → blended (multiply)
+    onto a parchment tone, so a white square never shows.
+  Detected in the browser by sampling the picture's corners on a canvas
+  (same origin in Foundry). Mockup checked with the owner's portraits.
 
 Draft card list (from what the report records; names to decide):
 The Hammer (most damage), One Punch (biggest single hit), The Wall (most

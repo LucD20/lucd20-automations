@@ -3368,3 +3368,11 @@ session (or agent per book) can do the writing step from the guide.
 
 Also parked from §22.2: Dice Stats per turn / per creature, Sell, Hero
 start area (Battle Medicine HUD and Flanking overlay: built v0.81.0).
+
+### 25.6 After v0.81.0 (owner, 2026-11-20)
+
+Owner's ideas before testing 0.81.0 (built v0.81.1, rules 23–24 in the
+ledger): Battle Medicine from the Treat Wounds and Battle Medicine macro and
+the feat's action; Medic Dedication; a GM editor; the flanking overlay as
+flankable squares, shown with the cover line for 5 s (editable) instead of
+the always-on cover preview.

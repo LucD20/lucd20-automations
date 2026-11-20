@@ -851,11 +851,11 @@
       },
       "pf2eBattleMedicine": {
         "Name": "Battle Medicine",
-        "Hint": "A first-aid button in the Token HUD (under Riding's) for creatures with Battle Medicine or treated with it. Hover it: who treated this creature and when they can again, whom this creature treated, and Combat Assessment immunity. Read from Battle Medicine's Medicine checks (with a target) or PF2e's immunity effect; 1 day by world time (1 hour with Paragon Battle Medicine). No PF2e effect is added."
+        "Hint": "A first-aid button in the Token HUD (under Riding's). Hover it: who treated this creature and when they can again, whom it treated, Medic Dedication (ready or used) and Combat Assessment immunity. Read from the Treat Wounds and Battle Medicine macro, the feat's own action (with a target), Medicine checks naming Battle Medicine, or PF2e's immunity effect. 1 day by world time, 1 hour for the macro's exceptions (Baton, Paragon, Forensic Medicine, Godless Healing, Robust Health). A Medic treating someone already immune spends Medic Dedication. The GM clicks the button to edit. No PF2e effect is added."
       },
       "pf2eFlanking": {
         "Name": "Flanking Overlay",
-        "Hint": "With your token selected and a creature targeted that you flank: a broken shield over the target and a line to each ally you flank it with. While dragging your token, the same for where it would end. PF2e's own flanking rules decide. Per player."
+        "Hint": "Shown with the cover line for a few seconds when you select your token, target a creature or move (Cover's \"Show for\" setting): every square you could step into to flank the target is highlighted, with a line to each ally you already flank it with and a broken shield over it. While you drag your token, the squares stay and the one under your token gets the broken shield. PF2e's own flanking rules decide; only tokens you can see count. Per player."
       },
       "pf2eMultiCheck": {
         "Name": "Multiple Checks",
@@ -965,7 +965,8 @@
         "Name": "Cover",
         "Hint": "Attack rolls get the target's cover from the attacker's point of view: walls hiding more than half of it, greater (+4); a wall across the line center to center, standard (+2); another creature on the line, lesser (+1; not dead or prone ones). It raises the target's AC for that roll only, the higher of it and a Cover the target already has. The roll window shows No cover / Lesser / Standard / Greater to change it; the card says which was used.",
         "Setting": {
-          "preview": { "Name": "Map preview", "Hint": "While you target, draw the line from your token and the cover it gives (only you see it)." },
+          "preview": { "Name": "Map preview", "Hint": "When you select your token, target a creature, or your token moves: draw the line from your token and the cover it gives, together with the flanking overlay (only you see it)." },
+          "previewSeconds": { "Name": "Show for (seconds)", "Hint": "How long the cover and flanking overlay stay on the map. 0: always while you have a target." },
           "areaReach": { "Name": "Areas reach past wall ends", "Hint": "PF2e leaves a square out of an area when the line to its center hits a wall, so a creature partly behind a wall's end is never targeted. On: the square counts when a clear line reaches any part of it, and the creature gets cover instead." }
         }
       },
@@ -2223,7 +2224,22 @@
       "TreatedBy": "Treated by {name}: again in {time}",
       "Treated": "Treated {name} ({time})",
       "AssessedBy": "Combat Assessment: immune to {name} ({time})",
-      "None": "Battle Medicine: no one treated yet"
+      "None": "Battle Medicine: no one treated yet",
+    "MedicReady": "Medic Dedication: ready (may treat someone already immune)",
+    "MedicUsed": "Medic Dedication: used, ready again in {time}",
+    "ClickToEdit": "Click to edit",
+    "EditorTitle": "Battle Medicine",
+    "EditorFor": "Battle Medicine: {name}",
+    "SectionTreatedBy": "Treated by (immune to them)",
+    "SectionTreated": "Treated",
+    "SectionAdd": "Add: treated by",
+    "Nobody": "Nobody.",
+    "Remove": "Remove",
+    "MedicReset": "Make ready",
+    "MedicSpend": "Mark used",
+    "Healer": "Healer",
+    "HoursLeft": "Hours left",
+    "Add": "Add"
     },
     "MultiCheck": {
       "Title": "Multiple Checks",

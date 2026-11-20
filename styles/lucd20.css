@@ -2854,3 +2854,12 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-multi-check .lucd20-mc-title { margin: 0 0 4px; }
 .lucd20-multi-check .lucd20-mc-diff { opacity: 0.8; font-size: 0.9em; }
 .lucd20-multi-check .lucd20-mc-reveal { margin-top: 4px; width: 100%; }
+
+/* Battle Medicine editor (pf2eBattleMedicine) */
+.lucd20-bm-editor .lucd20-bm-editor-body { display: flex; flex-direction: column; gap: 6px; padding: 4px 0; }
+.lucd20-bm-editor h4 { margin: 6px 0 0; font-size: 0.95em; }
+.lucd20-bm-editor .lucd20-bm-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.lucd20-bm-editor .lucd20-bm-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.lucd20-bm-editor .lucd20-bm-add { display: grid; grid-template-columns: 1fr 64px auto; gap: 6px; }
+.lucd20-bm-editor .lucd20-bm-medic { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin: 4px 0; }
+.lucd20-bm-editor .muted { opacity: 0.7; margin: 0; }

@@ -919,6 +919,32 @@ one that leaves fewer squares next to enemies (see PLAN).
   the Treat Wounds link, a macro) and that the message has the marks
   above; `data-tooltip-html` in V14.
 
+- v0.81.1 (owner: "most people use the battle medicine / treat wounds macro;
+  make it work with it plus using the BM actions"; "the Medic dedication";
+  "something to allow manual editing"):
+  - Uses also read from the "Treat Wounds and Battle Medicine" macro (PF2e
+    Workbench's Basic Action Macros; source: Asymonous' macros on GitLab):
+    its healing / "No healing done" message carries
+    `flags.treat_wounds_battle_medicine` { id: target token, healerId,
+    bmBatonUsed }, flavor "… Battle Medicine" (else Treat Wounds, ignored);
+    and from the feat's own action card (origin item slug `battle-medicine`;
+    the roller's client adds its single target as `bmTarget`). The
+    Workbench "BM Immunity CD" effect ("Battle Medicine by <name>") counts.
+  - Durations as the macro: 1 day; 1 hour with the Battle Medic's Baton, a
+    healer with Paragon Battle Medicine or Forensic Medicine Methodology, a
+    patient with Godless Healing or Robust Health.
+  - The same use seen twice within 30 s of real time (a check and its
+    healing message) counts once.
+  - **Medic Dedication**: treating a creature already immune to you spends
+    it (kind `medicDedication` on the medic, 1 day; 1 hour if master in
+    Medicine); the Workbench's "Medic dedication used" effect counts. The
+    HUD says "ready" / "used, ready again in …". Medic's extra healing is
+    already in the macro and PF2e's Treat Wounds.
+  - **GM editor**: clicking the HUD button (GM) opens a window: who treated
+    this creature (remove), whom it treated (remove), Medic Dedication
+    (make ready / mark used), add "treated by <healer>" with hours left.
+    The GM gets the button on every player character.
+
 ## 24. Flanking overlay (built v0.81.0)
 
 - Owner: "When your token is selected, you have a creature targeted and are
@@ -943,6 +969,26 @@ one that leaves fewer squares next to enemies (see PLAN).
   Redrawn on target, control, token refresh (the preview's too), delete,
   canvas ready. (verify) in V14 the preview's `refreshToken` while dragging,
   and its `canFlank` at the preview's position.
+
+- v0.81.1 (owner: "just showing when you are hovering the token on a
+  flankable square is fine, on the square itself"; "the cover overlay always
+  on was distracting, so merge: token selected + target shows the overlay
+  for 5 seconds (editable), and also show flankable squares right away"):
+  - `tactical-overlay.js`: one window for the cover line and the flanking
+    overlay, opened by selecting a token, targeting, or the selected token
+    moving; its length is Cover's new client setting "Show for (seconds)"
+    (`previewSeconds`, default 5; 0 = always, the old behaviour; 5 when
+    Cover is off). The cover preview no longer redraws on every token
+    refresh outside the window.
+  - Flank squares: every square (for the token's size) within its reach of
+    the target, not on another visible creature, whose centre lines up with
+    a visible ally that can flank the target through opposite sides
+    (`flankSquares`); PF2e's `canFlank(target, { reach: 1e6 })` first (the
+    automation setting, enemies, flankable). Square grids only.
+  - While dragging: the squares stay (no timer), the square under the drag
+    preview is filled stronger and gets the broken shield; no lines. After
+    the drop the window opens again. A pointer release redraws (cancelled
+    drags).
 
 ## 25. Recall Knowledge (built v0.78.0)
 

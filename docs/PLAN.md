@@ -3396,3 +3396,4 @@ healer is selected (green = can treat, red = immune to you), C5 in the Effects H
 v0.81.4: the owner picked C3 + C4: pie badges on immune creatures for
 everyone, green / red badges on allies for the selected healer; the Token
 Tooltip lines removed (its extension point stays, unused).
+v0.81.5: the badge sits higher, clear of the HP bar (owner).

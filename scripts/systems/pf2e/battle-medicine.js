@@ -408,7 +408,8 @@ function drawBadge(container, { token, kind, share }) {
   const grid = canvas.grid?.size ?? 100;
   const r = Math.max(9, grid * 0.12);
   const x = (token.x ?? token.document.x) + r * 0.9;
-  const y = (token.y ?? token.document.y) + (token.h ?? token.document.height * grid) - r * 0.9;
+  // Above the bottom edge, clear of the HP bar (owner, v0.81.5).
+  const y = (token.y ?? token.document.y) + (token.h ?? token.document.height * grid) - Math.max(r * 2.4, grid * 0.3);
   const g = new PIXI.Graphics();
   g.lineStyle(Math.max(1.5, r * 0.15), 0x1b1b1b, 1);
   g.beginFill(kind === "ready" ? GREEN : GREY, 1).drawCircle(x, y, r).endFill();

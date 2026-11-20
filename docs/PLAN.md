@@ -3490,6 +3490,15 @@ quote. Two variants in the mockup (top of the page,
 on every card. Rarity tiers drafted: Legendary, Epic, Rare, Common (from
 how far the number stands out from the party).
 
+Decided (owner, 2026-11-20):
+- The gold ribbon on every card (rarity only on the edge, glow and badge).
+- Art: the actor's portrait (`actor.img`), not the token. Portraits are
+  transparent cut-outs, so the art stands out past the top of the card
+  (fitted by height, wide group pictures by width; anchored to the ribbon),
+  with a drop shadow; the shine stays behind the art; numeral and rarity
+  badge above it. Tested with the owner's art (kept out of the repository).
+- Timing: the cards first; after 5 seconds the report window fades in too.
+
 Draft card list (from what the report records; names to decide):
 The Hammer (most damage), One Punch (biggest single hit), The Wall (most
 damage taken), Lifeline (most healing), Tactician (most on-turn damage by

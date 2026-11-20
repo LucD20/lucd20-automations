@@ -102,6 +102,7 @@ const localData = combat => {
   }
   return state.local.get(combat.id) ?? null;
 };
+const combatById = id => (typeof game.combats?.get === "function" ? game.combats.get(id) : [...(game.combats ?? [])].find(c => c?.id === id)) ?? null;
 const recording = combat => !!combat?.started && !!localData(combat);
 
 /** Foundry's dispositions: FRIENDLY 1, NEUTRAL 0, HOSTILE -1, SECRET -2 (counted as hostile: hidden foes). */
@@ -231,7 +232,7 @@ function settle(ev) {
 }
 
 function record(combatId, ev) {
-  const data = state.local.get(combatId) ?? localData(game.combats?.get(combatId));
+  const data = state.local.get(combatId) ?? localData(combatById(combatId));
   if (!data) return;
   data.events.push(ev);
   state.dirty.add(combatId);
@@ -242,7 +243,7 @@ function record(combatId, ev) {
 const stripEvent = ({ time, combat, ...ev }) => Object.fromEntries(Object.entries(ev).filter(([, v]) => v !== false && v !== undefined));
 
 async function save(id) {
-  const combat = game.combats?.get(id);
+  const combat = combatById(id);
   const data = state.local.get(id);
   if (!combat || !data || state.ended.has(id)) return;
   try {

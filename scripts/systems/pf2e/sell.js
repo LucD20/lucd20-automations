@@ -1,5 +1,6 @@
 import { localize } from "../../core/constants.js";
 import { defineFeature } from "../../core/registry.js";
+import { LootQuantityWindow } from "../../features/loot-pile.js";
 
 /**
  * Sell (owner, Q295; v0.82.0). PF2e / SF2e.
@@ -105,20 +106,21 @@ export async function sellAllEquipment(actor, { chat = true } = {}) {
 /*  The sheets                                  */
 /* -------------------------------------------- */
 
-/** Selling one item: always confirmed (owner, v0.84.3); a stack asks how many in the same dialog. */
+/**
+ * Selling one item: always confirmed (owner, v0.84.3), in the Loot Pile's "How many?" dialog (v0.84.5: it has
+ * Cancel and the same look); a stack picks how many, the button shows the price.
+ */
 async function onSellClick(event, actor, itemId) {
   event.preventDefault();
   event.stopPropagation();
   const item = actor.items.get(itemId);
   if (!item) return;
   const have = item.quantity ?? item.system?.quantity ?? 1;
-  const n = await DialogV2.prompt({
-    window: { title: t("SellTitle", { name: item.name }) },
-    content: have > 1
-      ? `<p>${esc(t("SellEach", { price: priceText(halfPrice(item, 1)) }))}</p><label class="lucd20-sell-qty">${esc(t("HowMany", { max: have }))} <input type="number" name="qty" value="${have}" min="1" max="${have}" step="1" autofocus></label>`
-      : `<p>${esc(t("SellConfirm", { name: item.name, price: priceText(halfPrice(item, 1)) }))}</p><input type="hidden" name="qty" value="1">`,
-    ok: { label: t("Sell"), callback: (ev, button) => Number(button.form.elements.qty.value) },
-    rejectClose: false
+  const n = await LootQuantityWindow.wait(item, null, "Sell", {
+    title: t("SellTitle", { name: item.name }),
+    icon: "fa-hand-holding-dollar",
+    sub: [have > 1 ? t("SellEach", { price: priceText(halfPrice(item, 1)) }) : t("HalfPriceOf", { price: priceText(halfPrice(item, 1)) })],
+    label: count => t("SellNFor", { count, price: priceText(halfPrice(item, count)) })
   });
   if (!n) return;
   await sellItem(item, n);
@@ -136,8 +138,8 @@ export class SellWindow extends ApplicationV2 {
     id: "lucd20-sell-window",
     classes: ["lucd20-loot-app", "lucd20-sell-app"],
     window: { title: "LUCD20.Sell.WindowTitle", icon: "fa-solid fa-hand-holding-dollar", resizable: true },
-    position: { width: 440, height: "auto" },
-    actions: { cancel: SellWindow.#onCancel, sell: SellWindow.#onSell, all: SellWindow.#onAll, none: SellWindow.#onNone }
+    position: { width: 460, height: "auto" },
+    actions: { cancel: SellWindow.#onCancel, sell: SellWindow.#onSell }
   };
 
   static open(actor) {
@@ -172,39 +174,57 @@ export class SellWindow extends ApplicationV2 {
   }
 
   async _renderHTML() {
-    const rows = this.items().map(i => {
+    const items = this.items();
+    const icon = name => `<i class="ll-i fa-solid ${name}" aria-hidden="true"></i>`;
+    const rows = items.map(i => {
       const have = i.quantity ?? i.system?.quantity ?? 1;
       const n = this.picked.get(i.id) ?? 0;
-      return `<li class="lucd20-sell-row" data-item-id="${esc(i.id)}">
-        <label><input type="checkbox" class="pick" ${n ? "checked" : ""}> <img src="${esc(i.img)}" alt=""> <span class="name">${esc(i.name)}</span></label>
-        ${have > 1 ? `<input type="number" class="qty" min="1" max="${have}" value="${n || have}" aria-label="${esc(t("HowMany", { max: have }))}"> <span class="sub">/ ${have}</span>` : `<span></span><span></span>`}
-        <span class="price">${esc(priceText(halfPrice(i, 1)))}</span>
+      const shown = n || have;
+      return `<li class="lucd20-sell-row lucd20-loot-item ${n ? "is-picked" : ""}" data-item-id="${esc(i.id)}">
+        <input type="checkbox" class="pick ll-check" ${n ? "checked" : ""} aria-label="${esc(i.name)}">
+        <span class="lucd20-loot-icon"><img src="${esc(i.img)}" alt=""></span>
+        <span class="name">${esc(i.name)}${have > 1 ? ` <span class="have">×${have}</span>` : ""}</span>
+        ${have > 1 ? `<input type="number" class="qty-in" min="1" max="${have}" step="1" value="${shown}" aria-label="${esc(t("HowMany", { max: have }))}">` : `<span class="qty-in-none"></span>`}
+        <span class="price"><b>${esc(priceText(halfPrice(i, shown)))}</b>${have > 1 ? `<span class="each">${esc(t("Each", { price: priceText(halfPrice(i, 1)) }))}</span>` : ""}</span>
       </li>`;
     }).join("");
     const total = this.total();
+    const count = [...this.picked.values()].reduce((s, n) => s + n, 0);
+    const all = items.length && this.picked.size === items.length;
+    const body = rows
+      ? `<ol class="lucd20-sell-list">${rows}</ol>`
+      : `<div class="lucd20-loot-empty"><i class="fa-solid fa-sack-xmark ll-empty-art"></i><span class="sub">${esc(t("NothingToSell"))}</span></div>`;
     return `<div class="lucd20-sell-body">
-      ${rows ? `<ol class="lucd20-sell-list">${rows}</ol>` : `<p>${esc(t("NothingToSell"))}</p>`}
-      <p class="lucd20-sell-total">${esc(t("Total", { price: total ? priceText(total) : "—" }))} <span class="sub">${esc(t("HalfPrice"))}</span></p>
-      <footer class="lucd20-sell-footer">
-        <button type="button" data-action="all">${esc(t("SelectAll"))}</button>
-        <button type="button" data-action="none">${esc(t("SelectNone"))}</button>
-        <button type="button" data-action="cancel"><i class="fa-solid fa-xmark"></i> ${esc(t("Cancel"))}</button>
-        <button type="button" data-action="sell" ${this.picked.size ? "" : "disabled"}><i class="fa-solid fa-hand-holding-dollar"></i> ${esc(t("SellSelected"))}</button>
+      <header class="lucd20-loot-taker lucd20-sell-head">
+        <input type="checkbox" class="ll-check pick-all" ${all ? "checked" : ""} ${items.length ? "" : "disabled"} aria-label="${esc(t("SelectAll"))}">
+        <span class="label">${esc(t("Picked", { n: this.picked.size, of: items.length }))}</span>
+        <span class="half">${icon("fa-scale-balanced")} ${esc(t("HalfPrice"))}</span>
+      </header>
+      <div class="lucd20-sell-scroll">${body}</div>
+      <footer class="lucd20-loot-footer lucd20-sell-footer">
+        <span class="lucd20-sell-total"><span class="label">${esc(t("TotalLabel"))}</span> <b>${esc(total ? priceText(total) : "—")}</b></span>
+        <button type="button" class="ll-btn ll-btn-footer" data-action="cancel">${icon("fa-xmark")}<span>${esc(t("Cancel"))}</span></button>
+        <button type="button" class="ll-btn ll-btn-footer ll-btn-primary" data-action="sell" ${count ? "" : "disabled"}>${icon("fa-hand-holding-dollar")}<span>${esc(count ? t("SellN", { count }) : t("SellSelected"))}</span></button>
       </footer></div>`;
   }
 
   _replaceHTML(result, content) {
     content.innerHTML = result;
+    const all = content.querySelector("input.pick-all");
+    if (all && this.picked.size && !all.checked) all.indeterminate = true;
+    all?.addEventListener("change", () => (this.picked.size ? SellWindow.#onNone.call(this) : SellWindow.#onAll.call(this)));
     for (const row of content.querySelectorAll(".lucd20-sell-row")) {
       const id = row.dataset.itemId;
-      const qty = row.querySelector("input.qty");
+      const qty = row.querySelector("input.qty-in");
       row.querySelector("input.pick").addEventListener("change", ev => {
         if (ev.target.checked) this.picked.set(id, Number(qty?.value) || 1);
         else this.picked.delete(id);
         this.render();
       });
       qty?.addEventListener("change", () => {
-        if (this.picked.has(id)) this.picked.set(id, Math.max(1, Number(qty.value) || 1));
+        const max = Number(qty.max) || 1;
+        const n = Math.min(max, Math.max(1, Math.round(Number(qty.value) || 1)));
+        this.picked.set(id, n); // changing how many also picks it
         this.render();
       });
     }

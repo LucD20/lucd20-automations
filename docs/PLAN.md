@@ -3591,6 +3591,21 @@ v0.84.2: the Battle Medicine badge mirrors the reaction badge (same size, bottom
   like Foundry does (the old code fails it). Never use UUIDs as keys in
   flags or other document data.
 
+### 26.7 v0.84.5 (owner: "Encounter now works. Now the refining, with a better looking window")
+
+- The window uses the Loot Pile look (`lucd20-loot-app` tokens): the
+  encounter picker in the header bar; totals tiles (Dealt, Taken, Healing,
+  Rounds); one card per creature, best first, with its portrait
+  (participants now store `img`, the actor's portrait), name, damage
+  (+companions), % of enemy HP, a bar (its share of the best; companions
+  in a darker segment), and small stats (On turn, Friendly fire, Taken,
+  Healed; zeros faded). The best gets a crown and an accent border.
+  "Missed damage" faded at the bottom. Screenshot:
+  `docs/mockups/report-sell-0.84.5.png`.
+- Next (owner): "Title / Combat Role": picture, then the role this combat
+  (e.g. "DPS: you dealt X damage", "Meat shield: you took X damage", …).
+  To plan with the owner after the window is approved.
+
 ### 22.4 Sell (v0.84.3)
 
 Owner: "Ask for confirmation when selling. Add the same icon on PCs' sheet,
@@ -3600,4 +3615,12 @@ many, in the same dialog, with the price each). Characters / NPCs /
 familiars get "Sell items" after "Sell all treasure": a window listing
 sellable priced items (checkbox, how many for stacks, half price each),
 Select all / none, the total, "Sell selected" (confirmed; one chat card).
-v0.84.4: a Cancel button closes the window (owner). Test 70.
+v0.84.4: a Cancel button closes the window (owner). v0.84.5 (owner: "I
+meant the individual sell window needs a cancel button. The bulk sell
+window needs stylizing too"): selling one item uses the Loot Pile's "How
+many?" dialog (`LootQuantityWindow.wait(item, null, "Sell", opts)`, now
+with title / icon / sub lines / a label function; the number is hidden for
+a single item), with Sell N for {price} and Cancel. The Sell items window
+has the Loot Pile look: select-all box (some/all), item rows with icons,
+how many (changing it picks the row), the price and price each, Total,
+Cancel and "Sell N". Test 70.

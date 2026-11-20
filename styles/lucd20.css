@@ -2875,24 +2875,69 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-party-load .lpl-label { display: flex; justify-content: space-between; gap: 8px; margin-top: 2px; }
 
 /* Encounter Report card (encounterReport) */
-.lucd20-encounter-report h3 { margin: 0 0 4px; font-size: 1.05em; }
-.lucd20-encounter-report table { width: 100%; border-collapse: collapse; font-size: 0.85em; }
-.lucd20-encounter-report th, .lucd20-encounter-report td { padding: 2px 3px; text-align: right; white-space: nowrap; }
-.lucd20-encounter-report th:first-child, .lucd20-encounter-report td:first-child { text-align: left; white-space: normal; }
-.lucd20-encounter-report tbody tr:nth-child(odd) { background: rgba(0, 0, 0, 0.06); }
-.lucd20-encounter-report .lpr-plus { opacity: 0.7; font-size: 0.9em; }
-.lucd20-encounter-report .lpr-missed { margin: 4px 0 0; opacity: 0.55; font-size: 0.85em; }
 
 /* Sell items window (pf2eSell) */
-.lucd20-sell-app .lucd20-sell-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 3px; max-height: 60vh; overflow-y: auto; }
-.lucd20-sell-app .lucd20-sell-row { display: grid; grid-template-columns: 1fr 56px auto 72px; align-items: center; gap: 6px; }
-.lucd20-sell-app .lucd20-sell-row label { display: flex; align-items: center; gap: 6px; min-width: 0; }
-.lucd20-sell-app .lucd20-sell-row img { width: 24px; height: 24px; border: none; }
-.lucd20-sell-app .lucd20-sell-row .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.lucd20-sell-app .lucd20-sell-row .price { text-align: right; }
-.lucd20-sell-app .sub { opacity: 0.7; font-size: 0.85em; }
-.lucd20-sell-app .lucd20-sell-total { margin: 8px 0 4px; font-weight: 600; }
-.lucd20-sell-app .lucd20-sell-footer { display: flex; gap: 6px; }
-.lucd20-sell-app .lucd20-sell-footer button { flex: 1; }
-.lucd20-report-app .lucd20-report-pick { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-.lucd20-report-app .lucd20-report-pick select { flex: 1; }
+/* Sell items window (v0.84.5): the Loot Pile's look. */
+.lucd20-sell-app .lucd20-sell-body { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+.lucd20-sell-app .lucd20-sell-head { min-height: 40px; padding: 6px 10px 6px 12px; }
+.lucd20-sell-app .lucd20-sell-head .label { flex: 1; color: var(--ll-text); font-size: 13px; font-weight: 600; }
+.lucd20-sell-app .lucd20-sell-head .half { display: inline-flex; align-items: center; gap: 5px; color: var(--ll-text-muted); font-size: 12px; }
+.lucd20-sell-app .lucd20-sell-scroll { flex: 1; min-height: 0; max-height: 60vh; padding: 4px 8px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--ll-border-strong) transparent; }
+.lucd20-sell-app .lucd20-sell-list { margin: 0; padding: 0; list-style: none; }
+.lucd20-sell-app .lucd20-sell-row { margin: 0; padding: 3px 4px; border: 1px solid transparent; }
+.lucd20-sell-app .lucd20-sell-row.is-picked { border-color: var(--ll-accent-border); background: rgba(238, 155, 58, 0.08); }
+.lucd20-sell-app .lucd20-sell-row .name { font-weight: 600; }
+.lucd20-sell-app .lucd20-sell-row .have { color: var(--ll-text-muted); font-size: 12px; font-weight: 400; }
+.lucd20-sell-app .lucd20-sell-row input.qty-in,
+.lucd20-sell-app .lucd20-sell-row .qty-in-none { flex: none; width: 48px; }
+.lucd20-sell-app .lucd20-sell-row input.qty-in {
+  appearance: textfield; -moz-appearance: textfield;
+  height: 26px; margin: 0; padding: 0;
+  border: 1px solid var(--ll-border-strong); border-radius: var(--ll-radius);
+  background: var(--ll-bg-sunken); box-shadow: none; color: var(--ll-text);
+  font: inherit; font-weight: 700; font-variant-numeric: tabular-nums; text-align: center;
+}
+.lucd20-sell-app .lucd20-sell-row input.qty-in::-webkit-inner-spin-button,
+.lucd20-sell-app .lucd20-sell-row input.qty-in::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.lucd20-sell-app .lucd20-sell-row input.qty-in:focus-visible { outline: 2px solid var(--ll-accent); outline-offset: 1px; }
+.lucd20-sell-app .lucd20-sell-row .price { display: flex; flex: none; flex-direction: column; align-items: flex-end; min-width: 76px; font-variant-numeric: tabular-nums; }
+.lucd20-sell-app .lucd20-sell-row .price b { color: var(--ll-accent-text); font-weight: 700; }
+.lucd20-sell-app .lucd20-sell-row .price .each { color: var(--ll-text-muted); font-size: 11px; }
+.lucd20-sell-app .lucd20-sell-footer { flex-wrap: nowrap; align-items: center; }
+.lucd20-sell-app .lucd20-sell-total { flex: 1; min-width: 0; font-size: 15px; }
+.lucd20-sell-app .lucd20-sell-total .label { color: var(--ll-text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+.lucd20-sell-app .lucd20-sell-total b { color: var(--ll-accent-text); font-variant-numeric: tabular-nums; }
+/* Encounter Report window (v0.84.5): the Loot Pile's look. */
+.lucd20-report-app .lucd20-report-body { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+.lucd20-report-app .lucd20-report-pick { min-height: 42px; padding: 6px 10px; }
+.lucd20-report-app .lucd20-report-pick select { flex: 1; min-width: 0; height: 28px; margin: 0; font-weight: 600; }
+.lucd20-report-app .lucd20-report-scroll { flex: 1; min-height: 0; max-height: 70vh; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--ll-border-strong) transparent; }
+.lucd20-report-app .lucd20-encounter-report { display: flex; flex-direction: column; gap: 8px; padding: 10px; }
+.lucd20-report-app .lpr-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 6px; }
+.lucd20-report-app .lpr-tile { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 8px; align-items: center; padding: 6px 10px; border: 1px solid var(--ll-border); border-radius: var(--ll-radius); background: var(--ll-bg-raised); }
+.lucd20-report-app .lpr-tile i { grid-row: span 2; color: var(--ll-accent-text); font-size: 16px; }
+.lucd20-report-app .lpr-tile b { font-size: 17px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.lucd20-report-app .lpr-tile span { color: var(--ll-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+.lucd20-report-app .lpr-rows { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.lucd20-report-app .lpr-row { display: flex; align-items: center; gap: 10px; margin: 0; padding: 8px 10px; border: 1px solid var(--ll-border); border-radius: var(--ll-radius); background: var(--ll-bg-raised); }
+.lucd20-report-app .lpr-row.is-top { border-color: var(--ll-accent-border); background: linear-gradient(90deg, rgba(238, 155, 58, 0.12), var(--ll-bg-raised) 60%); }
+.lucd20-report-app .lpr-portrait { position: relative; flex: none; display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid #8b8799; border-radius: 50%; background: var(--ll-bg-sunken); color: var(--ll-text-muted); }
+.lucd20-report-app .lpr-portrait img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; object-position: top; }
+.lucd20-report-app .lpr-row.is-top .lpr-portrait { border-color: var(--ll-accent); box-shadow: 0 0 0 2px rgba(238, 155, 58, 0.25); }
+.lucd20-report-app .lpr-crown { position: absolute; top: -7px; right: -5px; color: var(--ll-accent); font-size: 13px; filter: drop-shadow(0 1px 1px #000); }
+.lucd20-report-app .lpr-main { display: flex; flex: 1; flex-direction: column; gap: 4px; min-width: 0; }
+.lucd20-report-app .lpr-line { display: flex; align-items: baseline; gap: 8px; }
+.lucd20-report-app .lpr-name { flex: 1; min-width: 0; overflow: hidden; font-size: 15px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.lucd20-report-app .lpr-dmg b { color: var(--ll-accent-text); font-size: 17px; font-variant-numeric: tabular-nums; }
+.lucd20-report-app .lpr-plus { color: var(--ll-text-muted); font-size: 12px; }
+.lucd20-report-app .lpr-pct { min-width: 38px; color: var(--ll-text-muted); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
+.lucd20-report-app .lpr-bar { display: flex; height: 6px; overflow: hidden; border-radius: 3px; background: var(--ll-bg-sunken); }
+.lucd20-report-app .lpr-bar .own { background: var(--ll-accent); }
+.lucd20-report-app .lpr-bar .comp { background: var(--ll-accent-border); opacity: 0.8; }
+.lucd20-report-app .lpr-stats { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.lucd20-report-app .lpr-stat { display: inline-flex; align-items: baseline; gap: 4px; color: var(--ll-text-muted); font-size: 12px; }
+.lucd20-report-app .lpr-stat i { font-size: 11px; }
+.lucd20-report-app .lpr-stat b { color: var(--ll-text); font-variant-numeric: tabular-nums; }
+.lucd20-report-app .lpr-stat.is-zero { opacity: 0.4; }
+.lucd20-report-app .lpr-missed { margin: 0; color: var(--ll-text-muted); font-size: 12px; opacity: 0.7; }
+.lucd20-report-app .lucd20-loot-empty { min-height: 140px; }

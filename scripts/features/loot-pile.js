@@ -1302,15 +1302,19 @@ class LootQuantityWindow extends AnswerWindow {
     }
   };
 
-  /** Resolves with the chosen number (defaults to the whole stack), or null. */
-  static wait(item, takerName, verb = "Take") {
-    return super.wait({ item, takerName, verb });
+  /**
+   * Resolves with the chosen number (defaults to the whole stack), or null.
+   * Also used by Sell (v0.84.5): `opts` = { title, icon, sub: [extra lines], label(count) → the button's text }.
+   */
+  static wait(item, takerName, verb = "Take", opts = {}) {
+    return super.wait({ item, takerName, verb, opts }, opts.title ? { window: { title: opts.title, icon: `fa-solid ${opts.icon ?? "fa-download"}` } } : undefined);
   }
 
-  setup({ item, takerName, verb }) {
+  setup({ item, takerName, verb, opts = {} }) {
     this.item = item;
     this.takerName = takerName;
     this.verb = verb;
+    this.opts = opts;
     this.max = Number(item.system.quantity) || 1;
     this.value = this.max;
   }
@@ -1319,13 +1323,15 @@ class LootQuantityWindow extends AnswerWindow {
     const item = this.item;
     const sub = [localize("LUCD20.LootPile.InPile", { count: this.max })];
     if (this.takerName) sub.push(localize("LUCD20.LootPile.ForName", { name: esc(this.takerName) }));
+    if (this.opts.sub) sub.splice(0, sub.length, ...this.opts.sub.map(esc));
+    const single = this.max <= 1;
     return `
       <form class="lucd20-loot-qty" autocomplete="off">
         <div class="what">
           ${itemIconHTML(item, "large")}
           <span><strong>${esc(item.name)}</strong><span class="sub">${sub.join(" · ")}</span></span>
         </div>
-        <div class="field">
+        <div class="field" ${single ? "hidden" : ""}>
           <label for="${this.id}-qty">${localize("LUCD20.LootPile.HowMany")}</label>
           <span class="stepper">
             <button type="button" class="ll-btn ll-btn-square" data-action="step" data-step="-1" aria-label="${esc(localize("LUCD20.LootPile.OneFewer"))}">${icon("fa-minus")}</button>
@@ -1335,7 +1341,7 @@ class LootQuantityWindow extends AnswerWindow {
           <span class="range">${localize("LUCD20.LootPile.OfMax", { max: this.max })}</span>
         </div>
         <footer class="lucd20-loot-footer is-dialog">
-          <button type="submit" class="ll-btn ll-btn-footer ll-btn-primary" data-action="confirm">${icon("fa-download")}<span data-take-label></span></button>
+          <button type="submit" class="ll-btn ll-btn-footer ll-btn-primary" data-action="confirm">${icon(this.opts.icon ?? "fa-download")}<span data-take-label></span></button>
           <button type="button" class="ll-btn ll-btn-footer" data-action="cancel">${icon("fa-xmark")}<span>${localize("LUCD20.LootPile.Cancel")}</span></button>
         </footer>
       </form>`;
@@ -1361,7 +1367,7 @@ class LootQuantityWindow extends AnswerWindow {
     this.value = value;
     const form = this.element.querySelector(".lucd20-loot-qty");
     if (writeBack) form.querySelector("input[name=quantity]").value = value;
-    form.querySelector("[data-take-label]").textContent = localize(`LUCD20.LootPile.${this.verb}N`, { count: value });
+    form.querySelector("[data-take-label]").textContent = this.opts.label ? this.opts.label(value) : localize(`LUCD20.LootPile.${this.verb}N`, { count: value });
     form.querySelector('[data-step="-1"]').disabled = value <= 1;
     form.querySelector('[data-step="1"]').disabled = value >= this.max;
     return value;
@@ -1562,7 +1568,7 @@ defineFeature({
   }
 });
 
-export { LootPileWindow, reviewLoot };
+export { LootPileWindow, reviewLoot, LootQuantityWindow };
 /** For a system's own Party Stash window (D&D 4e): the shared pieces of the Loot Pile. */
 export const lootApi = {
   adapter, stashActor, handOut, splitCoins, pileCoins, denominations, takers, tokenArt, isCharacter,

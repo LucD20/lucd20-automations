@@ -2245,6 +2245,18 @@
     "NoReports": "No encounter reports yet.",
     "Encounter": "Encounter",
     "Entry": "{scene} · {rounds} rounds · {when}",
+    "Top": "Most damage",
+    "MissedHint": "Damage whose source wasn't known (no attack or damage card for it)",
+    "Tile": {
+      "Damage": "Dealt",
+      "DamageHint": "All damage the party dealt to enemies",
+      "Taken": "Taken",
+      "TakenHint": "All damage the party took",
+      "Healed": "Healing",
+      "HealedHint": "All healing the party gave",
+      "Rounds": "Rounds",
+      "RoundsHint": "Rounds the combat lasted"
+    },
       "Col": {
         "Name": "",
         "NameHint": "",
@@ -2254,7 +2266,7 @@
         "PercentHint": "Its damage against all the HP the enemies had when the combat started",
         "OnTurn": "On turn",
         "OnTurnHint": "Damage to enemies by its side during its turns",
-        "Friendly": "Allies",
+        "Friendly": "Friendly fire",
         "FriendlyHint": "Damage it dealt to its own side",
         "Taken": "Taken",
         "TakenHint": "Damage it took",
@@ -2292,7 +2304,13 @@
     "SelectNone": "Select none",
     "Cancel": "Cancel",
     "SellSelected": "Sell selected",
-    "SellSelectedConfirm": "Sell {count} items for {price}?"
+    "SellSelectedConfirm": "Sell {count} items for {price}?",
+    "SellNFor": "Sell {count} for {price}",
+    "SellN": "Sell {count}",
+    "HalfPriceOf": "Half price: {price}.",
+    "Each": "{price} each",
+    "Picked": "{n} of {of} selected",
+    "TotalLabel": "Total"
     },
     "BattleMedicine": {
       "Name": "Battle Medicine",

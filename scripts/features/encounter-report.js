@@ -107,7 +107,7 @@ async function startRecording(combat) {
     const hp = readHP(actor);
     const master = activeAdapters().map(a => a.masterOf?.(actor)).find(Boolean) ?? null;
     if (participants.some(x => x.uuid === actor.uuid)) continue;
-    participants.push({ uuid: actor.uuid, name: c.token?.name ?? c.name ?? actor.name, side: sideOf(c.token), hp: hp ? hp.value + hp.temp : 0, master, hidden: !!c.hidden || !!c.token?.hidden });
+    participants.push({ uuid: actor.uuid, img: actor.img ?? c.img ?? c.token?.texture?.src ?? null, name: c.token?.name ?? c.name ?? actor.name, side: sideOf(c.token), hp: hp ? hp.value + hp.temp : 0, master, hidden: !!c.hidden || !!c.token?.hidden });
     if (hp) state.cache.set(actor.uuid, hp);
   }
   await combat.setFlag(MODULE_ID, FLAG, { participants, events: [] });
@@ -173,7 +173,7 @@ export function buildReport(data) {
   const list = data?.participants ?? [];
   const p = Array.isArray(list) ? Object.fromEntries(list.map(x => [x.uuid, x])) : list;
   const side = uuid => p[uuid]?.side ?? 0;
-  const row = uuid => (rows[uuid] ??= { uuid, name: p[uuid]?.name ?? "?", damage: 0, companions: 0, onTurn: 0, friendly: 0, taken: 0, healed: 0 });
+  const row = uuid => (rows[uuid] ??= { uuid, name: p[uuid]?.name ?? "?", img: p[uuid]?.img ?? null, damage: 0, companions: 0, onTurn: 0, friendly: 0, taken: 0, healed: 0 });
   const rows = {};
   let missed = 0;
   for (const ev of data?.events ?? []) {
@@ -203,12 +203,41 @@ export function buildReport(data) {
   return { rows: out, missed };
 }
 
-export function reportHTML(report) {
-  const head = ["Name", "Damage", "Percent", "OnTurn", "Friendly", "Taken", "Healed"].map(k => `<th data-tooltip="${esc(t(`Col.${k}Hint`))}">${esc(t(`Col.${k}`))}</th>`).join("");
-  const body = report.rows.map(r => `<tr><td>${esc(r.name)}</td><td>${r.damage}${r.companions ? ` <span class="lpr-plus">+${r.companions}</span>` : ""}</td><td>${r.pct}%</td><td>${r.onTurn}</td><td>${r.friendly || ""}</td><td>${r.taken}</td><td>${r.healed || ""}</td></tr>`).join("");
-  const missed = report.missed ? `<p class="lpr-missed">${esc(t("Missed", { n: report.missed }))}</p>` : "";
-  return `<div class="lucd20-encounter-report"><h3><i class="fa-solid fa-chart-column"></i> ${esc(t("Title"))}</h3>
-    <table><thead><tr>${head}</tr></thead><tbody>${body || `<tr><td colspan="7">${esc(t("Nothing"))}</td></tr>`}</tbody></table>${missed}</div>`;
+/**
+ * The report (v0.84.5, restyled in the Loot Pile's look): totals on top, then one card per creature, best first:
+ * portrait, name, damage with a bar (its share of the best), % of enemy HP, and the small stats. Zeros are faded.
+ */
+export function reportHTML(report, { rounds = null } = {}) {
+  const rows = report.rows ?? [];
+  const sum = key => rows.reduce((n, r) => n + (r[key] || 0), 0);
+  const best = Math.max(1, ...rows.map(r => r.damage + r.companions));
+  const tile = (key, value, icon) => `<div class="lpr-tile" data-tooltip="${esc(t(`Tile.${key}Hint`))}"><i class="fa-solid ${icon}"></i><b>${value}</b><span>${esc(t(`Tile.${key}`))}</span></div>`;
+  const tiles = `<div class="lpr-tiles">
+      ${tile("Damage", sum("damage"), "fa-burst")}
+      ${tile("Taken", sum("taken"), "fa-shield-halved")}
+      ${tile("Healed", sum("healed"), "fa-heart-pulse")}
+      ${rounds != null ? tile("Rounds", rounds, "fa-hourglass-half") : ""}
+    </div>`;
+  const stat = (key, value, icon) => `<span class="lpr-stat ${value ? "" : "is-zero"}" data-col="${key}" data-tooltip="${esc(t(`Col.${key}Hint`))}"><i class="fa-solid ${icon}"></i><b>${value || 0}</b><span>${esc(t(`Col.${key}`))}</span></span>`;
+  const cards = rows.map((r, n) => {
+    const total = r.damage + r.companions;
+    const own = Math.round((r.damage / best) * 100), comp = Math.round((r.companions / best) * 100);
+    const img = r.img ? `<img src="${esc(r.img)}" alt="">` : `<i class="fa-solid fa-user"></i>`;
+    return `<li class="lpr-row ${n === 0 && total ? "is-top" : ""}" data-uuid="${esc(r.uuid)}">
+      <span class="lpr-portrait">${img}${n === 0 && total ? `<i class="fa-solid fa-crown lpr-crown" data-tooltip="${esc(t("Top"))}"></i>` : ""}</span>
+      <div class="lpr-main">
+        <div class="lpr-line"><span class="lpr-name" data-col="Name">${esc(r.name)}</span>
+          <span class="lpr-dmg" data-col="Damage" data-tooltip="${esc(t("Col.DamageHint"))}"><b>${r.damage}</b>${r.companions ? ` <span class="lpr-plus">+${r.companions}</span>` : ""}</span>
+          <span class="lpr-pct" data-col="Percent" data-tooltip="${esc(t("Col.PercentHint"))}">${r.pct}%</span></div>
+        <div class="lpr-bar" aria-hidden="true"><span class="own" style="width:${own}%"></span><span class="comp" style="width:${comp}%"></span></div>
+        <div class="lpr-stats">${stat("OnTurn", r.onTurn, "fa-hourglass-start")}${stat("Friendly", r.friendly, "fa-people-arrows")}${stat("Taken", r.taken, "fa-shield-halved")}${stat("Healed", r.healed, "fa-heart-pulse")}</div>
+      </div>
+    </li>`;
+  }).join("");
+  const missed = report.missed ? `<p class="lpr-missed" data-tooltip="${esc(t("MissedHint"))}"><i class="fa-solid fa-circle-question"></i> ${esc(t("Missed", { n: report.missed }))}</p>` : "";
+  return `<div class="lucd20-encounter-report">${tiles}
+    ${cards ? `<ol class="lpr-rows">${cards}</ol>` : `<div class="lucd20-loot-empty"><i class="fa-solid fa-chart-column ll-empty-art"></i><span class="sub">${esc(t("Nothing"))}</span></div>`}
+    ${missed}</div>`;
 }
 
 async function onDeleteCombat(combat) {
@@ -252,7 +281,7 @@ export class ReportWindow extends ApplicationV2 {
     id: "lucd20-encounter-report",
     classes: ["lucd20-loot-app", "lucd20-report-app"],
     window: { title: "LUCD20.EncounterReport.Title", icon: "fa-solid fa-chart-column", resizable: true },
-    position: { width: 560, height: "auto" },
+    position: { width: 480, height: "auto" },
     actions: {}
   };
 
@@ -268,11 +297,11 @@ export class ReportWindow extends ApplicationV2 {
   async _renderHTML() {
     const list = history();
     const entry = list[this.index] ?? list.at(-1);
-    if (!entry) return `<p class="lucd20-report-empty">${esc(t("NoReports"))}</p>`;
+    if (!entry) return `<div class="lucd20-loot-empty"><i class="fa-solid fa-chart-column ll-empty-art"></i><span class="sub">${esc(t("NoReports"))}</span></div>`;
     const options = list.map((e, i) => `<option value="${i}" ${list[this.index] === e || (!list[this.index] && i === list.length - 1) ? "selected" : ""}>${esc(t("Entry", { scene: e.scene || "—", rounds: e.rounds ?? "?", when: new Date(e.at).toLocaleString() }))}</option>`).reverse().join("");
     return `<div class="lucd20-report-body">
-      <label class="lucd20-report-pick">${esc(t("Encounter"))} <select class="pick">${options}</select></label>
-      ${reportHTML(entry)}</div>`;
+      <header class="lucd20-loot-taker lucd20-report-pick"><label>${esc(t("Encounter"))}</label><select class="pick">${options}</select></header>
+      <div class="lucd20-report-scroll">${reportHTML(entry, { rounds: entry.rounds ?? null })}</div></div>`;
   }
 
   _replaceHTML(result, content) {

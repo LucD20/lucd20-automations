@@ -2881,7 +2881,7 @@ no longer match the module); not touched.
 5. **Battle Medicine HUD** (Q291), **Flanking overlay** (Q292). **Built v0.81.0** (rules 23, 24 in the ledger; test 69).
 6. **Dice Stats**: damage per turn tab, dice per creature and the end card
    (Q293–Q294), one per-encounter record for both.
-7. **Sell** (Q295), **Hero start area** (Q296).
+7. **Sell** (Q295; **built v0.82.0**, `systems/pf2e/sell.js`, test 70), **Hero start area** (Q296).
 
 ---
 
@@ -3397,3 +3397,110 @@ v0.81.4: the owner picked C3 + C4: pie badges on immune creatures for
 everyone, green / red badges on allies for the selected healer; the Token
 Tooltip lines removed (its extension point stays, unused).
 v0.81.5: the badge sits higher, clear of the HP bar (owner).
+
+## 26. Encounter report — damage per creature (owner, 2026-11-20; plan, not built)
+
+Owner: "Has to kinda be per system. Damage dealt on turn, if dealt by
+allies, counts to your total combat damage, so a commander sees how the
+damage happened after he used Demoralizing Charge. Reports at the end of the
+encounter: Total damage (dealt only by yourself) | Percentage of damage dealt
+to the enemies (all enemies' HP vs the damage dealt by this creature). Some
+damage will be placed wrong: a faded 'Missed damage' at the bottom. Later: a
+'DPS / tanked the most / healed the most' end screen." (Replaces Q293–Q294.)
+
+### 26.1 Proposal
+
+**Recording (generic core, `features/encounter-report.js`):** per combat, on
+the active GM's client, from the Damage Log's HP watcher (it already sees every
+HP change, any source): each change → { round, turn (the combatant whose turn
+it is), target, amount actually lost (capped at the HP it had: no overkill),
+healing, temp HP, **source** (who dealt it, from the system adapter, or
+null) }. Stored on the combat document's flags (deleted with it), copied
+into a history when the encounter ends.
+
+**Attribution (system adapters):**
+- PF2e / SF2e: the "damage applied" message (`flags.pf2e.appliedDamage`)
+  is linked to the damage roll it came from; the roll's actor = the source.
+  (verify) how PF2e 8.7 links them (the applied message's origin / the
+  damage roll message id) and persistent damage (source: the effect's
+  origin, else "missed").
+- D&D 4e: our own damage application (`dnd4e/damage-apply.mjs`) knows the
+  attacker; ongoing damage from the effect's origin.
+- No source found → "missed damage".
+
+**Two numbers per creature:**
+- **Damage**: dealt by itself, to enemies.
+- **On its turn**: dealt to enemies by anyone on its side during its turn
+  (the commander case: a Strike granted by a tactic, a reaction).
+
+**End of encounter (a chat card when the combat is deleted / ended):** one
+row per PC (and NPC allies): Damage | % of enemy HP (its damage ÷ the sum of
+all enemies' max HP) | On its turn. A faded line "Missed damage: 34" at the
+bottom. Enemy HP itself is never shown (only percentages). GM-only rows for
+hidden NPCs.
+
+**Dice Stats:** a new "Encounters" tab listing past encounters, each opening
+the same table; per creature also the dice it rolled in that encounter.
+
+**Later:** awards (most damage, damage taken, healing done) on the same data.
+
+### 26.2 Questions (Q317–Q321)
+
+- Q317: Damage to allies (friendly fire, splash): not counted, or counted
+  separately?
+- Q318: "% of enemy HP": of all enemies' max HP (proposal), or of the HP
+  they had when the encounter started?
+- Q319: Who sees the end card: everyone (proposal), or GM only with a
+  "show to players" button?
+- Q320: Healing and damage taken in the card now (two more columns), or only
+  in the later awards screen?
+- Q321: Minions / summons / companions: their damage counts to their
+  master's total, or own rows?
+
+## 27. Party bulk (owner, 2026-11-20; plan, not built)
+
+Owner: "Total party bulk: the maximum bulk of each creature in the party,
+how much they have together, and how much bulk is in the party stash, like a
+party encumbrance. Bag of holding / spacious pouch increase this as well.
+Also in the 4e party sheet."
+
+Proposal:
+- **PF2e / SF2e** (the Party actor sheet, inventory tab, next to PF2e's own
+  bulk line): "Party bulk: 23 / 41", where 23 = everything the members carry
+  plus the stash's bulk, and 41 = the sum of the members' limits plus the
+  capacity of extradimensional containers (Bag of Holding, Spacious Pouch:
+  items whose bulk is ignored inside, `system.bulk.capacity`). Hover: per
+  member "Amiri 6 / 9 (encumbered at 9, max 14)", the stash, each bag. Over
+  the limit: the number turns orange (encumbered) / red (past max).
+- **D&D 4e** (our Party Stash window): the same with 4e's encumbrance
+  (normal load, heavy load, max drag; the stash's weight); bags of holding
+  (4e: 200 lb capacity) add to it.
+
+Questions (Q322–Q324):
+- Q322: The members' limit: PF2e's encumbered threshold (5 + Str: carrying
+  more slows you) or the maximum (10 + Str)? Proposal: show encumbered as the
+  limit, max in the hover.
+- Q323: A bag of holding carried by a member: its contents count toward
+  that member already (PF2e does it); add only its capacity to the party
+  limit? (proposal: yes, every bag in the party, carried or stashed).
+- Q324: 4e: weight in pounds as the sheet shows it, or 4e's "bulk" isn't a
+  thing so pounds only (proposal: pounds)?
+
+### 22.3 Sell (built v0.82.0)
+
+Owner: "Sell in 2e is half price, no need for anything else. Add a Sell
+everything in the Loot sheet, so it sells all equipment (not treasure) for
+half price." Built (`pf2eSell`, Core Rules → Tools, PF2e / SF2e, on):
+- A Sell icon in each non-treasure, non-coin physical item's row controls
+  (before Edit) on character, NPC, familiar, loot and party sheets, for
+  owners; tooltip "Sell for 5 sp (half price)". Half price with PF2e's own
+  maths (`Coins.fromPrice(price, qty).scale(0.5)`: per-batch prices, coin
+  spillover, SF2e credits); coins to the same actor (`addCurrency`); a stack
+  asks how many; a container's contents are moved out first. Chat:
+  "Longsword: sold for 5 sp" (the compendium link when there is one). No
+  confirmation (as PF2e's own sell-treasure). (Q295 said right-click; PF2e's
+  item rows have no context menu, so it is an icon.)
+- Loot sheets: "Sell all equipment" next to PF2e's "Sell all treasure":
+  every priced item but treasure and coins, half price, after a
+  confirmation with the count and total; treasure inside a sold container
+  is moved out; unpriced items stay. One chat card with the list.

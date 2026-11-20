@@ -861,6 +861,10 @@
         "Name": "Flanking Overlay",
         "Hint": "Shown with the cover line for a few seconds when you select your token, target a creature or move (Cover's \"Show for\" setting): every square you could step into to flank the target is highlighted, with a line to each ally you already flank it with and a broken shield over it. While you drag your token, the squares stay and the one under your token gets the broken shield. PF2e's own flanking rules decide; only tokens you can see count. Per player."
       },
+      "pf2eSell": {
+        "Name": "Sell",
+        "Hint": "A Sell icon on every item that isn't treasure (character, loot and party sheets): half its price, the coins to the same sheet, a chat line. A stack asks how many. Loot sheets also get \"Sell all equipment\" next to \"Sell all treasure\" (half price, everything but treasure and coins, after a confirmation)."
+      },
       "pf2eMultiCheck": {
         "Name": "Multiple Checks",
         "Hint": "Post several checks as one chat card. Shift-click an inline check's \"send to chat\" icon to collect it (a check group adds all of its checks), paste or drop selected journal text or @Check codes, or add a skill and DC by hand; then Send. Players see one button per check and how much lower each DC is than the hardest (\"Stealth (DC 2 lower)\"); only the GM sees the DCs. GM only; the window also opens from the chat's buttons."
@@ -2221,6 +2225,19 @@
       "Placed": "Stairs {n} placed: each end teleports to the other.",
       "PlacedOneWay": "Stairs {n} placed: the first end teleports to the second.",
       "Failed": "The stairs could not be placed (see the console)."
+    },
+    "Sell": {
+      "Sell": "Sell",
+      "SellTooltip": "Sell for {price} (half price)",
+      "SoldFor": "sold for {price}",
+      "HowManyTitle": "Sell {name}",
+      "HowMany": "How many (of {max})?",
+      "SellAllTooltip": "Sell all equipment (half price; not treasure)",
+      "SellAllTitle": "Sell all equipment",
+      "SellAllConfirm": "Sell {count} items (everything but treasure and coins) for {price}?",
+      "SoldAll": "Sold {count} items for {price}.",
+      "Items": "Items",
+      "NothingToSell": "Nothing to sell (treasure and coins aren't sold here)."
     },
     "BattleMedicine": {
       "Name": "Battle Medicine",

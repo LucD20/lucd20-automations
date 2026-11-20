@@ -106,6 +106,7 @@ sets `game.system.id`.
 | `test67.js` | SF2e runs the PF2e features (`?system=sf2e`), PF2e and 4e unchanged (v0.79.1) |
 | `test68.js` | Multiple Checks: codes and journal HTML read, the card (GM-only DCs, "DC n lower" than the hardest), Shift-click on PF2e's send-to-chat icon collects instead of posting, the window, a Lore by hand, Send (v0.80.0) |
 | `test69.js` | Battle Medicine (the Treat Wounds and Battle Medicine macro, the feat card by origin or title, the no-target warning, the same use twice, Medic Dedication, the 1-hour exceptions, the GM editor, the badges for everyone and for the selected healer) and the overlay (the timed window, flank squares, the shield over the target while dragging) (v0.81.4) |
+| `test70.js` | Sell: the icon (not on treasure), half price, stacks, the chat line; Sell all equipment on loot sheets (treasure kept, out of sold containers, unpriced kept) (v0.82.0) |
 
 For a new feature, copy the closest test, keep its mock setup and replace the
 checks.

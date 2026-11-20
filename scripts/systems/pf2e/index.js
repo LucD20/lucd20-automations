@@ -16,6 +16,7 @@ import "./recall-knowledge.js";
 import "./multi-check.js";
 import "./battle-medicine.js";
 import "./flanking.js";
+import "./sell.js";
 import "./commander.js";
 import "./combat-assessment.js";
 import "./guardians-deflection.js";

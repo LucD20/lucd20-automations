@@ -1,4 +1,4 @@
-import { registerEncounterReportAdapter } from "../../features/encounter-report.js";
+import { registerEncounterReportAdapter, noteAttack } from "../../features/encounter-report.js";
 import { sysFlags } from "./sys.js";
 
 /**
@@ -9,7 +9,9 @@ import { sysFlags } from "./sys.js";
  *   `system.context.origin.actor` (who applied it) is the source, else none (missed).
  * - Masters: a familiar's master (`actor.master`); an eidolon / animal companion's linked character when the
  *   system exposes it.
- * (verify) in PF2e 8.7: `origin.actor` on the damage-taken message, the persistent condition's context.
+ * - Attack rolls: `flags.pf2e.context` { type: "attack-roll", outcome } on the roll's message; the speaker's actor.
+ * (verify) in PF2e 8.7: `origin.actor` on the damage-taken message, the persistent condition's context, the
+ * attack roll's `context.outcome` (set when a target was selected).
  */
 
 function sourceOf(message) {
@@ -24,6 +26,12 @@ function sourceOf(message) {
 
 function onMessage(message, noteSource) {
   if (!game.user.isActiveGM) return;
+  // Attack rolls (Strikes, spell attacks): who rolled and the outcome, for the enemies' "Hits 2/5" (v0.84.6).
+  const context = sysFlags(message)?.context;
+  if (context?.type === "attack-roll" && context.outcome) {
+    const actor = message.actor ?? globalThis.fromUuidSync?.(context.actor ?? "") ?? null;
+    if (actor?.uuid) noteAttack(actor.uuid, context.outcome);
+  }
   const applied = sysFlags(message)?.appliedDamage;
   if (!applied?.uuid) return;
   const source = sourceOf(message);

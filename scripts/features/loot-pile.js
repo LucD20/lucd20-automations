@@ -1568,7 +1568,7 @@ defineFeature({
   }
 });
 
-export { LootPileWindow, reviewLoot, LootQuantityWindow };
+export { LootPileWindow, reviewLoot, LootQuantityWindow, tokenArt, portraitHTML, PLACEHOLDER_PORTRAIT };
 /** For a system's own Party Stash window (D&D 4e): the shared pieces of the Loot Pile. */
 export const lootApi = {
   adapter, stashActor, handOut, splitCoins, pileCoins, denominations, takers, tokenArt, isCharacter,

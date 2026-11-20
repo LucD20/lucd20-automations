@@ -85,21 +85,43 @@ const assert = require("assert");
     await er.noteSource(kyra.uuid, ogre.uuid, "damage");
     kyra.system.attributes.hp.value = 21;
     Hooks.callAll("updateActor", kyra, {});
+    // The ogre's attack rolls: one hit, one miss (PF2e: the roll message's context.outcome).
+    Hooks.callAll("createChatMessage", { actor: ogre, flags: { pf2e: { context: { type: "attack-roll", outcome: "success" } } } });
+    Hooks.callAll("createChatMessage", { actor: ogre, flags: { pf2e: { context: { type: "attack-roll", outcome: "failure" } } } });
     // 3 damage to the ogre from nowhere (missed).
     await settle(50);
     ogre.system.attributes.hp.value = 43;
     Hooks.callAll("updateActor", ogre, {});
     await settle(2600);
-    out.events = (flags[M].encounterReport.events ?? []).map(e => `${e.target}<${e.source ?? "?"}:${e.amount}`);
+    out.events = (flags[M].encounterReport.events ?? []).filter(e => e.kind !== "attack").map(e => `${e.target}<${e.source ?? "?"}:${e.amount}`);
+    // The ogre goes down just before the combat ends: its save would reach a deleted combat (v0.84.6 bug).
+    ogre.system.attributes.hp.value = 0;
+    Hooks.callAll("updateActor", ogre, {});
+    let saveAfterEnd = false;
+    const realSet = combat.setFlag;
     // End of combat: the card.
     Hooks.callAll("deleteCombat", combat);
+    combat.setFlag = async () => { saveAfterEnd = true; throw new Error("Cannot read properties of undefined (reading '_id')"); };
     await settle(300);
     const div = foundry.applications.instances.get("lucd20-encounter-report")?.element;
-    out.card = [...(div?.querySelectorAll(".lpr-row") ?? [])].map(row => ["Name", "Damage", "Percent", "OnTurn", "Friendly", "Taken", "Healed"]
+    out.card = [...(div?.querySelectorAll(".lpr-row:not(.lpr-foe)") ?? [])].map(row => ["Name", "Damage", "Percent", "OnTurn", "Friendly", "Taken", "Healed"]
       .map(k => row.querySelector(`[data-col="${k}"]`)?.querySelector("b")?.textContent ?? row.querySelector(`[data-col="${k}"]`)?.textContent.trim()).join("|"));
     out.tiles = [...(div?.querySelectorAll(".lpr-tile b") ?? [])].map(b => b.textContent);
     out.cardMissed = div?.querySelector(".lpr-missed")?.textContent.trim();
     out.noChat = posted.length === 0;
+    const foe = div?.querySelector(".lpr-foe");
+    out.foe = foe && ["Name", "Fate", "MaxHit", "BestTurn", "MaxTaken", "Hits"].map(k => foe.querySelector(`[data-col="${k}"]`)?.textContent.replace(/\s+/g, " ").trim()).join("|");
+    out.saveAfterEnd = saveAfterEnd;
+    combat.setFlag = realSet;
+    // A name players can't see is never stored (the history is readable by every client).
+    const f2 = {};
+    const c2 = { id: "c2", started: true, active: true, round: 1, flags: f2, combatants: [{ actor: kyra, token: { name: "Kyra", disposition: 1 } }, { actor: ogre, token: { name: "Gorgut the Ogre", disposition: -1, playersCanSeeName: false } }],
+      get combatant() { return this.combatants[0]; }, getFlag(ns, k) { return f2[ns]?.[k]; }, async setFlag(ns, k, v) { (f2[ns] ??= {})[k] = expand(v); } };
+    game.combats = Object.assign([c2], { get: id => (id === "c2" ? c2 : null) });
+    game.combat = c2;
+    Hooks.callAll("updateCombat", c2, { round: 1 });
+    await settle(100);
+    out.hiddenName = JSON.stringify(f2[M]?.encounterReport ?? {}).includes("Gorgut") ? "leaked" : (f2[M]?.encounterReport?.participants ?? []).map(x => x.name).join(",");
     out.history = game.settings.get(M, "encounterReport_history").length;
     return out;
   });
@@ -111,10 +133,14 @@ const assert = require("assert");
   assert.strictEqual(r.missed, 5);
   assert.ok(!r.startedEarly && r.started, "recording starts once round 1 is applied");
   assert.deepStrictEqual(r.events, ["Actor.ogre<Actor.kyra:14", "Actor.kyra<Actor.ogre:9", "Actor.ogre<?:3"], "hint after, hint before, none");
-  assert.deepStrictEqual(r.card, ["Kyra|14|23%|17|0|9|0"], "the window's row (the ogre: no row)");
+  assert.deepStrictEqual(r.card, ["Kyra|14|23%|60|0|9|0"], "the party row (on her turn: her 14 + the unknown 3 and 43)");
   assert.deepStrictEqual(r.tiles, ["14", "9", "0", "1"], "damage dealt, taken, healed, rounds");
+  assert.strictEqual(r.foe, "Ogre|Down in round 1|9Biggest hit|9Best turn|43Biggest hit taken|1/2Hits",
+    "the enemy: biggest hit 9, best turn 9, biggest hit taken 43 (the unknown final blow: no name), 1 of 2 attacks hit, down in round 1");
+  assert.strictEqual(r.hiddenName, "Kyra,Unknown creature", "a hidden name is never stored");
+  assert.ok(!r.saveAfterEnd, "no save to a combat that has ended");
   assert.ok(r.noChat, "a window, no chat card");
-  assert.strictEqual(r.cardMissed, "Missed damage: 3");
+  assert.strictEqual(r.cardMissed, "Missed damage: 46");
   assert.strictEqual(r.history, 1);
   console.log("PHASE 72 CHECKS PASSED");
 })().catch(e => { console.error(e); process.exit(1); });

@@ -2920,8 +2920,6 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-report-app .lpr-tile span { color: var(--ll-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
 .lucd20-report-app .lpr-rows { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .lucd20-report-app .lpr-row { display: flex; align-items: center; gap: 10px; margin: 0; padding: 8px 10px; border: 1px solid var(--ll-border); border-radius: var(--ll-radius); background: var(--ll-bg-raised); }
-.lucd20-report-app .lpr-portrait { position: relative; flex: none; display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid #8b8799; border-radius: 50%; background: var(--ll-bg-sunken); color: var(--ll-text-muted); }
-.lucd20-report-app .lpr-portrait img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; object-position: top; }
 .lucd20-report-app .lpr-main { display: flex; flex: 1; flex-direction: column; gap: 4px; min-width: 0; }
 .lucd20-report-app .lpr-line { display: flex; align-items: baseline; gap: 8px; }
 .lucd20-report-app .lpr-name { flex: 1; min-width: 0; overflow: hidden; font-size: 15px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
@@ -2935,3 +2933,11 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-report-app .lpr-stat.is-zero { opacity: 0.4; }
 .lucd20-report-app .lpr-missed { margin: 0; color: var(--ll-text-muted); font-size: 12px; opacity: 0.7; }
 .lucd20-report-app .lucd20-loot-empty { min-height: 140px; }
+/* Encounter Report portraits (v0.84.6): the Loot Pile's portrait (ring art, scaled art standing out). */
+.lucd20-report-app .lpr-row .lucd20-loot-portrait.lpr-face { width: 44px; height: 44px; }
+.lucd20-report-app .lpr-row .lucd20-loot-portrait.lpr-face img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.lucd20-report-app .lpr-row .lucd20-loot-portrait.lpr-face.is-pop img { object-fit: contain; object-position: center; }
+.lucd20-report-app .lpr-section { margin: 4px 0 0; padding: 0; border: none; color: var(--ll-text-muted); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.lucd20-report-app .lpr-foe { background: var(--ll-bg-sunken); }
+.lucd20-report-app .lpr-fate { color: var(--ll-text-muted); font-size: 12px; white-space: nowrap; }
+.lucd20-report-app .lpr-fate.is-down { color: var(--ll-danger-text); }

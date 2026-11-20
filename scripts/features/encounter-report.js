@@ -3,6 +3,7 @@ import { defineFeature } from "../core/registry.js";
 import { readHP } from "../core/hp.js";
 import { broadcast, executeAsGM, onBroadcast, onGMRequest } from "../core/socket.js";
 import { addChatControl } from "../core/chat-controls.js";
+import { tokenArt, portraitHTML, PLACEHOLDER_PORTRAIT } from "./loot-pile.js";
 
 /** Debug: `CONFIG.debug.lucd20Report = true` (or lucd20Rules) logs what is recorded. */
 const dbg = (...args) => { if (CONFIG.debug?.lucd20Report || CONFIG.debug?.lucd20Rules) console.log("lucd20-automations | Encounter Report:", ...args); };
@@ -38,7 +39,7 @@ const esc = value => Handlebars.escapeExpression(String(value ?? ""));
 const t = (key, data) => localize(`LUCD20.EncounterReport.${key}`, data);
 const FRIENDLY = 1, HOSTILE = -1;
 
-const state = { feature: null, cache: new Map(), hints: [], pending: [], saveTimer: null };
+const state = { feature: null, cache: new Map(), hints: [], pending: [], saveTimer: null, local: new Map(), dirty: new Set(), ended: new Set() };
 
 /* -------------------------------------------- */
 /*  System adapters                             */
@@ -87,7 +88,21 @@ function takeHint(ev) {
 /*  Recording                                   */
 /* -------------------------------------------- */
 
-const recording = combat => !!combat?.started && !!combat.getFlag?.(MODULE_ID, FLAG);
+/*
+ * The data of a combat being recorded lives in `state.local` on the active GM's client (the truth) and is
+ * copied to the combat's flag (to survive a reload). v0.84.6: a save that reaches the server after the
+ * combat was deleted failed ("Cannot read properties of undefined (reading '_id')"); the end of the
+ * combat now reads the local copy, and late saves are skipped.
+ */
+const localData = combat => {
+  if (!combat?.id) return null;
+  if (!state.local.has(combat.id)) {
+    const saved = combat.getFlag?.(MODULE_ID, FLAG);
+    if (saved) state.local.set(combat.id, foundry.utils.deepClone(saved));
+  }
+  return state.local.get(combat.id) ?? null;
+};
+const recording = combat => !!combat?.started && !!localData(combat);
 
 /** Foundry's dispositions: FRIENDLY 1, NEUTRAL 0, HOSTILE -1, SECRET -2 (counted as hostile: hidden foes). */
 function sideOf(token) {
@@ -95,22 +110,32 @@ function sideOf(token) {
   return d === 1 ? FRIENDLY : d === -1 || d === -2 ? HOSTILE : 0;
 }
 
-/** Snapshot the participants when the combat starts: HP, side, name, master. */
+/**
+ * Snapshot the participants when the combat starts: HP, side, name, picture, master.
+ * The history is a world setting every client can read, so a name players can't see (PF2e
+ * `playersCanSeeName`) is never stored: "Unknown creature" and the placeholder picture instead.
+ */
 async function startRecording(combat) {
-  if (!game.user.isActiveGM || !combat?.started || typeof combat.getFlag !== "function" || combat.getFlag(MODULE_ID, FLAG)) return;
+  if (!game.user.isActiveGM || !combat?.started || typeof combat.getFlag !== "function" || localData(combat)) return;
   // An array, not keyed by UUID: Foundry reads the dots in "Actor.x" / "Scene.y.Token.z.Actor.x" keys as
   // nested paths when the flag is saved, and the lookups then find nobody (v0.84.4: "didn't track anything").
   const participants = [];
   for (const c of combat.combatants) {
     const actor = c.actor;
-    if (!actor) continue;
+    if (!actor || participants.some(x => x.uuid === actor.uuid)) continue;
     const hp = readHP(actor);
     const master = activeAdapters().map(a => a.masterOf?.(actor)).find(Boolean) ?? null;
-    if (participants.some(x => x.uuid === actor.uuid)) continue;
-    participants.push({ uuid: actor.uuid, img: actor.img ?? c.img ?? c.token?.texture?.src ?? null, name: c.token?.name ?? c.name ?? actor.name, side: sideOf(c.token), hp: hp ? hp.value + hp.temp : 0, master, hidden: !!c.hidden || !!c.token?.hidden });
+    const nameHidden = c.token?.playersCanSeeName === false;
+    const art = nameHidden ? { src: PLACEHOLDER_PORTRAIT, scale: 1 } : tokenArt(c.token ?? actor.prototypeToken, actor);
+    participants.push({
+      uuid: actor.uuid, name: nameHidden ? localize("LUCD20.TurnAnnouncer.Unknown") : (c.token?.name ?? c.name ?? actor.name),
+      img: art.src, scale: art.scale, side: sideOf(c.token), hp: hp ? hp.value + hp.temp : 0, master,
+      hidden: !!c.hidden || !!c.token?.hidden
+    });
     if (hp) state.cache.set(actor.uuid, hp);
   }
-  await combat.setFlag(MODULE_ID, FLAG, { participants, events: [] });
+  state.local.set(combat.id, { participants, events: [] });
+  await save(combat.id);
   dbg("recording", combat.id, participants.map(p => `${p.name} (side ${p.side}, ${p.hp} HP)`));
 }
 
@@ -126,39 +151,63 @@ function onUpdateActor(actor) {
   // A combat already running when the feature started (or whose start was missed): start now.
   if (!recording(combat)) startRecording(combat);
   const ev = {
-    time: Date.now(), round: combat.round, turn: combat.combatant?.actor?.uuid ?? null,
-    target: actor.uuid, amount: Math.abs(delta), kind: delta > 0 ? "damage" : "heal", source: null
+    time: Date.now(), combat: combat.id, round: combat.round, turn: combat.combatant?.actor?.uuid ?? null,
+    target: actor.uuid, amount: Math.abs(delta), kind: delta > 0 ? "damage" : "heal", source: null,
+    down: delta > 0 && before.value > 0 && after.value <= 0
   };
   ev.source = takeHint(ev);
-  dbg("event", ev.kind, ev.amount, actor.name, "source:", ev.source ?? "none yet");
+  dbg("event", ev.kind, ev.amount, actor.name, "source:", ev.source ?? "none yet", ev.down ? "(down)" : "");
   state.pending.push(ev);
   setTimeout(() => settle(ev), SETTLE_MS);
 }
 
-/** After a moment (a late hint may still come), write the event to the combat. */
+/**
+ * An attack roll and whether it hit (from the system adapter; GM side). → an "attack" event.
+ * outcome: "criticalSuccess" | "success" | "failure" | "criticalFailure".
+ */
+export function noteAttack(sourceUuid, outcome) {
+  if (!game.user.isActiveGM || !sourceUuid || !outcome) return;
+  const combat = game.combat;
+  if (!recording(combat)) return;
+  record(combat.id, { round: combat.round, turn: combat.combatant?.actor?.uuid ?? null, kind: "attack", source: sourceUuid, outcome });
+  dbg("attack", sourceUuid, outcome);
+}
+
+/** After a moment (a late hint may still come), add the event to its combat. */
 function settle(ev) {
   const i = state.pending.indexOf(ev);
   if (i < 0) return;
   state.pending.splice(i, 1);
   if (!ev.source) ev.source = takeHint(ev);
-  const combat = game.combats?.find(c => recording(c) && c.active) ?? game.combat;
-  if (!recording(combat)) return;
-  (state.unsaved ??= new Map()).set(combat.id, [...(state.unsaved.get(combat.id) ?? []), stripEvent(ev)]);
+  record(ev.combat, stripEvent(ev));
+}
+
+function record(combatId, ev) {
+  const data = state.local.get(combatId) ?? localData(game.combats?.get(combatId));
+  if (!data) return;
+  data.events.push(ev);
+  state.dirty.add(combatId);
   clearTimeout(state.saveTimer);
   state.saveTimer = setTimeout(flushSaves, 300);
 }
 
-const stripEvent = ({ round, turn, target, amount, kind, source }) => ({ round, turn, target, amount, kind, source });
+const stripEvent = ({ round, turn, target, amount, kind, source, down }) => ({ round, turn, target, amount, kind, source, ...(down ? { down: true } : {}) });
+
+async function save(id) {
+  const combat = game.combats?.get(id);
+  const data = state.local.get(id);
+  if (!combat || !data || state.ended.has(id)) return;
+  try {
+    await combat.setFlag(MODULE_ID, FLAG, foundry.utils.deepClone(data));
+  } catch (err) {
+    dbg("save skipped (combat gone?)", id, err?.message);
+  }
+}
 
 async function flushSaves() {
-  const unsaved = state.unsaved ?? new Map();
-  state.unsaved = new Map();
-  for (const [id, events] of unsaved) {
-    const combat = game.combats?.get(id);
-    const data = combat?.getFlag(MODULE_ID, FLAG);
-    if (!data) continue;
-    await combat.setFlag(MODULE_ID, FLAG, { ...data, events: [...data.events, ...events] });
-  }
+  const ids = [...state.dirty];
+  state.dirty.clear();
+  for (const id of ids) await save(id);
 }
 
 /* -------------------------------------------- */
@@ -200,13 +249,55 @@ export function buildReport(data) {
     .filter(r => side(r.uuid) === FRIENDLY && !p[r.uuid]?.hidden)
     .map(r => ({ ...r, pct: enemyHP(side(r.uuid)) ? Math.round((r.damage / enemyHP(side(r.uuid))) * 100) : 0 }))
     .sort((a, b) => a.name.localeCompare(b.name));
-  return { rows: out, missed };
+  return { rows: out, missed, foes: buildFoes(p, data?.events ?? []) };
 }
 
 /**
- * The report (v0.84.5, restyled in the Loot Pile's look): totals on top, then one card per creature, by name
- * (v0.84.6, owner: no crown, no bars, no ranking: "this will cause feels bad"; just the stats): portrait, name,
- * damage, % of enemy HP, and the small stats. Zeros are faded.
+ * Enemies (owner, v0.84.6: "Oh wow, that NPC barely did anything!" / "We killed that one in a round!"):
+ * biggest hit dealt, best turn (most damage in one turn), biggest hit taken (and from whom), attacks hit,
+ * the round it went down. Hidden combatants get no card; hidden names were never stored.
+ */
+function buildFoes(p, events) {
+  const foes = {};
+  const foe = uuid => (foes[uuid] ??= { uuid, name: p[uuid].name, img: p[uuid].img ?? null, scale: p[uuid].scale ?? 1, maxHit: 0, bestTurn: 0, maxTaken: 0, maxTakenBy: null, attacks: 0, hits: 0, crits: 0, down: null, turns: {} });
+  const isFoe = uuid => p[uuid] && p[uuid].side === HOSTILE && !p[uuid].hidden;
+  for (const uuid of Object.keys(p)) if (isFoe(uuid)) foe(uuid);
+  for (const ev of events) {
+    if (ev.kind === "attack") {
+      if (!isFoe(ev.source)) continue;
+      const f = foe(ev.source);
+      f.attacks += 1;
+      if (ev.outcome === "success" || ev.outcome === "criticalSuccess") f.hits += 1;
+      if (ev.outcome === "criticalSuccess") f.crits += 1;
+      continue;
+    }
+    if (ev.kind !== "damage") continue;
+    if (isFoe(ev.source) && p[ev.target]?.side !== HOSTILE) {
+      const f = foe(ev.source);
+      f.maxHit = Math.max(f.maxHit, ev.amount);
+      const key = `${ev.round}|${ev.turn}`;
+      f.turns[key] = (f.turns[key] ?? 0) + ev.amount;
+      f.bestTurn = Math.max(f.bestTurn, f.turns[key]);
+    }
+    if (isFoe(ev.target)) {
+      const f = foe(ev.target);
+      if (ev.amount > f.maxTaken) {
+        f.maxTaken = ev.amount;
+        f.maxTakenBy = ev.source && p[ev.source] && !p[ev.source].hidden ? p[ev.source].name : null;
+      }
+      if (ev.down && f.down == null) f.down = ev.round;
+    }
+  }
+  return Object.values(foes).map(({ turns, ...f }) => f).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** A token's picture as on the map (the Loot Pile's helper: ring art, scaled art standing out of its circle). */
+const faceHTML = r => portraitHTML(r.img || PLACEHOLDER_PORTRAIT, "lpr-face", "", r.scale ?? 1);
+
+/**
+ * The report (v0.84.5, restyled in the Loot Pile's look; v0.84.6: just the stats, no ranking): totals on top,
+ * the party's cards by name (portrait, name, damage, % of enemy HP, small stats; zeros faded), then the
+ * enemies' cards (their own stats).
  */
 export function reportHTML(report, { rounds = null } = {}) {
   const rows = report.rows ?? [];
@@ -218,41 +309,53 @@ export function reportHTML(report, { rounds = null } = {}) {
       ${tile("Healed", sum("healed"), "fa-heart-pulse")}
       ${rounds != null ? tile("Rounds", rounds, "fa-hourglass-half") : ""}
     </div>`;
-  const stat = (key, value, icon) => `<span class="lpr-stat ${value ? "" : "is-zero"}" data-col="${key}" data-tooltip="${esc(t(`Col.${key}Hint`))}"><i class="fa-solid ${icon}"></i><b>${value || 0}</b><span>${esc(t(`Col.${key}`))}</span></span>`;
-  const cards = rows.map(r => {
-    const img = r.img ? `<img src="${esc(r.img)}" alt="">` : `<i class="fa-solid fa-user"></i>`;
-    return `<li class="lpr-row" data-uuid="${esc(r.uuid)}">
-      <span class="lpr-portrait">${img}</span>
+  const stat = (key, value, icon, label = t(`Col.${key}`), tip = t(`Col.${key}Hint`)) => `<span class="lpr-stat ${value ? "" : "is-zero"}" data-col="${key}" data-tooltip="${esc(tip)}"><i class="fa-solid ${icon}"></i><b>${value || 0}</b><span>${esc(label)}</span></span>`;
+  const cards = rows.map(r => `<li class="lpr-row" data-uuid="${esc(r.uuid)}">
+      ${faceHTML(r)}
       <div class="lpr-main">
         <div class="lpr-line"><span class="lpr-name" data-col="Name">${esc(r.name)}</span>
           <span class="lpr-dmg" data-col="Damage" data-tooltip="${esc(t("Col.DamageHint"))}"><b>${r.damage}</b>${r.companions ? ` <span class="lpr-plus">+${r.companions}</span>` : ""}</span>
           <span class="lpr-pct" data-col="Percent" data-tooltip="${esc(t("Col.PercentHint"))}">${r.pct}%</span></div>
         <div class="lpr-stats">${stat("OnTurn", r.onTurn, "fa-hourglass-start")}${stat("Friendly", r.friendly, "fa-people-arrows")}${stat("Taken", r.taken, "fa-shield-halved")}${stat("Healed", r.healed, "fa-heart-pulse")}</div>
       </div>
+    </li>`).join("");
+  const foes = (report.foes ?? []).map(f => {
+    const fate = f.down != null ? t("Foe.Down", { round: f.down }) : t("Foe.Standing");
+    const taken = f.maxTakenBy ? t("Foe.TakenBy", { name: f.maxTakenBy }) : t("Foe.Taken");
+    const hits = f.attacks ? `<span class="lpr-stat" data-col="Hits" data-tooltip="${esc(t("Foe.HitsHint"))}"><i class="fa-solid fa-crosshairs"></i><b>${f.hits}/${f.attacks}</b><span>${esc(t("Foe.Hits"))}${f.crits ? ` (${esc(t("Foe.Crits", { n: f.crits }))})` : ""}</span></span>` : "";
+    return `<li class="lpr-row lpr-foe" data-uuid="${esc(f.uuid)}">
+      ${faceHTML(f)}
+      <div class="lpr-main">
+        <div class="lpr-line"><span class="lpr-name" data-col="Name">${esc(f.name)}</span>
+          <span class="lpr-fate ${f.down != null ? "is-down" : ""}" data-col="Fate">${f.down != null ? '<i class="fa-solid fa-skull"></i> ' : ""}${esc(fate)}</span></div>
+        <div class="lpr-stats">${stat("MaxHit", f.maxHit, "fa-burst", t("Foe.MaxHit"), t("Foe.MaxHitHint"))}${stat("BestTurn", f.bestTurn, "fa-hourglass-start", t("Foe.BestTurn"), t("Foe.BestTurnHint"))}${stat("MaxTaken", f.maxTaken, "fa-shield-halved", taken, t("Foe.TakenHint"))}${hits}</div>
+      </div>
     </li>`;
   }).join("");
   const missed = report.missed ? `<p class="lpr-missed" data-tooltip="${esc(t("MissedHint"))}"><i class="fa-solid fa-circle-question"></i> ${esc(t("Missed", { n: report.missed }))}</p>` : "";
   return `<div class="lucd20-encounter-report">${tiles}
-    ${cards ? `<ol class="lpr-rows">${cards}</ol>` : `<div class="lucd20-loot-empty"><i class="fa-solid fa-chart-column ll-empty-art"></i><span class="sub">${esc(t("Nothing"))}</span></div>`}
+    ${cards ? `<h4 class="lpr-section">${esc(t("Party"))}</h4><ol class="lpr-rows">${cards}</ol>` : `<div class="lucd20-loot-empty"><i class="fa-solid fa-chart-column ll-empty-art"></i><span class="sub">${esc(t("Nothing"))}</span></div>`}
+    ${foes ? `<h4 class="lpr-section">${esc(t("Enemies"))}</h4><ol class="lpr-rows">${foes}</ol>` : ""}
     ${missed}</div>`;
 }
 
 async function onDeleteCombat(combat) {
   if (!game.user.isActiveGM) return;
+  state.ended.add(combat.id); // no more saves to it
   // Settle what is still pending right now.
-  for (const ev of [...state.pending]) {
+  for (const ev of state.pending.filter(e => e.combat === combat.id)) {
     state.pending.splice(state.pending.indexOf(ev), 1);
     if (!ev.source) ev.source = takeHint(ev);
-    (state.unsaved ??= new Map()).set(combat.id, [...(state.unsaved.get(combat.id) ?? []), stripEvent(ev)]);
+    localData(combat)?.events.push(stripEvent(ev));
   }
-  const data = foundry.utils.deepClone(combat.getFlag?.(MODULE_ID, FLAG));
+  const data = foundry.utils.deepClone(localData(combat));
+  state.local.delete(combat.id);
   if (!data) return;
-  data.events = [...(data.events ?? []), ...(state.unsaved?.get(combat.id) ?? [])];
-  state.unsaved?.delete(combat.id);
   const report = buildReport(data);
   dbg("combat ended", combat.id, data.events.length, "events", report);
-  if (!data.events.length) return;
-  const entry = { at: Date.now(), scene: combat.scene?.name ?? "", rounds: combat.round, ...report };
+  if (!data.events.some(e => e.kind !== "attack")) return;
+  const scene = combat.scene?.name ?? game.scenes?.get(combat._source?.scene)?.name ?? canvas?.scene?.name ?? "";
+  const entry = { at: Date.now(), scene, rounds: combat.round, ...report };
   try {
     const history = game.settings.get(MODULE_ID, HISTORY_KEY) ?? [];
     history.push(entry);
@@ -295,7 +398,7 @@ export class ReportWindow extends ApplicationV2 {
     const list = history();
     const entry = list[this.index] ?? list.at(-1);
     if (!entry) return `<div class="lucd20-loot-empty"><i class="fa-solid fa-chart-column ll-empty-art"></i><span class="sub">${esc(t("NoReports"))}</span></div>`;
-    const options = list.map((e, i) => `<option value="${i}" ${list[this.index] === e || (!list[this.index] && i === list.length - 1) ? "selected" : ""}>${esc(t("Entry", { scene: e.scene || "—", rounds: e.rounds ?? "?", when: new Date(e.at).toLocaleString() }))}</option>`).reverse().join("");
+    const options = list.map((e, i) => `<option value="${i}" ${list[this.index] === e || (!list[this.index] && i === list.length - 1) ? "selected" : ""}>${esc(t("Entry", { scene: e.scene || t("NoScene"), rounds: e.rounds === 1 ? t("RoundOne") : t("RoundsN", { n: e.rounds ?? "?" }), when: new Date(e.at).toLocaleString() }))}</option>`).reverse().join("");
     return `<div class="lucd20-report-body">
       <header class="lucd20-loot-taker lucd20-report-pick"><label>${esc(t("Encounter"))}</label><select class="pick">${options}</select></header>
       <div class="lucd20-report-scroll">${reportHTML(entry, { rounds: entry.rounds ?? null })}</div></div>`;

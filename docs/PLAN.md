@@ -3605,6 +3605,31 @@ v0.84.2: the Battle Medicine badge mirrors the reaction badge (same size, bottom
 - v0.84.6 (owner: "dont do a crown for most damage nor a 'progress bar'.
   This will cause feels bad. Show just stats"): no crown, no top highlight,
   no bars; cards sorted by name, not by damage.
+- v0.84.7 (owner, from the first real report):
+  - Pictures were broken (stretched past the circle). The report now uses
+    the Loot Pile's portrait helpers (`tokenArt` + `portraitHTML`, exported
+    from `loot-pile.js`): the ring subject's art, the token's scale (art
+    stands out of its circle as on the map), no videos (webm → the actor's
+    picture). Owner: "this has been happening with almost anything that
+    uses pictures": the same helpers should be used everywhere (to do:
+    list the other places with the owner).
+  - The error "Cannot read properties of undefined (reading '_id')" from
+    `flushSaves`: a save reached the server after the combat was deleted.
+    The recording now lives on the GM's client (`state.local`; the flag is
+    only a copy for reloads); the end reads that copy; no saves after the
+    end; failed saves are ignored.
+  - Scene name: from the combat, else the viewed scene ("No scene" if
+    none); "1 round" / "N rounds".
+  - Enemies section (owner: "NPCs also need to show there, but
+    differently ... more for the 'Oh wow, that NPC barely did anything!'
+    or 'We killed that one in a round!'"): per enemy, biggest hit dealt,
+    best turn (most damage in one turn), biggest hit taken (and by whom),
+    attacks hit / made (+ crits; PF2e `context.type "attack-roll"` +
+    `outcome`), "Down in round N" / "Still standing" (an HP change to 0).
+    Hidden combatants get no card. A name players can't see
+    (`playersCanSeeName === false`) is never stored (the history is a world
+    setting all clients read): "Unknown creature" + the placeholder picture.
+  - Not yet: D&D 4e attack hits (no outcome on its cards yet).
 - Next (owner): stats first, then "Hallmark cards" (name to decide): every
   player always gets one. Was "Title / Combat Role": picture, then the role this combat
   (e.g. "DPS: you dealt X damage", "Meat shield: you took X damage", …).

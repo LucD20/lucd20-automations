@@ -3612,6 +3612,38 @@ HP (Close Call, Back from the Brink, Guardian Angel, Executioner), attack
 targets (Ghost: PF2e `context.target`), participant levels (Giant Slayer),
 the order of events (First Blood, Clutch).
 
+
+### 26.9 Combat Cards built (v0.85.0, `combatCards`)
+
+Owner: "1. Good for now. 2. No, mystery is good. 3. It's good how you did it."
+- Files: `scripts/features/combat-cards/catalog.js` (the 55 cards: rarity,
+  `pf2` flag, a test over the recording; `computeStats`, `dealCards`),
+  `combat-cards.js` (dealing, the overlay, the collection, the Party Deck);
+  text under `LUCD20.CombatCards.Card.<id>` (Name, Rule, Stat, Q1, Q2).
+- Recording (Encounter Report): HP after / max / from full / back up from 0
+  on each HP event; participants' portrait, level, `pc`, highest spell
+  rank; `noteEvent()` for adapters: attack target, saves, skill actions
+  (`action:` roll option), spells (the spell card), Hero Points, dying
+  (PF2e), natural 20s and squares moved (every system; secret rolls never
+  count). Battle Medicine uses count for Combat Medic.
+- Secrets: Scholar counts Recall Knowledge attempts, never results (a
+  secret roll); blind/whispered rolls give no outcome and no natural 20.
+- End of a fight (active GM): one card per player character, rarest first;
+  saved on the actor (`flags.lucd20-automations.cards.<id>` = [{ at, scene,
+  value, foil }]); foil when it is that actor's first. The cards are
+  broadcast and fill the screen for everyone (z-index above windows);
+  "Victory" when every visible enemy went down, else "Battle's end"; Close
+  / Esc / a click outside; after `reportDelay` seconds (5) the report fades
+  in above them. `onEncounterEnd(fn)` in the report lets the cards take
+  over its opening.
+- Party Deck: a "Deck" tab added to PF2e's party sheet (its nav and panes;
+  (verify) the markup in PF2e 8.7), and a window from the chat buttons
+  (every system; D&D 4e uses this). Party = PF2e's active party, else the
+  player-owned characters. Undiscovered cards: face down, rarity only.
+  GM: Grant… (pick a character) and a remove button per copy.
+- Titles shrink to fit their ribbon (fonts: Modesto Condensed, Eczar).
+- Test 73.
+
 ## 27. Party bulk (owner, 2026-11-20; built v0.83.0 as `partyLoad`)
 
 Owner: "Total party bulk: the maximum bulk of each creature in the party,

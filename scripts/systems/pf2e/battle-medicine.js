@@ -4,6 +4,7 @@ import { watchDOM } from "../../core/dom-watch.js";
 import { appElement } from "../../core/dom.js";
 import { addImmunity, DAY, immunitiesOf, removeImmunity, timeLeft, usedBy } from "./immunity.js";
 import { sysApi, sysFlags, sysId } from "./sys.js";
+import { noteEvent } from "../../features/encounter-report.js";
 
 /**
  * Rule 23 (docs/pf2e-rules.md, owner Q291, v0.81.1 additions): Battle Medicine on the Token HUD. PF2e / SF2e.
@@ -142,6 +143,8 @@ async function onCreateMessage(message) {
   if (!patient) return;
   const token = message.token ?? use.healer.getActiveTokens?.(true, true)?.[0]?.document;
   await record(use.healer, patient, { name: token?.name ?? use.healer.name, baton: use.baton });
+  // Combat Cards (v0.85.0): Combat Medic counts the allies treated in a fight.
+  noteEvent({ kind: "skill", source: use.healer.uuid, action: "battle-medicine", target: patient.uuid });
 }
 
 /** Effects made by others: PF2e's immunity effect, the Workbench's "Medic dedication used". */

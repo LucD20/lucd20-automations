@@ -39,7 +39,7 @@ const esc = value => Handlebars.escapeExpression(String(value ?? ""));
 const t = (key, data) => localize(`LUCD20.EncounterReport.${key}`, data);
 const FRIENDLY = 1, HOSTILE = -1;
 
-const state = { feature: null, cache: new Map(), hints: [], pending: [], saveTimer: null, local: new Map(), dirty: new Set(), ended: new Set() };
+const state = { feature: null, cache: new Map(), hints: [], pending: [], saveTimer: null, local: new Map(), dirty: new Set(), ended: new Set(), pos: new Map() };
 
 /* -------------------------------------------- */
 /*  System adapters                             */
@@ -127,10 +127,16 @@ async function startRecording(combat) {
     const master = activeAdapters().map(a => a.masterOf?.(actor)).find(Boolean) ?? null;
     const nameHidden = c.token?.playersCanSeeName === false;
     const art = nameHidden ? { src: PLACEHOLDER_PORTRAIT, scale: 1 } : tokenArt(c.token ?? actor.prototypeToken, actor);
+    const level = Number(actor.level ?? actor.system?.details?.level?.value ?? actor.system?.details?.level);
     participants.push({
       uuid: actor.uuid, name: nameHidden ? localize("LUCD20.TurnAnnouncer.Unknown") : (c.token?.name ?? c.name ?? actor.name),
-      img: art.src, scale: art.scale, side: sideOf(c.token), hp: hp ? hp.value + hp.temp : 0, master,
-      hidden: !!c.hidden || !!c.token?.hidden
+      img: art.src, scale: art.scale, side: sideOf(c.token), hp: hp ? hp.value + hp.temp : 0, max: hp?.max ?? 0, master,
+      hidden: !!c.hidden || !!c.token?.hidden,
+      // For the Combat Cards (v0.85.0): the portrait (cards use it, not the token), level, player character,
+      // the highest spell rank it can cast (Big Guns).
+      portrait: nameHidden ? null : (actor.img ?? null), level: Number.isFinite(level) ? level : null,
+      pc: !!actor.hasPlayerOwner && sideOf(c.token) === FRIENDLY,
+      maxRank: activeAdapters().map(a => a.maxSpellRank?.(actor)).find(n => n != null) ?? null
     });
     if (hp) state.cache.set(actor.uuid, hp);
   }
@@ -153,7 +159,10 @@ function onUpdateActor(actor) {
   const ev = {
     time: Date.now(), combat: combat.id, round: combat.round, turn: combat.combatant?.actor?.uuid ?? null,
     target: actor.uuid, amount: Math.abs(delta), kind: delta > 0 ? "damage" : "heal", source: null,
-    down: delta > 0 && before.value > 0 && after.value <= 0
+    down: delta > 0 && before.value > 0 && after.value <= 0,
+    // Combat Cards: HP after (Close Call, Executioner), back up from 0 (Back from the Brink, Guardian Angel).
+    hp: after.value, max: after.max, full: delta > 0 && before.value >= before.max,
+    up: delta < 0 && before.value <= 0 && after.value > 0
   };
   ev.source = takeHint(ev);
   dbg("event", ev.kind, ev.amount, actor.name, "source:", ev.source ?? "none yet", ev.down ? "(down)" : "");
@@ -165,12 +174,51 @@ function onUpdateActor(actor) {
  * An attack roll and whether it hit (from the system adapter; GM side). → an "attack" event.
  * outcome: "criticalSuccess" | "success" | "failure" | "criticalFailure".
  */
-export function noteAttack(sourceUuid, outcome) {
-  if (!game.user.isActiveGM || !sourceUuid || !outcome) return;
+export function noteAttack(sourceUuid, outcome, target = null) {
+  if (!sourceUuid || !outcome) return;
+  noteEvent({ kind: "attack", source: sourceUuid, outcome, ...(target ? { target } : {}) });
+}
+
+/**
+ * Any other event of the current combat (GM side; from system adapters), for the Combat Cards (v0.85.0):
+ *   { kind: "save", source, outcome } · { kind: "skill", source, action, outcome, target? } ·
+ *   { kind: "spell", source, rank } · { kind: "hero", source } · { kind: "dying", target, value } ·
+ *   { kind: "nat20", source } · { kind: "move", source, squares }
+ */
+export function noteEvent(ev) {
+  if (!game.user.isActiveGM || !ev?.kind) return;
   const combat = game.combat;
   if (!recording(combat)) return;
-  record(combat.id, { round: combat.round, turn: combat.combatant?.actor?.uuid ?? null, kind: "attack", source: sourceUuid, outcome });
-  dbg("attack", sourceUuid, outcome);
+  record(combat.id, { round: combat.round, turn: combat.combatant?.actor?.uuid ?? null, ...ev });
+  dbg(ev.kind, ev.source ?? ev.target, ev.outcome ?? ev.action ?? ev.value ?? ev.squares ?? "");
+}
+
+/**
+ * Natural 20s on any public d20 roll (every system). Blind / whispered rolls are skipped: a card must never
+ * tell players what a secret roll was.
+ */
+function onChatMessage(message) {
+  if (!game.user.isActiveGM || !recording(game.combat)) return;
+  if (message.blind || message.whisper?.length) return;
+  const actor = message.actor ?? (message.speaker ? ChatMessage.getSpeakerActor?.(message.speaker) : null);
+  if (!actor?.uuid) return;
+  for (const roll of message.rolls ?? []) {
+    for (const die of roll.dice ?? []) {
+      if (die.faces !== 20) continue;
+      for (const r of die.results ?? []) if (r.active !== false && !r.discarded && r.result === 20) noteEvent({ kind: "nat20", source: actor.uuid });
+    }
+  }
+}
+
+/** Squares moved (every system): a token's position against the last one seen. */
+function onTokenMoved(doc, change) {
+  if (!game.user.isActiveGM || !doc?.id) return;
+  const was = state.pos.get(doc.id);
+  state.pos.set(doc.id, { x: doc.x, y: doc.y });
+  if (!was || (change?.x === undefined && change?.y === undefined) || !doc.actor?.uuid) return;
+  const size = doc.parent?.grid?.size ?? canvas?.grid?.size ?? 100;
+  const squares = Math.round(Math.max(Math.abs(doc.x - was.x), Math.abs(doc.y - was.y)) / size);
+  if (squares > 0) noteEvent({ kind: "move", source: doc.actor.uuid, squares });
 }
 
 /** After a moment (a late hint may still come), add the event to its combat. */
@@ -191,7 +239,7 @@ function record(combatId, ev) {
   state.saveTimer = setTimeout(flushSaves, 300);
 }
 
-const stripEvent = ({ round, turn, target, amount, kind, source, down }) => ({ round, turn, target, amount, kind, source, ...(down ? { down: true } : {}) });
+const stripEvent = ({ time, combat, ...ev }) => Object.fromEntries(Object.entries(ev).filter(([, v]) => v !== false && v !== undefined));
 
 async function save(id) {
   const combat = game.combats?.get(id);
@@ -353,19 +401,38 @@ async function onDeleteCombat(combat) {
   if (!data) return;
   const report = buildReport(data);
   dbg("combat ended", combat.id, data.events.length, "events", report);
-  if (!data.events.some(e => e.kind !== "attack")) return;
+  if (!data.events.some(e => e.kind === "damage" || e.kind === "heal")) return;
   const scene = combat.scene?.name ?? game.scenes?.get(combat._source?.scene)?.name ?? canvas?.scene?.name ?? "";
   const entry = { at: Date.now(), scene, rounds: combat.round, ...report };
+  // Others add to the entry and may take over the opening (Combat Cards: the cards first, the report after).
+  let takenOver = false;
+  for (const fn of [...endHandlers]) {
+    try { if (await fn(data, entry)) takenOver = true; } catch (err) { console.error("lucd20-automations | Encounter end", err); }
+  }
   try {
     const history = game.settings.get(MODULE_ID, HISTORY_KEY) ?? [];
     history.push(entry);
     await game.settings.set(MODULE_ID, HISTORY_KEY, history.slice(-20));
   } catch (err) { console.error("lucd20-automations | Encounter Report history", err); }
   // The window (owner, v0.84.3: "should be a window"), for everyone unless the option says GM only.
+  if (takenOver) return;
   const everyone = state.feature?.get("public") !== false;
   if (everyone) broadcast("encounterReport.show", {});
   ReportWindow.open();
 }
+
+const endHandlers = [];
+/**
+ * fn(data, entry) at the end of a recorded encounter (active GM), before the entry is saved to the history:
+ * it may add to `entry`; returning true means it opens things itself (then calls `ReportWindow.open()`).
+ */
+export function onEncounterEnd(fn) {
+  endHandlers.push(fn);
+  return () => { const i = endHandlers.indexOf(fn); if (i >= 0) endHandlers.splice(i, 1); };
+}
+
+/** Whether this user sees the report (the option: everyone, or the GM only). */
+export const reportVisible = () => canSee();
 
 /* -------------------------------------------- */
 /*  The window                                  */
@@ -436,10 +503,12 @@ defineFeature({
     for (const tok of canvas?.tokens?.placeables ?? []) { const hp = tok.actor && readHP(tok.actor); if (hp) state.cache.set(tok.actor.uuid, hp); }
     feature.on("combatStart", combat => startRecording(combat));
     feature.on("updateCombat", combat => { if (combat.started) startRecording(combat); });
-    feature.on("createToken", doc => { const hp = doc.actor && readHP(doc.actor); if (hp) state.cache.set(doc.actor.uuid, hp); });
+    feature.on("createToken", doc => { if (doc?.id) state.pos.set(doc.id, { x: doc.x, y: doc.y }); const hp = doc.actor && readHP(doc.actor); if (hp) state.cache.set(doc.actor.uuid, hp); });
     feature.on("updateActor", onUpdateActor);
     // Unlinked tokens (as the Damage Log): the token's own actor; the cache makes a second call a no-op.
-    feature.on("updateToken", doc => { if (!doc?.actorLink && doc?.actor) onUpdateActor(doc.actor); });
+    feature.on("updateToken", (doc, change) => { if (!doc?.actorLink && doc?.actor) onUpdateActor(doc.actor); onTokenMoved(doc, change); });
+    for (const tok of canvas?.tokens?.placeables ?? []) if (tok.document?.id) state.pos.set(tok.document.id, { x: tok.document.x, y: tok.document.y });
+    feature.on("createChatMessage", onChatMessage);
     feature.on("updateActorDelta", delta => { const actor = delta?.parent?.actor; if (actor) onUpdateActor(actor); });
     feature.on("deleteCombat", onDeleteCombat);
     for (const adapter of activeAdapters()) {

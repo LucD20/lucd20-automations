@@ -141,7 +141,7 @@ function brokenShield(x, y, size, color) {
 
 /** This user's controlled, owned tokens; `dragging`: their drag previews. */
 function sources() {
-  const controlled = canvas.tokens.controlled.filter(t => t.isOwner && t.actor);
+  const controlled = (canvas.tokens?.controlled ?? []).filter(t => t.isOwner && t.actor);
   const previews = (canvas.tokens.preview?.children ?? []).filter(p => p.isPreview && controlled.some(c => c.id === p.id));
   return { controlled, previews };
 }
@@ -211,7 +211,7 @@ defineFeature({
     feature.on("targetToken", user => { if (user.isSelf) show(); });
     feature.on("controlToken", (token, controlled) => { if (controlled) show(); else schedule(); });
     feature.on("updateToken", (doc, changes) => {
-      if (("x" in changes || "y" in changes) && canvas.tokens.controlled.some(t => t.id === doc.id)) show();
+      if (("x" in changes || "y" in changes) && (canvas.tokens?.controlled ?? []).some(t => t.id === doc.id)) show();
       else if (isShowing()) schedule();
     });
     // While dragging (the preview moves) and while the window is open (others move).

@@ -3383,3 +3383,5 @@ Medicine lines in the Token Tooltip for everyone (option under Token
 Tooltip); the flanking shield always over the target. Also fixed: since
 v0.81.0 the flanking overlay threw when `game.user.targets` was missing
 (harness tests 25–26).
+
+v0.81.3: the flanking overlay also threw on token moves when `canvas.tokens.controlled` was missing (harness tests 12, 23); full suite: all pass but the three old failures (4, 11, 13).

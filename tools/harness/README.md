@@ -105,7 +105,7 @@ sets `game.system.id`.
 | `test66.js` | PF2e Combat Assessment (Recall Knowledge at once, the fallback card, the 1-day immunity), Recall Knowledge (the GM's card, attempts, lores, might-apply, no-target mode, DCs without PF2e's data) and Guardian's Deflection (+2 AC degrees, who gets a card, Deflect / Skip, panache) (67) |
 | `test67.js` | SF2e runs the PF2e features (`?system=sf2e`), PF2e and 4e unchanged (v0.79.1) |
 | `test68.js` | Multiple Checks: codes and journal HTML read, the card (GM-only DCs, "DC n lower" than the hardest), Shift-click on PF2e's send-to-chat icon collects instead of posting, the window, a Lore by hand, Send (v0.80.0) |
-| `test69.js` | Battle Medicine (the Treat Wounds and Battle Medicine macro, the feat card by origin or title, the no-target warning, the same use twice, Medic Dedication, the 1-hour exceptions, the GM editor, the Token Tooltip lines) and the overlay (the timed window, flank squares, the shield over the target while dragging) (v0.81.2) |
+| `test69.js` | Battle Medicine (the Treat Wounds and Battle Medicine macro, the feat card by origin or title, the no-target warning, the same use twice, Medic Dedication, the 1-hour exceptions, the GM editor, the badges for everyone and for the selected healer) and the overlay (the timed window, flank squares, the shield over the target while dragging) (v0.81.4) |
 
 For a new feature, copy the closest test, keep its mock setup and replace the
 checks.

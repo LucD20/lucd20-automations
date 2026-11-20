@@ -603,10 +603,6 @@
           },
           "fontSize": {
             "Name": "Text size"
-          },
-          "battleMedicine": {
-            "Name": "Battle Medicine",
-            "Hint": "Add Battle Medicine lines (needs the Battle Medicine feature): who treated this creature and for how long it is immune, whom it treated, Medic Dedication. Everyone sees them."
           }
         }
       },
@@ -855,7 +851,11 @@
       },
       "pf2eBattleMedicine": {
         "Name": "Battle Medicine",
-        "Hint": "A first-aid button in the Token HUD (under Riding's). Hover it: who treated this creature and when they can again, whom it treated, Medic Dedication (ready or used) and Combat Assessment immunity. Read from the Treat Wounds and Battle Medicine macro, the feat's own action (with a target), Medicine checks naming Battle Medicine, or PF2e's immunity effect. 1 day by world time, 1 hour for the macro's exceptions (Baton, Paragon, Forensic Medicine, Godless Healing, Robust Health). A Medic treating someone already immune spends Medic Dedication. The GM clicks the button to edit. No PF2e effect is added."
+        "Setting": {
+          "badgesAll": { "Name": "Badges on immune creatures", "Hint": "A small first-aid badge on creatures immune to someone's Battle Medicine; its red fill is the time left. Everyone sees it (on tokens they can see)." },
+          "badgesHealer": { "Name": "Badges for the selected healer", "Hint": "With your token selected and it has Battle Medicine, your allies get a badge: green, you can treat it; the red fill, immune to you and for how long." }
+        },
+        "Hint": "Tracks Battle Medicine: from the Treat Wounds and Battle Medicine macro, the feat's own action (with one target), Medicine checks naming Battle Medicine, or PF2e's immunity effect. 1 day by world time, 1 hour for the macro's exceptions (Baton, Paragon, Forensic Medicine, Godless Healing, Robust Health); a Medic treating someone already immune spends Medic Dedication. Badges on the tokens (see the options); the Token HUD button lists names and times, and the GM clicks it to edit. No PF2e effect is added."
       },
       "pf2eFlanking": {
         "Name": "Flanking Overlay",
@@ -2239,10 +2239,6 @@
     "SectionAdd": "Add: {name} treated",
     "Patient": "Treated creature",
     "NeedTarget": "Battle Medicine: target the creature you treat (exactly one) so it is tracked.",
-    "TipTreatedBy": "{name}: immune {time}",
-    "TipTreated": "→ {name} {time}",
-    "TipMedicReady": "Medic: ready",
-    "TipMedicUsed": "Medic: {time}",
     "Nobody": "Nobody.",
     "Remove": "Remove",
     "MedicReset": "Make ready",

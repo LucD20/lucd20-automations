@@ -4,7 +4,6 @@ import { watchDOM } from "../../core/dom-watch.js";
 import { appElement } from "../../core/dom.js";
 import { addImmunity, DAY, immunitiesOf, removeImmunity, timeLeft, usedBy } from "./immunity.js";
 import { sysFlags } from "./sys.js";
-import { refreshTooltip, registerTooltipExtra } from "../../features/token-tooltip/token-tooltip.js";
 
 /**
  * Rule 23 (docs/pf2e-rules.md, owner Q291, v0.81.1 additions): Battle Medicine on the Token HUD. PF2e / SF2e.
@@ -202,26 +201,6 @@ export function hudLines(actor) {
   return lines;
 }
 
-/**
- * Token Tooltip lines (everyone who sees the token; owner: "somewhere anyone can see"): who treated it and
- * how long it is immune, whom it treated, Medic Dedication. Names of actors this user can't see are left out.
- */
-export function tooltipLines(token) {
-  const actor = token?.actor;
-  if (!actor) return [];
-  const lines = [];
-  for (const e of immunitiesOf(actor, { kind: KIND })) lines.push({ icon: "fa-kit-medical", color: "#e05252", value: t("TipTreatedBy", { name: e.name, time: timeLeft(e) }) });
-  for (const e of usedBy(actor.uuid, KIND)) {
-    const name = visibleName(e.actor);
-    if (name) lines.push({ icon: "fa-hand-holding-medical", color: "#4caf50", value: t("TipTreated", { name, time: timeLeft(e) }) });
-  }
-  if (hasFeat(actor, "medic-dedication")) {
-    const used = immunitiesOf(actor, { kind: MEDIC })[0];
-    lines.push({ icon: "fa-user-doctor", color: used ? "#9e9e9e" : "#4caf50", value: used ? t("TipMedicUsed", { time: timeLeft(used) }) : t("TipMedicReady") });
-  }
-  return lines;
-}
-
 function hudState() {
   const hud = canvas?.hud?.token;
   const doc = hud?.document ?? hud?.object?.document ?? null;
@@ -370,17 +349,125 @@ export class BattleMedicineEditor extends ApplicationV2 {
   }
 }
 
+/* -------------------------------------------- */
+/*  Badges on the tokens (C3 + C4)              */
+/* -------------------------------------------- */
+
+let badgeLayer = null;
+let badgeTimer = null;
+let badgeFeature = null;
+const RED = 0xe05252, GREEN = 0x3f9a45, GREY = 0x555555;
+
+function ensureBadgeLayer() {
+  if (badgeLayer && !badgeLayer.destroyed && badgeLayer.parent) return badgeLayer;
+  badgeLayer = new PIXI.Container();
+  badgeLayer.name = "lucd20-automations-battle-medicine";
+  badgeLayer.eventMode = "none";
+  (canvas.interface ?? canvas.controls ?? canvas.stage).addChild(badgeLayer);
+  return badgeLayer;
+}
+
+/** The share of an immunity still to run (1 = just treated). */
+const remaining = e => {
+  const total = Math.max(1, e.until - e.at);
+  return Math.max(0, Math.min(1, (e.until - (Number(game.time?.worldTime) || 0)) / total));
+};
+
+/** This user's selected token whose creature has Battle Medicine (the healer), or null. */
+function selectedHealer() {
+  return (canvas.tokens?.controlled ?? []).find(t => t.isOwner && hasFeat(t.actor, SLUG)) ?? null;
+}
+
+const isAlly = (a, b) => (typeof a?.isAllyOf === "function" ? a.isAllyOf(b) : a?.hasPlayerOwner && b?.hasPlayerOwner);
+
+/**
+ * The badge each visible token gets → [{ token, kind: "pie" | "ready", share }].
+ * - Everyone (option "badgesAll"): a red pie on creatures immune to someone's Battle Medicine (the longest).
+ * - A healer selected (option "badgesHealer"): its allies get green (you can treat it) or the red pie of the
+ *   immunity to *you*; creatures immune only to other healers turn green for you.
+ */
+export function badgesFor(viewer = selectedHealer(), { all = true, healer = true } = {}) {
+  const out = [];
+  const healerActor = healer ? viewer?.actor ?? null : null;
+  for (const token of canvas.tokens?.placeables ?? []) {
+    const actor = token.actor;
+    if (!actor || !token.visible || token.isPreview) continue;
+    if (healerActor && token.id !== viewer.id && actor !== healerActor && isAlly(actor, healerActor)) {
+      const mine = immunitiesOf(actor, { kind: KIND, by: healerActor.uuid })[0];
+      out.push(mine ? { token, kind: "pie", share: remaining(mine) } : { token, kind: "ready", share: 1 });
+      continue;
+    }
+    if (!all) continue;
+    const list = immunitiesOf(actor, { kind: KIND });
+    if (list.length) out.push({ token, kind: "pie", share: Math.max(...list.map(remaining)) });
+  }
+  return out;
+}
+
+function drawBadge(container, { token, kind, share }) {
+  const grid = canvas.grid?.size ?? 100;
+  const r = Math.max(9, grid * 0.12);
+  const x = (token.x ?? token.document.x) + r * 0.9;
+  const y = (token.y ?? token.document.y) + (token.h ?? token.document.height * grid) - r * 0.9;
+  const g = new PIXI.Graphics();
+  g.lineStyle(Math.max(1.5, r * 0.15), 0x1b1b1b, 1);
+  g.beginFill(kind === "ready" ? GREEN : GREY, 1).drawCircle(x, y, r).endFill();
+  if (kind === "pie" && share > 0) {
+    g.lineStyle(0);
+    g.beginFill(RED, 1).moveTo(x, y).arc(x, y, r - 1, -Math.PI / 2, -Math.PI / 2 + share * Math.PI * 2).lineTo(x, y).endFill();
+  }
+  g.lineStyle(0).beginFill(0x1b1b1b, 1).drawCircle(x, y, r * 0.62).endFill();
+  container.addChild(g);
+  // The first-aid glyph (Font Awesome, loaded by Foundry).
+  const icon = new PIXI.Text("\uf479", { fontFamily: ["Font Awesome 6 Pro", "Font Awesome 6 Free", "FontAwesome"], fontWeight: "900", fontSize: Math.round(r * 0.8), fill: 0xffffff });
+  icon.anchor?.set?.(0.5);
+  icon.position.set(x, y);
+  container.addChild(icon);
+}
+
+export function drawBadges() {
+  if (badgeLayer && !badgeLayer.destroyed) badgeLayer.removeChildren().forEach(c => c.destroy({ children: true }));
+  if (!canvas?.ready || !badgeFeature?.active) return;
+  const all = badgeFeature.get("badgesAll") !== false, healer = badgeFeature.get("badgesHealer") !== false;
+  if (!all && !healer) return;
+  const badges = badgesFor(selectedHealer(), { all, healer });
+  if (!badges.length) return;
+  const container = ensureBadgeLayer();
+  for (const b of badges) drawBadge(container, b);
+}
+
+function scheduleBadges() {
+  clearTimeout(badgeTimer);
+  badgeTimer = setTimeout(() => {
+    badgeTimer = null;
+    try { drawBadges(); } catch (err) { console.error("lucd20-automations | Battle Medicine badges", err); }
+  }, 50);
+}
+
 defineFeature({
   id: "pf2eBattleMedicine",
   category: "pf2e",
   systems: ["pf2e"],
   defaultEnabled: true,
+  settings: {
+    badgesAll: { kind: "boolean", default: true, scope: "client" },
+    badgesHealer: { kind: "boolean", default: true, scope: "client" }
+  },
+  onSettingChange() {
+    scheduleBadges();
+  },
   enable(feature) {
+    badgeFeature = feature;
     feature.on("createChatMessage", onCreateMessage);
     feature.on("preCreateChatMessage", onPreCreateMessage);
     feature.on("createItem", onCreateItem);
     feature.on("updateActor", () => BattleMedicineEditor.refresh());
-    feature.onCleanup(registerTooltipExtra("battleMedicine", tooltipLines));
+    // Badges on the tokens (owner's pick: mockups C3 + C4, docs/mockups/bm-badge.png).
+    for (const hook of ["controlToken", "updateActor", "updateWorldTime", "createToken", "deleteToken", "canvasReady", "updateToken"]) feature.on(hook, scheduleBadges);
+    feature.on("refreshToken", (token) => { if (!token.isPreview) scheduleBadges(); });
+    feature.on("canvasTearDown", () => { badgeLayer = null; });
+    feature.onCleanup(() => { clearTimeout(badgeTimer); badgeLayer?.destroy?.({ children: true }); badgeLayer = null; });
+    scheduleBadges();
     feature.on("renderTokenHUD", () => drawHudButton());
     feature.onCleanup(watchDOM("battle-medicine-hud", drawHudButton));
     feature.onCleanup(() => document.querySelectorAll(".lucd20-battle-medicine").forEach(el => el.remove()));

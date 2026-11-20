@@ -107,16 +107,6 @@ const assert = require("assert");
     const fake = { updateSource() {}, flags: {}, content: "" };
     Hooks.callAll("preCreateChatMessage", fake, { content: "", flags: { pf2e: { origin: { uuid: "Actor.kyra.Item.bm", type: "feat" } } } }, {}, game.user.id);
     out.warned = warns;
-    // Token Tooltip: the lines everyone sees; off with the tooltip's setting.
-    const tt = await import(`/modules/${M}/scripts/features/token-tooltip/token-tooltip.js`);
-    await game.settings.set(M, "tokenTooltip_enabled", true);
-    await settle();
-    const kyraTok = { actor: kyra, document: { disposition: 1 }, visible: true };
-    out.tooltip = tt.tooltipRows(kyraTok).filter(r => /kit-medical|holding-medical|user-doctor/.test(r.icon)).map(r => r.value);
-    await game.settings.set(M, "tokenTooltip_battleMedicine", false);
-    await settle();
-    out.tooltipOff = tt.tooltipRows(kyraTok).filter(r => /kit-medical|holding-medical|user-doctor/.test(r.icon)).length;
-
     // Flanking: the ogre (1 square) at 3,3; Amiri at 4,3; Kyra selected at 1,1 (not adjacent).
     canvas.ready = true;
     canvas.grid = { size: 100, isSquare: true, distance: 5 };
@@ -157,6 +147,21 @@ const assert = require("assert");
     Hooks.callAll("refreshToken", preview);
     await settle(150);
     out.dragOffSquare = canvas.controls.children.find(c => c.name?.includes("flanking"))?.children.length ?? 0;
+    // Badges (C3 + C4): nobody selected → the pie on Amiri (immune to Kyra); Kyra selected → Amiri's pie
+    // (immune to Kyra), and a green "ready" on an ally not immune to Kyra; enemies get nothing.
+    canvas.tokens.preview.children = [];
+    const valT = mkTok("t-val", valeros, 6, 6);
+    canvas.tokens.placeables.push(valT);
+    const fmt = list => list.map(b => `${b.token.id}:${b.kind}${b.kind === "pie" ? ":" + b.share.toFixed(2) : ""}`).sort();
+    out.badgesNobody = fmt(bm.badgesFor(null));
+    out.badgesKyra = fmt(bm.badgesFor(kyraT));
+    game.time.worldTime += 12 * 3600;
+    out.badgesHalf = fmt(bm.badgesFor(null));
+    game.time.worldTime -= 12 * 3600;
+    canvas.tokens.controlled = [kyraT];
+    bm.drawBadges();
+    out.badgeLayer = (canvas.interface ?? canvas.controls).children.find(c => c.name?.includes("battle-medicine"))?.children.length ?? 0;
+    canvas.tokens.placeables.pop();
     // Moved next to the ogre opposite Amiri: flanking now (line + shield on the target).
     canvas.tokens.preview.children = [];
     kyraT.document.x = 200; kyraT.document.y = 300;
@@ -183,8 +188,10 @@ const assert = require("assert");
   assert.strictEqual(r.addHeading, "Add: Kyra treated");
   assert.deepStrictEqual(r.byTitle, ["Treated by Kyra: again in 24 h"], "the feat card known by its title");
   assert.deepStrictEqual(r.warned, ["Battle Medicine: target the creature you treat (exactly one) so it is tracked."]);
-  assert.deepStrictEqual(r.tooltip, ["→ Amiri 24 h", "→ Ezren 24 h", "Medic: ready"], "Token Tooltip lines");
-  assert.strictEqual(r.tooltipOff, 0, "off with the Token Tooltip setting");
+  assert.deepStrictEqual(r.badgesNobody, ["t-amiri:pie:1.00"], "everyone: the pie on the immune creature");
+  assert.deepStrictEqual(r.badgesKyra, ["t-amiri:pie:1.00", "t-val:ready"], "Kyra selected: red for immune to her, green for treatable allies");
+  assert.deepStrictEqual(r.badgesHalf, ["t-amiri:pie:0.50"], "the pie empties with world time");
+  assert.strictEqual(r.badgeLayer, 4, "two badges drawn (circle + glyph each)");
   assert.strictEqual(r.shieldOverTarget, true, "while dragging, the shield is over the target");
   assert.deepStrictEqual(r.squares, ["2,3"], "the square opposite Amiri, within 5 ft of the ogre (diagonals enter top and leave right: not opposite)");
   assert.ok(r.shownChildren >= 1, "shown on show()");

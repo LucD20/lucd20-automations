@@ -962,6 +962,19 @@ one that leaves fewer squares next to enemies (see PLAN).
     SF2e, on by default): everyone hovering a token sees "Kyra: immune
     18 h", "→ Amiri 18 h", "Medic: ready / 18 h" (needs Token Tooltip on).
 
+- v0.81.4 (owner picked mockups C3 + C4, `docs/mockups/bm-badge.png`; the
+  Token Tooltip lines "don't look great" and are gone): badges on the
+  tokens, in an overlay layer (`canvas.interface`), redrawn on control,
+  token / actor updates, world time:
+  - everyone (client option `badgesAll`, on): a small first-aid badge on a
+    creature immune to someone's Battle Medicine, a red pie for the share of
+    the longest immunity still to run (empties with world time);
+  - the selected healer (an owned controlled token whose creature has the
+    feat; option `badgesHealer`, on): each ally (`isAllyOf`) gets green
+    (you can treat it) or the red pie of the immunity to *you*; creatures
+    immune only to other healers turn green for you; enemies: nothing new.
+  - Names and times stay in the HUD button's hover; the GM edits there.
+
 ## 24. Flanking overlay (built v0.81.0)
 
 - Owner: "When your token is selected, you have a creature targeted and are

@@ -3392,3 +3392,7 @@ it?" for the selected healer, E + B). Waiting on the owner's pick.
 Round 2 (owner: "C is the right direction, not there yet"): `docs/mockups/bm-badge.html` / `.png`:
 C1 icon only + time on hover, C2 cooldown arc on the ring, C3 cooldown pie badge, C4 dots only while a
 healer is selected (green = can treat, red = immune to you), C5 in the Effects Halo, C3 + C4.
+
+v0.81.4: the owner picked C3 + C4: pie badges on immune creatures for
+everyone, green / red badges on allies for the selected healer; the Token
+Tooltip lines removed (its extension point stays, unused).

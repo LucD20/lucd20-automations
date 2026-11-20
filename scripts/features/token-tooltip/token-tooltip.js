@@ -25,7 +25,7 @@ export const CONFIG_KEY = "tokenTooltipConfig";
 const state = { feature: null, el: null, token: null, dragging: false };
 
 /**
- * Lines other features add after the configured rows (v0.81.2: Battle Medicine). fn(token, user) → [{ icon,
+ * Lines other features add after the configured rows (v0.81.2; Battle Medicine used it until v0.81.4). fn(token, user) → [{ icon,
  * color, value }] for what this user may see. Each can be switched off by a Token Tooltip setting with the
  * same id when the feature declares one (e.g. `battleMedicine`, PF2e).
  */
@@ -169,8 +169,7 @@ defineFeature({
   defaultEnabled: false,
   settings: {
     accent: { kind: "color", default: "#500085" },
-    fontSize: { kind: "range", min: 12, max: 22, step: 1, default: 16, scope: "client" },
-    battleMedicine: { kind: "boolean", default: true, system: "pf2e" }
+    fontSize: { kind: "range", min: 12, max: 22, step: 1, default: 16, scope: "client" }
   },
 
   init() {

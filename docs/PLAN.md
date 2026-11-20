@@ -3563,3 +3563,4 @@ v0.84.1: Battle Medicine "Roll on use" (the owner's console log showed the
 action is read and recorded since 0.81.2; what was missing was the roll):
 using the feat opens the Workbench macro with Battle Medicine chosen, else
 PF2e's Treat Wounds roll; the roll records the use.
+v0.84.2: the Battle Medicine badge mirrors the reaction badge (same size, bottom-left corner of the token).

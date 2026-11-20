@@ -3520,41 +3520,87 @@ Foil (owner): the first time a character earns a card it is foil (the
 holographic shine and a rainbow glow); earned again later: the rarity
 colours only, no foil. Kept per actor (a flag: card id → times earned).
 
-Catalog (30; review page `docs/mockups/combat-cards-catalog.html/.png`,
-numbered; each card has 2 quotes that rotate):
+Catalog (owner: "how big can you make the deck with reliable triggers?";
+55 cards: 18 Common, 18 Rare, 10 Epic, 9 Legendary; #1–30 kept their numbers;
+35 work in every system, the rest need PF2e/SF2e roll data). Review page
+`docs/mockups/combat-cards-catalog.html/.png`, numbered; 2 quotes each,
+rotating. Reliable signals only: HP changes, attack-roll outcomes (with a
+target), saving-throw outcomes, natural 20s, PF2e skill actions (the roll's
+`action:` option), spells cast and their rank, token movement, Hero Points,
+dying value, the fight's shape (rounds, enemy levels). Left out: anything
+that guesses who caused something (conditions without a source, damage
+types, reactions, Shield Block), and negative or joke cards. D&D 4e has no
+outcome on its cards yet (would need its attack cards read).
 
-| # | Card | Rarity | Earned by |
-|---|---|---|---|
-| 1 | The Hammer | Common | Most damage dealt to enemies. |
-| 2 | The Wall | Common | Most damage taken. |
-| 3 | Lifeline | Common | Most healing given. |
-| 4 | First Blood | Common | Dealt the first damage of the fight. |
-| 5 | Finisher | Common | Most final blows. |
-| 6 | Sharpshooter | Common | Best hit rate (2 or more attacks). |
-| 7 | Commander | Common | Most damage dealt by allies during your turn. |
-| 8 | Pack Leader | Common | Most damage by your companion, familiar or summons. |
-| 9 | Steadfast | Common | Fought the whole fight without going down (anyone can get it). |
-| 10 | Shoulder to Shoulder | Common | Fought beside the party (the last resort: everyone can get it). |
-| 11 | One Punch | Rare | The biggest single hit of the fight, at least twice the party's average hit. |
-| 12 | Lucky Star | Rare | 2 critical hits. |
-| 13 | Close Call | Rare | Fell below a quarter of your HP and never went down. |
-| 14 | Untouchable | Rare | Took no damage in a fight of 3 rounds or more. |
-| 15 | Back from the Brink | Rare | Went down and got back up. |
-| 16 | Field Medic | Rare | Healed 2 or more different allies. |
-| 17 | Whirlwind | Rare | Damaged 3 or more different enemies. |
-| 18 | Opening Salvo | Rare | Dealt a quarter or more of the enemies' HP in round 1. |
-| 19 | Iron Hide | Rare | Took a third or more of all the party's damage and never went down. |
-| 20 | Clutch | Rare | Dealt the blow that ended the fight. |
-| 21 | Executioner | Epic | Took an enemy from full HP to down in a single hit. |
-| 22 | Crit Storm | Epic | 3 or more critical hits. |
-| 23 | Guardian Angel | Epic | Brought a downed ally back up. |
-| 24 | Juggernaut | Epic | Took half or more of all the party's damage and never went down. |
-| 25 | Triple Threat | Epic | 3 or more final blows. |
-| 26 | One-Hero Army | Legendary | Dealt half or more of all the party's damage (parties of 3 or more). |
-| 27 | Flawless | Legendary | Most damage dealt, and nobody in the party took any damage. |
-| 28 | Giant Slayer | Legendary | Final blow on an enemy 3 or more levels above the party. |
-| 29 | Ghost | Legendary | Attacked 5 or more times and never hit. |
-| 30 | Last Stand | Legendary | Everyone else in the party went down; you didn't, and the party won. |
+| # | Card | Rarity | Systems | Earned by |
+|---|---|---|---|---|
+| 1 | The Hammer | Common | all | Most damage dealt to enemies. |
+| 2 | The Wall | Common | all | Most damage taken. |
+| 3 | Lifeline | Common | all | Most healing given. |
+| 4 | First Blood | Common | all | Dealt the first damage of the fight. |
+| 5 | Finisher | Common | all | Most final blows. |
+| 6 | Sharpshooter | Common | PF2e/SF2e | Best hit rate (2 or more attacks). |
+| 7 | Commander | Common | all | Most damage dealt by allies during your turn. |
+| 8 | Pack Leader | Common | all | Most damage by your companion, familiar or summons. |
+| 9 | Steadfast | Common | all | Fought the whole fight without going down (anyone can get it). |
+| 10 | Shoulder to Shoulder | Common | all | Fought beside the party (the last resort: everyone can get it). |
+| 11 | One Punch | Rare | all | The biggest single hit of the fight, at least twice the party's average hit. |
+| 12 | Lucky Star | Rare | PF2e/SF2e | 2 critical hits. |
+| 13 | Close Call | Rare | all | Fell below a quarter of your HP and never went down. |
+| 14 | Untouchable | Rare | all | Took no damage in a fight of 3 rounds or more. |
+| 15 | Back from the Brink | Rare | all | Went down and got back up. |
+| 16 | Field Medic | Rare | all | Healed 2 or more different allies. |
+| 17 | Whirlwind | Rare | all | Damaged 3 or more different enemies. |
+| 18 | Opening Salvo | Rare | all | Dealt a quarter or more of the enemies' HP in round 1. |
+| 19 | Iron Hide | Rare | all | Took a third or more of all the party's damage and never went down. |
+| 20 | Clutch | Rare | all | Dealt the blow that ended the fight. |
+| 21 | Executioner | Epic | all | Took an enemy from full HP to down in a single hit. |
+| 22 | Crit Storm | Epic | PF2e/SF2e | 3 or more critical hits. |
+| 23 | Guardian Angel | Epic | all | Brought a downed ally back up. |
+| 24 | Juggernaut | Epic | all | Took half or more of all the party's damage and never went down. |
+| 25 | Triple Threat | Epic | all | 3 or more final blows. |
+| 26 | One-Hero Army | Legendary | all | Dealt half or more of all the party's damage (parties of 3 or more). |
+| 27 | Flawless | Legendary | all | Most damage dealt, and nobody in the party took any damage. |
+| 28 | Giant Slayer | Legendary | all | Final blow on an enemy 3 or more levels above the party. |
+| 29 | Ghost | Legendary | PF2e/SF2e | Attacked 5 or more times and never hit. |
+| 30 | Last Stand | Legendary | all | Everyone else in the party went down; you didn't, and the party won. |
+| 31 | Spellslinger | Common | PF2e/SF2e | Cast the most spells (2 or more). |
+| 32 | Marathon | Common | all | Moved the most squares. |
+| 33 | Immovable | Common | all | Moved 1 square or less in a fight of 3 rounds or more. |
+| 34 | Scholar | Common | PF2e/SF2e | Succeeded at Recall Knowledge. |
+| 35 | Iron Will | Common | PF2e/SF2e | Succeeded at 3 or more saving throws. |
+| 36 | Terror | Common | PF2e/SF2e | Demoralized an enemy successfully. |
+| 37 | Wrestler | Common | PF2e/SF2e | Tripped, Shoved or Grappled an enemy successfully. |
+| 38 | Acrobat | Common | PF2e/SF2e | Tumbled Through an enemy's space successfully. |
+| 39 | Trickster | Rare | PF2e/SF2e | Feinted successfully 2 or more times. |
+| 40 | Natural | Rare | all | Rolled 2 natural 20s. |
+| 41 | Unshakable | Rare | PF2e/SF2e | Critical success on a saving throw. |
+| 42 | Combat Medic | Rare | PF2e/SF2e | Used Battle Medicine on 2 or more allies. |
+| 43 | Fate's Favourite | Rare | PF2e/SF2e | Spent a Hero Point, and the party won. |
+| 44 | Big Guns | Rare | PF2e/SF2e | Cast a spell of the highest rank you can cast. |
+| 45 | Shrugged It Off | Rare | PF2e/SF2e | Succeeded at every saving throw (3 or more). |
+| 46 | Blitz | Rare | all | Most damage in a fight won in a single round. |
+| 47 | Death's Door | Epic | PF2e/SF2e | Reached dying 2 or more and lived. |
+| 48 | Endurance | Epic | all | Never went down in a fight of 6 rounds or more. |
+| 49 | Boss Fight | Epic | all | Most damage to an enemy 2 or more levels above the party. |
+| 50 | Lockdown | Epic | PF2e/SF2e | 3 or more successful Trips, Shoves or Grapples. |
+| 51 | Natural Disaster | Epic | all | Rolled 3 natural 20s. |
+| 52 | Perfect Aim | Legendary | PF2e/SF2e | Hit with every attack (4 or more), at least one a critical hit. |
+| 53 | Saviour | Legendary | all | Brought 2 or more downed allies back up. |
+| 54 | Unstoppable Force | Legendary | all | Dealt three quarters or more of all the enemies' HP. |
+| 55 | Iron Mind | Legendary | PF2e/SF2e | Critical success on 3 or more saving throws. |
+
+Party Deck (owner: "a 'Party Deck' tab (likely in the Party Sheet), where
+they can see all cards gained, stacked by same type"): mockup
+`docs/mockups/party-deck.html/.png`. A "Deck" tab on PF2e's party sheet (D&D
+4e: a tab in our Party Stash window). Header: "15 / 55 discovered" with a
+meter, counts per rarity, filter by character, sort (rarity, most earned,
+newest), show/hide undiscovered. Stacks by card: count ×N, the owners'
+portraits with their counts, the top copy foil when it was a first. Not yet
+earned: face down, rarity only ("???"). Clicking a stack: the big card, its
+rule, and its history (who, which fight, when, the number, foil marks); GM:
+Grant… / Remove… (corrections). Kept per actor (flag: card id → list of
+{ at, scene, value, foil }), so it follows a character between parties.
 
 Choosing (draft): every party member gets exactly one card; candidates
 from all cards they qualify for, best rarity first, then how strongly they

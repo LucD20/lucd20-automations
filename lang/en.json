@@ -872,9 +872,9 @@
       },
       "encounterReport": {
         "Name": "Encounter Report",
-        "Hint": "When an encounter ends, a chat card with each ally's damage: dealt by itself (companions' added to their master), as a percentage of the HP the enemies had when the combat started, dealt by its side on its turn, friendly fire, taken and healed. Damage the module couldn't tie to a creature shows as \"Missed damage\". Sources: PF2e's damage messages; D&D 4e's damage buttons.",
+        "Hint": "When an encounter ends, a window with each ally's damage (past encounters too; reopen it from the chat's buttons): dealt by itself (companions' added to their master), as a percentage of the HP the enemies had when the combat started, dealt by its side on its turn, friendly fire, taken and healed. Damage the module couldn't tie to a creature shows as \"Missed damage\". Sources: PF2e's damage messages; D&D 4e's damage buttons.",
         "Setting": {
-          "public": { "Name": "Everyone sees the card", "Hint": "Off: only the GM." }
+          "public": { "Name": "Everyone sees the report", "Hint": "Off: only the GM." }
         }
       },
       "pf2eMultiCheck": {
@@ -2242,6 +2242,9 @@
       "Title": "Encounter report",
       "Missed": "Missed damage: {n}",
       "Nothing": "No damage recorded.",
+    "NoReports": "No encounter reports yet.",
+    "Encounter": "Encounter",
+    "Entry": "{scene} · {rounds} rounds · {when}",
       "Col": {
         "Name": "",
         "NameHint": "",
@@ -2276,7 +2279,19 @@
       "SellAllConfirm": "Sell {count} items (everything but treasure and coins) for {price}?",
       "SoldAll": "Sold {count} items for {price}.",
       "Items": "Items",
-      "NothingToSell": "Nothing to sell (treasure and coins aren't sold here)."
+      "NothingToSell": "Nothing to sell (treasure and coins aren't sold here).",
+    "SellTitle": "Sell {name}",
+    "SellConfirm": "Sell {name} for {price} (half price)?",
+    "SellEach": "{price} each (half price).",
+    "WindowTitle": "Sell items",
+    "WindowFor": "Sell items: {name}",
+    "WindowTooltip": "Sell items (half price; not treasure)",
+    "Total": "Total: {price}",
+    "HalfPrice": "(half price)",
+    "SelectAll": "Select all",
+    "SelectNone": "Select none",
+    "SellSelected": "Sell selected",
+    "SellSelectedConfirm": "Sell {count} items for {price}?"
     },
     "BattleMedicine": {
       "Name": "Battle Medicine",

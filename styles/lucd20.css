@@ -2882,3 +2882,17 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-encounter-report tbody tr:nth-child(odd) { background: rgba(0, 0, 0, 0.06); }
 .lucd20-encounter-report .lpr-plus { opacity: 0.7; font-size: 0.9em; }
 .lucd20-encounter-report .lpr-missed { margin: 4px 0 0; opacity: 0.55; font-size: 0.85em; }
+
+/* Sell items window (pf2eSell) */
+.lucd20-sell-app .lucd20-sell-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 3px; max-height: 60vh; overflow-y: auto; }
+.lucd20-sell-app .lucd20-sell-row { display: grid; grid-template-columns: 1fr 56px auto 72px; align-items: center; gap: 6px; }
+.lucd20-sell-app .lucd20-sell-row label { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.lucd20-sell-app .lucd20-sell-row img { width: 24px; height: 24px; border: none; }
+.lucd20-sell-app .lucd20-sell-row .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lucd20-sell-app .lucd20-sell-row .price { text-align: right; }
+.lucd20-sell-app .sub { opacity: 0.7; font-size: 0.85em; }
+.lucd20-sell-app .lucd20-sell-total { margin: 8px 0 4px; font-weight: 600; }
+.lucd20-sell-app .lucd20-sell-footer { display: flex; gap: 6px; }
+.lucd20-sell-app .lucd20-sell-footer button { flex: 1; }
+.lucd20-report-app .lucd20-report-pick { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.lucd20-report-app .lucd20-report-pick select { flex: 1; }

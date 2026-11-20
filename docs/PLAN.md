@@ -3564,3 +3564,28 @@ action is read and recorded since 0.81.2; what was missing was the roll):
 using the feat opens the Workbench macro with Battle Medicine chosen, else
 PF2e's Treat Wounds roll; the roll records the use.
 v0.84.2: the Battle Medicine badge mirrors the reaction badge (same size, bottom-left corner of the token).
+
+### 26.5 v0.84.3 (owner's test: "should be a window; it didn't track anything")
+
+- The report is a window (`ReportWindow`), opened for everyone at the end
+  of the encounter (broadcast; option "Everyone sees the report"), with a
+  dropdown of the past encounters (history, newest 20) and a chat-controls
+  button to reopen it. No chat card.
+- Recording also starts lazily on the first HP change of a started combat
+  without a record (a combat already running, or a missed start; Foundry
+  fires `combatStart` while still at round 0, so the start comes from the
+  `updateCombat` to round 1).
+- Debug: `CONFIG.debug.lucd20Report = true` (or `lucd20Rules`) logs the
+  start, every HP change seen (with whether it is recorded), hints, events
+  and the end. (verify) with the owner why nothing was recorded.
+
+### 22.4 Sell (v0.84.3)
+
+Owner: "Ask for confirmation when selling. Add the same icon on PCs' sheet,
+next to 'sell all treasure', 'add coin' etc. like 'Sell items', and from
+there they can sell in bulk." Every single sale is confirmed (a stack: how
+many, in the same dialog, with the price each). Characters / NPCs /
+familiars get "Sell items" after "Sell all treasure": a window listing
+sellable priced items (checkbox, how many for stacks, half price each),
+Select all / none, the total, "Sell selected" (confirmed; one chat card).
+Test 70.

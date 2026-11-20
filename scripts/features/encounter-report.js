@@ -1,7 +1,11 @@
 import { MODULE_ID, localize, systemMatches } from "../core/constants.js";
 import { defineFeature } from "../core/registry.js";
 import { readHP } from "../core/hp.js";
-import { executeAsGM, onGMRequest } from "../core/socket.js";
+import { broadcast, executeAsGM, onBroadcast, onGMRequest } from "../core/socket.js";
+import { addChatControl } from "../core/chat-controls.js";
+
+/** Debug: `CONFIG.debug.lucd20Report = true` (or lucd20Rules) logs what is recorded. */
+const dbg = (...args) => { if (CONFIG.debug?.lucd20Report || CONFIG.debug?.lucd20Rules) console.log("lucd20-automations | Encounter Report:", ...args); };
 
 /**
  * Encounter Report (owner, PLAN §26; v0.84.0). At the end of an encounter, a chat card with each ally's damage.
@@ -15,7 +19,8 @@ import { executeAsGM, onGMRequest } from "../core/socket.js";
  * - Kept on the combat's flags; when the combat is deleted the card is posted and a summary goes to a world
  *   history (newest 20; for a later Dice Stats tab).
  *
- * The card (everyone sees it by default; option): one row per creature on the players' side that took part,
+ * The report window (v0.84.3; was a chat card): opens for everyone at the end (option: GM only), with a
+ * list of past encounters; reopened from the chat's buttons. One row per creature on the players' side that took part,
  * best first:
  *   Damage (dealt by itself to enemies; minions' / companions' damage also shown added to their master,
  *   "45 +12") | % of enemy HP (its damage ÷ the HP the enemies had when the combat started) | On its turn
@@ -60,6 +65,7 @@ export async function noteSource(targetUuid, sourceUuid, kind = null) {
 
 function addHint(hint) {
   hint.time = Date.now();
+  dbg("hint", hint.target, "←", hint.source, hint.kind ?? "");
   state.hints.push(hint);
   state.hints = state.hints.filter(h => Date.now() - h.time < HINT_WINDOW_MS * 2);
   // A hint arriving after its HP change (PF2e) resolves the pending event at once.
@@ -102,6 +108,7 @@ async function startRecording(combat) {
     if (hp) state.cache.set(actor.uuid, hp);
   }
   await combat.setFlag(MODULE_ID, FLAG, { participants, events: [] });
+  dbg("recording", combat.id, Object.values(participants).map(p => `${p.name} (side ${p.side}, ${p.hp} HP)`));
 }
 
 function onUpdateActor(actor) {
@@ -110,14 +117,17 @@ function onUpdateActor(actor) {
   const before = state.cache.get(actor.uuid);
   const after = readHP(actor);
   if (after) state.cache.set(actor.uuid, after);
-  if (!before || !after || !recording(combat)) return;
-  const delta = (before.value + before.temp) - (after.value + after.temp);
-  if (!delta) return;
+  const delta = before && after ? (before.value + before.temp) - (after.value + after.temp) : 0;
+  if (delta) dbg("HP change", actor.name, -delta, { combat: combat?.id ?? null, started: !!combat?.started, recording: recording(combat) });
+  if (!before || !after || !delta || !combat?.started) return;
+  // A combat already running when the feature started (or whose start was missed): start now.
+  if (!recording(combat)) startRecording(combat);
   const ev = {
     time: Date.now(), round: combat.round, turn: combat.combatant?.actor?.uuid ?? null,
     target: actor.uuid, amount: Math.abs(delta), kind: delta > 0 ? "damage" : "heal", source: null
   };
   ev.source = takeHint(ev);
+  dbg("event", ev.kind, ev.amount, actor.name, "source:", ev.source ?? "none yet");
   state.pending.push(ev);
   setTimeout(() => settle(ev), SETTLE_MS);
 }
@@ -210,14 +220,61 @@ async function onDeleteCombat(combat) {
   data.events = [...(data.events ?? []), ...(state.unsaved?.get(combat.id) ?? [])];
   state.unsaved?.delete(combat.id);
   const report = buildReport(data);
-  if (!report.rows.length && !report.missed) return;
-  const whisper = state.feature?.get("public") === false ? ChatMessage.getWhisperRecipients("GM").map(u => u.id) : [];
-  await ChatMessage.create({ content: reportHTML(report), speaker: { alias: t("Title") }, whisper });
+  dbg("combat ended", combat.id, data.events.length, "events", report);
+  if (!data.events.length) return;
+  const entry = { at: Date.now(), scene: combat.scene?.name ?? "", rounds: combat.round, ...report };
   try {
     const history = game.settings.get(MODULE_ID, HISTORY_KEY) ?? [];
-    history.push({ at: Date.now(), scene: combat.scene?.name ?? "", rounds: combat.round, ...report });
+    history.push(entry);
     await game.settings.set(MODULE_ID, HISTORY_KEY, history.slice(-20));
-  } catch { /* history is optional */ }
+  } catch (err) { console.error("lucd20-automations | Encounter Report history", err); }
+  // The window (owner, v0.84.3: "should be a window"), for everyone unless the option says GM only.
+  const everyone = state.feature?.get("public") !== false;
+  if (everyone) broadcast("encounterReport.show", {});
+  ReportWindow.open();
+}
+
+/* -------------------------------------------- */
+/*  The window                                  */
+/* -------------------------------------------- */
+
+const { ApplicationV2 } = foundry.applications.api;
+
+const history = () => { try { return game.settings.get(MODULE_ID, HISTORY_KEY) ?? []; } catch { return []; } };
+const canSee = () => game.user.isGM || state.feature?.get("public") !== false;
+
+export class ReportWindow extends ApplicationV2 {
+  static DEFAULT_OPTIONS = {
+    id: "lucd20-encounter-report",
+    classes: ["lucd20-loot-app", "lucd20-report-app"],
+    window: { title: "LUCD20.EncounterReport.Title", icon: "fa-solid fa-chart-column", resizable: true },
+    position: { width: 560, height: "auto" },
+    actions: {}
+  };
+
+  /** Open on the newest report (or a given one: its index in the history). */
+  static open(index = null) {
+    if (!canSee()) return null;
+    const app = foundry.applications.instances?.get(this.DEFAULT_OPTIONS.id) ?? new this();
+    const list = history();
+    app.index = index ?? list.length - 1;
+    return app.render({ force: true });
+  }
+
+  async _renderHTML() {
+    const list = history();
+    const entry = list[this.index] ?? list.at(-1);
+    if (!entry) return `<p class="lucd20-report-empty">${esc(t("NoReports"))}</p>`;
+    const options = list.map((e, i) => `<option value="${i}" ${list[this.index] === e || (!list[this.index] && i === list.length - 1) ? "selected" : ""}>${esc(t("Entry", { scene: e.scene || "—", rounds: e.rounds ?? "?", when: new Date(e.at).toLocaleString() }))}</option>`).reverse().join("");
+    return `<div class="lucd20-report-body">
+      <label class="lucd20-report-pick">${esc(t("Encounter"))} <select class="pick">${options}</select></label>
+      ${reportHTML(entry)}</div>`;
+  }
+
+  _replaceHTML(result, content) {
+    content.innerHTML = result;
+    content.querySelector("select.pick")?.addEventListener("change", ev => { this.index = Number(ev.target.value); this.render(); });
+  }
 }
 
 defineFeature({
@@ -231,9 +288,17 @@ defineFeature({
   init() {
     game.settings.register(MODULE_ID, HISTORY_KEY, { scope: "world", config: false, type: Array, default: [] });
     onGMRequest("encounterReport.hint", hint => { if (state.feature?.active) addHint(hint); return true; });
+    onBroadcast("encounterReport.show", () => { if (state.feature?.active) ReportWindow.open(); });
   },
   enable(feature) {
     state.feature = feature;
+    // Reopen the reports (history) from the chat's buttons.
+    feature.onCleanup(addChatControl({
+      id: "encounterReport", icon: "fa-solid fa-chart-column", tooltip: t("Title"), order: 41,
+      visible: () => canSee() && history().length > 0,
+      onClick: () => ReportWindow.open()
+    }));
+    feature.onCleanup(() => foundry.applications.instances?.get(ReportWindow.DEFAULT_OPTIONS.id)?.close());
     for (const a of game.actors ?? []) { const hp = readHP(a); if (hp) state.cache.set(a.uuid, hp); }
     for (const tok of canvas?.tokens?.placeables ?? []) { const hp = tok.actor && readHP(tok.actor); if (hp) state.cache.set(tok.actor.uuid, hp); }
     feature.on("combatStart", combat => startRecording(combat));

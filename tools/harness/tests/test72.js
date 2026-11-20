@@ -43,7 +43,7 @@ const assert = require("assert");
     const kyra = mkActor("kyra", "Kyra", 30), ogre = mkActor("ogre", "Ogre", 60);
     const flags = {};
     const combat = {
-      id: "c1", started: true, active: true, round: 1, scene: { name: "Cave" }, flags,
+      id: "c1", started: false, active: true, round: 0, scene: { name: "Cave" }, flags,
       combatants: [{ actor: kyra, token: { name: "Kyra", disposition: 1 } }, { actor: ogre, token: { name: "Ogre", disposition: -1 } }],
       get combatant() { return this.combatants[0]; },
       getFlag(ns, k) { return flags[ns]?.[k]; }, async setFlag(ns, k, v) { (flags[ns] ??= {})[k] = v; }
@@ -55,7 +55,12 @@ const assert = require("assert");
     window.ChatMessage = { getSpeaker: () => ({}), getWhisperRecipients: () => [], create: async d => { posted.push(d); return d; } };
     await game.settings.set(M, "encounterReport_enabled", true);
     await settle();
-    Hooks.callAll("combatStart", combat);
+    // Foundry's order: combatStart while still round 0, then the update to round 1.
+    Hooks.callAll("combatStart", combat, { round: 1, turn: 0 });
+    await settle(50);
+    out.startedEarly = !!flags[M]?.encounterReport;
+    combat.round = 1; combat.started = true;
+    Hooks.callAll("updateCombat", combat, { round: 1 });
     await settle(150);
     out.started = !!flags[M]?.encounterReport;
     // Kyra hits the ogre for 14 (PF2e: the message comes just after the HP change).
@@ -76,9 +81,10 @@ const assert = require("assert");
     // End of combat: the card.
     Hooks.callAll("deleteCombat", combat);
     await settle(300);
-    const div = document.createElement("div"); div.innerHTML = posted[0]?.content ?? "";
-    out.card = [...div.querySelectorAll("tbody tr")].map(tr => [...tr.children].map(td => td.textContent.trim()).join("|"));
-    out.cardMissed = div.querySelector(".lpr-missed")?.textContent;
+    const div = foundry.applications.instances.get("lucd20-encounter-report")?.element;
+    out.card = [...(div?.querySelectorAll("tbody tr") ?? [])].map(tr => [...tr.children].map(td => td.textContent.trim()).join("|"));
+    out.cardMissed = div?.querySelector(".lpr-missed")?.textContent;
+    out.noChat = posted.length === 0;
     out.history = game.settings.get(M, "encounterReport_history").length;
     return out;
   });
@@ -88,9 +94,10 @@ const assert = require("assert");
   assert.deepStrictEqual(r.rows, ["Amiri|28+0|35%|20|4|0|0", "Kyra|10+8|13%|23|0|16|6", "Wolf|8+0|10%|8|0|0|0"],
     "own damage; companions added to the master; % of 80 enemy HP; on-turn by the side; friendly fire; taken; healed");
   assert.strictEqual(r.missed, 5);
-  assert.ok(r.started);
+  assert.ok(!r.startedEarly && r.started, "recording starts once round 1 is applied");
   assert.deepStrictEqual(r.events, ["Actor.ogre<Actor.kyra:14", "Actor.kyra<Actor.ogre:9", "Actor.ogre<?:3"], "hint after, hint before, none");
-  assert.deepStrictEqual(r.card, ["Kyra|14|23%|17||9|"], "the card's row (the ogre: no row)");
+  assert.deepStrictEqual(r.card, ["Kyra|14|23%|17||9|"], "the window's row (the ogre: no row)");
+  assert.ok(r.noChat, "a window, no chat card");
   assert.strictEqual(r.cardMissed, "Missed damage: 3");
   assert.strictEqual(r.history, 1);
   console.log("PHASE 72 CHECKS PASSED");

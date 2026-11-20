@@ -3398,7 +3398,7 @@ everyone, green / red badges on allies for the selected healer; the Token
 Tooltip lines removed (its extension point stays, unused).
 v0.81.5: the badge sits higher, clear of the HP bar (owner).
 
-## 26. Encounter report — damage per creature (owner, 2026-11-20; plan agreed, not built)
+## 26. Encounter report — damage per creature (owner, 2026-11-20; built v0.84.0 as `encounterReport`)
 
 Owner: "Has to kinda be per system. Damage dealt on turn, if dealt by
 allies, counts to your total combat damage, so a commander sees how the
@@ -3532,3 +3532,29 @@ tick, red past max; hover lists members, stash, bags) with adapters:
   by weight (contents of containers counted), weightless containers in the
   stash add their capacity; in the Party Stash window under the coins.
 Test 71.
+
+### 26.4 Built (v0.84.0)
+
+`features/encounter-report.js` (Combat, GM, on; option "Everyone sees the
+card", on) with adapters (`systems/pf2e/encounter-report.js`; 4e in
+`dnd4e/damage-apply.mjs`):
+- Recording on the active GM's client from combat start (`combatStart`, or
+  the first update of a started combat): participants (name, side from the
+  token's disposition: friendly 1, hostile −1 / secret −2, HP + temp at the
+  start, master), then every HP change (value + temp, the Damage Log's
+  reading; linked and unlinked tokens) → { round, turn (the combatant whose
+  turn), target, amount, kind, source } on the combat's flags.
+- Sources: "hints" `noteSource(target, source, kind)` (from any client; to
+  the GM by socket), matched to the change within 4 s before or after:
+  PF2e's damage-taken message (`appliedDamage.uuid`; source =
+  `origin.actor`; persistent damage: the condition's
+  `system.context.origin.actor`), 4e's damage buttons (the damage card's
+  speaker, before applying). Settled 2 s after the change.
+- The card on `deleteCombat`: rows for the friendly side (not hidden
+  combatants), best first: Damage (+ companions', master from PF2e's
+  `actor.master`) | % enemy HP (of the enemies' HP at the start) | On turn
+  (damage to enemies by its side or by an unknown source during its turns)
+  | Allies (friendly fire) | Taken | Healed; "Missed damage: N" faded. A
+  world history (`encounterReport_history`, newest 20) for a later tab.
+- Test 72. (verify) in Foundry: the damage-taken message's origin in PF2e
+  8.7, persistent damage, eidolons / animal companions as masters.

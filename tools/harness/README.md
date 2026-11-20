@@ -108,6 +108,7 @@ sets `game.system.id`.
 | `test69.js` | Battle Medicine (the Treat Wounds and Battle Medicine macro, the feat card by origin or title, the no-target warning, the same use twice, Medic Dedication, the 1-hour exceptions, the GM editor, the badges for everyone and for the selected healer) and the overlay (the timed window, flank squares, the shield over the target while dragging) (v0.81.4) |
 | `test70.js` | Sell: the icon (not on treasure), half price, stacks, the chat line; Sell all equipment on loot sheets (treasure kept, out of sold containers, unpriced kept) (v0.82.0) |
 | `test71.js` | Party Load: PF2e (members + stash + Bag of Holding, the bar under Total bulk, ticks, colours, hover) and D&D 4e (pounds, weightless bag) (v0.83.0) |
+| `test72.js` | Encounter Report: the report from data (own damage, companions, % of enemy HP, on turn, friendly fire, taken, healed, missed), recording with hints before / after the HP change, the card at the end (v0.84.0) |
 
 For a new feature, copy the closest test, keep its mock setup and replace the
 checks.

@@ -2873,3 +2873,12 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-party-load .lpl-tick { position: absolute; top: -1px; bottom: -1px; width: 2px; margin-left: -1px; background: #f0e6d2; box-shadow: 0 0 2px #000; }
 .lucd20-party-load .lpl-tick.lpl-max { background: #ff6b6b; }
 .lucd20-party-load .lpl-label { display: flex; justify-content: space-between; gap: 8px; margin-top: 2px; }
+
+/* Encounter Report card (encounterReport) */
+.lucd20-encounter-report h3 { margin: 0 0 4px; font-size: 1.05em; }
+.lucd20-encounter-report table { width: 100%; border-collapse: collapse; font-size: 0.85em; }
+.lucd20-encounter-report th, .lucd20-encounter-report td { padding: 2px 3px; text-align: right; white-space: nowrap; }
+.lucd20-encounter-report th:first-child, .lucd20-encounter-report td:first-child { text-align: left; white-space: normal; }
+.lucd20-encounter-report tbody tr:nth-child(odd) { background: rgba(0, 0, 0, 0.06); }
+.lucd20-encounter-report .lpr-plus { opacity: 0.7; font-size: 0.9em; }
+.lucd20-encounter-report .lpr-missed { margin: 4px 0 0; opacity: 0.55; font-size: 0.85em; }

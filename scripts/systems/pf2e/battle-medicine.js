@@ -64,7 +64,7 @@ export const medicReady = healer => hasFeat(healer, "medic-dedication") && !immu
  */
 export function isFeatCard(flags, content = "") {
   const origin = flags?.origin ?? {};
-  const item = origin.uuid ? fromUuidSync?.(origin.uuid) : null;
+  const item = origin.uuid ? globalThis.fromUuidSync?.(origin.uuid) : null;
   if (item && (slugOf(item) === SLUG || isBattleMedicineText(item.name))) return true;
   if ((origin.rollOptions ?? []).some(o => o === `origin:item:slug:${SLUG}` || o === `item:slug:${SLUG}`)) return true;
   if (origin.type && origin.type !== "feat" && origin.type !== "action") return false;
@@ -104,7 +104,7 @@ export function readUse(message) {
   const context = flags.context ?? {};
   const ours = message.flags?.["lucd20-automations"]?.bmTarget ?? null;
   const healer = message.actor ?? (message.speaker?.actor ? game.actors?.get(message.speaker.actor) : null);
-  const originItem = flags.origin?.uuid ? fromUuidSync?.(flags.origin.uuid) : null;
+  const originItem = flags.origin?.uuid ? globalThis.fromUuidSync?.(flags.origin.uuid) : null;
   // 2. The feat's own action card (the healer: the card's actor, i.e. its token).
   if (!context.type && isFeatCard(flags, message.content)) return healer && ours ? { healer, patientUuid: ours } : null;
   // 3. A Medicine check naming Battle Medicine.

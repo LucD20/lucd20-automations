@@ -869,6 +869,13 @@
         "Name": "Party Load",
         "Hint": "The party's encumbrance as one bar, like PF2e's bulk bar: everything the party members carry plus the Party Stash, with two ticks at the members' encumbered and maximum limits added up. Extradimensional containers in the stash (Bag of Holding, Spacious Pouch) add their capacity. Hover it for each member, the stash and each bag. PF2e: on the party sheet's Stash tab; D&D 4e: in the Party Stash window (pounds)."
       },
+      "encounterReport": {
+        "Name": "Encounter Report",
+        "Hint": "When an encounter ends, a chat card with each ally's damage: dealt by itself (companions' added to their master), as a percentage of the HP the enemies had when the combat started, dealt by its side on its turn, friendly fire, taken and healed. Damage the module couldn't tie to a creature shows as \"Missed damage\". Sources: PF2e's damage messages; D&D 4e's damage buttons.",
+        "Setting": {
+          "public": { "Name": "Everyone sees the card", "Hint": "Off: only the GM." }
+        }
+      },
       "pf2eMultiCheck": {
         "Name": "Multiple Checks",
         "Hint": "Post several checks as one chat card. Shift-click an inline check's \"send to chat\" icon to collect it (a check group adds all of its checks), paste or drop selected journal text or @Check codes, or add a skill and DC by hand; then Send. Players see one button per check and how much lower each DC is than the hardest (\"Stealth (DC 2 lower)\"); only the GM sees the DCs. GM only; the window also opens from the chat's buttons."
@@ -2229,6 +2236,27 @@
       "Placed": "Stairs {n} placed: each end teleports to the other.",
       "PlacedOneWay": "Stairs {n} placed: the first end teleports to the second.",
       "Failed": "The stairs could not be placed (see the console)."
+    },
+    "EncounterReport": {
+      "Title": "Encounter report",
+      "Missed": "Missed damage: {n}",
+      "Nothing": "No damage recorded.",
+      "Col": {
+        "Name": "",
+        "NameHint": "",
+        "Damage": "Damage",
+        "DamageHint": "Dealt to enemies by this creature (+ its companions')",
+        "Percent": "% enemy HP",
+        "PercentHint": "Its damage against all the HP the enemies had when the combat started",
+        "OnTurn": "On turn",
+        "OnTurnHint": "Damage to enemies by its side during its turns",
+        "Friendly": "Allies",
+        "FriendlyHint": "Damage it dealt to its own side",
+        "Taken": "Taken",
+        "TakenHint": "Damage it took",
+        "Healed": "Healed",
+        "HealedHint": "Healing it gave"
+      }
     },
     "PartyLoad": {
       "Title": "Party load",

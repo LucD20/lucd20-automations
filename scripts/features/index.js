@@ -48,3 +48,4 @@ import "./quick-teleport.js";
 import "./token-reactions/token-reactions.js";
 import "./signature-spells/signature-spells.js";
 import "./party-load.js";
+import "./encounter-report.js";

@@ -2881,7 +2881,28 @@ no longer match the module); not touched.
 5. **Battle Medicine HUD** (Q291), **Flanking overlay** (Q292). **Built v0.81.0** (rules 23, 24 in the ledger; test 69).
 6. **Dice Stats**: damage per turn tab, dice per creature and the end card
    (Q293–Q294), one per-encounter record for both.
-7. **Sell** (Q295; **built v0.82.0**, `systems/pf2e/sell.js`, test 70), **Hero start area** (Q296).
+7. **Sell** (Q295; **built v0.82.0**, `systems/pf2e/sell.js`, test 70), **Hero start area** (Q296; **built v0.87.0**, `features/hero-start.js`, test 75).
+
+**Hero Start Area as built (v0.87.0, `heroStart`, every system; owner, 2026-11-25:
+"Start with Hero Start area", then Dice Stats, then test it all):**
+- The GM who creates an encounter on the viewed scene gets the bar "Click on
+  the map to create the start area" | Cancel. Click = a square; drag = the
+  rectangle's squares reachable from the drag's first square without
+  crossing a movement wall (8 neighbours); Shift + click / drag removes.
+  Live preview (blue; red when removing).
+- The first area teleports every player character's token (player-owned,
+  type character / Player Character) into it, by name, reading order, each
+  where its whole footprint is in the area and free (other tokens count);
+  no room: stacked on the first square. Update options `animate: false,
+  teleport: true` ((verify) in V14 that it's a teleport, no walk).
+- Then the bar reads "Click or drag to add squares" | Done; Escape / Done
+  stop; reopen from a chat button (flag icon) while an unstarted encounter
+  is on the scene.
+- Everyone sees the area (gold squares, outer outline, "Start" label) on our
+  canvas overlay; stored on the combat (`flags.lucd20-automations.heroStart`
+  = { scene, cells: ["col,row"] }). Starting the encounter unsets it;
+  deleting the encounter removes it with the combat.
+- Square grids only (gridless / hex: no bar).
 
 ---
 

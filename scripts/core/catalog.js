@@ -34,6 +34,7 @@ export const FEATURE_ORDER = [
   { id: "defeatAutomation", category: "combat", phase: 13 },
   { id: "encounterReport", category: "combat", phase: 73 },
   { id: "combatCards", category: "combat", phase: 74 },
+  { id: "heroStart", category: "combat", phase: 75 },
   { id: "hudCombatLock", category: "combat", phase: 12 },
   { id: "combatMovement", category: "combat", phase: 15 },
   { id: "sharedPicks", category: "combat", phase: 66 },

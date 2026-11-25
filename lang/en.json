@@ -898,6 +898,10 @@
           "reportDelay": { "Name": "Report after (seconds)", "Hint": "How long the cards stay alone before the Encounter Report fades in." }
         }
       },
+      "heroStart": {
+        "Name": "Hero Start Area",
+        "Hint": "When you create an encounter, click on the map to mark where the heroes start: a click marks a square, a drag marks an area (only the squares reachable from where the drag started without crossing a wall); Shift removes squares. The first area teleports every player character's token into it. Everyone sees the area until the encounter starts. Reopen it from the chat buttons. Square grids only."
+      },
       "pf2eMultiCheck": {
         "Name": "Multiple Checks",
         "Hint": "Post several checks as one chat card. Shift-click an inline check's \"send to chat\" icon to collect it (a check group adds all of its checks), paste or drop selected journal text or @Check codes, or add a skill and DC by hand; then Send. Players see one button per check and how much lower each DC is than the hardest (\"Stealth (DC 2 lower)\"); only the GM sees the DCs. GM only; the window also opens from the chat's buttons."
@@ -2734,6 +2738,14 @@
           "Q2": "You'll have to do better."
         }
       }
+    },
+    "HeroStart": {
+      "Prompt": "Click on the map to create the start area (drag for an area; Shift removes)",
+      "Adding": "Click or drag to add squares (Shift removes)",
+      "Done": "Done",
+      "Cancel": "Cancel",
+      "Control": "Hero start area",
+      "Label": "Start"
     },
     "PartyLoad": {
       "Title": "Party load",

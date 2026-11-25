@@ -109,6 +109,7 @@ sets `game.system.id`.
 | `test70.js` | Sell: the icon (not on treasure), half price, stacks, the chat line; Sell all equipment on loot sheets (treasure kept, out of sold containers, unpriced kept) (v0.82.0) |
 | `test71.js` | Party Load: PF2e (members + stash + Bag of Holding, the bar under Total bulk, ticks, colours, hover) and D&D 4e (pounds, weightless bag) (v0.83.0) |
 | `test72.js` | Encounter Report: the report from data (own damage, companions, % of enemy HP, on turn, friendly fire, taken, healed, missed), recording with hints before / after the HP change, the card at the end (v0.84.0) |
+| `test79.js` | Signature Spells: Such a Disgrace! (the feat's card, the ally from the failed Will save, the pick with several, the target with none, what the other clients are told, the spotlight, Less motion, `useSignature`) (v0.90.0) |
 
 For a new feature, copy the closest test, keep its mock setup and replace the
 checks.

@@ -3934,3 +3934,85 @@ a single item), with Sell N for {price} and Cancel. The Sell items window
 has the Loot Pile look: select-all box (some/all), item rows with icons,
 how many (changing it picks the row), the price and price each, Total,
 Cancel and "Sell N". Test 70.
+
+## 28. Such a Disgrace! — a signature animation (owner, 2026-11-25; built for v0.90.0)
+
+Owner: "I want Such a Disgrace Feat from the Dandy archetype to have a cool
+funny animation. Give me a few simple different mockups of the animation after
+using it." The feat (Dandy archetype, level 4, reaction): an ally within 30
+feet fails a Will save against a mental effect; the ally rerolls with +1 and
+keeps the higher result.
+
+Mockups: `docs/mockups/such-a-disgrace.html` (plain 2D canvas, each frame a
+function of the time), five variants: A glove slap, B monocle pop, **C
+spotlight of shame**, D cut-in strip, E stamp.
+
+Owner: "C is good, though the finger coming from the top looks... a bit nsfw,
+but I like it. The reaction already has to proc when someone fails a save, so
+you can likely get the target from it; if more than one, then a selection
+should appear for the player."
+
+**Built** (branch `claude/nifty-bohr-24hfbn`, no version of its own: it is
+released with the branch that has rule 28, v0.89.0 → 0.90.0): the third
+signature of Signature Spells (§20), `suchADisgrace`;
+`scripts/features/signature-spells/spells/such-a-disgrace.js`; test
+`test79.js`.
+
+- **The look** (variant C): the window dims (0.74) with a hole of light on the
+  ally and a beam from above; the ally blushes and sweats; a gloved hand comes
+  in and wags its finger three times ("tut" left, right, left); the dandy's
+  speech bubble "Such a disgrace!"; at 2.2 s the light turns gold, a gold ring,
+  sparkles and "+1"; 3.6 s in all.
+  - The hand was redrawn (owner: the first one looked NSFW): a coat sleeve with
+    gold buttons, a lace cuff, a fist with the thumb across and three curled
+    fingers, the index out with two creases; it comes in from the upper right
+    along its own arm (tilted 0.42 rad) instead of straight down.
+  - All of it is painted on the screen overlay (`fx.screenPaint`), placed from
+    the tokens every frame, sized by the ally's token on screen (80 px = the
+    mockup; kept between 0.5 and 2.6). No token is moved or changed, and Token
+    Reactions is not involved.
+  - Not in the module: the mockup's save chip, the purple swirl and thread
+    (they only set the scene there).
+- **What starts it**: the feat's card posted to chat (an item's card without a
+  roll, or a self-effect's card), slug `such-a-disgrace` (a card without a slug
+  goes by its name). The PF2e reader now reads such cards as `roll: "card"`.
+- **On whom** (the new `choose` of a signature, `registry.js`): asked on the
+  client of the one who posted the card, only there.
+  - The reader's `candidates`: among the last 40 chat messages of the last 3
+    minutes that this user may see, the tokens whose **latest** Will save is a
+    failure or critical failure and not a reroll, that are not the dandy, have
+    the dandy's disposition and are within 30 feet. When any of those saves is
+    known to be against a mental effect (`item:trait:mental` among its
+    options), only those.
+  - One: that ally. Several: a small window, one button per ally, the latest
+    save first (a name the player may not read is "Ally n"); closing it plays
+    nothing. None: the token that user targets; no target: a note, nothing
+    plays.
+  - Then that client tells the others (`signatureUse` over the module socket:
+    the dandy's and the ally's token ids, never a hidden token's; for a
+    whispered card, only its recipients play it). With "Show them to me" off
+    for the one who used it, the others still get it.
+- **From the rule's own card** (rule 28, `systems/pf2e/such-a-disgrace.js`, on
+  the other branch: the GM's client offers React to the dandy's players when
+  an ally fails a mental Will save, so it knows who failed):
+  `useSignature("suchADisgrace", { caster, targets, to })`, exported by
+  `signature-spells.js`, plays it on that client and tells the others (tokens,
+  token documents, ids or uuids; `to`: user ids when not everyone may know).
+  To be called when React is answered:
+  `useSignature("suchADisgrace", { caster: doc, targets: [saver], to: reveal ? null : m.whisper })`.
+  The card-in-chat way above stays for a feat posted by hand. The same
+  signature on the same token is not started twice while it plays.
+- **Who sees what**: only users who see the ally's token; the bubble only when
+  they also see the dandy's. An ally the user can't see is never offered.
+- **Less motion**: no dark, no hand; the bubble, the blush, a still ring and
+  the "+1" fade in and out, 1.7 s.
+- **Options**: the GM's switch `suchADisgrace` (on). In the GM's preview:
+  select the dandy, target the ally.
+- Not done: the reroll itself (the ally rerolls as usual), the 10-minute
+  immunity, sound.
+- **(verify) in Foundry**: the feat's slug is `such-a-disgrace` and its card
+  has `message.item` and no `flags.pf2e.context`; a save's message has
+  `context.type === "saving-throw"`, `context.domains` with `will` (or the
+  option `check:statistic:will`), `context.outcome`, `context.isReroll` on a
+  reroll; `message.isAuthor`; the dim over the whole window (sidebar included)
+  reads well.

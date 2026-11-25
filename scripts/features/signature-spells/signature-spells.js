@@ -31,6 +31,8 @@ import "./spells/index.js";
  */
 
 const SOCKET_TYPE = "signaturePreview";
+/** A signature whose target was chosen by the one who used it (`choose`): told to the other clients. */
+const USE_TYPE = "signatureUse";
 let lastRun = null;
 /** If the dice have not landed by then, go on without them. */
 const DICE_TIMEOUT = 15000;
@@ -167,10 +169,11 @@ function stopAll() {
 const wanted = sig => !!sig && !!feature?.active && !!feature.get("show") && !!feature.get(sig.id) && !!canvas?.ready && document.visibilityState !== "hidden";
 
 async function onChatMessage(message) {
-  if (!feature?.active || !feature.get("show") || !canvas?.ready) return;
+  if (!feature?.active || !canvas?.ready) return;
   if (message?.visible === false || message?.isContentVisible === false) return; // not this user's to see
   const info = read(message);
   const sig = signatureFor(info, message);
+  if (sig?.choose) return useChosen(sig, info, message);
   if (!wanted(sig)) return;
   if (info.scene && canvas.scene?.id && info.scene !== canvas.scene.id) return;
   // Dice So Nice decides in its own createChatMessage handler: ask once every handler has run.
@@ -179,6 +182,65 @@ async function onChatMessage(message) {
   const dice = willAnimate(message) ? diceLanded(message.id, DICE_TIMEOUT) : null;
   const total = Number(message.rolls?.[0]?.total);
   await play(sig, info, { dice, claim: true, total: Number.isFinite(total) ? total : null });
+}
+
+/* -------------------------------------------- */
+/*  A target said by the one who used it        */
+/* -------------------------------------------- */
+
+const isAuthor = message => message?.isAuthor ?? (message?.author?.id ?? message?.user?.id) === game.user.id;
+
+/**
+ * A signature with `choose` (Such a Disgrace!): the message doesn't say on whom. The client of the one who
+ * posted it works that out (asking them when it must), plays it, and tells the others. With "Show them to me"
+ * off for that user the others still get it.
+ */
+async function useChosen(sig, info, message) {
+  if (!isAuthor(message) || !feature.get(sig.id)) return;
+  if (info.scene && canvas.scene?.id && info.scene !== canvas.scene.id) return;
+  let targets = [];
+  try {
+    targets = await sig.choose(info, { token: t => (typeof t === "string" ? tokenOf(t) ?? tokenById(t) : t ?? null), canSee });
+  } catch (err) {
+    return error(`Signature Spells: ${sig.id} could not find its target.`, err);
+  }
+  // A whispered card: only for those it was whispered to.
+  useSignature(sig.id, { caster: info.caster, targets, to: message.whisper, info });
+}
+
+/** A token, a token document, a token id or a token uuid → the token on the scene in view. */
+const anyToken = t => (!t ? null : typeof t === "string" ? tokenOf(t) ?? tokenById(t) : t.document ? t : t.object ?? tokenById(t.id));
+const playing = (sig, token) => [...runs].some(run => !run.dead && run.sig === sig && run.info?.targets?.[0] === token);
+
+/**
+ * Start a signature from other code that knows who it is for (a rules automation, e.g. the React button of
+ * Such a Disgrace!): it plays on this client and the others are told.
+ * @param {string} id       the signature's id ("suchADisgrace")
+ * @param {object} o        caster, targets: tokens, token documents, ids or uuids; to: user ids when only
+ *                          some users may know of it (a whispered card), else everyone
+ * @returns {boolean} whether it was started
+ */
+export function useSignature(id, { caster = null, targets = [], to = null, info = {} } = {}) {
+  const sig = signatureById(id);
+  if (!sig || !feature?.active || !feature.get(sig.id) || !canvas?.ready) return false;
+  const list = [...new Set((targets ?? []).map(anyToken).filter(Boolean))];
+  if (!list.length || playing(sig, list[0])) return false;
+  const from = anyToken(caster), users = (to ?? []).map(u => u?.id ?? u).filter(Boolean);
+  // Nothing about a hidden token leaves this client.
+  broadcast(USE_TYPE, { spell: sig.id, scene: canvas.scene?.id ?? null, caster: from && !from.document?.hidden ? from.id : null,
+    targets: list.filter(x => !x.document?.hidden).map(x => x.id), ...(users.length ? { to: users } : {}) });
+  if (wanted(sig) && (!users.length || users.includes(game.user.id))) play(sig, { roll: "card", ...info, caster: from?.id ?? null, targets: list, ordered: true }, { claim: true });
+  return true;
+}
+
+function onUse(payload) {
+  const sig = signatureById(payload?.spell);
+  if (!sig?.choose || !wanted(sig)) return;
+  if (Array.isArray(payload.to) && !payload.to.includes(game.user.id)) return;
+  if (payload.scene && canvas.scene?.id && payload.scene !== canvas.scene.id) return;
+  const targets = (payload.targets ?? []).map(tokenById).filter(Boolean);
+  if (!targets.length || playing(sig, targets[0])) return;
+  play(sig, { roll: "card", caster: payload.caster ?? null, targets, ordered: true }, { claim: true });
 }
 
 /* -------------------------------------------- */
@@ -241,7 +303,7 @@ function onPreview(payload) {
 /*  Feature                                     */
 /* -------------------------------------------- */
 
-export const _test = { runs, readers, onChatMessage, onPreview, contextOf, get lastRun() { return lastRun; } };
+export const _test = { runs, readers, onChatMessage, onPreview, onUse, contextOf, get lastRun() { return lastRun; } };
 
 defineFeature({
   id: "signatureSpells",
@@ -256,6 +318,7 @@ defineFeature({
 
   init() {
     onBroadcast(SOCKET_TYPE, onPreview);
+    onBroadcast(USE_TYPE, onUse);
   },
 
   enable(f) {

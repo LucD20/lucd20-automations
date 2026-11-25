@@ -417,7 +417,8 @@
           "finisherFrame": { "Name": "Impact frame", "Hint": "A short freeze in stark black and white with speed lines, at the hit." },
           "finisherSlash": { "Name": "Screen slash", "Hint": "A glint cuts the scene, the two halves slide apart and rejoin with a flash." },
           "finisherConfetti": { "Name": "Confetti", "Hint": "Something festive thrown up on the hit." },
-          "finisherConfettiKind": { "Name": "Confetti kind" }
+          "finisherConfettiKind": { "Name": "Confetti kind" },
+          "suchADisgrace": { "Name": "Such a Disgrace!", "Hint": "The Dandy's reaction, when its card is posted to chat: the window goes dark, a spotlight finds the ally whose Will save just failed and a gloved hand wags its finger at them. The ally is found from the failed save in chat; with several, the dandy's player picks one; with none, the token they target." }
         }
       },
       "pf2eCreatureScale": {
@@ -2284,8 +2285,16 @@
     "SignatureSpells": {
       "Preview": "Preview",
       "PreviewSpell": "Spell",
-      "PreviewHint": "Plays the spell on the tokens you target (cast by the token you have selected), or on the selected tokens, with a throw of its dice when Dice So Nice is active (only you see the dice). Everyone else sees the part on the tokens they can see; no damage is dealt. For the finisher, select the swashbuckler and target the enemy (two enemies for Dual).",
+      "PreviewHint": "Plays the spell on the tokens you target (cast by the token you have selected), or on the selected tokens, with a throw of its dice when Dice So Nice is active (only you see the dice). Everyone else sees the part on the tokens they can see; no damage is dealt. For the finisher, select the swashbuckler and target the enemy (two enemies for Dual). For Such a Disgrace!, select the dandy and target the ally.",
       "PreviewNone": "Select or target a token first.",
+      "SuchADisgrace": {
+        "Shout": "Such a disgrace!",
+        "Tut": "tut",
+        "PickTitle": "Such a Disgrace!",
+        "Pick": "More than one ally just failed a Will save. Who is the disgrace?",
+        "Ally": "Ally {n}",
+        "NoAlly": "Such a Disgrace!: no ally's failed Will save was found. Target the ally and use it again to see the animation."
+      },
       "Finisher": {
         "Shout": "FINISHER!",
         "Critical": "CRITICAL",

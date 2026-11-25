@@ -221,9 +221,9 @@ async function helpers(page) {
   assert.strictEqual(pure.both, "chainLightning", "a spell with its own signature is never taken by the finisher");
   assert.strictEqual(pure.attack, null, "only the damage roll");
   assert.strictEqual(pure.spell, null, "never a spell's damage, even with the finisher option on");
-  assert.deepStrictEqual(pure.order, ["chainLightning", "finisher"]);
+  assert.deepStrictEqual(pure.order, ["chainLightning", "finisher", "suchADisgrace"]);
   assert.deepStrictEqual(pure.settings, ["show:client:true", "chainLightning:world:true", "finisher:world:true", "finisherDice:world:true<finisher", "finisherStrip:world:true<finisher", "finisherMark:world:true<finisher",
-    "finisherSigil:world:S<finisherMark", "finisherFrame:world:true<finisher", "finisherSlash:world:true<finisher", "finisherConfetti:world:true<finisher", "finisherConfettiKind:world:hat<finisherConfetti"],
+    "finisherSigil:world:S<finisherMark", "finisherFrame:world:true<finisher", "finisherSlash:world:true<finisher", "finisherConfetti:world:true<finisher", "finisherConfettiKind:world:hat<finisherConfetti", "suchADisgrace:world:true"],
   "every part on, the S sigil and the twirling hat by default; all GM (world) options");
   assert.deepStrictEqual(pure.texts, ["Swashbuckler finisher", "Dice flourish", "Cut-in strip", "Signature mark", "Sigil", "Impact frame", "Screen slash", "Confetti", "Confetti kind"]);
   assert.deepStrictEqual(pure.missing, [], "every text is in lang/en.json");

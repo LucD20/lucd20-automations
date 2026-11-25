@@ -2878,10 +2878,10 @@ no longer match the module); not touched.
    Classes.
 **Parked (owner, 2026-11-19): steps 5–7 wait until after §23's drafting.**
 
-5. **Battle Medicine HUD** (Q291), **Flanking overlay** (Q292).
+5. **Battle Medicine HUD** (Q291), **Flanking overlay** (Q292). **Built v0.81.0** (rules 23, 24 in the ledger; test 69).
 6. **Dice Stats**: damage per turn tab, dice per creature and the end card
    (Q293–Q294), one per-encounter record for both.
-7. **Sell** (Q295), **Hero start area** (Q296).
+7. **Sell** (Q295; **built v0.82.0**, `systems/pf2e/sell.js`, test 70), **Hero start area** (Q296).
 
 ---
 
@@ -3366,5 +3366,470 @@ session (or agent per book) can do the writing step from the guide.
 7. The GP sheet (treasure by level) and CR sheet (encounter XP) are in
    `DC_Sheets.xlsx`, not yet in code.
 
-Also parked from §22.2: Battle Medicine HUD, Flanking overlay, Dice Stats
-per turn / per creature, Sell, Hero start area.
+Also parked from §22.2: Dice Stats per turn / per creature, Sell, Hero
+start area (Battle Medicine HUD and Flanking overlay: built v0.81.0).
+
+### 25.6 After v0.81.0 (owner, 2026-11-20)
+
+Owner's ideas before testing 0.81.0 (built v0.81.1, rules 23–24 in the
+ledger): Battle Medicine from the Treat Wounds and Battle Medicine macro and
+the feat's action; Medic Dedication; a GM editor; the flanking overlay as
+flankable squares, shown with the cover line for 5 s (editable) instead of
+the always-on cover preview.
+
+v0.81.2 (owner's test of 0.81.1): feat card known by its title too and a
+warning without a target; the editor adds "<this token> treated …"; Battle
+Medicine lines in the Token Tooltip for everyone (option under Token
+Tooltip); the flanking shield always over the target. Also fixed: since
+v0.81.0 the flanking overlay threw when `game.user.targets` was missing
+(harness tests 25–26).
+
+v0.81.3: the flanking overlay also threw on token moves when `canvas.tokens.controlled` was missing (harness tests 12, 23); full suite: all pass but the three old failures (4, 11, 13).
+
+Battle Medicine tooltip design (owner: the 0.81.3 line "doesn't look great"): mockups A–E in
+`docs/mockups/bm-tooltip.html` / `.png` (compact cell, footer line, token badge, chips, "can I treat
+it?" for the selected healer, E + B). Waiting on the owner's pick.
+Round 2 (owner: "C is the right direction, not there yet"): `docs/mockups/bm-badge.html` / `.png`:
+C1 icon only + time on hover, C2 cooldown arc on the ring, C3 cooldown pie badge, C4 dots only while a
+healer is selected (green = can treat, red = immune to you), C5 in the Effects Halo, C3 + C4.
+
+v0.81.4: the owner picked C3 + C4: pie badges on immune creatures for
+everyone, green / red badges on allies for the selected healer; the Token
+Tooltip lines removed (its extension point stays, unused).
+v0.81.5: the badge sits higher, clear of the HP bar (owner).
+
+## 26. Encounter report — damage per creature (owner, 2026-11-20; built v0.84.0 as `encounterReport`)
+
+Owner: "Has to kinda be per system. Damage dealt on turn, if dealt by
+allies, counts to your total combat damage, so a commander sees how the
+damage happened after he used Demoralizing Charge. Reports at the end of the
+encounter: Total damage (dealt only by yourself) | Percentage of damage dealt
+to the enemies (all enemies' HP vs the damage dealt by this creature). Some
+damage will be placed wrong: a faded 'Missed damage' at the bottom. Later: a
+'DPS / tanked the most / healed the most' end screen." (Replaces Q293–Q294.)
+
+### 26.1 Proposal
+
+**Recording (generic core, `features/encounter-report.js`):** per combat, on
+the active GM's client, from the Damage Log's HP watcher (it already sees every
+HP change, any source): each change → { round, turn (the combatant whose turn
+it is), target, amount actually lost (capped at the HP it had: no overkill),
+healing, temp HP, **source** (who dealt it, from the system adapter, or
+null) }. Stored on the combat document's flags (deleted with it), copied
+into a history when the encounter ends.
+
+**Attribution (system adapters):**
+- PF2e / SF2e: the "damage applied" message (`flags.pf2e.appliedDamage`)
+  is linked to the damage roll it came from; the roll's actor = the source.
+  (verify) how PF2e 8.7 links them (the applied message's origin / the
+  damage roll message id) and persistent damage (source: the effect's
+  origin, else "missed").
+- D&D 4e: our own damage application (`dnd4e/damage-apply.mjs`) knows the
+  attacker; ongoing damage from the effect's origin.
+- No source found → "missed damage".
+
+**Two numbers per creature:**
+- **Damage**: dealt by itself, to enemies.
+- **On its turn**: dealt to enemies by anyone on its side during its turn
+  (the commander case: a Strike granted by a tactic, a reaction).
+
+**End of encounter (a chat card when the combat is deleted / ended):** one
+row per PC (and NPC allies): Damage | % of enemy HP (its damage ÷ the sum of
+all enemies' max HP) | On its turn. A faded line "Missed damage: 34" at the
+bottom. Enemy HP itself is never shown (only percentages). GM-only rows for
+hidden NPCs.
+
+**Dice Stats:** a new "Encounters" tab listing past encounters, each opening
+the same table; per creature also the dice it rolled in that encounter.
+
+**Later:** awards (most damage, damage taken, healing done) on the same data.
+
+### 26.2 Owner's answers
+
+Q317 damage to allies: counted separately. Q318 "% of enemy HP": of the
+HP they had when the combat started. Q319 the end card: everyone by
+default. Q320 healing and damage taken: in the card now. Q321 minions /
+summons / companions: both (own rows, and added to their master's total).
+
+### 26.3 Questions as asked (Q317–Q321)
+
+- Q317: Damage to allies (friendly fire, splash): not counted, or counted
+  separately?
+- Q318: "% of enemy HP": of all enemies' max HP (proposal), or of the HP
+  they had when the encounter started?
+- Q319: Who sees the end card: everyone (proposal), or GM only with a
+  "show to players" button?
+- Q320: Healing and damage taken in the card now (two more columns), or only
+  in the later awards screen?
+- Q321: Minions / summons / companions: their damage counts to their
+  master's total, or own rows?
+
+
+### 26.8 Combat Cards (owner, 2026-11-20: "the 'Cards' at the end of the fight ... this is more about 'look how cool!' instead of functional")
+
+Every player always gets one card at the end of a fight (owner). Positive
+framing only: no ranking, no "worst" cards (owner on the report: "this will
+cause feels bad"). Owner named Draw Steel's version as the reference ("does
+it but not very well"); ours is our own design.
+
+Plan: (1) pick a look from the mockups, (2) agree the card list and how a
+card is chosen, (3) build. Mockup: `docs/mockups/combat-cards.html/.png`
+(silhouettes stand in for token art):
+- A. Tarot: dealt one by one, gilded frame, arched art, title banner,
+  numeral, big stat, a one-line flavour quote.
+- B. Foil: trading cards flipping over, holographic shine, rarity edge.
+  (Rarity can read as a ranking; e.g. "Common" could feel bad.)
+- C. Spotlight: full-width lineup of slanted panels sliding in, light rays,
+  big numbers; then shrinks into the report.
+
+Owner's pick: "A with B, I like the rarity and the card look, but the
+titles and stuff from A": the foil card (rarity edge, glow, badge, shine
+on the art) with A's ribbon title, numeral, name, big stat and flavour
+quote. Two variants in the mockup (top of the page,
+`docs/mockups/combat-cards-ab.png`): the ribbon tinted by rarity, or gold
+on every card. Rarity tiers drafted: Legendary, Epic, Rare, Common (from
+how far the number stands out from the party).
+
+Decided (owner, 2026-11-20):
+- The gold ribbon on every card (rarity only on the edge, glow and badge).
+- Art: the actor's portrait (`actor.img`), not the token. Portraits are
+  transparent cut-outs, so the art stands out past the top of the card
+  (fitted by height, wide group pictures by width; anchored to the ribbon),
+  with a drop shadow; the shine stays behind the art; numeral and rarity
+  badge above it. Tested with the owner's art (kept out of the repository).
+- Timing: the cards first; after 5 seconds the report window fades in too.
+- Two art modes, chosen per picture (owner's PC portraits are full
+  paintings, opaque, some on white; NPC art is transparent cut-outs):
+  - transparent (alpha at the edges) → the cut-out stands out past the
+    top of the card;
+  - opaque → fills the art window (cover, focused near the top: faces),
+    a soft vignette and a fade into the card below;
+  - opaque with a light background (bright corners) → blended (multiply)
+    onto a parchment tone, so a white square never shows.
+  Detected in the browser by sampling the picture's corners on a canvas
+  (same origin in Foundry). Mockup checked with the owner's portraits.
+
+Owner (2026-11-20): "Full portraits that fit is the way to go." (Only the
+fill mode for PC portraits; the cut-out mode stays for transparent art.)
+"10 common, 10 epic, 5 rare, 5 legendary" — read as 10 Common, 10 Rare,
+5 Epic, 5 Legendary (the usual order is Common < Rare < Epic < Legendary).
+(verify) with the owner.
+
+Rarity is now fixed per card (not from how far a number stands out).
+Foil (owner): the first time a character earns a card it is foil (the
+holographic shine and a rainbow glow); earned again later: the rarity
+colours only, no foil. Kept per actor (a flag: card id → times earned).
+
+Catalog (owner: "how big can you make the deck with reliable triggers?";
+55 cards: 18 Common, 18 Rare, 10 Epic, 9 Legendary; #1–30 kept their numbers;
+35 work in every system, the rest need PF2e/SF2e roll data). Review page
+`docs/mockups/combat-cards-catalog.html/.png`, numbered; 2 quotes each,
+rotating. Reliable signals only: HP changes, attack-roll outcomes (with a
+target), saving-throw outcomes, natural 20s, PF2e skill actions (the roll's
+`action:` option), spells cast and their rank, token movement, Hero Points,
+dying value, the fight's shape (rounds, enemy levels). Left out: anything
+that guesses who caused something (conditions without a source, damage
+types, reactions, Shield Block), and negative or joke cards. D&D 4e has no
+outcome on its cards yet (would need its attack cards read).
+
+| # | Card | Rarity | Systems | Earned by |
+|---|---|---|---|---|
+| 1 | The Hammer | Common | all | Most damage dealt to enemies. |
+| 2 | The Wall | Common | all | Most damage taken. |
+| 3 | Lifeline | Common | all | Most healing given. |
+| 4 | First Blood | Common | all | Dealt the first damage of the fight. |
+| 5 | Finisher | Common | all | Most final blows. |
+| 6 | Sharpshooter | Common | PF2e/SF2e | Best hit rate (2 or more attacks). |
+| 7 | Commander | Common | all | Most damage dealt by allies during your turn. |
+| 8 | Pack Leader | Common | all | Most damage by your companion, familiar or summons. |
+| 9 | Steadfast | Common | all | Fought the whole fight without going down (anyone can get it). |
+| 10 | Shoulder to Shoulder | Common | all | Fought beside the party (the last resort: everyone can get it). |
+| 11 | One Punch | Rare | all | The biggest single hit of the fight, at least twice the party's average hit. |
+| 12 | Lucky Star | Rare | PF2e/SF2e | 2 critical hits. |
+| 13 | Close Call | Rare | all | Fell below a quarter of your HP and never went down. |
+| 14 | Untouchable | Rare | all | Took no damage in a fight of 3 rounds or more. |
+| 15 | Back from the Brink | Rare | all | Went down and got back up. |
+| 16 | Field Medic | Rare | all | Healed 2 or more different allies. |
+| 17 | Whirlwind | Rare | all | Damaged 3 or more different enemies. |
+| 18 | Opening Salvo | Rare | all | Dealt a quarter or more of the enemies' HP in round 1. |
+| 19 | Iron Hide | Rare | all | Took a third or more of all the party's damage and never went down. |
+| 20 | Clutch | Rare | all | Dealt the blow that ended the fight. |
+| 21 | Executioner | Epic | all | Took an enemy from full HP to down in a single hit. |
+| 22 | Crit Storm | Epic | PF2e/SF2e | 3 or more critical hits. |
+| 23 | Guardian Angel | Epic | all | Brought a downed ally back up. |
+| 24 | Juggernaut | Epic | all | Took half or more of all the party's damage and never went down. |
+| 25 | Triple Threat | Epic | all | 3 or more final blows. |
+| 26 | One-Hero Army | Legendary | all | Dealt half or more of all the party's damage (parties of 3 or more). |
+| 27 | Flawless | Legendary | all | Most damage dealt, and nobody in the party took any damage. |
+| 28 | Giant Slayer | Legendary | all | Final blow on an enemy 3 or more levels above the party. |
+| 29 | Ghost | Legendary | PF2e/SF2e | Attacked 5 or more times and never hit. |
+| 30 | Last Stand | Legendary | all | Everyone else in the party went down; you didn't, and the party won. |
+| 31 | Spellslinger | Common | PF2e/SF2e | Cast the most spells (2 or more). |
+| 32 | Marathon | Common | all | Moved the most squares. |
+| 33 | Immovable | Common | all | Moved 1 square or less in a fight of 3 rounds or more. |
+| 34 | Scholar | Common | PF2e/SF2e | Succeeded at Recall Knowledge. |
+| 35 | Iron Will | Common | PF2e/SF2e | Succeeded at 3 or more saving throws. |
+| 36 | Terror | Common | PF2e/SF2e | Demoralized an enemy successfully. |
+| 37 | Wrestler | Common | PF2e/SF2e | Tripped, Shoved or Grappled an enemy successfully. |
+| 38 | Acrobat | Common | PF2e/SF2e | Tumbled Through an enemy's space successfully. |
+| 39 | Trickster | Rare | PF2e/SF2e | Feinted successfully 2 or more times. |
+| 40 | Natural | Rare | all | Rolled 2 natural 20s. |
+| 41 | Unshakable | Rare | PF2e/SF2e | Critical success on a saving throw. |
+| 42 | Combat Medic | Rare | PF2e/SF2e | Used Battle Medicine on 2 or more allies. |
+| 43 | Fate's Favourite | Rare | PF2e/SF2e | Spent a Hero Point, and the party won. |
+| 44 | Big Guns | Rare | PF2e/SF2e | Cast a spell of the highest rank you can cast. |
+| 45 | Shrugged It Off | Rare | PF2e/SF2e | Succeeded at every saving throw (3 or more). |
+| 46 | Blitz | Rare | all | Most damage in a fight won in a single round. |
+| 47 | Death's Door | Epic | PF2e/SF2e | Reached dying 2 or more and lived. |
+| 48 | Endurance | Epic | all | Never went down in a fight of 6 rounds or more. |
+| 49 | Boss Fight | Epic | all | Most damage to an enemy 2 or more levels above the party. |
+| 50 | Lockdown | Epic | PF2e/SF2e | 3 or more successful Trips, Shoves or Grapples. |
+| 51 | Natural Disaster | Epic | all | Rolled 3 natural 20s. |
+| 52 | Perfect Aim | Legendary | PF2e/SF2e | Hit with every attack (4 or more), at least one a critical hit. |
+| 53 | Saviour | Legendary | all | Brought 2 or more downed allies back up. |
+| 54 | Unstoppable Force | Legendary | all | Dealt three quarters or more of all the enemies' HP. |
+| 55 | Iron Mind | Legendary | PF2e/SF2e | Critical success on 3 or more saving throws. |
+
+Party Deck (owner: "a 'Party Deck' tab (likely in the Party Sheet), where
+they can see all cards gained, stacked by same type"): mockup
+`docs/mockups/party-deck.html/.png`. A "Deck" tab on PF2e's party sheet (D&D
+4e: a tab in our Party Stash window). Header: "15 / 55 discovered" with a
+meter, counts per rarity, filter by character, sort (rarity, most earned,
+newest), show/hide undiscovered. Stacks by card: count ×N, the owners'
+portraits with their counts, the top copy foil when it was a first. Not yet
+earned: face down, rarity only ("???"). Clicking a stack: the big card, its
+rule, and its history (who, which fight, when, the number, foil marks); GM:
+Grant… / Remove… (corrections). Kept per actor (flag: card id → list of
+{ at, scene, value, foil }), so it follows a character between parties.
+
+Choosing (draft): every party member gets exactly one card; candidates
+from all cards they qualify for, best rarity first, then how strongly they
+qualify; each card once per fight; "Steadfast" / "Shoulder to Shoulder"
+guarantee one for everyone.
+
+New data the recording needs for some cards: HP after each change and max
+HP (Close Call, Back from the Brink, Guardian Angel, Executioner), attack
+targets (Ghost: PF2e `context.target`), participant levels (Giant Slayer),
+the order of events (First Blood, Clutch).
+
+
+### 26.9 Combat Cards built (v0.85.0, `combatCards`)
+
+Owner: "1. Good for now. 2. No, mystery is good. 3. It's good how you did it."
+- Files: `scripts/features/combat-cards/catalog.js` (the 55 cards: rarity,
+  `pf2` flag, a test over the recording; `computeStats`, `dealCards`),
+  `combat-cards.js` (dealing, the overlay, the collection, the Party Deck);
+  text under `LUCD20.CombatCards.Card.<id>` (Name, Rule, Stat, Q1, Q2).
+- Recording (Encounter Report): HP after / max / from full / back up from 0
+  on each HP event; participants' portrait, level, `pc`, highest spell
+  rank; `noteEvent()` for adapters: attack target, saves, skill actions
+  (`action:` roll option), spells (the spell card), Hero Points, dying
+  (PF2e), natural 20s and squares moved (every system; secret rolls never
+  count). Battle Medicine uses count for Combat Medic.
+- Secrets: Scholar counts Recall Knowledge attempts, never results (a
+  secret roll); blind/whispered rolls give no outcome and no natural 20.
+- End of a fight (active GM): one card per player character, rarest first;
+  saved on the actor (`flags.lucd20-automations.cards.<id>` = [{ at, scene,
+  value, foil }]); foil when it is that actor's first. The cards are
+  broadcast and fill the screen for everyone (z-index above windows);
+  "Victory" when every visible enemy went down, else "Battle's end"; Close
+  / Esc / a click outside; after `reportDelay` seconds (5) the report fades
+  in above them. `onEncounterEnd(fn)` in the report lets the cards take
+  over its opening.
+- Party Deck: a "Deck" tab added to PF2e's party sheet (its nav and panes;
+  (verify) the markup in PF2e 8.7), and a window from the chat buttons
+  (every system; D&D 4e uses this). Party = PF2e's active party, else the
+  player-owned characters. Undiscovered cards: face down, rarity only.
+  GM: Grant… (pick a character) and a remove button per copy.
+- Titles shrink to fit their ribbon (fonts: Modesto Condensed, Eczar).
+- Test 73.
+
+## 27. Party bulk (owner, 2026-11-20; built v0.83.0 as `partyLoad`)
+
+Owner: "Total party bulk: the maximum bulk of each creature in the party,
+how much they have together, and how much bulk is in the party stash, like a
+party encumbrance. Bag of holding / spacious pouch increase this as well.
+Also in the 4e party sheet."
+
+Proposal:
+- **PF2e / SF2e** (the Party actor sheet, inventory tab, next to PF2e's own
+  bulk line): "Party bulk: 23 / 41", where 23 = everything the members carry
+  plus the stash's bulk, and 41 = the sum of the members' limits plus the
+  capacity of extradimensional containers (Bag of Holding, Spacious Pouch:
+  items whose bulk is ignored inside, `system.bulk.capacity`). Hover: per
+  member "Amiri 6 / 9 (encumbered at 9, max 14)", the stash, each bag. Over
+  the limit: the number turns orange (encumbered) / red (past max).
+- **D&D 4e** (our Party Stash window): the same with 4e's encumbrance
+  (normal load, heavy load, max drag; the stash's weight); bags of holding
+  (4e: 200 lb capacity) add to it.
+
+Questions (Q322–Q324):
+- Q322: The members' limit: PF2e's encumbered threshold (5 + Str: carrying
+  more slows you) or the maximum (10 + Str)? Proposal: show encumbered as the
+  limit, max in the hover.
+- Q323: A bag of holding carried by a member: its contents count toward
+  that member already (PF2e does it); add only its capacity to the party
+  limit? (proposal: yes, every bag in the party, carried or stashed).
+- Q324: 4e: weight in pounds as the sheet shows it, or 4e's "bulk" isn't a
+  thing so pounds only (proposal: pounds)?
+
+### 22.3 Sell (built v0.82.0)
+
+Owner: "Sell in 2e is half price, no need for anything else. Add a Sell
+everything in the Loot sheet, so it sells all equipment (not treasure) for
+half price." Built (`pf2eSell`, Core Rules → Tools, PF2e / SF2e, on):
+- A Sell icon in each non-treasure, non-coin physical item's row controls
+  (before Edit) on character, NPC, familiar, loot and party sheets, for
+  owners; tooltip "Sell for 5 sp (half price)". Half price with PF2e's own
+  maths (`Coins.fromPrice(price, qty).scale(0.5)`: per-batch prices, coin
+  spillover, SF2e credits); coins to the same actor (`addCurrency`); a stack
+  asks how many; a container's contents are moved out first. Chat:
+  "Longsword: sold for 5 sp" (the compendium link when there is one). No
+  confirmation (as PF2e's own sell-treasure). (Q295 said right-click; PF2e's
+  item rows have no context menu, so it is an icon.)
+- Loot sheets: "Sell all equipment" next to PF2e's "Sell all treasure":
+  every priced item but treasure and coins, half price, after a
+  confirmation with the count and total; treasure inside a sold container
+  is moved out; unpriced items stay. One chat card with the list.
+
+### 27.1 Answers and what was built (v0.83.0)
+
+Q322: "like PF2e does it, with a bar and the two ticks". Q323: only the
+containers in the party stash. Q324: pounds (4e).
+
+Built: feature `partyLoad` (Sheets & Windows, PF2e / SF2e and D&D 4e, on),
+`features/party-load.js` (the bar: fill = load, ticks at the summed
+encumbered and maximum limits, scale to 112 % of max; orange past the first
+tick, red past max; hover lists members, stash, bags) with adapters:
+- PF2e (`systems/pf2e/party-load.js`): `game.actors.party` members with a
+  bulk limit (PF2e's `inventory.bulk`), the stash = the party actor's
+  inventory; top-level stash containers with `system.bulk.ignored` > 0 add
+  that to both limits, and what they ignore (min(contents, ignored)) is
+  added back to the load. Under the party sheet's "Total bulk" line;
+  redrawn when a member's or the party's items change.
+- 4e (`dnd4e/party-stash.mjs`): player characters' `system.encumbrance`
+  (value, normal load = "encumbered", heavy load = "max"), the stash's items
+  by weight (contents of containers counted), weightless containers in the
+  stash add their capacity; in the Party Stash window under the coins.
+Test 71.
+
+### 26.4 Built (v0.84.0)
+
+`features/encounter-report.js` (Combat, GM, on; option "Everyone sees the
+card", on) with adapters (`systems/pf2e/encounter-report.js`; 4e in
+`dnd4e/damage-apply.mjs`):
+- Recording on the active GM's client from combat start (`combatStart`, or
+  the first update of a started combat): participants (name, side from the
+  token's disposition: friendly 1, hostile −1 / secret −2, HP + temp at the
+  start, master), then every HP change (value + temp, the Damage Log's
+  reading; linked and unlinked tokens) → { round, turn (the combatant whose
+  turn), target, amount, kind, source } on the combat's flags.
+- Sources: "hints" `noteSource(target, source, kind)` (from any client; to
+  the GM by socket), matched to the change within 4 s before or after:
+  PF2e's damage-taken message (`appliedDamage.uuid`; source =
+  `origin.actor`; persistent damage: the condition's
+  `system.context.origin.actor`), 4e's damage buttons (the damage card's
+  speaker, before applying). Settled 2 s after the change.
+- The card on `deleteCombat`: rows for the friendly side (not hidden
+  combatants), best first: Damage (+ companions', master from PF2e's
+  `actor.master`) | % enemy HP (of the enemies' HP at the start) | On turn
+  (damage to enemies by its side or by an unknown source during its turns)
+  | Allies (friendly fire) | Taken | Healed; "Missed damage: N" faded. A
+  world history (`encounterReport_history`, newest 20) for a later tab.
+- Test 72. (verify) in Foundry: the damage-taken message's origin in PF2e
+  8.7, persistent damage, eidolons / animal companions as masters.
+
+v0.84.1: Battle Medicine "Roll on use" (the owner's console log showed the
+action is read and recorded since 0.81.2; what was missing was the roll):
+using the feat opens the Workbench macro with Battle Medicine chosen, else
+PF2e's Treat Wounds roll; the roll records the use.
+v0.84.2: the Battle Medicine badge mirrors the reaction badge (same size, bottom-left corner of the token).
+
+### 26.5 v0.84.3 (owner's test: "should be a window; it didn't track anything")
+
+- The report is a window (`ReportWindow`), opened for everyone at the end
+  of the encounter (broadcast; option "Everyone sees the report"), with a
+  dropdown of the past encounters (history, newest 20) and a chat-controls
+  button to reopen it. No chat card.
+- Recording also starts lazily on the first HP change of a started combat
+  without a record (a combat already running, or a missed start; Foundry
+  fires `combatStart` while still at round 0, so the start comes from the
+  `updateCombat` to round 1).
+- Debug: `CONFIG.debug.lucd20Report = true` (or `lucd20Rules`) logs the
+  start, every HP change seen (with whether it is recorded), hints, events
+  and the end.
+
+### 26.6 v0.84.4 (the owner's debug log: why nothing was recorded)
+
+- The log showed recording, HP changes, events and their sources all
+  working. The bug was in the saved data: the participants were keyed by
+  actor UUID (`Actor.x`, `Scene.y.Token.z.Actor.x`), and Foundry expands
+  dotted keys in an update into nested objects, so the report looked up
+  nobody (no rows; all damage "missed"). Participants are now an array of
+  `{ uuid, … }`; `buildReport` also accepts the old keyed form.
+- Lesson for the harness: test 72's mock `setFlag` now expands dotted keys
+  like Foundry does (the old code fails it). Never use UUIDs as keys in
+  flags or other document data.
+
+### 26.7 v0.84.5 (owner: "Encounter now works. Now the refining, with a better looking window")
+
+- The window uses the Loot Pile look (`lucd20-loot-app` tokens): the
+  encounter picker in the header bar; totals tiles (Dealt, Taken, Healing,
+  Rounds); one card per creature, best first, with its portrait
+  (participants now store `img`, the actor's portrait), name, damage
+  (+companions), % of enemy HP, a bar (its share of the best; companions
+  in a darker segment), and small stats (On turn, Friendly fire, Taken,
+  Healed; zeros faded). The best gets a crown and an accent border.
+  "Missed damage" faded at the bottom. Screenshot:
+  `docs/mockups/report-sell-0.84.5.png`.
+- v0.84.6 (owner: "dont do a crown for most damage nor a 'progress bar'.
+  This will cause feels bad. Show just stats"): no crown, no top highlight,
+  no bars; cards sorted by name, not by damage.
+- v0.84.7 (owner, from the first real report):
+  - Pictures were broken (stretched past the circle). The report now uses
+    the Loot Pile's portrait helpers (`tokenArt` + `portraitHTML`, exported
+    from `loot-pile.js`): the ring subject's art, the token's scale (art
+    stands out of its circle as on the map), no videos (webm → the actor's
+    picture). Owner: "this has been happening with almost anything that
+    uses pictures": the same helpers should be used everywhere (to do:
+    list the other places with the owner).
+  - The error "Cannot read properties of undefined (reading '_id')" from
+    `flushSaves`: a save reached the server after the combat was deleted.
+    The recording now lives on the GM's client (`state.local`; the flag is
+    only a copy for reloads); the end reads that copy; no saves after the
+    end; failed saves are ignored.
+  - Scene name: from the combat, else the viewed scene ("No scene" if
+    none); "1 round" / "N rounds".
+  - Enemies section (owner: "NPCs also need to show there, but
+    differently ... more for the 'Oh wow, that NPC barely did anything!'
+    or 'We killed that one in a round!'"): per enemy, biggest hit dealt,
+    best turn (most damage in one turn), biggest hit taken (and by whom),
+    attacks hit / made (+ crits; PF2e `context.type "attack-roll"` +
+    `outcome`), "Down in round N" / "Still standing" (an HP change to 0).
+    Hidden combatants get no card. A name players can't see
+    (`playersCanSeeName === false`) is never stored (the history is a world
+    setting all clients read): "Unknown creature" + the placeholder picture.
+  - Not yet: D&D 4e attack hits (no outcome on its cards yet).
+- Next (owner): stats first, then "Hallmark cards" (name to decide): every
+  player always gets one. Was "Title / Combat Role": picture, then the role this combat
+  (e.g. "DPS: you dealt X damage", "Meat shield: you took X damage", …).
+  To plan with the owner after the window is approved.
+
+### 22.4 Sell (v0.84.3)
+
+Owner: "Ask for confirmation when selling. Add the same icon on PCs' sheet,
+next to 'sell all treasure', 'add coin' etc. like 'Sell items', and from
+there they can sell in bulk." Every single sale is confirmed (a stack: how
+many, in the same dialog, with the price each). Characters / NPCs /
+familiars get "Sell items" after "Sell all treasure": a window listing
+sellable priced items (checkbox, how many for stacks, half price each),
+Select all / none, the total, "Sell selected" (confirmed; one chat card).
+v0.84.4: a Cancel button closes the window (owner). v0.84.5 (owner: "I
+meant the individual sell window needs a cancel button. The bulk sell
+window needs stylizing too"): selling one item uses the Loot Pile's "How
+many?" dialog (`LootQuantityWindow.wait(item, null, "Sell", opts)`, now
+with title / icon / sub lines / a label function; the number is hidden for
+a single item), with Sell N for {price} and Cancel. The Sell items window
+has the Loot Pile look: select-all box (some/all), item rows with icons,
+how many (changing it picks the row), the price and price each, Total,
+Cancel and "Sell N". Test 70.

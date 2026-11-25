@@ -2,6 +2,7 @@ import { MODULE_ID, error, localize } from "../../core/constants.js";
 import { distanceText } from "../../features/instant-range.js";
 import { defineFeature } from "../../core/registry.js";
 import { sysId, sysApi } from "./sys.js";
+import { isShowing, registerOverlay, show } from "./tactical-overlay.js";
 
 /**
  * Rule 19 (docs/pf2e-rules.md): PF2e cover for attack rolls (owner, Q228–Q232; the owner's diagram):
@@ -14,7 +15,9 @@ import { sysId, sysApi } from "./sys.js";
  *   from Take Cover or set by hand, counts: the higher wins, no stacking). Not on rerolls.
  * - The roll window shows four buttons above Roll: No cover | Lesser | Standard | Greater, the automatic one
  *   chosen; anyone rolling can change it. The attack card says the cover used, and "set by hand" if changed.
- * - While targeting, the line and the cover it gives are drawn on the map, for the user only.
+ * - While targeting, the line and the cover it gives are drawn on the map, for the user only. v0.81.1 (owner:
+ *   "always on was distracting"): shown with the flanking overlay for `previewSeconds` (default 5; 0 = always)
+ *   after selecting a token, targeting, or the token moving (tactical-overlay.js).
  */
 
 const L = (key, data) => localize(`LUCD20.PF2eRules.Cover.${key}`, data);
@@ -371,6 +374,7 @@ function clearPreview() {
 function drawPreview() {
 	clearPreview();
 	if (!canvas?.ready) return;
+	if (!isShowing()) return;
 	const attacker = canvas.tokens?.controlled?.[0] ?? game.user.character?.getActiveTokens?.()?.[0];
 	if (!attacker || !game.user.targets?.size) return;
 	if (!layer || layer.destroyed) {
@@ -409,6 +413,7 @@ defineFeature({
 	defaultEnabled: true,
 	settings: {
 		preview: { kind: "boolean", default: true, scope: "client" },
+		previewSeconds: { kind: "number", default: 5, min: 0, scope: "client", dependsOn: "preview" },
 		areaReach: { kind: "boolean", default: true, scope: "world" }
 	},
 
@@ -432,8 +437,17 @@ defineFeature({
 		}
 		feature.on("renderCheckModifiersDialog", (app, html) => onDialog(app, html));
 		feature.on("renderChatMessageHTML", (message, html) => onCard(message, html));
-		for (const hook of ["targetToken", "controlToken", "refreshToken", "updateWall", "createWall", "deleteWall"]) {
-			feature.on(hook, () => (feature.get("preview") ? redraw() : clearPreview()));
+		feature.onCleanup(registerOverlay("cover", () => (feature.get("preview") ? redraw() : clearPreview())));
+		// Opens the shared overlay window (flanking too): selecting, targeting, the selected token moving.
+		feature.on("targetToken", (user) => { if (user.isSelf && feature.get("preview")) show(); });
+		feature.on("controlToken", (token, controlled) => { if (feature.get("preview")) (controlled ? show() : redraw()); });
+		feature.on("updateToken", (doc, changes) => {
+			if (!feature.get("preview")) return;
+			if (("x" in changes || "y" in changes) && canvas.tokens?.controlled?.some((t) => t.id === doc.id)) show();
+			else if (isShowing()) redraw();
+		});
+		for (const hook of ["refreshToken", "updateWall", "createWall", "deleteWall"]) {
+			feature.on(hook, () => { if (feature.get("preview") && isShowing()) redraw(); });
 		}
 		feature.onCleanup(() => { clearPreview(); layer?.destroy?.({ children: true }); layer = null; });
 	},

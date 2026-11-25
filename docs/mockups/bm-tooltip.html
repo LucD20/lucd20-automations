@@ -1,0 +1,100 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Battle Medicine in the Token Tooltip (mockups)</title>
+<link rel="stylesheet" href="../../tools/harness/node_modules/@fortawesome/fontawesome-free/css/all.min.css">
+<style>
+body { margin: 0; padding: 24px; background: #26231f; color: #e9e4dc; font: 14px "Signika", "Trebuchet MS", sans-serif; }
+h1 { font-size: 20px; margin: 0 0 4px; } .lead { color: #b9b1a5; margin: 0 0 18px; max-width: 1100px; }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.opt { background: #34302a; border: 1px solid #4b453c; border-radius: 8px; padding: 14px; }
+.opt h2 { font-size: 16px; margin: 0 0 2px; } .opt h2 b { color: #f3b469; }
+.opt p { color: #c9c1b5; margin: 4px 0 10px; font-size: 13px; line-height: 1.35; }
+.opt .pro { color: #8fd18f; } .opt .con { color: #e39a7c; }
+.scene { position: relative; height: 165px; border-radius: 6px; background: #8b6a43 radial-gradient(circle at 30% 40%, #a07c52 0 30%, transparent 31%) ; overflow: hidden; margin-bottom: 6px; }
+.scene + .scene { margin-top: 8px; }
+.cap { font-size: 12px; color: #b9b1a5; margin: 2px 0 0; }
+.tok { position: absolute; left: 14px; top: 26px; width: 84px; height: 84px; border: 2px solid #4caf50; border-radius: 4px; background: center/cover no-repeat; }
+.tok .badge { position: absolute; left: -8px; bottom: -8px; display: flex; align-items: center; gap: 3px; padding: 1px 5px; border-radius: 10px; background: #1b1b1b; border: 1px solid #e05252; color: #fff; font-size: 11px; }
+.tok .badge i { color: #e05252; }
+.name { position: absolute; left: 6px; top: 114px; width: 100px; text-align: center; color: #fff; font-weight: 600; text-shadow: 0 0 3px #000, 0 0 3px #000; }
+.tt { position: absolute; left: 108px; top: 22px; padding: 5px; border: 2px solid #500085; border-radius: 5px; background: rgba(15,12,20,.88); box-shadow: 0 0 20px #000; color: #fff; font-size: 15px; line-height: 1.25; }
+.tt .g { display: grid; grid-auto-flow: column; grid-template-rows: repeat(5, auto); column-gap: .6rem; }
+.tt .c { display: grid; grid-template-columns: 1.3em auto; align-items: center; gap: .45rem; white-space: nowrap; }
+.tt .c i { text-align: center; }
+.tt .foot { margin-top: 4px; padding-top: 4px; border-top: 1px solid rgba(255,255,255,.18); font-size: 12px; color: #d8d0e8; display: flex; gap: 10px; white-space: nowrap; }
+.tt .foot i { color: #e05252; margin-right: 3px; }
+.tt .chips { display: flex; gap: 4px; margin-bottom: 4px; }
+.chip { display: inline-flex; align-items: center; gap: 4px; padding: 0 6px; border-radius: 9px; font-size: 12px; background: rgba(224,82,82,.22); border: 1px solid rgba(224,82,82,.6); }
+.chip.ok { background: rgba(76,175,80,.2); border-color: rgba(76,175,80,.6); }
+.red { color: #e05252; } .green { color: #4caf50; } .grey { color: #9e9e9e; }
+.hp { color: #cd1818; } .ac { color: #74a2be; } .hero { color: #f2df07; } .fort { color: #c8621e; } .ref { color: #2fbc6c; } .will { color: #cd1dbf; } .ath { color: #a3430f; } .mute { color: #999; }
+.sel { position: absolute; left: 14px; top: 26px; width: 84px; height: 84px; outline: 2px dashed #ff9829; outline-offset: 3px; }
+.reco { outline: 2px solid #f3b469; }
+.tag { display: inline-block; font-size: 11px; padding: 1px 6px; border-radius: 8px; background: #f3b469; color: #222; font-weight: 700; margin-left: 6px; }
+</style></head><body>
+<h1>Battle Medicine in the Token Tooltip: five ways</h1>
+<p class="lead">Today (0.81.3) the line "Uri: immune 1 h" is wider than the other cells and stretches the panel. Each option below shows Schmekcho (treated by Uri, immune for 1 hour). Where it matters, a second picture shows the healer.</p>
+<div class="grid">
+
+<!-- A -->
+<div class="opt"><h2><b>A</b> · A compact cell</h2>
+<p>One cell like the others: the first-aid icon and the time left. Red: immune to someone; green on a healer: how many they treated. Names only in the HUD button's hover.</p>
+<div class="scene"><div class="tok" style="background-image:url(../../tools/harness/icons/goblin.webp)"></div><div class="name">Schmekcho</div>
+<div class="tt"><div class="g">
+<div class="c"><i class="fa-solid fa-heart hp"></i><span>114</span></div><div class="c"><i class="fa-solid fa-shield-halved ac"></i><span>26</span></div><div class="c"><i class="fa-solid fa-star hero"></i><span>0/3</span></div><div class="c"><i class="fa-solid fa-chess-rook fort"></i><span>25</span></div><div class="c"><i class="fa-solid fa-person-running ref"></i><span>29</span></div>
+<div class="c"><i class="fa-solid fa-brain will"></i><span>22</span></div><div class="c"><i class="fa-solid fa-hand-fist ath"></i><span>24</span></div><div class="c"><i class="fa-solid fa-shoe-prints mute"></i><span>30</span></div><div class="c"><i class="fa-solid fa-ruler mute"></i><span>~5</span></div><div class="c"><i class="fa-solid fa-kit-medical red"></i><span>1 h</span></div>
+</div></div></div>
+<p class="cap">On the healer: <i class="fa-solid fa-kit-medical green"></i> 2 · <i class="fa-solid fa-user-doctor green"></i> ✓ (Medic ready)</p>
+<p><span class="pro">+ same size as every cell, no clutter.</span> <span class="con">− "1 h" doesn't say who; needs the HUD hover for names.</span></p></div>
+
+<!-- B -->
+<div class="opt"><h2><b>B</b> · A footer line</h2>
+<p>The grid stays as you set it; Battle Medicine goes in one small line under it, after a thin divider, only when there is something to say.</p>
+<div class="scene"><div class="tok" style="background-image:url(../../tools/harness/icons/goblin.webp)"></div><div class="name">Schmekcho</div>
+<div class="tt"><div class="g">
+<div class="c"><i class="fa-solid fa-heart hp"></i><span>114</span></div><div class="c"><i class="fa-solid fa-shield-halved ac"></i><span>26</span></div><div class="c"><i class="fa-solid fa-star hero"></i><span>0/3</span></div><div class="c"><i class="fa-solid fa-chess-rook fort"></i><span>25</span></div><div class="c"><i class="fa-solid fa-person-running ref"></i><span>29</span></div>
+<div class="c"><i class="fa-solid fa-brain will"></i><span>22</span></div><div class="c"><i class="fa-solid fa-hand-fist ath"></i><span>24</span></div><div class="c"><i class="fa-solid fa-shoe-prints mute"></i><span>30</span></div><div class="c"><i class="fa-solid fa-ruler mute"></i><span>~5</span></div>
+</div><div class="foot"><span><i class="fa-solid fa-kit-medical"></i>Immune to Uri · 1 h</span></div></div></div>
+<p class="cap">On the healer: <i class="fa-solid fa-kit-medical green"></i> Treated Amiri 18 h, Ezren 2 h · Medic ready</p>
+<p><span class="pro">+ names readable, grid untouched.</span> <span class="con">− a long footer when a healer treated many.</span></p></div>
+
+<!-- C -->
+<div class="opt"><h2><b>C</b> · A badge on the token</h2>
+<p>Nothing in the tooltip: a small badge on the token's corner, seen by everyone without hovering, like a condition icon with a countdown.</p>
+<div class="scene"><div class="tok" style="background-image:url(../../tools/harness/icons/goblin.webp)"><div class="badge"><i class="fa-solid fa-kit-medical"></i>1h</div></div><div class="name">Schmekcho</div>
+<div class="tt"><div class="g">
+<div class="c"><i class="fa-solid fa-heart hp"></i><span>114</span></div><div class="c"><i class="fa-solid fa-shield-halved ac"></i><span>26</span></div><div class="c"><i class="fa-solid fa-star hero"></i><span>0/3</span></div><div class="c"><i class="fa-solid fa-chess-rook fort"></i><span>25</span></div><div class="c"><i class="fa-solid fa-person-running ref"></i><span>29</span></div>
+<div class="c"><i class="fa-solid fa-brain will"></i><span>22</span></div><div class="c"><i class="fa-solid fa-hand-fist ath"></i><span>24</span></div><div class="c"><i class="fa-solid fa-shoe-prints mute"></i><span>30</span></div><div class="c"><i class="fa-solid fa-ruler mute"></i><span>~5</span></div>
+</div></div></div>
+<p><span class="pro">+ visible at a glance, mid-fight.</span> <span class="con">− one more thing on the map, next to conditions; who isn't shown.</span></p></div>
+
+<!-- D -->
+<div class="opt"><h2><b>D</b> · Chips above the grid</h2>
+<p>A row of small pills on top of the tooltip: one per healer this creature is immune to. Red = immune; on a healer, a green "Medic" pill.</p>
+<div class="scene"><div class="tok" style="background-image:url(../../tools/harness/icons/goblin.webp)"></div><div class="name">Schmekcho</div>
+<div class="tt"><div class="chips"><span class="chip"><i class="fa-solid fa-kit-medical"></i>Uri 1h</span></div><div class="g">
+<div class="c"><i class="fa-solid fa-heart hp"></i><span>114</span></div><div class="c"><i class="fa-solid fa-shield-halved ac"></i><span>26</span></div><div class="c"><i class="fa-solid fa-star hero"></i><span>0/3</span></div><div class="c"><i class="fa-solid fa-chess-rook fort"></i><span>25</span></div><div class="c"><i class="fa-solid fa-person-running ref"></i><span>29</span></div>
+<div class="c"><i class="fa-solid fa-brain will"></i><span>22</span></div><div class="c"><i class="fa-solid fa-hand-fist ath"></i><span>24</span></div><div class="c"><i class="fa-solid fa-shoe-prints mute"></i><span>30</span></div><div class="c"><i class="fa-solid fa-ruler mute"></i><span>~5</span></div>
+</div></div></div>
+<p><span class="pro">+ names and time, clearly apart from the stats.</span> <span class="con">− several healers = several pills.</span></p></div>
+
+<!-- E -->
+<div class="opt reco"><h2><b>E</b> · "Can I treat it?" <span class="tag">Recommended</span></h2>
+<p>Answer the question the player actually has: with your own token selected (one that has Battle Medicine), hovering an ally shows one cell: <span class="green">ready</span> or <span class="red">the time left for you</span>. Other healers' immunities don't matter to you; nobody else sees anything.</p>
+<div class="scene"><div class="tok" style="background-image:url(../../tools/harness/icons/goblin.webp)"></div><div class="name">Schmekcho</div>
+<div class="tt"><div class="g">
+<div class="c"><i class="fa-solid fa-heart hp"></i><span>114</span></div><div class="c"><i class="fa-solid fa-shield-halved ac"></i><span>26</span></div><div class="c"><i class="fa-solid fa-star hero"></i><span>0/3</span></div><div class="c"><i class="fa-solid fa-chess-rook fort"></i><span>25</span></div><div class="c"><i class="fa-solid fa-person-running ref"></i><span>29</span></div>
+<div class="c"><i class="fa-solid fa-brain will"></i><span>22</span></div><div class="c"><i class="fa-solid fa-hand-fist ath"></i><span>24</span></div><div class="c"><i class="fa-solid fa-shoe-prints mute"></i><span>30</span></div><div class="c"><i class="fa-solid fa-ruler mute"></i><span>~5</span></div><div class="c"><i class="fa-solid fa-kit-medical red"></i><span>1 h</span></div>
+</div></div></div>
+<p class="cap">Uri selected, hovering Schmekcho: <i class="fa-solid fa-kit-medical red"></i> 1 h · Kyra selected: <i class="fa-solid fa-kit-medical green"></i> Ready · a Medic with it ready: <i class="fa-solid fa-user-doctor green"></i> Medic</p>
+<p><span class="pro">+ one small cell, only for healers, exactly what they need.</span> <span class="con">− the GM and non-healers see nothing (the HUD hover still has the full list).</span></p></div>
+
+<!-- F: combine -->
+<div class="opt"><h2><b>E + B</b> · Both</h2>
+<p>Healers get E's cell when they have their token selected; the GM (or everyone, by option) also gets B's footer with the names.</p>
+<div class="scene"><div class="tok" style="background-image:url(../../tools/harness/icons/goblin.webp)"></div><div class="name">Schmekcho</div>
+<div class="tt"><div class="g">
+<div class="c"><i class="fa-solid fa-heart hp"></i><span>114</span></div><div class="c"><i class="fa-solid fa-shield-halved ac"></i><span>26</span></div><div class="c"><i class="fa-solid fa-star hero"></i><span>0/3</span></div><div class="c"><i class="fa-solid fa-chess-rook fort"></i><span>25</span></div><div class="c"><i class="fa-solid fa-person-running ref"></i><span>29</span></div>
+<div class="c"><i class="fa-solid fa-brain will"></i><span>22</span></div><div class="c"><i class="fa-solid fa-hand-fist ath"></i><span>24</span></div><div class="c"><i class="fa-solid fa-shoe-prints mute"></i><span>30</span></div><div class="c"><i class="fa-solid fa-ruler mute"></i><span>~5</span></div><div class="c"><i class="fa-solid fa-kit-medical red"></i><span>1 h</span></div>
+</div><div class="foot"><span><i class="fa-solid fa-kit-medical"></i>Immune to Uri · 1 h</span></div></div></div>
+<p><span class="pro">+ the healer's answer and the full picture.</span> <span class="con">− two places for the same thing.</span></p></div>
+
+</div></body></html>

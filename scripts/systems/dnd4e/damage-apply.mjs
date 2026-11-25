@@ -1,5 +1,6 @@
 import { MODULE_ID, SOCKET } from "./constants.mjs";
 import { F, L, setting, log, actorFromSpeaker } from "./utils.mjs";
+import { noteSource } from "../../features/encounter-report.js";
 
 /*
  * Damage chat cards: the dnd4e "Apply Damage" buttons only affect the *selected* tokens, which
@@ -90,7 +91,12 @@ async function apply(message, mode, half) {
 		? storedTargets(message).map((t) => t.actor)
 		: canvas.tokens.controlled.map((t) => t.actor);
 	if (!actors.length) return ui.notifications.warn(mode === "targets" ? L("DamageApply.NoTargets") : L("DamageApply.NoSelection"));
-	for (const actor of actors) await applyToActor(actor, dealt, multiplier);
+	// Encounter Report: this damage comes from the damage card's speaker (PLAN §26).
+	const source = actorFromSpeaker(message.speaker);
+	for (const actor of actors) {
+		if (source) await noteSource(actor.uuid, source.uuid, "damage");
+		await applyToActor(actor, dealt, multiplier);
+	}
 	log("damage applied", mode, half ? "half" : "full", actors.map((a) => a.name));
 }
 

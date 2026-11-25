@@ -24,6 +24,25 @@ export const CONFIG_KEY = "tokenTooltipConfig";
 
 const state = { feature: null, el: null, token: null, dragging: false };
 
+/**
+ * Lines other features add after the configured rows (v0.81.2; Battle Medicine used it until v0.81.4). fn(token, user) → [{ icon,
+ * color, value }] for what this user may see. Each can be switched off by a Token Tooltip setting with the
+ * same id when the feature declares one (e.g. `battleMedicine`, PF2e).
+ */
+const extras = new Map();
+
+export function registerTooltipExtra(id, fn) {
+  extras.set(id, fn);
+  refreshIfShown();
+  return () => {
+    extras.delete(id);
+    refreshIfShown();
+  };
+}
+
+/** Redraw the tooltip if it is open (a feature's data changed). */
+export const refreshTooltip = () => refreshIfShown();
+
 /** The world's rows: saved config, else the system's preset. */
 export function tooltipConfig() {
   const saved = game.settings.get(MODULE_ID, CONFIG_KEY);
@@ -64,6 +83,15 @@ export function tooltipRows(token) {
     const value = evaluate(row.value, token);
     if (value === undefined) continue;
     rows.push({ icon: iconClass(row.icon), color: row.color || "#ffffff", value });
+  }
+  for (const [id, fn] of extras) {
+    const declared = state.feature?.def?.settings?.[id];
+    if (declared && state.feature.get(id) === false) continue;
+    try {
+      for (const line of fn(token, game.user) ?? []) rows.push({ icon: iconClass(line.icon), color: line.color || "#ffffff", value: String(line.value ?? "") });
+    } catch (err) {
+      console.error(`${MODULE_ID} | Token Tooltip extra "${id}"`, err);
+    }
   }
   return rows;
 }
@@ -168,7 +196,8 @@ defineFeature({
       if (token === state.token) position();
     });
     feature.on("updateActor", actor => {
-      if (state.token?.actor === actor) refreshIfShown();
+      // Extras may show other actors' data (whom a healer treated): refresh on any actor while extras exist.
+      if (state.token?.actor === actor || extras.size) refreshIfShown();
     });
     feature.on("updateToken", doc => {
       if (doc === state.token?.document) refreshIfShown();

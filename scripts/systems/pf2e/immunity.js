@@ -27,7 +27,14 @@ export async function addImmunity(actor, { kind, by, name, seconds = DAY }) {
 	if (!actor?.setFlag) return;
 	const t = now();
 	const kept = immunitiesOf(actor).filter((e) => !(e.kind === kind && e.by === by));
-	kept.push({ kind, by, name, at: t, until: t + seconds });
+	kept.push({ kind, by, name, at: t, until: t + seconds, real: Date.now() });
+	await actor.setFlag(MODULE_ID, KEY, kept);
+}
+
+/** Remove immunities matching kind (and `by`, when given). GM's client. */
+export async function removeImmunity(actor, { kind, by = null }) {
+	if (!actor?.setFlag) return;
+	const kept = immunitiesOf(actor).filter((e) => !(e.kind === kind && (!by || e.by === by)));
 	await actor.setFlag(MODULE_ID, KEY, kept);
 }
 

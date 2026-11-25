@@ -849,6 +849,41 @@
           }
         }
       },
+      "pf2eBattleMedicine": {
+        "Name": "Battle Medicine",
+        "Setting": {
+          "badgesAll": { "Name": "Badges on immune creatures", "Hint": "A small first-aid badge on creatures immune to someone's Battle Medicine; its red fill is the time left. Everyone sees it (on tokens they can see)." },
+          "rollOnUse": { "Name": "Roll on use", "Hint": "Using the feat opens the Battle Medicine roll with its DC choices: PF2e Workbench's Treat Wounds and Battle Medicine macro (Battle Medicine chosen) when it is active, else PF2e's Treat Wounds roll. The roll records the use (cancelled: nothing). Off: the card itself records it (with one target)." },
+          "badgesHealer": { "Name": "Badges for the selected healer", "Hint": "With your token selected and it has Battle Medicine, your allies get a badge: green, you can treat it; the red fill, immune to you and for how long." }
+        },
+        "Hint": "Tracks Battle Medicine: from the Treat Wounds and Battle Medicine macro, the feat's own action (with one target), Medicine checks naming Battle Medicine, or PF2e's immunity effect. 1 day by world time, 1 hour for the macro's exceptions (Baton, Paragon, Forensic Medicine, Godless Healing, Robust Health); a Medic treating someone already immune spends Medic Dedication. Badges on the tokens (see the options); the Token HUD button lists names and times, and the GM clicks it to edit. No PF2e effect is added."
+      },
+      "pf2eFlanking": {
+        "Name": "Flanking Overlay",
+        "Hint": "Shown with the cover line for a few seconds when you select your token, target a creature or move (Cover's \"Show for\" setting): every square you could step into to flank the target is highlighted, with a line to each ally you already flank it with and a broken shield over it. While you drag your token, the squares stay and the one under your token gets the broken shield. PF2e's own flanking rules decide; only tokens you can see count. Per player."
+      },
+      "pf2eSell": {
+        "Name": "Sell",
+        "Hint": "A Sell icon on every item that isn't treasure (character, loot and party sheets): half its price, the coins to the same sheet, a chat line. A stack asks how many. Loot sheets also get \"Sell all equipment\" next to \"Sell all treasure\" (half price, everything but treasure and coins, after a confirmation)."
+      },
+      "partyLoad": {
+        "Name": "Party Load",
+        "Hint": "The party's encumbrance as one bar, like PF2e's bulk bar: everything the party members carry plus the Party Stash, with two ticks at the members' encumbered and maximum limits added up. Extradimensional containers in the stash (Bag of Holding, Spacious Pouch) add their capacity. Hover it for each member, the stash and each bag. PF2e: on the party sheet's Stash tab; D&D 4e: in the Party Stash window (pounds)."
+      },
+      "encounterReport": {
+        "Name": "Encounter Report",
+        "Hint": "When an encounter ends, a window with each ally's damage (past encounters too; reopen it from the chat's buttons): dealt by itself (companions' added to their master), as a percentage of the HP the enemies had when the combat started, dealt by its side on its turn, friendly fire, taken and healed. Damage the module couldn't tie to a creature shows as \"Missed damage\". Sources: PF2e's damage messages; D&D 4e's damage buttons.",
+        "Setting": {
+          "public": { "Name": "Everyone sees the report", "Hint": "Off: only the GM." }
+        }
+      },
+      "combatCards": {
+        "Name": "Combat Cards",
+        "Hint": "At the end of a fight, every player character gets a card for what they did (55 cards: Common, Rare, Epic, Legendary). The first time a character earns a card it is foil. The cards fill the screen for everyone; then the Encounter Report fades in. The Party Deck (a tab on the PF2e party sheet, and a chat button) shows every card the party has earned. Needs the Encounter Report on (it records the fight).",
+        "Setting": {
+          "reportDelay": { "Name": "Report after (seconds)", "Hint": "How long the cards stay alone before the Encounter Report fades in." }
+        }
+      },
       "pf2eMultiCheck": {
         "Name": "Multiple Checks",
         "Hint": "Post several checks as one chat card. Shift-click an inline check's \"send to chat\" icon to collect it (a check group adds all of its checks), paste or drop selected journal text or @Check codes, or add a skill and DC by hand; then Send. Players see one button per check and how much lower each DC is than the hardest (\"Stealth (DC 2 lower)\"); only the GM sees the DCs. GM only; the window also opens from the chat's buttons."
@@ -957,7 +992,8 @@
         "Name": "Cover",
         "Hint": "Attack rolls get the target's cover from the attacker's point of view: walls hiding more than half of it, greater (+4); a wall across the line center to center, standard (+2); another creature on the line, lesser (+1; not dead or prone ones). It raises the target's AC for that roll only, the higher of it and a Cover the target already has. The roll window shows No cover / Lesser / Standard / Greater to change it; the card says which was used.",
         "Setting": {
-          "preview": { "Name": "Map preview", "Hint": "While you target, draw the line from your token and the cover it gives (only you see it)." },
+          "preview": { "Name": "Map preview", "Hint": "When you select your token, target a creature, or your token moves: draw the line from your token and the cover it gives, together with the flanking overlay (only you see it)." },
+          "previewSeconds": { "Name": "Show for (seconds)", "Hint": "How long the cover and flanking overlay stay on the map. 0: always while you have a target." },
           "areaReach": { "Name": "Areas reach past wall ends", "Hint": "PF2e leaves a square out of an area when the line to its center hits a wall, so a creature partly behind a wall's end is never targeted. On: the square counts when a clear line reaches any part of it, and the creature gets cover instead." }
         }
       },
@@ -2208,6 +2244,545 @@
       "Placed": "Stairs {n} placed: each end teleports to the other.",
       "PlacedOneWay": "Stairs {n} placed: the first end teleports to the second.",
       "Failed": "The stairs could not be placed (see the console)."
+    },
+    "EncounterReport": {
+      "Title": "Encounter report",
+      "Missed": "Missed damage: {n}",
+      "Nothing": "No damage recorded.",
+    "NoReports": "No encounter reports yet.",
+    "Encounter": "Encounter",
+    "Entry": "{scene} · {rounds} · {when}",
+    "RoundOne": "1 round",
+    "RoundsN": "{n} rounds",
+    "NoScene": "No scene",
+    "Party": "Party",
+    "Enemies": "Enemies",
+    "Foe": {
+      "Down": "Down in round {round}",
+      "Standing": "Still standing",
+      "MaxHit": "Biggest hit",
+      "MaxHitHint": "The most damage it dealt with a single hit",
+      "BestTurn": "Best turn",
+      "BestTurnHint": "The most damage it dealt in a single turn",
+      "Taken": "Biggest hit taken",
+      "TakenBy": "Biggest hit taken ({name})",
+      "TakenHint": "The most damage it took from a single hit",
+      "Hits": "Hits",
+      "HitsHint": "Attack rolls that hit, of all its attack rolls",
+      "Crits": "{n}× crit"
+    },
+    "MissedHint": "Damage whose source wasn't known (no attack or damage card for it)",
+    "Tile": {
+      "Damage": "Dealt",
+      "DamageHint": "All damage the party dealt to enemies",
+      "Taken": "Taken",
+      "TakenHint": "All damage the party took",
+      "Healed": "Healing",
+      "HealedHint": "All healing the party gave",
+      "Rounds": "Rounds",
+      "RoundsHint": "Rounds the combat lasted"
+    },
+      "Col": {
+        "Name": "",
+        "NameHint": "",
+        "Damage": "Damage",
+        "DamageHint": "Dealt to enemies by this creature (+ its companions')",
+        "Percent": "% enemy HP",
+        "PercentHint": "Its damage against all the HP the enemies had when the combat started",
+        "OnTurn": "On turn",
+        "OnTurnHint": "Damage to enemies by its side during its turns",
+        "Friendly": "Friendly fire",
+        "FriendlyHint": "Damage it dealt to its own side",
+        "Taken": "Taken",
+        "TakenHint": "Damage it took",
+        "Healed": "Healed",
+        "HealedHint": "Healing it gave"
+      }
+    },
+    "CombatCards": {
+      "Title": "Combat Cards",
+      "Victory": "Victory",
+      "BattleOver": "Battle's end",
+      "Close": "Close",
+      "You": "You",
+      "RoundOne": "1 round",
+      "RoundsN": "{n} rounds",
+      "Rarity": {
+        "common": "Common",
+        "rare": "Rare",
+        "epic": "Epic",
+        "legendary": "Legendary"
+      },
+      "DeckTitle": "Party Deck",
+      "Tab": "Deck",
+      "Discovered": "{n} / {of} discovered",
+      "All": "All",
+      "ShowUnknown": "Show undiscovered",
+      "Sort": {
+        "rarity": "Sort: rarity",
+        "count": "Sort: most earned",
+        "newest": "Sort: newest"
+      },
+      "NoParty": "No party members yet.",
+      "PickACard": "Pick a card to see who earned it.",
+      "EarnedTimes": "Earned {n} times",
+      "Foil": "Foil",
+      "NoScene": "No scene",
+      "Grant": "Grant…",
+      "GrantWho": "Give {card} to:",
+      "Granted": "Granted by the GM",
+      "Remove": "Remove",
+      "RemoveConfirm": "Remove this {card} from {name}?",
+      "Card": {
+        "hammer": {
+          "Name": "The Hammer",
+          "Rule": "Most damage dealt to enemies.",
+          "Stat": "damage dealt",
+          "Q1": "They felt that one in the next village.",
+          "Q2": "Subtlety is overrated."
+        },
+        "wall": {
+          "Name": "The Wall",
+          "Rule": "Most damage taken.",
+          "Stat": "damage taken",
+          "Q1": "Nothing got past. Nothing.",
+          "Q2": "Is that all you've got?"
+        },
+        "lifeline": {
+          "Name": "Lifeline",
+          "Rule": "Most healing given.",
+          "Stat": "HP healed",
+          "Q1": "Not today.",
+          "Q2": "Hold still, this will sting."
+        },
+        "firstBlood": {
+          "Name": "First Blood",
+          "Rule": "Dealt the first damage of the fight.",
+          "Stat": "round of the first hit",
+          "Q1": "Someone had to start it.",
+          "Q2": "Ladies first."
+        },
+        "finisher": {
+          "Name": "Finisher",
+          "Rule": "Most final blows.",
+          "Stat": "final blows",
+          "Q1": "Last one standing? Not anymore.",
+          "Q2": "Leave that one to me."
+        },
+        "sharpshooter": {
+          "Name": "Sharpshooter",
+          "Rule": "Best hit rate (2 or more attacks).",
+          "Stat": "attacks hit",
+          "Q1": "Aim small, miss small.",
+          "Q2": "Right where I wanted it."
+        },
+        "commander": {
+          "Name": "Commander",
+          "Rule": "Most damage dealt by allies during your turn.",
+          "Stat": "damage by allies on your turn",
+          "Q1": "On my mark.",
+          "Q2": "Everyone, now!"
+        },
+        "packLeader": {
+          "Name": "Pack Leader",
+          "Rule": "Most damage by your companion, familiar or summons.",
+          "Stat": "companion damage",
+          "Q1": "Good dog.",
+          "Q2": "We hunt together."
+        },
+        "steadfast": {
+          "Name": "Steadfast",
+          "Rule": "Fought the whole fight without going down (anyone can get it).",
+          "Stat": "rounds standing",
+          "Q1": "Still here.",
+          "Q2": "Steady as stone."
+        },
+        "shoulder": {
+          "Name": "Shoulder to Shoulder",
+          "Rule": "Fought beside the party (the last resort: everyone can get it).",
+          "Stat": "rounds fought",
+          "Q1": "Together, or not at all.",
+          "Q2": "I had your back."
+        },
+        "onePunch": {
+          "Name": "One Punch",
+          "Rule": "The biggest single hit of the fight, at least twice the party's average hit.",
+          "Stat": "damage in one hit",
+          "Q1": "One was enough.",
+          "Q2": "Did you see that?"
+        },
+        "luckyStar": {
+          "Name": "Lucky Star",
+          "Rule": "2 critical hits.",
+          "Stat": "critical hits",
+          "Q1": "The dice love me.",
+          "Q2": "Fortune favours the bold."
+        },
+        "closeCall": {
+          "Name": "Close Call",
+          "Rule": "Fell below a quarter of your HP and never went down.",
+          "Stat": "HP at the lowest",
+          "Q1": "That was too close.",
+          "Q2": "Just a scratch. Mostly."
+        },
+        "untouchable": {
+          "Name": "Untouchable",
+          "Rule": "Took no damage in a fight of 3 rounds or more.",
+          "Stat": "damage taken",
+          "Q1": "Missed me.",
+          "Q2": "Too slow."
+        },
+        "backFromTheBrink": {
+          "Name": "Back from the Brink",
+          "Rule": "Went down and got back up.",
+          "Stat": "times back up",
+          "Q1": "I'm not done yet.",
+          "Q2": "Death can wait."
+        },
+        "fieldMedic": {
+          "Name": "Field Medic",
+          "Rule": "Healed 2 or more different allies.",
+          "Stat": "allies healed",
+          "Q1": "Next!",
+          "Q2": "Line up, I've got enough for everyone."
+        },
+        "whirlwind": {
+          "Name": "Whirlwind",
+          "Rule": "Damaged 3 or more different enemies.",
+          "Stat": "enemies hit",
+          "Q1": "Who's next?",
+          "Q2": "Everyone gets some."
+        },
+        "openingSalvo": {
+          "Name": "Opening Salvo",
+          "Rule": "Dealt a quarter or more of the enemies' HP in round 1.",
+          "Stat": "of the enemies' HP in round 1",
+          "Q1": "Hello there.",
+          "Q2": "First impressions matter."
+        },
+        "ironHide": {
+          "Name": "Iron Hide",
+          "Rule": "Took a third or more of all the party's damage and never went down.",
+          "Stat": "of the party's damage taken",
+          "Q1": "Hit me again, I dare you.",
+          "Q2": "Armour is for using."
+        },
+        "clutch": {
+          "Name": "Clutch",
+          "Rule": "Dealt the blow that ended the fight.",
+          "Stat": "rounds to victory",
+          "Q1": "And that's the fight.",
+          "Q2": "Curtain."
+        },
+        "executioner": {
+          "Name": "Executioner",
+          "Rule": "Took an enemy from full HP to down in a single hit.",
+          "Stat": "damage in one hit",
+          "Q1": "It never stood a chance.",
+          "Q2": "Clean."
+        },
+        "critStorm": {
+          "Name": "Crit Storm",
+          "Rule": "3 or more critical hits.",
+          "Stat": "critical hits",
+          "Q1": "Again. And again.",
+          "Q2": "The stars aligned."
+        },
+        "guardianAngel": {
+          "Name": "Guardian Angel",
+          "Rule": "Brought a downed ally back up.",
+          "Stat": "allies saved",
+          "Q1": "Not on my watch.",
+          "Q2": "Breathe. You're fine."
+        },
+        "juggernaut": {
+          "Name": "Juggernaut",
+          "Rule": "Took half or more of all the party's damage and never went down.",
+          "Stat": "of the party's damage taken",
+          "Q1": "I am the front line.",
+          "Q2": "Unstoppable."
+        },
+        "tripleThreat": {
+          "Name": "Triple Threat",
+          "Rule": "3 or more final blows.",
+          "Stat": "final blows",
+          "Q1": "Three for three.",
+          "Q2": "Keep them coming."
+        },
+        "oneHeroArmy": {
+          "Name": "One-Hero Army",
+          "Rule": "Dealt half or more of all the party's damage (parties of 3 or more).",
+          "Stat": "of the party's damage",
+          "Q1": "Did you all even show up?",
+          "Q2": "I'll handle this."
+        },
+        "flawless": {
+          "Name": "Flawless",
+          "Rule": "Most damage dealt, and nobody in the party took any damage.",
+          "Stat": "damage taken by the party",
+          "Q1": "Not a scratch on us.",
+          "Q2": "Textbook."
+        },
+        "giantSlayer": {
+          "Name": "Giant Slayer",
+          "Rule": "Final blow on an enemy 3 or more levels above the party.",
+          "Stat": "levels above the party",
+          "Q1": "The bigger they are…",
+          "Q2": "Timber!"
+        },
+        "ghost": {
+          "Name": "Ghost",
+          "Rule": "Attacked 5 or more times and never hit.",
+          "Stat": "attacks on you hit",
+          "Q1": "You can't hit what you can't catch.",
+          "Q2": "Was that meant for me?"
+        },
+        "lastStand": {
+          "Name": "Last Stand",
+          "Rule": "Everyone else in the party went down; you didn't, and the party won.",
+          "Stat": "allies down, still standing",
+          "Q1": "I'll finish this myself.",
+          "Q2": "Get up. We won."
+        },
+        "spellslinger": {
+          "Name": "Spellslinger",
+          "Rule": "Cast the most spells (2 or more).",
+          "Stat": "spells cast",
+          "Q1": "Next one's bigger.",
+          "Q2": "I have a spell for that."
+        },
+        "marathon": {
+          "Name": "Marathon",
+          "Rule": "Moved the most squares.",
+          "Stat": "squares moved",
+          "Q1": "Can't catch me.",
+          "Q2": "Here, there, everywhere."
+        },
+        "immovable": {
+          "Name": "Immovable",
+          "Rule": "Moved 1 square or less in a fight of 3 rounds or more.",
+          "Stat": "squares moved",
+          "Q1": "I'm not going anywhere.",
+          "Q2": "Come to me."
+        },
+        "scholar": {
+          "Name": "Scholar",
+          "Rule": "Used Recall Knowledge (a secret roll: the attempt counts, never the result).",
+          "Stat": "times Recall Knowledge",
+          "Q1": "Weak to fire, obviously.",
+          "Q2": "I read about these."
+        },
+        "ironWill": {
+          "Name": "Iron Will",
+          "Rule": "Succeeded at 3 or more saving throws.",
+          "Stat": "saves passed",
+          "Q1": "Nice try.",
+          "Q2": "My mind is my own."
+        },
+        "terror": {
+          "Name": "Terror",
+          "Rule": "Demoralized an enemy successfully.",
+          "Stat": "enemies demoralized",
+          "Q1": "Boo.",
+          "Q2": "Run while you can."
+        },
+        "wrestler": {
+          "Name": "Wrestler",
+          "Rule": "Tripped, Shoved or Grappled an enemy successfully.",
+          "Stat": "takedowns",
+          "Q1": "Down you go.",
+          "Q2": "Stay put."
+        },
+        "acrobat": {
+          "Name": "Acrobat",
+          "Rule": "Tumbled Through an enemy's space successfully.",
+          "Stat": "tumbles",
+          "Q1": "Excuse me.",
+          "Q2": "Pardon my reach."
+        },
+        "trickster": {
+          "Name": "Trickster",
+          "Rule": "Feinted successfully 2 or more times.",
+          "Stat": "feints",
+          "Q1": "Look over there!",
+          "Q2": "Gotcha."
+        },
+        "natural": {
+          "Name": "Natural",
+          "Rule": "Rolled 2 natural 20s.",
+          "Stat": "natural 20s",
+          "Q1": "Twice!",
+          "Q2": "The dice are on my side."
+        },
+        "unshakable": {
+          "Name": "Unshakable",
+          "Rule": "Critical success on a saving throw.",
+          "Stat": "critical saves",
+          "Q1": "Was that supposed to hurt?",
+          "Q2": "Not even close."
+        },
+        "combatMedic": {
+          "Name": "Combat Medic",
+          "Rule": "Used Battle Medicine on 2 or more allies.",
+          "Stat": "allies patched up",
+          "Q1": "Walk it off.",
+          "Q2": "Hold this. Press hard."
+        },
+        "fatesFavourite": {
+          "Name": "Fate's Favourite",
+          "Rule": "Spent a Hero Point, and the party won.",
+          "Stat": "Hero Points spent",
+          "Q1": "Not like this.",
+          "Q2": "Destiny owes me one."
+        },
+        "bigGuns": {
+          "Name": "Big Guns",
+          "Rule": "Cast a spell of the highest rank you can cast.",
+          "Stat": "spell rank",
+          "Q1": "Stand back.",
+          "Q2": "Overkill is underrated."
+        },
+        "shruggedItOff": {
+          "Name": "Shrugged It Off",
+          "Rule": "Succeeded at every saving throw (3 or more).",
+          "Stat": "saves passed",
+          "Q1": "Is that it?",
+          "Q2": "Barely felt it."
+        },
+        "blitz": {
+          "Name": "Blitz",
+          "Rule": "Most damage in a fight won in a single round.",
+          "Stat": "round",
+          "Q1": "Blink and you missed it.",
+          "Q2": "That was quick."
+        },
+        "deathsDoor": {
+          "Name": "Death's Door",
+          "Rule": "Reached dying 2 or more and lived.",
+          "Stat": "dying value survived",
+          "Q1": "I saw the light. Didn't like it.",
+          "Q2": "Not yet."
+        },
+        "endurance": {
+          "Name": "Endurance",
+          "Rule": "Never went down in a fight of 6 rounds or more.",
+          "Stat": "rounds",
+          "Q1": "Still standing. Somehow.",
+          "Q2": "Is it over yet?"
+        },
+        "bossFight": {
+          "Name": "Boss Fight",
+          "Rule": "Most damage to an enemy 2 or more levels above the party.",
+          "Stat": "damage to the big one",
+          "Q1": "That's the big one.",
+          "Q2": "Bring it down!"
+        },
+        "lockdown": {
+          "Name": "Lockdown",
+          "Rule": "3 or more successful Trips, Shoves or Grapples.",
+          "Stat": "takedowns",
+          "Q1": "Nobody moves.",
+          "Q2": "Stay. Down."
+        },
+        "naturalDisaster": {
+          "Name": "Natural Disaster",
+          "Rule": "Rolled 3 natural 20s.",
+          "Stat": "natural 20s",
+          "Q1": "Again?!",
+          "Q2": "Call it destiny."
+        },
+        "perfectAim": {
+          "Name": "Perfect Aim",
+          "Rule": "Hit with every attack (4 or more), at least one a critical hit.",
+          "Stat": "attacks hit",
+          "Q1": "Never missed.",
+          "Q2": "Every single one."
+        },
+        "saviour": {
+          "Name": "Saviour",
+          "Rule": "Brought 2 or more downed allies back up.",
+          "Stat": "allies saved",
+          "Q1": "Everybody gets up.",
+          "Q2": "Not one of us falls today."
+        },
+        "unstoppableForce": {
+          "Name": "Unstoppable Force",
+          "Rule": "Dealt three quarters or more of all the enemies' HP.",
+          "Stat": "of the enemies' HP",
+          "Q1": "Was there anyone else fighting?",
+          "Q2": "Nothing stands."
+        },
+        "ironMind": {
+          "Name": "Iron Mind",
+          "Rule": "Critical success on 3 or more saving throws.",
+          "Stat": "critical saves",
+          "Q1": "Unbreakable.",
+          "Q2": "You'll have to do better."
+        }
+      }
+    },
+    "PartyLoad": {
+      "Title": "Party load",
+      "Encumbered": "encumbered",
+      "Max": "max",
+      "Stash": "Party Stash"
+    },
+    "Sell": {
+      "Sell": "Sell",
+      "SellTooltip": "Sell for {price} (half price)",
+      "SoldFor": "sold for {price}",
+      "HowManyTitle": "Sell {name}",
+      "HowMany": "How many (of {max})?",
+      "SellAllTooltip": "Sell all equipment (half price; not treasure)",
+      "SellAllTitle": "Sell all equipment",
+      "SellAllConfirm": "Sell {count} items (everything but treasure and coins) for {price}?",
+      "SoldAll": "Sold {count} items for {price}.",
+      "Items": "Items",
+      "NothingToSell": "Nothing to sell (treasure and coins aren't sold here).",
+    "SellTitle": "Sell {name}",
+    "SellConfirm": "Sell {name} for {price} (half price)?",
+    "SellEach": "{price} each (half price).",
+    "WindowTitle": "Sell items",
+    "WindowFor": "Sell items: {name}",
+    "WindowTooltip": "Sell items (half price; not treasure)",
+    "Total": "Total: {price}",
+    "HalfPrice": "(half price)",
+    "SelectAll": "Select all",
+    "SelectNone": "Select none",
+    "Cancel": "Cancel",
+    "SellSelected": "Sell selected",
+    "SellSelectedConfirm": "Sell {count} items for {price}?",
+    "SellNFor": "Sell {count} for {price}",
+    "SellN": "Sell {count}",
+    "HalfPriceOf": "Half price: {price}.",
+    "Each": "{price} each",
+    "Picked": "{n} of {of} selected",
+    "TotalLabel": "Total"
+    },
+    "BattleMedicine": {
+      "Name": "Battle Medicine",
+      "Title": "Battle Medicine",
+      "TreatedBy": "Treated by {name}: again in {time}",
+      "Treated": "Treated {name} ({time})",
+      "AssessedBy": "Combat Assessment: immune to {name} ({time})",
+      "None": "Battle Medicine: no one treated yet",
+    "MedicReady": "Medic Dedication: ready (may treat someone already immune)",
+    "MedicUsed": "Medic Dedication: used, ready again in {time}",
+    "ClickToEdit": "Click to edit",
+    "EditorTitle": "Battle Medicine",
+    "EditorFor": "Battle Medicine: {name}",
+    "SectionTreatedBy": "Treated by (immune to them)",
+    "SectionTreated": "Treated",
+    "SectionAdd": "Add: {name} treated",
+    "Patient": "Treated creature",
+    "NeedTarget": "Battle Medicine: target the creature you treat (exactly one) so it is tracked.",
+    "Nobody": "Nobody.",
+    "Remove": "Remove",
+    "MedicReset": "Make ready",
+    "MedicSpend": "Mark used",
+    "Healer": "Healer",
+    "HoursLeft": "Hours left",
+    "Add": "Add"
     },
     "MultiCheck": {
       "Title": "Multiple Checks",

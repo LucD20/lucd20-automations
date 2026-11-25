@@ -31,8 +31,8 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 | 20 | Effect areas: targeting window, hover cover, exact reach | built v0.61.3 | `pf2eAreas` |
 | 21 | Commander / Fighter: Combat Assessment | built v0.77.0 | `pf2eCombatAssessment` |
 | 22 | Swashbuckler: Guardian's Deflection | built v0.77.0 | `pf2eGuardiansDeflection` |
-| 23 | Battle Medicine: who used it on whom, on the Token HUD | planned | `pf2eBattleMedicine` |
-| 24 | Flanking overlay | planned | `pf2eFlanking` |
+| 23 | Battle Medicine: who used it on whom, on the Token HUD | built v0.81.0 | `pf2eBattleMedicine` |
+| 24 | Flanking overlay | built v0.81.0 | `pf2eFlanking` |
 | 25 | Recall Knowledge (replaces PF2e Workbench's macro) | built v0.78.0 | `pf2eRecallKnowledge` |
 
 Commander (Battlecry!): research notes in `docs/pf2e-commander.md`; rules to
@@ -885,7 +885,7 @@ one that leaves fewer squares next to enemies (see PLAN).
   `pf2e.feat-effects` under that name; `context.dc.value` is the target's
   AC on a Strike.
 
-## 23. Battle Medicine on the Token HUD (planned)
+## 23. Battle Medicine on the Token HUD (built v0.81.0)
 
 - Owner: "A simple hover that says who already used Battle Medicine is
   enough. On the target, who already used it on it and how long until it can
@@ -899,8 +899,95 @@ one that leaves fewer squares next to enemies (see PLAN).
   Amiri (18 h)". Entries older than 1 day go. Combat Assessment's immunity
   (rule 21) is shown the same way. Players see only tokens they see, and
   hidden NPC names as players see them.
+- Built v0.81.0 (`battle-medicine.js`, test 69), Core Rules → Actions, on
+  by default. PF2e has no Battle Medicine roll option of its own (the feat
+  is a Medicine check at Treat Wounds' DCs; its source has no rules), so a
+  use is: a Medicine skill check (`context.domains` has `medicine`) whose
+  options or origin item say `battle-medicine`, or whose flavor / content
+  names "Battle Medicine"; the patient is `context.target.actor`, else the
+  roller's single target, added by the roller's client in
+  `preCreateChatMessage` (`flags.lucd20-automations.bmTarget`). Also PF2e's
+  "Effect: Battle Medicine Immunity" (slug
+  `effect-battle-medicine-immunity`) appearing on an actor, the healer from
+  `system.context.origin.actor`. Stored with `immunity.js` (kind
+  `battleMedicine`), 1 day, 1 hour if the healer has Paragon Battle
+  Medicine. HUD button (`fa-kit-medical`, after Riding's horse) for tokens
+  whose actor has the feat or anything to show; HTML tooltip lines
+  "Treated by Kyra: again in 18 h", "Treated Amiri (18 h)", "Combat
+  Assessment: immune to Kyra (18 h)"; actors the user can't see are left
+  out. (verify) how the owner rolls Battle Medicine (the feat's chat card →
+  the Treat Wounds link, a macro) and that the message has the marks
+  above; `data-tooltip-html` in V14.
 
-## 24. Flanking overlay (planned)
+- v0.81.1 (owner: "most people use the battle medicine / treat wounds macro;
+  make it work with it plus using the BM actions"; "the Medic dedication";
+  "something to allow manual editing"):
+  - Uses also read from the "Treat Wounds and Battle Medicine" macro (PF2e
+    Workbench's Basic Action Macros; source: Asymonous' macros on GitLab):
+    its healing / "No healing done" message carries
+    `flags.treat_wounds_battle_medicine` { id: target token, healerId,
+    bmBatonUsed }, flavor "… Battle Medicine" (else Treat Wounds, ignored);
+    and from the feat's own action card (origin item slug `battle-medicine`;
+    the roller's client adds its single target as `bmTarget`). The
+    Workbench "BM Immunity CD" effect ("Battle Medicine by <name>") counts.
+  - Durations as the macro: 1 day; 1 hour with the Battle Medic's Baton, a
+    healer with Paragon Battle Medicine or Forensic Medicine Methodology, a
+    patient with Godless Healing or Robust Health.
+  - The same use seen twice within 30 s of real time (a check and its
+    healing message) counts once.
+  - **Medic Dedication**: treating a creature already immune to you spends
+    it (kind `medicDedication` on the medic, 1 day; 1 hour if master in
+    Medicine); the Workbench's "Medic dedication used" effect counts. The
+    HUD says "ready" / "used, ready again in …". Medic's extra healing is
+    already in the macro and PF2e's Treat Wounds.
+  - **GM editor**: clicking the HUD button (GM) opens a window: who treated
+    this creature (remove), whom it treated (remove), Medic Dedication
+    (make ready / mark used), add "treated by <healer>" with hours left.
+    The GM gets the button on every player character.
+
+- v0.81.2 (owner's first test of 0.81.1: "using the Action didn't show it";
+  "it shouldn't ask who is using it, just get from the origin token"; "it
+  needs to be somewhere anyone can see, could be an extension of the Token
+  tooltip"):
+  - The feat's card is also known by the origin's roll options and by its
+    card title (`<h3>` "Battle Medicine") when the origin item can't be
+    found; used without exactly one target, the roller gets a warning to
+    target the patient (it was silently not tracked). Debug: with
+    `CONFIG.debug.lucd20Rules = true` the GM's console logs each message
+    read and whether it counted.
+  - The GM editor's add row: the token it is open for is the healer; pick
+    the creature it treated (the scene's creatures and every character).
+  - **Token Tooltip** extension (`registerTooltipExtra` in
+    `token-tooltip.js`; option "Battle Medicine" under Token Tooltip, PF2e /
+    SF2e, on by default): everyone hovering a token sees "Kyra: immune
+    18 h", "→ Amiri 18 h", "Medic: ready / 18 h" (needs Token Tooltip on).
+
+- v0.81.4 (owner picked mockups C3 + C4, `docs/mockups/bm-badge.png`; the
+  Token Tooltip lines "don't look great" and are gone): badges on the
+  tokens, in an overlay layer (`canvas.interface`), redrawn on control,
+  token / actor updates, world time:
+  - everyone (client option `badgesAll`, on): a small first-aid badge on a
+    creature immune to someone's Battle Medicine, a red pie for the share of
+    the longest immunity still to run (empties with world time);
+  - the selected healer (an owned controlled token whose creature has the
+    feat; option `badgesHealer`, on): each ally (`isAllyOf`) gets green
+    (you can treat it) or the red pie of the immunity to *you*; creatures
+    immune only to other healers turn green for you; enemies: nothing new.
+  - Names and times stay in the HUD button's hover; the GM edits there.
+
+- v0.84.1 (owner: "using the action applies the immunity but doesn't roll
+  the Battle Medicine roll, with the DC choices"): option "Roll on use"
+  (world, on). Using the feat (its card, on the user's client) opens the
+  roll: PF2e Workbench's internal macro "XDY DO_NOT_IMPORT Treat Wounds and
+  Battle Medicine" (pack `xdy-pf2e-workbench.asymonous-benefactor-macros-internal`,
+  `-sf2e` first in SF2e) with the healer's token selected and "Battle
+  Medicine" chosen in its dialog (`renderDialog`, `select[name=useBattleMedicine]`;
+  it only pre-selects it in combat), else PF2e's `treat-wounds` action with
+  the roll options `action:battle-medicine` (same DCs, Medic bonus). The
+  card is flagged `bmRoll` and records nothing: the roll does (cancelled:
+  no immunity).
+
+## 24. Flanking overlay (built v0.81.0)
 
 - Owner: "When your token is selected, you have a creature targeted and are
   flanking: a 'broken shield' icon on the target, with a line from you to the
@@ -911,6 +998,43 @@ one that leaves fewer squares next to enemies (see PLAN).
   opposite sides or corners of the target; both able to act and with the
   target in melee reach); during a drag, worked out for the drag's end
   square. Only this user's own selected token and tokens they see.
+- Built v0.81.0 (`flanking.js`, test 69), Core Rules → Battlefield, per
+  player, on by default: for each of the user's controlled, owned tokens
+  and each target it can see, PF2e's `canFlank` (the flanking automation
+  setting, reach, enemies, hidden tokens) and `onOppositeSides` with every
+  visible ally that can flank too; a line to each such ally (black under
+  the "controlled" disposition colour) and a broken shield (two halves
+  split by a zigzag) over the target's top edge. While dragging, the drag
+  preview (`canvas.tokens.preview`, same id) is used instead and the
+  original token is left out of the allies; gang-up abilities are not
+  counted (PF2e's `isFlanking` would count them, but also the original).
+  Redrawn on target, control, token refresh (the preview's too), delete,
+  canvas ready. (verify) in V14 the preview's `refreshToken` while dragging,
+  and its `canFlank` at the preview's position.
+
+- v0.81.1 (owner: "just showing when you are hovering the token on a
+  flankable square is fine, on the square itself"; "the cover overlay always
+  on was distracting, so merge: token selected + target shows the overlay
+  for 5 seconds (editable), and also show flankable squares right away"):
+  - `tactical-overlay.js`: one window for the cover line and the flanking
+    overlay, opened by selecting a token, targeting, or the selected token
+    moving; its length is Cover's new client setting "Show for (seconds)"
+    (`previewSeconds`, default 5; 0 = always, the old behaviour; 5 when
+    Cover is off). The cover preview no longer redraws on every token
+    refresh outside the window.
+  - Flank squares: every square (for the token's size) within its reach of
+    the target, not on another visible creature, whose centre lines up with
+    a visible ally that can flank the target through opposite sides
+    (`flankSquares`); PF2e's `canFlank(target, { reach: 1e6 })` first (the
+    automation setting, enemies, flankable). Square grids only.
+  - While dragging: the squares stay (no timer), the square under the drag
+    preview is filled stronger and gets the broken shield; no lines. After
+    the drop the window opens again. A pointer release redraws (cancelled
+    drags).
+
+- v0.81.2 (owner: the broken shield on your own token while dragging "feels
+  like you are being flanked"): the shield is always over the target; while
+  dragging onto a flank square the target gets it.
 
 ## 25. Recall Knowledge (built v0.78.0)
 

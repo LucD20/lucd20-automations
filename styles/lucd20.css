@@ -2854,3 +2854,212 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-multi-check .lucd20-mc-title { margin: 0 0 4px; }
 .lucd20-multi-check .lucd20-mc-diff { opacity: 0.8; font-size: 0.9em; }
 .lucd20-multi-check .lucd20-mc-reveal { margin-top: 4px; width: 100%; }
+
+/* Battle Medicine editor (pf2eBattleMedicine) */
+.lucd20-bm-editor .lucd20-bm-editor-body { display: flex; flex-direction: column; gap: 6px; padding: 4px 0; }
+.lucd20-bm-editor h4 { margin: 6px 0 0; font-size: 0.95em; }
+.lucd20-bm-editor .lucd20-bm-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.lucd20-bm-editor .lucd20-bm-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.lucd20-bm-editor .lucd20-bm-add { display: grid; grid-template-columns: 1fr 64px auto; gap: 6px; }
+.lucd20-bm-editor .lucd20-bm-medic { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin: 4px 0; }
+.lucd20-bm-editor .muted { opacity: 0.7; margin: 0; }
+
+/* Party Load (partyLoad): a bar like PF2e's bulk bar, two ticks (encumbered, max) */
+.lucd20-party-load { margin: 6px 0; font-size: 0.9em; }
+.lucd20-party-load .lpl-track { position: relative; height: 10px; border-radius: 5px; background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(0, 0, 0, 0.5); overflow: hidden; }
+.lucd20-party-load .lpl-fill { position: absolute; left: 0; top: 0; bottom: 0; background: #6c8aa5; }
+.lucd20-party-load.is-encumbered .lpl-fill { background: #d9822b; }
+.lucd20-party-load.is-over .lpl-fill { background: #b72b2b; }
+.lucd20-party-load .lpl-tick { position: absolute; top: -1px; bottom: -1px; width: 2px; margin-left: -1px; background: #f0e6d2; box-shadow: 0 0 2px #000; }
+.lucd20-party-load .lpl-tick.lpl-max { background: #ff6b6b; }
+.lucd20-party-load .lpl-label { display: flex; justify-content: space-between; gap: 8px; margin-top: 2px; }
+
+/* Encounter Report card (encounterReport) */
+
+/* Sell items window (pf2eSell) */
+/* Sell items window (v0.84.5): the Loot Pile's look. */
+.lucd20-sell-app .lucd20-sell-body { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+.lucd20-sell-app .lucd20-sell-head { min-height: 40px; padding: 6px 10px 6px 12px; }
+.lucd20-sell-app .lucd20-sell-head .label { flex: 1; color: var(--ll-text); font-size: 13px; font-weight: 600; }
+.lucd20-sell-app .lucd20-sell-head .half { display: inline-flex; align-items: center; gap: 5px; color: var(--ll-text-muted); font-size: 12px; }
+.lucd20-sell-app .lucd20-sell-scroll { flex: 1; min-height: 0; max-height: 60vh; padding: 4px 8px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--ll-border-strong) transparent; }
+.lucd20-sell-app .lucd20-sell-list { margin: 0; padding: 0; list-style: none; }
+.lucd20-sell-app .lucd20-sell-row { margin: 0; padding: 3px 4px; border: 1px solid transparent; }
+.lucd20-sell-app .lucd20-sell-row.is-picked { border-color: var(--ll-accent-border); background: rgba(238, 155, 58, 0.08); }
+.lucd20-sell-app .lucd20-sell-row .name { font-weight: 600; }
+.lucd20-sell-app .lucd20-sell-row .have { color: var(--ll-text-muted); font-size: 12px; font-weight: 400; }
+.lucd20-sell-app .lucd20-sell-row input.qty-in,
+.lucd20-sell-app .lucd20-sell-row .qty-in-none { flex: none; width: 48px; }
+.lucd20-sell-app .lucd20-sell-row input.qty-in {
+  appearance: textfield; -moz-appearance: textfield;
+  height: 26px; margin: 0; padding: 0;
+  border: 1px solid var(--ll-border-strong); border-radius: var(--ll-radius);
+  background: var(--ll-bg-sunken); box-shadow: none; color: var(--ll-text);
+  font: inherit; font-weight: 700; font-variant-numeric: tabular-nums; text-align: center;
+}
+.lucd20-sell-app .lucd20-sell-row input.qty-in::-webkit-inner-spin-button,
+.lucd20-sell-app .lucd20-sell-row input.qty-in::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.lucd20-sell-app .lucd20-sell-row input.qty-in:focus-visible { outline: 2px solid var(--ll-accent); outline-offset: 1px; }
+.lucd20-sell-app .lucd20-sell-row .price { display: flex; flex: none; flex-direction: column; align-items: flex-end; min-width: 76px; font-variant-numeric: tabular-nums; }
+.lucd20-sell-app .lucd20-sell-row .price b { color: var(--ll-accent-text); font-weight: 700; }
+.lucd20-sell-app .lucd20-sell-row .price .each { color: var(--ll-text-muted); font-size: 11px; }
+.lucd20-sell-app .lucd20-sell-footer { flex-wrap: nowrap; align-items: center; }
+.lucd20-sell-app .lucd20-sell-total { flex: 1; min-width: 0; font-size: 15px; }
+.lucd20-sell-app .lucd20-sell-total .label { color: var(--ll-text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+.lucd20-sell-app .lucd20-sell-total b { color: var(--ll-accent-text); font-variant-numeric: tabular-nums; }
+/* Encounter Report window (v0.84.5): the Loot Pile's look. */
+.lucd20-report-app .lucd20-report-body { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+.lucd20-report-app .lucd20-report-pick { min-height: 42px; padding: 6px 10px; }
+.lucd20-report-app .lucd20-report-pick select { flex: 1; min-width: 0; height: 28px; margin: 0; font-weight: 600; }
+.lucd20-report-app .lucd20-report-scroll { flex: 1; min-height: 0; max-height: 70vh; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--ll-border-strong) transparent; }
+.lucd20-report-app .lucd20-encounter-report { display: flex; flex-direction: column; gap: 8px; padding: 10px; }
+.lucd20-report-app .lpr-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 6px; }
+.lucd20-report-app .lpr-tile { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 8px; align-items: center; padding: 6px 10px; border: 1px solid var(--ll-border); border-radius: var(--ll-radius); background: var(--ll-bg-raised); }
+.lucd20-report-app .lpr-tile i { grid-row: span 2; color: var(--ll-accent-text); font-size: 16px; }
+.lucd20-report-app .lpr-tile b { font-size: 17px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.lucd20-report-app .lpr-tile span { color: var(--ll-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+.lucd20-report-app .lpr-rows { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.lucd20-report-app .lpr-row { display: flex; align-items: center; gap: 10px; margin: 0; padding: 8px 10px; border: 1px solid var(--ll-border); border-radius: var(--ll-radius); background: var(--ll-bg-raised); }
+.lucd20-report-app .lpr-main { display: flex; flex: 1; flex-direction: column; gap: 4px; min-width: 0; }
+.lucd20-report-app .lpr-line { display: flex; align-items: baseline; gap: 8px; }
+.lucd20-report-app .lpr-name { flex: 1; min-width: 0; overflow: hidden; font-size: 15px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.lucd20-report-app .lpr-dmg b { color: var(--ll-accent-text); font-size: 17px; font-variant-numeric: tabular-nums; }
+.lucd20-report-app .lpr-plus { color: var(--ll-text-muted); font-size: 12px; }
+.lucd20-report-app .lpr-pct { min-width: 38px; color: var(--ll-text-muted); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
+.lucd20-report-app .lpr-stats { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.lucd20-report-app .lpr-stat { display: inline-flex; align-items: baseline; gap: 4px; color: var(--ll-text-muted); font-size: 12px; }
+.lucd20-report-app .lpr-stat i { font-size: 11px; }
+.lucd20-report-app .lpr-stat b { color: var(--ll-text); font-variant-numeric: tabular-nums; }
+.lucd20-report-app .lpr-stat.is-zero { opacity: 0.4; }
+.lucd20-report-app .lpr-missed { margin: 0; color: var(--ll-text-muted); font-size: 12px; opacity: 0.7; }
+.lucd20-report-app .lucd20-loot-empty { min-height: 140px; }
+/* Encounter Report portraits (v0.84.6): the Loot Pile's portrait (ring art, scaled art standing out). */
+.lucd20-report-app .lpr-row .lucd20-loot-portrait.lpr-face { width: 44px; height: 44px; }
+.lucd20-report-app .lpr-row .lucd20-loot-portrait.lpr-face img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.lucd20-report-app .lpr-row .lucd20-loot-portrait.lpr-face.is-pop img { object-fit: contain; object-position: center; }
+.lucd20-report-app .lpr-section { margin: 4px 0 0; padding: 0; border: none; color: var(--ll-text-muted); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.lucd20-report-app .lpr-foe { background: var(--ll-bg-sunken); }
+.lucd20-report-app .lpr-fate { color: var(--ll-text-muted); font-size: 12px; white-space: nowrap; }
+.lucd20-report-app .lpr-fate.is-down { color: var(--ll-danger-text); }
+
+/* Combat Cards (v0.85.0; the approved mockups: docs/mockups/combat-cards*.html, party-deck.html) ------------ */
+.lcc-card {
+  --lcc-text: #efe6d8; --lcc-muted: #b5ab9d;
+  position: relative; flex: none; width: 220px; height: 360px; padding: 3px; border-radius: 14px; box-sizing: border-box;
+  background: var(--lcc-edge); box-shadow: 0 0 22px var(--lcc-glow), 0 14px 30px rgba(0, 0, 0, 0.6);
+  color: var(--lcc-text); font-family: Signika, "Segoe UI", sans-serif; text-align: center; isolation: isolate;
+}
+.lcc-card *, .lcc-card *::before, .lcc-card *::after { box-sizing: border-box; }
+.lcc-card.is-common { --lcc-edge: linear-gradient(135deg, #f0d48e, #8a6a32, #f0d48e); --lcc-glow: rgba(240, 212, 142, 0.25); }
+.lcc-card.is-rare { --lcc-edge: linear-gradient(135deg, #6be3ff, #3a7bff, #6be3ff); --lcc-glow: rgba(70, 150, 255, 0.45); }
+.lcc-card.is-epic { --lcc-edge: linear-gradient(135deg, #f7d37a, #b06bff, #6be3ff, #f7d37a); --lcc-glow: rgba(176, 107, 255, 0.55); }
+.lcc-card.is-legendary { --lcc-edge: linear-gradient(135deg, #fff1b8, #f7b733, #ff7a3d, #f7b733, #fff1b8); --lcc-glow: rgba(247, 183, 51, 0.6); }
+.lcc-card.is-plain { box-shadow: 0 0 10px var(--lcc-glow), 0 14px 30px rgba(0, 0, 0, 0.6); }
+.lcc-card.is-foil::before { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: 14px; background: conic-gradient(#ff7ad9, #7affef, #fff27a, #ff7ad9); filter: blur(10px); opacity: 0.45; }
+.lcc-card .lcc-inner { position: relative; height: 100%; overflow: hidden; border-radius: 11px; background: linear-gradient(#17141d, #0e0c12); }
+.lcc-card .lcc-art { position: absolute; left: 0; right: 0; top: 0; height: 214px; overflow: hidden; border-radius: 11px 11px 0 0; background: radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.1), #0f0e13 80%); }
+.lcc-card .lcc-art img { display: block; width: 100%; height: 100%; max-width: none; border: 0; object-fit: cover; object-position: 50% 12%; }
+.lcc-card .lcc-art::after { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 55%, #15121b 98%), radial-gradient(ellipse at 50% 35%, transparent 55%, rgba(0, 0, 0, 0.45)); }
+.lcc-card .lcc-art.is-light { background: radial-gradient(circle at 50% 40%, #e9dcc0, #8b7a5c 90%); }
+.lcc-card .lcc-art.is-light img { mix-blend-mode: multiply; }
+.lcc-card .lcc-art.is-empty { display: grid; place-items: center; font-size: 64px; color: rgba(255, 255, 255, 0.18); }
+.lcc-card .lcc-banner {
+  position: absolute; z-index: 3; left: 6px; right: 6px; top: 192px; padding: 6px 4px 5px;
+  background: linear-gradient(#f0d48e, #c9a35a); color: #2a1a0c;
+  clip-path: polygon(0 0, 100% 0, 94% 50%, 100% 100%, 0 100%, 6% 50%); filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.6));
+  font: 700 22px/1.1 "Modesto Condensed", Eczar, Georgia, serif; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; overflow: hidden; padding-left: 16px; padding-right: 16px;
+}
+.lcc-card .lcc-banner.is-mid { font-size: 19px; padding-top: 7px; }
+.lcc-card .lcc-banner.is-long { font-size: 16px; padding-top: 8px; padding-bottom: 7px; }
+.lcc-card .lcc-body { position: absolute; left: 12px; right: 12px; top: 236px; bottom: 10px; display: flex; flex-direction: column; align-items: center; }
+.lcc-card .lcc-who { font-size: 13px; font-weight: 600; color: var(--lcc-muted); }
+.lcc-card .lcc-stat { margin-top: 2px; font: 700 34px/1 "Modesto Condensed", Eczar, Georgia, serif; color: #f4e3c1; }
+.lcc-card .lcc-stat small { display: block; margin-top: 3px; font: 400 12px Signika, sans-serif; color: var(--lcc-muted); }
+.lcc-card .lcc-quote { margin-top: auto; font-size: 11.5px; font-style: italic; color: #cdb98f; }
+.lcc-card .lcc-sheen { position: absolute; z-index: 2; inset: 3px; border-radius: 11px; pointer-events: none; mix-blend-mode: color-dodge; opacity: 0.45;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 120, 220, 0.55) 42%, rgba(120, 255, 240, 0.55) 50%, rgba(255, 240, 120, 0.55) 58%, transparent 70%);
+  background-size: 250% 100%; animation: lcc-sheen 3.2s ease-in-out infinite; }
+.lcc-card.is-plain .lcc-sheen { display: none; }
+.lcc-card .lcc-num { position: absolute; z-index: 4; top: 9px; left: 12px; font: 700 14px "Modesto Condensed", Eczar, serif; letter-spacing: 0.1em; color: #f4e3c1; text-shadow: 0 1px 4px #000; }
+.lcc-card .lcc-rarity { position: absolute; z-index: 4; top: 10px; right: 10px; padding: 2px 8px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.35); background: rgba(0, 0, 0, 0.55); font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+.lcc-card .lcc-you { position: absolute; z-index: 5; top: -10px; left: 50%; transform: translateX(-50%); padding: 2px 10px; border-radius: 10px; background: #ee9b3a; color: #1b1a21; font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6); }
+@keyframes lcc-sheen { 0%, 100% { background-position: 120% 0; } 50% { background-position: -20% 0; } }
+@keyframes lcc-flip { from { opacity: 0; transform: rotateY(180deg) scale(0.85); } 60% { opacity: 1; } to { opacity: 1; transform: none; } }
+@keyframes lcc-fade { from { opacity: 0; } to { opacity: 1; } }
+
+/* The overlay at the end of a fight. */
+.lucd20-combat-cards { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; overflow: auto; background: radial-gradient(ellipse at 50% 30%, rgba(60, 40, 90, 0.75), rgba(5, 4, 8, 0.92) 70%); animation: lcc-fade 0.4s ease-out both; }
+.lucd20-combat-cards .lcc-stage { display: flex; flex-direction: column; align-items: center; gap: 26px; padding: 40px 20px; perspective: 1000px; }
+.lucd20-combat-cards .lcc-heading { text-align: center; }
+.lucd20-combat-cards .lcc-kicker { font: 600 13px Signika, sans-serif; letter-spacing: 0.3em; text-transform: uppercase; color: #b5ab9d; }
+.lucd20-combat-cards .lcc-title { font: 700 54px/1 "Modesto Condensed", Eczar, Georgia, serif; letter-spacing: 0.08em; text-transform: uppercase; color: #f4e3c1; text-shadow: 0 2px 16px rgba(238, 155, 58, 0.45); }
+.lucd20-combat-cards .lcc-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 24px; max-width: 1240px; }
+.lucd20-combat-cards .lcc-deal { animation: lcc-flip 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: calc(var(--i, 0) * 0.35s + 0.2s); }
+.lucd20-combat-cards .lcc-close { width: auto; padding: 6px 16px; border: 1px solid #5c596a; border-radius: 4px; background: #26252e; color: #efe6d8; font: 600 14px Signika, sans-serif; cursor: pointer; }
+.lucd20-combat-cards .lcc-close:hover { border-color: #9793a6; background: #383643; }
+.lucd20-fade-in { animation: lcc-fade 0.8s ease-out both; }
+
+/* The Party Deck (window and PF2e party-sheet tab). */
+.lucd20-party-deck { display: grid; grid-template-columns: minmax(0, 1fr) 290px; height: 100%; min-height: 560px; color: #efe6d8; font-family: Signika, sans-serif; background: #1b1a21; }
+.lucd20-deck-tab.active { display: block; height: 100%; overflow: hidden; }
+.lucd20-party-deck .lpd-main { min-width: 0; padding: 12px 14px; overflow-y: auto; scrollbar-width: thin; }
+.lucd20-party-deck .lpd-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.lucd20-party-deck .lpd-top h3 { margin: 0; border: 0; font: 700 24px "Modesto Condensed", Eczar, serif; letter-spacing: 0.06em; text-transform: uppercase; color: #f4e3c1; }
+.lucd20-party-deck .lpd-found { font-size: 13px; font-weight: 600; color: #b5ab9d; }
+.lucd20-party-deck .lpd-meter { flex: 1; min-width: 140px; height: 8px; overflow: hidden; border-radius: 4px; background: #131217; }
+.lucd20-party-deck .lpd-meter span { display: block; height: 100%; background: linear-gradient(90deg, #f0d48e, #6be3ff, #c99bff, #f7b733); }
+.lucd20-party-deck .lpd-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 10px 0 2px; }
+.lucd20-party-deck .lpd-chip { width: auto; margin: 0; padding: 3px 10px; border: 1px solid #3b3945; border-radius: 12px; background: #26252e; color: #b5ab9d; font: 600 12px Signika, sans-serif; line-height: 1.3; cursor: default; }
+.lucd20-party-deck button.lpd-chip { cursor: pointer; }
+.lucd20-party-deck .lpd-chip.is-on { border-color: #a8702f; background: rgba(238, 155, 58, 0.1); color: #f3b469; }
+.lucd20-party-deck .lpd-chip b { color: #efe6d8; }
+.lucd20-party-deck .lpd-chip.is-common b { color: #f0d48e; } .lucd20-party-deck .lpd-chip.is-rare b { color: #6be3ff; }
+.lucd20-party-deck .lpd-chip.is-epic b { color: #c99bff; } .lucd20-party-deck .lpd-chip.is-legendary b { color: #f7b733; }
+.lucd20-party-deck .lpd-people { display: flex; gap: 6px; margin-left: auto; }
+.lucd20-party-deck .lpd-person { display: grid; place-items: center; width: 30px; height: 30px; margin: 0; padding: 0; overflow: hidden; border: 2px solid #5c596a; border-radius: 50%; background: #26252e; color: #b5ab9d; font: 700 10px Signika, sans-serif; cursor: pointer; }
+.lucd20-party-deck .lpd-person.is-on { border-color: #ee9b3a; }
+.lucd20-party-deck .lpd-person img { width: 100%; height: 100%; border: 0; object-fit: cover; object-position: 50% 12%; }
+.lucd20-party-deck .lpd-stacks { display: grid; grid-template-columns: repeat(auto-fill, 152px); gap: 28px 16px; margin-top: 16px; padding: 0 10px 24px 0; }
+.lucd20-party-deck .lpd-stack { position: relative; width: 152px; height: 248px; cursor: pointer; }
+.lucd20-party-deck .lpd-stack.is-selected { outline: 2px solid #ee9b3a; outline-offset: 6px; border-radius: 12px; }
+.lucd20-party-deck .lpd-face { position: absolute; left: 0; top: 0; zoom: 0.69; }
+.lucd20-party-deck .lpd-b1, .lucd20-party-deck .lpd-b2 { position: absolute; width: 152px; height: 248px; border: 2px solid #8a6a32; border-radius: 10px; background: #0e0c12; }
+.lucd20-party-deck .is-rare > .lpd-b1, .lucd20-party-deck .is-rare > .lpd-b2 { border-color: #3a7bff; }
+.lucd20-party-deck .is-epic > .lpd-b1, .lucd20-party-deck .is-epic > .lpd-b2 { border-color: #b06bff; }
+.lucd20-party-deck .is-legendary > .lpd-b1, .lucd20-party-deck .is-legendary > .lpd-b2 { border-color: #f7b733; }
+.lucd20-party-deck .lpd-b1 { transform: translate(6px, 5px) rotate(2.5deg); opacity: 0.8; }
+.lucd20-party-deck .lpd-b2 { transform: translate(11px, 9px) rotate(5deg); opacity: 0.55; }
+.lucd20-party-deck .lpd-count { position: absolute; z-index: 9; top: -9px; right: -9px; min-width: 30px; padding: 3px 7px; border-radius: 14px; background: #ee9b3a; color: #1b1a21; font-size: 13px; font-weight: 800; text-align: center; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6); }
+.lucd20-party-deck .lpd-owners { position: absolute; z-index: 9; left: 0; right: 0; bottom: -18px; display: flex; justify-content: center; }
+.lucd20-party-deck .lpd-owners > span { position: relative; margin: 0 -3px; }
+.lucd20-party-deck .lpd-owners img { display: block; width: 24px; height: 24px; border: 2px solid #1b1a21; border-radius: 50%; object-fit: cover; object-position: 50% 12%; }
+.lucd20-party-deck .lpd-owners i { position: absolute; right: -4px; bottom: -3px; padding: 0 3px; border: 1px solid #5c596a; border-radius: 6px; background: #26252e; color: #efe6d8; font: 700 9px Signika, sans-serif; }
+.lucd20-party-deck .lpd-back { position: absolute; inset: 0; padding: 3px; border-radius: 10px; opacity: 0.85; }
+.lucd20-party-deck .lpd-back > div { display: grid; place-items: center; align-content: center; height: 100%; border-radius: 8px; background: repeating-linear-gradient(45deg, #15131b 0 10px, #19171f 10px 20px); }
+.lucd20-party-deck .lpd-back i { margin-bottom: 8px; font-size: 40px; color: rgba(255, 255, 255, 0.18); }
+.lucd20-party-deck .lpd-back b { font: 700 18px "Modesto Condensed", Eczar, serif; letter-spacing: 0.1em; color: #c7bba8; }
+.lucd20-party-deck .lpd-back small { margin-top: 4px; font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #b5ab9d; }
+.lucd20-party-deck .lpd-back.is-common { background: linear-gradient(135deg, #f0d48e, #8a6a32, #f0d48e); }
+.lucd20-party-deck .lpd-back.is-rare { background: linear-gradient(135deg, #6be3ff, #3a7bff, #6be3ff); }
+.lucd20-party-deck .lpd-back.is-epic { background: linear-gradient(135deg, #f7d37a, #b06bff, #6be3ff, #f7d37a); }
+.lucd20-party-deck .lpd-back.is-legendary { background: linear-gradient(135deg, #fff1b8, #f7b733, #ff7a3d, #f7b733, #fff1b8); }
+.lucd20-party-deck .lpd-stack.is-unknown { cursor: default; }
+.lucd20-party-deck .lpd-empty { color: #b5ab9d; }
+.lucd20-party-deck .lpd-side { padding: 12px; overflow-y: auto; border-left: 1px solid #3b3945; background: #15141a; scrollbar-width: thin; }
+.lucd20-party-deck .lpd-side.is-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: #b5ab9d; text-align: center; }
+.lucd20-party-deck .lpd-side.is-empty i { font-size: 40px; color: #5c596a; }
+.lucd20-party-deck .lpd-big { display: flex; justify-content: center; zoom: 0.9; margin-top: 6px; }
+.lucd20-party-deck .lpd-rule { margin: 10px 0 0; font-size: 12.5px; line-height: 1.4; color: #b5ab9d; text-align: center; }
+.lucd20-party-deck .lpd-rule b { color: #f3b469; }
+.lucd20-party-deck .lpd-side h4 { margin: 16px 0 6px; border: 0; font: 700 11px Signika, sans-serif; letter-spacing: 0.1em; text-transform: uppercase; color: #b5ab9d; }
+.lucd20-party-deck .lpd-side ol { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.lucd20-party-deck .lpd-side li { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid #2d2b36; border-radius: 4px; background: #1d1c23; font-size: 12.5px; }
+.lucd20-party-deck .lpd-side li img { width: 28px; height: 28px; border: 0; border-radius: 50%; object-fit: cover; object-position: 50% 12%; }
+.lucd20-party-deck .lpd-t { flex: 1; min-width: 0; color: #b5ab9d; }
+.lucd20-party-deck .lpd-t b { display: block; font-size: 13px; color: #efe6d8; }
+.lucd20-party-deck .lpd-n { font: 700 18px "Modesto Condensed", Eczar, serif; color: #f4e3c1; }
+.lucd20-party-deck .lpd-foilmark { padding: 1px 5px; border-radius: 6px; background: linear-gradient(90deg, #ffb3ec, #b3fff6, #fff6b3); color: #2a1d3a; font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+.lucd20-party-deck .lpd-remove { width: 26px; height: 26px; margin: 0; padding: 0; border: 1px solid #9c403b; border-radius: 4px; background: rgba(220, 60, 50, 0.1); color: #ff9a8f; cursor: pointer; }
+.lucd20-party-deck .lpd-gm { margin-top: 12px; }
+.lucd20-party-deck .lpd-grant { width: 100%; padding: 6px; border: 1px solid #5c596a; border-radius: 4px; background: #26252e; color: #efe6d8; font: 600 12px Signika, sans-serif; cursor: pointer; }
+.lucd20-party-deck-app .window-content { padding: 0; }

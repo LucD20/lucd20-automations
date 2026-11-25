@@ -6,9 +6,9 @@ const { ApplicationV2 } = foundry.applications.api;
  * options (Foundry copies window options).
  */
 export class AnswerWindow extends ApplicationV2 {
-  static wait(data) {
+  static wait(data, options) {
     return new Promise(resolve => {
-      const app = new this();
+      const app = new this(options);
       app.setup(data);
       app._resolve = resolve;
       app.render({ force: true });

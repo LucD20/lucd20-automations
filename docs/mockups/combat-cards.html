@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Combat Cards: mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Cinzel+Decorative:wght@700&family=Signika:wght@400;600;700&family=Teko:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../tools/harness/node_modules/@fortawesome/fontawesome-free/css/all.min.css">
+<style>
+  :root { --bg: #15141a; --text: #efe6d8; --muted: #b5ab9d; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #2b2a30; color: var(--text); font-family: Signika, "Segoe UI", sans-serif; }
+  h2.dir { margin: 0; padding: 18px 28px 6px; font: 600 15px Signika; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  h2.dir b { color: #f3b469; }
+  .stage { position: relative; margin: 0 20px 26px; padding: 36px 24px 30px; border-radius: 8px; overflow: hidden;
+    background: radial-gradient(ellipse at 50% 0%, rgba(80, 60, 110, .45), transparent 60%), linear-gradient(#101015, #0b0a0e); }
+  .stage .heading { text-align: center; margin-bottom: 26px; }
+  .stage .heading .kicker { font: 600 12px Signika; letter-spacing: .3em; text-transform: uppercase; color: var(--muted); }
+  .stage .heading .title { font: 800 30px Cinzel, serif; letter-spacing: .06em; color: #f4e3c1; text-shadow: 0 2px 12px rgba(238, 155, 58, .35); }
+  .row { display: flex; justify-content: center; gap: 22px; flex-wrap: wrap; }
+
+  /* Hero art: an SVG silhouette over a coloured light. */
+  .art { position: relative; overflow: hidden; }
+  .art svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  /* ---------------- A. Tarot ---------------- */
+  .tarot { position: relative; width: 210px; height: 362px; padding: 10px; border-radius: 12px;
+    background: linear-gradient(160deg, #3a2a1a, #1c140d 60%, #2e2012); box-shadow: 0 12px 30px rgba(0,0,0,.6), inset 0 0 0 1px #6b5130;
+    animation: deal .7s cubic-bezier(.2,.8,.2,1.2) both; }
+  .tarot:nth-child(2) { animation-delay: .25s } .tarot:nth-child(3) { animation-delay: .5s } .tarot:nth-child(4) { animation-delay: .75s }
+  .tarot .frame { position: absolute; inset: 7px; border: 2px solid #c9a35a; border-radius: 8px; pointer-events: none; }
+  .tarot .frame::before, .tarot .frame::after { content: "\2726"; position: absolute; left: 50%; transform: translateX(-50%); color: #e8c77d; font-size: 14px; background: #2a1d11; padding: 0 6px; }
+  .tarot .frame::before { top: -11px } .tarot .frame::after { bottom: -11px }
+  .tarot .numeral { text-align: center; font: 700 13px "Cinzel Decorative", serif; color: #e8c77d; letter-spacing: .2em; margin-top: 6px; }
+  .tarot .art { height: 170px; margin: 6px 10px 0; border-radius: 90px 90px 6px 6px; border: 2px solid #c9a35a; }
+  .tarot .banner { position: relative; margin: -14px 2px 0; padding: 6px 4px 5px; text-align: center; font: 800 17px Cinzel, serif; letter-spacing: .06em; color: #2a1a0c;
+    background: linear-gradient(#f0d48e, #c9a35a); clip-path: polygon(0 0, 100% 0, 94% 50%, 100% 100%, 0 100%, 6% 50%); }
+  .tarot .who { text-align: center; margin-top: 7px; font: 600 13px Signika; color: var(--muted); }
+  .tarot .stat { text-align: center; margin-top: 4px; font: 800 26px Cinzel, serif; color: #f4e3c1; line-height: 1; }
+  .tarot .stat small { display: block; font: 400 12px Signika; color: var(--muted); margin-top: 3px; }
+  .tarot .flavor { position: absolute; left: 18px; right: 18px; bottom: 18px; text-align: center; font: italic 11.5px Signika; color: #cdb98f; }
+
+  /* ---------------- B. Foil ---------------- */
+  .foil { position: relative; width: 210px; height: 320px; border-radius: 14px; padding: 3px;
+    background: var(--edge); box-shadow: 0 0 22px var(--glow), 0 14px 30px rgba(0,0,0,.6);
+    animation: flip .9s cubic-bezier(.2,.8,.2,1) both; transform-style: preserve-3d; }
+  .foil:nth-child(2) { animation-delay: .3s } .foil:nth-child(3) { animation-delay: .6s } .foil:nth-child(4) { animation-delay: .9s }
+  .foil.epic { --edge: linear-gradient(135deg, #f7d37a, #b06bff, #6be3ff, #f7d37a); --glow: rgba(176, 107, 255, .55); }
+  .foil.rare { --edge: linear-gradient(135deg, #6be3ff, #3a7bff, #6be3ff); --glow: rgba(70, 150, 255, .45); }
+  .foil.common { --edge: linear-gradient(135deg, #d9d2c3, #8a8577, #d9d2c3); --glow: rgba(220, 210, 190, .25); }
+  .foil .inner { position: relative; height: 100%; border-radius: 11px; overflow: hidden; background: #0f0e13; }
+  .foil .art { position: absolute; inset: 0; }
+  .foil .sheen { position: absolute; inset: 0; mix-blend-mode: color-dodge; opacity: .55; pointer-events: none;
+    background: linear-gradient(115deg, transparent 30%, rgba(255,120,220,.55) 42%, rgba(120,255,240,.55) 50%, rgba(255,240,120,.55) 58%, transparent 70%);
+    background-size: 250% 100%; animation: sheen 3.2s ease-in-out infinite; }
+  .foil .rarity { position: absolute; top: 10px; right: 10px; padding: 2px 8px; border-radius: 10px; font: 700 10px Signika; letter-spacing: .14em; text-transform: uppercase;
+    background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.35); }
+  .foil .panel { position: absolute; left: 8px; right: 8px; bottom: 8px; padding: 10px 12px 11px; border-radius: 9px;
+    background: rgba(14, 12, 20, .72); backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,.14); }
+  .foil .panel .t { font: 800 19px Cinzel, serif; letter-spacing: .04em; }
+  .foil .panel .w { font: 600 12px Signika; color: var(--muted); }
+  .foil .panel .n { display: flex; align-items: baseline; gap: 6px; margin-top: 6px; }
+  .foil .panel .n b { font: 600 34px Teko, sans-serif; line-height: .9; color: #fff; }
+  .foil .panel .n span { font: 12px Signika; color: var(--muted); }
+
+  /* ---------------- C. Spotlight lineup ---------------- */
+  .lineup { display: flex; justify-content: center; gap: 0; height: 360px; }
+  .spot { position: relative; width: 230px; margin: 0 -14px; clip-path: polygon(14% 0, 100% 0, 86% 100%, 0 100%);
+    animation: slide .6s cubic-bezier(.2,.8,.2,1) both; }
+  .spot:nth-child(2) { animation-delay: .2s } .spot:nth-child(3) { animation-delay: .4s } .spot:nth-child(4) { animation-delay: .6s }
+  .spot .art { position: absolute; inset: 0; }
+  .spot .rays { position: absolute; inset: -40%; background: repeating-conic-gradient(from 0deg at 50% 60%, rgba(255,255,255,.07) 0 6deg, transparent 6deg 18deg); animation: spin 30s linear infinite; }
+  .spot .shade { position: absolute; inset: 0; background: linear-gradient(transparent 35%, rgba(0,0,0,.92) 82%); }
+  .spot .top { position: absolute; top: 18px; left: 0; right: 0; text-align: center; font: 600 22px Teko, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--c); text-shadow: 0 0 14px var(--c); }
+  .spot .bottom { position: absolute; left: 34px; right: 34px; bottom: 22px; text-align: center; }
+  .spot .bottom .n { font: 600 56px Teko, sans-serif; line-height: .85; color: #fff; text-shadow: 0 0 18px var(--c); }
+  .spot .bottom .l { font: 600 12px Signika; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .spot .bottom .w { margin-top: 6px; font: 800 18px Cinzel, serif; color: #f4e3c1; }
+  .spot .edge { position: absolute; inset: 0; border-top: 3px solid var(--c); border-bottom: 3px solid var(--c); opacity: .9; }
+
+  .me { outline: none; }
+  .badge-me { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); z-index: 3; padding: 2px 10px; border-radius: 10px; font: 700 10px Signika; letter-spacing: .14em; text-transform: uppercase; background: #ee9b3a; color: #1b1a21; box-shadow: 0 2px 8px rgba(0,0,0,.6); }
+  .footer-note { text-align: center; margin-top: 24px; font: 13px Signika; color: var(--muted); }
+  .footer-note button { margin-left: 10px; padding: 5px 14px; border-radius: 4px; border: 1px solid #5c596a; background: #26252e; color: var(--text); font: 600 13px Signika; }
+
+
+  /* ---------------- A+B. Foil card, Tarot titles (owner's pick) ---------------- */
+  .ab { position: relative; width: 220px; height: 360px; border-radius: 14px; padding: 3px; background: var(--edge);
+    box-shadow: 0 0 22px var(--glow), 0 14px 30px rgba(0,0,0,.6); animation: flip .9s cubic-bezier(.2,.8,.2,1) both; }
+  .ab:nth-child(2) { animation-delay: .3s } .ab:nth-child(3) { animation-delay: .6s } .ab:nth-child(4) { animation-delay: .9s }
+  .ab.legendary { --edge: linear-gradient(135deg, #fff1b8, #f7b733, #ff7a3d, #f7b733, #fff1b8); --glow: rgba(247, 183, 51, .6); --ribbon: linear-gradient(#fff0b5, #e0a83a); --ink: #3a2306; }
+  .ab.epic { --edge: linear-gradient(135deg, #f7d37a, #b06bff, #6be3ff, #f7d37a); --glow: rgba(176, 107, 255, .55); --ribbon: linear-gradient(#e7cdff, #a36ae6); --ink: #24093f; }
+  .ab.rare { --edge: linear-gradient(135deg, #6be3ff, #3a7bff, #6be3ff); --glow: rgba(70, 150, 255, .45); --ribbon: linear-gradient(#cfeaff, #5f9ae8); --ink: #071c3a; }
+  .ab.common { --edge: linear-gradient(135deg, #f0d48e, #8a6a32, #f0d48e); --glow: rgba(240, 212, 142, .25); --ribbon: linear-gradient(#f0d48e, #c9a35a); --ink: #2a1a0c; }
+  .ab.gold { --ribbon: linear-gradient(#f0d48e, #c9a35a); --ink: #2a1a0c; }
+  .ab .inner { position: relative; height: 100%; border-radius: 11px; overflow: hidden; background: linear-gradient(#17141d, #0e0c12); }
+  .ab .art { position: absolute; left: 0; right: 0; top: 0; height: 210px; }
+  .ab .art::after { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 60%, #15121b); }
+  .ab .sheen { position: absolute; inset: 0; mix-blend-mode: color-dodge; opacity: .5; pointer-events: none;
+    background: linear-gradient(115deg, transparent 30%, rgba(255,120,220,.55) 42%, rgba(120,255,240,.55) 50%, rgba(255,240,120,.55) 58%, transparent 70%);
+    background-size: 250% 100%; animation: sheen 3.2s ease-in-out infinite; }
+  .ab.common .sheen { opacity: .18; }
+  .ab .numeral { position: absolute; top: 9px; left: 12px; font: 700 14px "Cinzel Decorative", serif; color: #f4e3c1; letter-spacing: .15em; text-shadow: 0 1px 4px #000; }
+  .ab .rarity { position: absolute; top: 10px; right: 10px; padding: 2px 8px; border-radius: 10px; font: 700 10px Signika; letter-spacing: .14em; text-transform: uppercase;
+    background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.35); }
+  .ab .banner { position: absolute; left: 6px; right: 6px; top: 192px; padding: 7px 4px 6px; text-align: center; font: 800 18px Cinzel, serif; letter-spacing: .06em; color: var(--ink);
+    background: var(--ribbon); clip-path: polygon(0 0, 100% 0, 94% 50%, 100% 100%, 0 100%, 6% 50%); filter: drop-shadow(0 3px 4px rgba(0,0,0,.6)); }
+  .ab .body { position: absolute; left: 12px; right: 12px; top: 236px; bottom: 10px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .ab .who { font: 600 13px Signika; color: var(--muted); }
+  .ab .stat { margin-top: 3px; font: 800 30px Cinzel, serif; color: #f4e3c1; line-height: 1; }
+  .ab .stat small { display: block; font: 400 12px Signika; color: var(--muted); margin-top: 3px; }
+  .ab .flavor { margin-top: auto; font: italic 11.5px Signika; color: #cdb98f; }
+
+  @keyframes deal { from { opacity: 0; transform: translateY(-60px) rotate(-8deg) scale(.9); } to { opacity: 1; transform: none; } }
+  @keyframes flip { from { opacity: 0; transform: rotateY(180deg) scale(.85); } 60% { opacity: 1; } to { transform: none; } }
+  @keyframes sheen { 0%, 100% { background-position: 120% 0; } 50% { background-position: -20% 0; } }
+  @keyframes slide { from { opacity: 0; transform: translateX(80px); } to { opacity: 1; transform: none; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  body.still *, body.still *::before, body.still *::after { animation-delay: -10s !important; animation-play-state: paused !important; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <!-- Simple hero silhouettes (stand-ins for the token art). -->
+    <g id="fighter"><path d="M100 46a22 22 0 1 1 0 44a22 22 0 1 1 0-44zM62 98h76l14 70H48z"/><path d="M50 108l-24 70 10 4 26-66z"/><rect x="146" y="40" width="7" height="110" rx="2" transform="rotate(14 150 95)"/><rect x="134" y="132" width="32" height="7" rx="2" transform="rotate(14 150 135)"/><path d="M60 168h80l-6 60H66z"/></g>
+    <g id="wizard"><path d="M100 10l26 58H74z"/><path d="M68 66h64l-6 6H74z"/><circle cx="100" cy="86" r="18"/><path d="M70 106h60l22 122H48z"/><rect x="38" y="30" width="6" height="200" rx="3" transform="rotate(-8 41 130)"/><circle cx="36" cy="30" r="10"/></g>
+    <g id="rogue"><path d="M100 40c22 0 34 18 34 40s-14 30-34 30-34-8-34-30 12-40 34-40z"/><path d="M64 104h72l18 124H46z"/><path d="M40 150l40-30 5 6-38 32z"/><path d="M160 150l-40-30-5 6 38 32z"/></g>
+    <g id="cleric"><circle cx="100" cy="66" r="22"/><path d="M60 94h80l16 134H44z"/><rect x="150" y="70" width="8" height="150" rx="3"/><path d="M154 40l18 18-18 18-18-18z"/></g>
+  </defs>
+</svg>
+
+<h2 class="dir"><b>A+B</b> · Your pick: foil cards with rarity, tarot titles · ribbon tinted by rarity</h2>
+<div class="stage" style="perspective: 900px">
+  <div class="heading"><div class="kicker">Goblin Warrens · 3 rounds</div><div class="title">Victory</div></div>
+  <div class="row">
+    <div class="ab legendary"><div class="inner">
+      <div class="art" style="background: radial-gradient(circle at 50% 55%, #e0703f, #2a0d06 80%)"><svg viewBox="0 0 200 230" fill="#100703" style="top:12px"><use href="#fighter"/></svg></div>
+      <div class="sheen"></div><span class="numeral">I</span><span class="rarity">Legendary</span>
+      <div class="banner">The Hammer</div>
+      <div class="body"><div class="who">Madzoog</div><div class="stat">62<small>damage dealt · 41% of the enemies</small></div><div class="flavor">“They felt that one in the next village.”</div></div></div></div>
+    <div class="ab epic"><div class="inner">
+      <div class="art" style="background: radial-gradient(circle at 50% 55%, #5d8bd8, #08112a 80%)"><svg viewBox="0 0 200 230" fill="#050812" style="top:12px"><use href="#cleric"/></svg></div>
+      <div class="sheen"></div><span class="numeral">II</span><span class="rarity">Epic</span>
+      <div class="banner">The Wall</div>
+      <div class="body"><div class="who">Schmekcho</div><div class="stat">48<small>damage taken</small></div><div class="flavor">“Nothing got past. Nothing.”</div></div></div></div>
+    <div class="ab rare"><span class="badge-me">You</span><div class="inner">
+      <div class="art" style="background: radial-gradient(circle at 50% 55%, #57c08a, #06180f 80%)"><svg viewBox="0 0 200 230" fill="#04100a" style="top:12px"><use href="#wizard"/></svg></div>
+      <div class="sheen"></div><span class="numeral">III</span><span class="rarity">Rare</span>
+      <div class="banner">Lifeline</div>
+      <div class="body"><div class="who">Uri</div><div class="stat">30<small>HP healed</small></div><div class="flavor">“Not today.”</div></div></div></div>
+    <div class="ab common"><div class="inner">
+      <div class="art" style="background: radial-gradient(circle at 50% 55%, #a768d8, #12071c 80%)"><svg viewBox="0 0 200 230" fill="#09040e" style="top:12px"><use href="#rogue"/></svg></div>
+      <div class="sheen"></div><span class="numeral">IV</span><span class="rarity">Common</span>
+      <div class="banner">Finisher</div>
+      <div class="body"><div class="who">Kyra</div><div class="stat">3<small>final blows</small></div><div class="flavor">“Last one standing? Not anymore.”</div></div></div></div>
+  </div>
+  <div class="footer-note">Cards flip over one at a time · <button>Close</button></div>
+</div>
+
+<h2 class="dir"><b>A+B</b> · Same, with the gold ribbon on every card (rarity only on the edge and the badge)</h2>
+<div class="stage" style="perspective: 900px">
+  <div class="heading"><div class="kicker">Goblin Warrens · 3 rounds</div><div class="title">Victory</div></div>
+  <div class="row">
+    <div class="ab legendary gold"><div class="inner">
+      <div class="art" style="background: radial-gradient(circle at 50% 55%, #e0703f, #2a0d06 80%)"><svg viewBox="0 0 200 230" fill="#100703" style="top:12px"><use href="#fighter"/></svg></div>
+      <div class="sheen"></div><span class="numeral">I</span><span class="rarity">Legendary</span>
+      <div class="banner">The Hammer</div>
+      <div class="body"><div class="who">Madzoog</div><div class="stat">62<small>damage dealt · 41% of the enemies</small></div><div class="flavor">“They felt that one in the next village.”</div></div></div></div>
+    <div class="ab epic gold"><div class="inner">
+      <div class="art" style="background: radial-gradient(circle at 50% 55%, #5d8bd8, #08112a 80%)"><svg viewBox="0 0 200 230" fill="#050812" style="top:12px"><use href="#cleric"/></svg></div>
+      <div class="sheen"></div><span class="numeral">II</span><span class="rarity">Epic</span>
+      <div class="banner">The Wall</div>
+      <div class="body"><div class="who">Schmekcho</div><div class="stat">48<small>damage taken</small></div><div class="flavor">“Nothing got past. Nothing.”</div></div></div></div>
+    <div class="ab rare gold"><span class="badge-me">You</span><div class="inner">
+      <div class="art" style="background: radial-gradient(circle at 50% 55%, #57c08a, #06180f 80%)"><svg viewBox="0 0 200 230" fill="#04100a" style="top:12px"><use href="#wizard"/></svg></div>
+      <div class="sheen"></div><span class="numeral">III</span><span class="rarity">Rare</span>
+      <div class="banner">Lifeline</div>
+      <div class="body"><div class="who">Uri</div><div class="stat">30<small>HP healed</small></div><div class="flavor">“Not today.”</div></div></div></div>
+    <div class="ab common gold"><div class="inner">
+      <div class="art" style="background: radial-gradient(circle at 50% 55%, #a768d8, #12071c 80%)"><svg viewBox="0 0 200 230" fill="#09040e" style="top:12px"><use href="#rogue"/></svg></div>
+      <div class="sheen"></div><span class="numeral">IV</span><span class="rarity">Common</span>
+      <div class="banner">Finisher</div>
+      <div class="body"><div class="who">Kyra</div><div class="stat">3<small>final blows</small></div><div class="flavor">“Last one standing? Not anymore.”</div></div></div></div>
+  </div>
+  <div class="footer-note">Cards flip over one at a time · <button>Close</button></div>
+</div>
+
+<h2 class="dir"><b>A</b> · Tarot: dealt one by one, gilded frames, a numeral each</h2>
+<div class="stage">
+  <div class="heading"><div class="kicker">Goblin Warrens · 3 rounds</div><div class="title">Victory</div></div>
+  <div class="row">
+    <div class="tarot"><div class="frame"></div><div class="numeral">I</div>
+      <div class="art" style="background: radial-gradient(circle at 50% 60%, #c9593f, #3a140c)"><svg viewBox="0 0 200 230" fill="#120a06"><use href="#fighter"/></svg></div>
+      <div class="banner">The Hammer</div><div class="who">Madzoog</div>
+      <div class="stat">62<small>damage dealt</small></div><div class="flavor">“They felt that one in the next village.”</div></div>
+    <div class="tarot"><div class="frame"></div><div class="numeral">II</div>
+      <div class="art" style="background: radial-gradient(circle at 50% 60%, #5d8bd8, #0e1a33)"><svg viewBox="0 0 200 230" fill="#070b14"><use href="#cleric"/></svg></div>
+      <div class="banner">The Wall</div><div class="who">Schmekcho</div>
+      <div class="stat">48<small>damage taken</small></div><div class="flavor">“Nothing got past. Nothing.”</div></div>
+    <div class="tarot me" style="position:relative"><span class="badge-me">You</span><div class="frame"></div><div class="numeral">III</div>
+      <div class="art" style="background: radial-gradient(circle at 50% 60%, #57c08a, #0c2a1b)"><svg viewBox="0 0 200 230" fill="#06120c"><use href="#wizard"/></svg></div>
+      <div class="banner">Lifeline</div><div class="who">Uri</div>
+      <div class="stat">30<small>HP healed</small></div><div class="flavor">“Not today.”</div></div>
+    <div class="tarot"><div class="frame"></div><div class="numeral">IV</div>
+      <div class="art" style="background: radial-gradient(circle at 50% 60%, #a768d8, #1d0e2c)"><svg viewBox="0 0 200 230" fill="#0c0612"><use href="#rogue"/></svg></div>
+      <div class="banner">Finisher</div><div class="who">Kyra</div>
+      <div class="stat">3<small>final blows</small></div><div class="flavor">“Last one standing? Not anymore.”</div></div>
+  </div>
+  <div class="footer-note">Each card turns over with a soft chime · <button>Close</button></div>
+</div>
+
+<h2 class="dir"><b>B</b> · Foil: trading cards that flip over, holographic shine, a rarity</h2>
+<div class="stage" style="perspective: 900px">
+  <div class="heading"><div class="kicker">Goblin Warrens · 3 rounds</div><div class="title">Victory</div></div>
+  <div class="row">
+    <div class="foil epic"><div class="inner">
+      <div class="art" style="background: radial-gradient(circle at 50% 45%, #e0703f, #2a0d06 75%)"><svg viewBox="0 0 200 230" fill="#100703"><use href="#fighter"/></svg></div>
+      <div class="sheen"></div><span class="rarity">Epic</span>
+      <div class="panel"><div class="t">The Hammer</div><div class="w">Madzoog</div><div class="n"><b>62</b><span>damage · 41% of the enemies</span></div></div></div></div>
+    <div class="foil rare"><div class="inner">
+      <div class="art" style="background: radial-gradient(circle at 50% 45%, #5d8bd8, #08112a 75%)"><svg viewBox="0 0 200 230" fill="#050812"><use href="#cleric"/></svg></div>
+      <div class="sheen"></div><span class="rarity">Rare</span>
+      <div class="panel"><div class="t">The Wall</div><div class="w">Schmekcho</div><div class="n"><b>48</b><span>damage taken</span></div></div></div></div>
+    <div class="foil rare" style="position:relative"><span class="badge-me">You</span><div class="inner">
+      <div class="art" style="background: radial-gradient(circle at 50% 45%, #57c08a, #06180f 75%)"><svg viewBox="0 0 200 230" fill="#04100a"><use href="#wizard"/></svg></div>
+      <div class="sheen"></div><span class="rarity">Rare</span>
+      <div class="panel"><div class="t">Lifeline</div><div class="w">Uri</div><div class="n"><b>30</b><span>HP healed</span></div></div></div></div>
+    <div class="foil common"><div class="inner">
+      <div class="art" style="background: radial-gradient(circle at 50% 45%, #a768d8, #12071c 75%)"><svg viewBox="0 0 200 230" fill="#09040e"><use href="#rogue"/></svg></div>
+      <div class="sheen"></div><span class="rarity">Common</span>
+      <div class="panel"><div class="t">Finisher</div><div class="w">Kyra</div><div class="n"><b>3</b><span>final blows</span></div></div></div></div>
+  </div>
+  <div class="footer-note">Rarity from how far the number stands out · <button>Close</button></div>
+</div>
+
+<h2 class="dir"><b>C</b> · Spotlight: an end-of-match lineup sliding in, big numbers, light rays</h2>
+<div class="stage">
+  <div class="heading"><div class="kicker">Goblin Warrens · 3 rounds</div><div class="title">Victory</div></div>
+  <div class="lineup">
+    <div class="spot" style="--c:#ff8a4c"><div class="art" style="background: radial-gradient(circle at 50% 45%, #c9593f, #1d0805 80%)"><div class="rays"></div><svg viewBox="0 0 200 230" fill="#0d0503" style="top:30px"><use href="#fighter"/></svg></div>
+      <div class="shade"></div><div class="edge"></div><div class="top">The Hammer</div>
+      <div class="bottom"><div class="n">62</div><div class="l">damage dealt</div><div class="w">Madzoog</div></div></div>
+    <div class="spot" style="--c:#6ea8ff"><div class="art" style="background: radial-gradient(circle at 50% 45%, #4c7bd0, #050b1d 80%)"><div class="rays"></div><svg viewBox="0 0 200 230" fill="#03060f" style="top:30px"><use href="#cleric"/></svg></div>
+      <div class="shade"></div><div class="edge"></div><div class="top">The Wall</div>
+      <div class="bottom"><div class="n">48</div><div class="l">damage taken</div><div class="w">Schmekcho</div></div></div>
+    <div class="spot" style="--c:#5fe0a0"><div class="art" style="background: radial-gradient(circle at 50% 45%, #46b07c, #031209 80%)"><div class="rays"></div><svg viewBox="0 0 200 230" fill="#020a05" style="top:30px"><use href="#wizard"/></svg></div>
+      <div class="shade"></div><div class="edge"></div><div class="top">Lifeline</div>
+      <div class="bottom"><div class="n">30</div><div class="l">HP healed</div><div class="w">Uri</div></div></div>
+    <div class="spot" style="--c:#c48bff"><div class="art" style="background: radial-gradient(circle at 50% 45%, #8a4fc0, #0d0516 80%)"><div class="rays"></div><svg viewBox="0 0 200 230" fill="#06030a" style="top:30px"><use href="#rogue"/></svg></div>
+      <div class="shade"></div><div class="edge"></div><div class="top">Finisher</div>
+      <div class="bottom"><div class="n">3</div><div class="l">final blows</div><div class="w">Kyra</div></div></div>
+  </div>
+  <div class="footer-note">Fills the screen for a few seconds, then shrinks into the report · <button>Close</button></div>
+</div>
+</body>
+</html>

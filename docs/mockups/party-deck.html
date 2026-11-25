@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Combat Cards: mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Cinzel+Decorative:wght@700&family=Signika:wght@400;600;700&family=Teko:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../tools/harness/node_modules/@fortawesome/fontawesome-free/css/all.min.css">
+<style>
+  :root { --bg: #15141a; --text: #efe6d8; --muted: #b5ab9d; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #2b2a30; color: var(--text); font-family: Signika, "Segoe UI", sans-serif; }
+  h2.dir { margin: 0; padding: 18px 28px 6px; font: 600 15px Signika; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  h2.dir b { color: #f3b469; }
+  .stage { position: relative; margin: 0 20px 26px; padding: 36px 24px 30px; border-radius: 8px; overflow: hidden;
+    background: radial-gradient(ellipse at 50% 0%, rgba(80, 60, 110, .45), transparent 60%), linear-gradient(#101015, #0b0a0e); }
+  .stage .heading { text-align: center; margin-bottom: 26px; }
+  .stage .heading .kicker { font: 600 12px Signika; letter-spacing: .3em; text-transform: uppercase; color: var(--muted); }
+  .stage .heading .title { font: 800 30px Cinzel, serif; letter-spacing: .06em; color: #f4e3c1; text-shadow: 0 2px 12px rgba(238, 155, 58, .35); }
+  .row { display: flex; justify-content: center; gap: 22px; flex-wrap: wrap; }
+
+  /* Hero art: an SVG silhouette over a coloured light. */
+  .art { position: relative; overflow: hidden; }
+  .art svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  /* ---------------- A. Tarot ---------------- */
+  .tarot { position: relative; width: 210px; height: 362px; padding: 10px; border-radius: 12px;
+    background: linear-gradient(160deg, #3a2a1a, #1c140d 60%, #2e2012); box-shadow: 0 12px 30px rgba(0,0,0,.6), inset 0 0 0 1px #6b5130;
+    animation: deal .7s cubic-bezier(.2,.8,.2,1.2) both; }
+  .tarot:nth-child(2) { animation-delay: .25s } .tarot:nth-child(3) { animation-delay: .5s } .tarot:nth-child(4) { animation-delay: .75s }
+  .tarot .frame { position: absolute; inset: 7px; border: 2px solid #c9a35a; border-radius: 8px; pointer-events: none; }
+  .tarot .frame::before, .tarot .frame::after { content: "\2726"; position: absolute; left: 50%; transform: translateX(-50%); color: #e8c77d; font-size: 14px; background: #2a1d11; padding: 0 6px; }
+  .tarot .frame::before { top: -11px } .tarot .frame::after { bottom: -11px }
+  .tarot .numeral { text-align: center; font: 700 13px "Cinzel Decorative", serif; color: #e8c77d; letter-spacing: .2em; margin-top: 6px; }
+  .tarot .art { height: 170px; margin: 6px 10px 0; border-radius: 90px 90px 6px 6px; border: 2px solid #c9a35a; }
+  .tarot .banner { position: relative; margin: -14px 2px 0; padding: 6px 4px 5px; text-align: center; font: 800 17px Cinzel, serif; letter-spacing: .06em; color: #2a1a0c;
+    background: linear-gradient(#f0d48e, #c9a35a); clip-path: polygon(0 0, 100% 0, 94% 50%, 100% 100%, 0 100%, 6% 50%); }
+  .tarot .who { text-align: center; margin-top: 7px; font: 600 13px Signika; color: var(--muted); }
+  .tarot .stat { text-align: center; margin-top: 4px; font: 800 26px Cinzel, serif; color: #f4e3c1; line-height: 1; }
+  .tarot .stat small { display: block; font: 400 12px Signika; color: var(--muted); margin-top: 3px; }
+  .tarot .flavor { position: absolute; left: 18px; right: 18px; bottom: 18px; text-align: center; font: italic 11.5px Signika; color: #cdb98f; }
+
+  /* ---------------- B. Foil ---------------- */
+  .foil { position: relative; width: 210px; height: 320px; border-radius: 14px; padding: 3px;
+    background: var(--edge); box-shadow: 0 0 22px var(--glow), 0 14px 30px rgba(0,0,0,.6);
+    animation: flip .9s cubic-bezier(.2,.8,.2,1) both; transform-style: preserve-3d; }
+  .foil:nth-child(2) { animation-delay: .3s } .foil:nth-child(3) { animation-delay: .6s } .foil:nth-child(4) { animation-delay: .9s }
+  .foil.epic { --edge: linear-gradient(135deg, #f7d37a, #b06bff, #6be3ff, #f7d37a); --glow: rgba(176, 107, 255, .55); }
+  .foil.rare { --edge: linear-gradient(135deg, #6be3ff, #3a7bff, #6be3ff); --glow: rgba(70, 150, 255, .45); }
+  .foil.common { --edge: linear-gradient(135deg, #d9d2c3, #8a8577, #d9d2c3); --glow: rgba(220, 210, 190, .25); }
+  .foil .inner { position: relative; height: 100%; border-radius: 11px; overflow: hidden; background: #0f0e13; }
+  .foil .art { position: absolute; inset: 0; }
+  .foil .sheen { position: absolute; inset: 0; mix-blend-mode: color-dodge; opacity: .55; pointer-events: none;
+    background: linear-gradient(115deg, transparent 30%, rgba(255,120,220,.55) 42%, rgba(120,255,240,.55) 50%, rgba(255,240,120,.55) 58%, transparent 70%);
+    background-size: 250% 100%; animation: sheen 3.2s ease-in-out infinite; }
+  .foil .rarity { position: absolute; top: 10px; right: 10px; padding: 2px 8px; border-radius: 10px; font: 700 10px Signika; letter-spacing: .14em; text-transform: uppercase;
+    background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.35); }
+  .foil .panel { position: absolute; left: 8px; right: 8px; bottom: 8px; padding: 10px 12px 11px; border-radius: 9px;
+    background: rgba(14, 12, 20, .72); backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,.14); }
+  .foil .panel .t { font: 800 19px Cinzel, serif; letter-spacing: .04em; }
+  .foil .panel .w { font: 600 12px Signika; color: var(--muted); }
+  .foil .panel .n { display: flex; align-items: baseline; gap: 6px; margin-top: 6px; }
+  .foil .panel .n b { font: 600 34px Teko, sans-serif; line-height: .9; color: #fff; }
+  .foil .panel .n span { font: 12px Signika; color: var(--muted); }
+
+  /* ---------------- C. Spotlight lineup ---------------- */
+  .lineup { display: flex; justify-content: center; gap: 0; height: 360px; }
+  .spot { position: relative; width: 230px; margin: 0 -14px; clip-path: polygon(14% 0, 100% 0, 86% 100%, 0 100%);
+    animation: slide .6s cubic-bezier(.2,.8,.2,1) both; }
+  .spot:nth-child(2) { animation-delay: .2s } .spot:nth-child(3) { animation-delay: .4s } .spot:nth-child(4) { animation-delay: .6s }
+  .spot .art { position: absolute; inset: 0; }
+  .spot .rays { position: absolute; inset: -40%; background: repeating-conic-gradient(from 0deg at 50% 60%, rgba(255,255,255,.07) 0 6deg, transparent 6deg 18deg); animation: spin 30s linear infinite; }
+  .spot .shade { position: absolute; inset: 0; background: linear-gradient(transparent 35%, rgba(0,0,0,.92) 82%); }
+  .spot .top { position: absolute; top: 18px; left: 0; right: 0; text-align: center; font: 600 22px Teko, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--c); text-shadow: 0 0 14px var(--c); }
+  .spot .bottom { position: absolute; left: 34px; right: 34px; bottom: 22px; text-align: center; }
+  .spot .bottom .n { font: 600 56px Teko, sans-serif; line-height: .85; color: #fff; text-shadow: 0 0 18px var(--c); }
+  .spot .bottom .l { font: 600 12px Signika; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .spot .bottom .w { margin-top: 6px; font: 800 18px Cinzel, serif; color: #f4e3c1; }
+  .spot .edge { position: absolute; inset: 0; border-top: 3px solid var(--c); border-bottom: 3px solid var(--c); opacity: .9; }
+
+  .me { outline: none; }
+  .badge-me { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); z-index: 3; padding: 2px 10px; border-radius: 10px; font: 700 10px Signika; letter-spacing: .14em; text-transform: uppercase; background: #ee9b3a; color: #1b1a21; box-shadow: 0 2px 8px rgba(0,0,0,.6); }
+  .footer-note { text-align: center; margin-top: 24px; font: 13px Signika; color: var(--muted); }
+  .footer-note button { margin-left: 10px; padding: 5px 14px; border-radius: 4px; border: 1px solid #5c596a; background: #26252e; color: var(--text); font: 600 13px Signika; }
+
+
+  /* ---------------- A+B. Foil card, Tarot titles (owner's pick) ---------------- */
+  .ab { position: relative; width: 220px; height: 360px; border-radius: 14px; padding: 3px; background: var(--edge);
+    box-shadow: 0 0 22px var(--glow), 0 14px 30px rgba(0,0,0,.6); animation: flip .9s cubic-bezier(.2,.8,.2,1) both; }
+  .ab:nth-child(2) { animation-delay: .3s } .ab:nth-child(3) { animation-delay: .6s } .ab:nth-child(4) { animation-delay: .9s }
+  .ab.legendary { --edge: linear-gradient(135deg, #fff1b8, #f7b733, #ff7a3d, #f7b733, #fff1b8); --glow: rgba(247, 183, 51, .6); --ribbon: linear-gradient(#fff0b5, #e0a83a); --ink: #3a2306; }
+  .ab.epic { --edge: linear-gradient(135deg, #f7d37a, #b06bff, #6be3ff, #f7d37a); --glow: rgba(176, 107, 255, .55); --ribbon: linear-gradient(#e7cdff, #a36ae6); --ink: #24093f; }
+  .ab.rare { --edge: linear-gradient(135deg, #6be3ff, #3a7bff, #6be3ff); --glow: rgba(70, 150, 255, .45); --ribbon: linear-gradient(#cfeaff, #5f9ae8); --ink: #071c3a; }
+  .ab.common { --edge: linear-gradient(135deg, #f0d48e, #8a6a32, #f0d48e); --glow: rgba(240, 212, 142, .25); --ribbon: linear-gradient(#f0d48e, #c9a35a); --ink: #2a1a0c; }
+  .ab.gold { --ribbon: linear-gradient(#f0d48e, #c9a35a); --ink: #2a1a0c; }
+  .ab .inner { position: relative; height: 100%; border-radius: 11px; overflow: hidden; background: linear-gradient(#17141d, #0e0c12); }
+  .ab .art { position: absolute; left: 0; right: 0; top: 0; height: 210px; }
+  .ab .art::after { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 60%, #15121b); }
+  .ab .sheen { position: absolute; inset: 0; mix-blend-mode: color-dodge; opacity: .5; pointer-events: none;
+    background: linear-gradient(115deg, transparent 30%, rgba(255,120,220,.55) 42%, rgba(120,255,240,.55) 50%, rgba(255,240,120,.55) 58%, transparent 70%);
+    background-size: 250% 100%; animation: sheen 3.2s ease-in-out infinite; }
+  .ab.common .sheen { opacity: .18; }
+  .ab .numeral { position: absolute; top: 9px; left: 12px; font: 700 14px "Cinzel Decorative", serif; color: #f4e3c1; letter-spacing: .15em; text-shadow: 0 1px 4px #000; }
+  .ab .rarity { position: absolute; top: 10px; right: 10px; padding: 2px 8px; border-radius: 10px; font: 700 10px Signika; letter-spacing: .14em; text-transform: uppercase;
+    background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.35); }
+  .ab .banner { position: absolute; left: 6px; right: 6px; top: 192px; padding: 7px 4px 6px; text-align: center; font: 800 18px Cinzel, serif; letter-spacing: .06em; color: var(--ink);
+    background: var(--ribbon); clip-path: polygon(0 0, 100% 0, 94% 50%, 100% 100%, 0 100%, 6% 50%); filter: drop-shadow(0 3px 4px rgba(0,0,0,.6)); }
+  .ab .body { position: absolute; left: 12px; right: 12px; top: 236px; bottom: 10px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .ab .who { font: 600 13px Signika; color: var(--muted); }
+  .ab .stat { margin-top: 3px; font: 800 30px Cinzel, serif; color: #f4e3c1; line-height: 1; }
+  .ab .stat small { display: block; font: 400 12px Signika; color: var(--muted); margin-top: 3px; }
+  .ab .flavor { margin-top: auto; font: italic 11.5px Signika; color: #cdb98f; }
+
+  @keyframes deal { from { opacity: 0; transform: translateY(-60px) rotate(-8deg) scale(.9); } to { opacity: 1; transform: none; } }
+  @keyframes flip { from { opacity: 0; transform: rotateY(180deg) scale(.85); } 60% { opacity: 1; } to { transform: none; } }
+  @keyframes sheen { 0%, 100% { background-position: 120% 0; } 50% { background-position: -20% 0; } }
+  @keyframes slide { from { opacity: 0; transform: translateX(80px); } to { opacity: 1; transform: none; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  body.still *, body.still *::before, body.still *::after { animation-delay: -10s !important; animation-play-state: paused !important; }
+
+  .ab { margin-top: 0; }
+  .ab .fill { position: absolute; left: 0; right: 0; top: 0; height: 214px; overflow: hidden; border-radius: 11px 11px 0 0; }
+  .ab .fill img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 12%; display: block; }
+  .ab .fill::after { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 55%, #15121b 98%), radial-gradient(ellipse at 50% 35%, transparent 55%, rgba(0,0,0,.45)); }
+  .ab .fill.light img { mix-blend-mode: multiply; }
+  .ab .fill.light { background: radial-gradient(circle at 50% 40%, #e9dcc0, #8b7a5c 90%); }
+  .ab .fill .ico { position: absolute; inset: 0; display: grid; place-items: center; font-size: 64px; color: rgba(255,255,255,.18); }
+  .ab .sheen2 { position: absolute; left: 3px; right: 3px; top: 3px; bottom: 3px; z-index: 1; border-radius: 11px; mix-blend-mode: color-dodge; opacity: .45; pointer-events: none;
+    background: linear-gradient(115deg, transparent 30%, rgba(255,120,220,.55) 42%, rgba(120,255,240,.55) 50%, rgba(255,240,120,.55) 58%, transparent 70%);
+    background-size: 250% 100%; animation: sheen 3.2s ease-in-out infinite; }
+  .ab.plain .sheen2 { display: none; }
+  .ab.plain { box-shadow: 0 0 10px var(--glow), 0 14px 30px rgba(0,0,0,.6); }
+  .ab.foil::before { content: ""; position: absolute; inset: 0; border-radius: 14px; z-index: 0; background: conic-gradient(from 0deg, #ff7ad9, #7affef, #fff27a, #ff7ad9); filter: blur(10px); opacity: .45; }
+  .ab .tag { position: absolute; z-index: 5; bottom: -11px; left: 50%; transform: translateX(-50%); padding: 2px 10px; border-radius: 10px; font: 700 10px Signika; letter-spacing: .14em; text-transform: uppercase; white-space: nowrap; }
+  .ab.foil .tag { background: linear-gradient(90deg, #ffb3ec, #b3fff6, #fff6b3); color: #2a1d3a; }
+  .ab.plain .tag { background: #26252e; color: var(--muted); border: 1px solid #5c596a; }
+  .ab .rule { position: absolute; left: 0; right: 0; top: calc(100% + 18px); text-align: center; font: 12.5px/1.35 Signika; color: var(--muted); }
+  .ab .rule b { color: #f3b469; }
+  .grid { display: grid; grid-template-columns: repeat(5, 220px); justify-content: center; gap: 96px 22px; padding-bottom: 70px; }
+  .tier { margin: 26px 0 18px; text-align: center; font: 800 20px Cinzel, serif; letter-spacing: .1em; }
+  .tier.common { color: #f0d48e } .tier.rare { color: #6be3ff } .tier.epic { color: #c99bff } .tier.legendary { color: #f7b733 }
+  .tier small { display: block; font: 13px Signika; letter-spacing: 0; color: var(--muted); }
+  .ab .body .flavor { font-size: 11px; }
+  .rule .sys, .rule .new { display: inline-block; padding: 0 5px; border-radius: 3px; font: 700 10px Signika; letter-spacing: .06em; text-transform: uppercase; vertical-align: 1px; }
+  .rule .sys { background: #3b3945; color: #cfc6b8; } .rule .new { background: #ee9b3a; color: #1b1a21; }
+
+  body { background: #3a3a3f; }
+  .sheet { width: 1180px; margin: 24px auto; border-radius: 6px; overflow: hidden; background: #1b1a21; box-shadow: 0 10px 40px rgba(0,0,0,.6); border: 1px solid #000; }
+  .sheet > header { display: flex; align-items: center; gap: 10px; padding: 6px 10px; background: #121117; border-bottom: 1px solid #3b3945; font: 600 14px Signika; }
+  .sheet > header .ctl { margin-left: auto; color: var(--muted); }
+  .sheet nav { display: flex; gap: 4px; padding: 8px 12px 0; background: linear-gradient(#2a2433, #1b1a21); border-bottom: 1px solid #3b3945; }
+  .sheet nav a { padding: 7px 14px; border-radius: 4px 4px 0 0; font: 600 13px Signika; color: var(--muted); }
+  .sheet nav a.on { background: #1b1a21; color: #f3b469; border: 1px solid #3b3945; border-bottom-color: #1b1a21; margin-bottom: -1px; }
+  .deck { display: grid; grid-template-columns: 1fr 300px; min-height: 760px; }
+  .deck .main { padding: 14px 16px; border-right: 1px solid #3b3945; }
+  .top { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .top h3 { margin: 0; font: 800 22px Cinzel, serif; color: #f4e3c1; }
+  .found { font: 600 13px Signika; color: var(--muted); }
+  .found b { color: #f3b469; font-size: 16px; }
+  .meter { flex: 1; min-width: 160px; height: 8px; border-radius: 4px; background: #131217; overflow: hidden; }
+  .meter span { display: block; height: 100%; width: 42%; background: linear-gradient(90deg, #f0d48e, #6be3ff, #c99bff, #f7b733); }
+  .chips { display: flex; gap: 6px; margin: 10px 0 4px; flex-wrap: wrap; }
+  .chip { padding: 3px 10px; border-radius: 12px; border: 1px solid #3b3945; background: #26252e; font: 600 12px Signika; color: var(--muted); }
+  .chip b { color: var(--text); }
+  .chip.on { border-color: #a8702f; color: #f3b469; background: rgba(238,155,58,.1); }
+  .chip.common b { color: #f0d48e } .chip.rare b { color: #6be3ff } .chip.epic b { color: #c99bff } .chip.legendary b { color: #f7b733 }
+  .people { display: flex; gap: 6px; align-items: center; margin-left: auto; }
+  .people img, .people .all { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #5c596a; object-fit: cover; object-position: 50% 12%; }
+  .people .all { display: grid; place-items: center; font: 700 10px Signika; color: var(--muted); background: #26252e; }
+  .people .on { border-color: #ee9b3a; }
+  .stacks { display: grid; grid-template-columns: repeat(auto-fill, 152px); gap: 26px 16px; margin-top: 16px; }
+  .stack { position: relative; width: 152px; height: 248px; cursor: pointer; }
+  .stack .card { position: absolute; left: 0; top: 0; zoom: .69; }
+  .stack .back1, .stack .back2 { position: absolute; width: 152px; height: 248px; border-radius: 10px; background: #0e0c12; border: 2px solid var(--edgec, #8a6a32); }
+  .stack .back1 { transform: translate(6px, 5px) rotate(2.5deg); opacity: .8; } .stack .back2 { transform: translate(11px, 9px) rotate(5deg); opacity: .55; }
+  .stack .count { position: absolute; z-index: 9; top: -9px; right: -9px; min-width: 30px; padding: 3px 7px; border-radius: 14px; background: #ee9b3a; color: #1b1a21; font: 800 13px Signika; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,.6); }
+  .stack .owners { position: absolute; z-index: 9; left: 0; right: 0; bottom: -18px; display: flex; justify-content: center; }
+  .stack .owners span { position: relative; margin: 0 -4px; }
+  .stack .owners img { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #1b1a21; object-fit: cover; object-position: 50% 12%; display: block; }
+  .stack .owners i { position: absolute; right: -4px; bottom: -3px; font: 700 9px Signika; font-style: normal; background: #26252e; border: 1px solid #5c596a; border-radius: 6px; padding: 0 3px; color: var(--text); }
+  .stack.sel { outline: 2px solid #ee9b3a; outline-offset: 6px; border-radius: 12px; }
+  .unknown { position: absolute; inset: 0; border-radius: 10px; padding: 3px; background: var(--edge); opacity: .85; }
+  .unknown .face { height: 100%; border-radius: 8px; display: grid; place-items: center; text-align: center;
+    background: repeating-linear-gradient(45deg, #15131b 0 10px, #19171f 10px 20px); }
+  .unknown .face i { font-size: 40px; color: rgba(255,255,255,.18); display: block; margin-bottom: 8px; }
+  .unknown .face b { font: 800 15px Cinzel, serif; color: #c7bba8; letter-spacing: .1em; }
+  .unknown .face small { display: block; margin-top: 4px; font: 700 10px Signika; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .unknown.common { --edge: linear-gradient(135deg, #f0d48e, #8a6a32, #f0d48e) } .unknown.rare { --edge: linear-gradient(135deg, #6be3ff, #3a7bff, #6be3ff) }
+  .unknown.epic { --edge: linear-gradient(135deg, #f7d37a, #b06bff, #6be3ff, #f7d37a) } .unknown.legendary { --edge: linear-gradient(135deg, #fff1b8, #f7b733, #ff7a3d, #f7b733, #fff1b8) }
+  .side { padding: 14px; background: #15141a; }
+  .side .big { zoom: .9; margin: 6px auto 0; width: 220px; }
+  .side h4 { margin: 18px 0 6px; font: 700 11px Signika; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .side ol { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  .side li { display: flex; gap: 8px; align-items: center; padding: 6px 8px; border-radius: 4px; background: #1d1c23; border: 1px solid #2d2b36; font: 12.5px Signika; }
+  .side li img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; object-position: 50% 12%; }
+  .side li .t { flex: 1; } .side li .t b { display: block; font-size: 13px; color: var(--text); } .side li .t span { color: var(--muted); }
+  .side li .n { font: 800 16px Cinzel, serif; color: #f4e3c1; }
+  .side li .foilmark { font: 700 9px Signika; letter-spacing: .1em; padding: 1px 5px; border-radius: 6px; background: linear-gradient(90deg, #ffb3ec, #b3fff6, #fff6b3); color: #2a1d3a; }
+  .side .rule { margin-top: 10px; font: 12.5px/1.4 Signika; color: var(--muted); text-align: center; }
+  .side .gm { margin-top: 14px; display: flex; gap: 6px; }
+  .side .gm button { flex: 1; padding: 6px; border-radius: 4px; border: 1px solid #5c596a; background: #26252e; color: var(--text); font: 600 12px Signika; }
+  .side .gm button.danger { border-color: #9c403b; color: #ff9a8f; background: rgba(220,60,50,.1); }
+  .side .gmnote { margin-top: 4px; font: 11px Signika; color: var(--muted); text-align: center; }
+</style>
+</head>
+<body><div class="sheet"><header><i class="fa-solid fa-users"></i> The Party <span class="ctl"><i class="fa-solid fa-xmark"></i></span></header>
+<nav><a>Overview</a><a>Inventory</a><a>Exploration</a><a class="on"><i class="fa-solid fa-layer-group"></i> Deck</a></nav>
+<div class="deck"><div class="main">
+  <div class="top"><h3>Party Deck</h3><span class="found"><b>15</b> / 55 discovered</span><div class="meter"><span style="width:27%"></span></div></div>
+  <div class="chips"><span class="chip common"><b>8</b> / 18 Common</span><span class="chip rare"><b>4</b> / 18 Rare</span><span class="chip epic"><b>2</b> / 10 Epic</span><span class="chip legendary"><b>1</b> / 9 Legendary</span><span class="people"><span class="all on">All</span><span class="all">M</span><span class="all">S</span><span class="all">U</span></span></div>
+  <div class="chips"><span class="chip on">Show undiscovered</span><span class="chip">Sort: rarity</span><span class="chip">Sort: most earned</span><span class="chip">Sort: newest</span></div>
+  <div class="stacks"><div class="stack sel" style="--edgec:#c9a35a"><div class="back2"></div><div class="back1"></div><div class="ab common gold foil card" ><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-hammer"></i></span></div><div class="banner" style="">The Hammer</div>
+  <div class="body"><div class="who">Madzoog</div><div class="stat">62<small>damage dealt</small></div><div class="flavor">“They felt that one in the next village.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#1</span><span class="rarity" style="z-index:4">Common</span></div><span class=count>×4</span><div class="owners"><span><img alt="" style="background:#26252e"><i>3</i></span><span><img alt="" style="background:#26252e"></span></div></div><div class="stack" style="--edgec:#c9a35a"><div class="back2"></div><div class="back1"></div><div class="ab common gold foil card" ><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-shield-halved"></i></span></div><div class="banner" style="">The Wall</div>
+  <div class="body"><div class="who">Schmekcho</div><div class="stat">48<small>damage taken</small></div><div class="flavor">“Nothing got past. Nothing.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#2</span><span class="rarity" style="z-index:4">Common</span></div><span class=count>×5</span><div class="owners"><span><img alt="" style="background:#26252e"><i>5</i></span></div></div><div class="stack" style="--edgec:#c9a35a"><div class="back1"></div><div class="ab common gold foil card" ><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-heart-pulse"></i></span></div><div class="banner" style="">Lifeline</div>
+  <div class="body"><div class="who">Uri</div><div class="stat">30<small>HP healed</small></div><div class="flavor">“Not today.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#3</span><span class="rarity" style="z-index:4">Common</span></div><span class=count>×2</span><div class="owners"><span><img alt="" style="background:#26252e"><i>2</i></span></div></div><div class="stack" style="--edgec:#c9a35a"><div class="back2"></div><div class="back1"></div><div class="ab common gold foil card" ><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-droplet"></i></span></div><div class="banner" style="">First Blood</div>
+  <div class="body"><div class="who">Madzoog</div><div class="stat">Round 1<small>first hit</small></div><div class="flavor">“Someone had to start it.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#4</span><span class="rarity" style="z-index:4">Common</span></div><span class=count>×3</span><div class="owners"><span><img alt="" style="background:#26252e"></span><span><img alt="" style="background:#26252e"></span><span><img alt="" style="background:#26252e"></span></div></div><div class="stack" style="--edgec:#c9a35a"><div class="back1"></div><div class="ab common gold foil card" ><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-skull"></i></span></div><div class="banner" style="">Finisher</div>
+  <div class="body"><div class="who">Uri</div><div class="stat">2<small>final blows</small></div><div class="flavor">“Last one standing? Not anymore.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#5</span><span class="rarity" style="z-index:4">Common</span></div><span class=count>×2</span><div class="owners"><span><img alt="" style="background:#26252e"><i>2</i></span></div></div><div class="stack"><div class="unknown common"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>common</small></div></div></div></div><div class="stack"><div class="unknown common"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>common</small></div></div></div></div><div class="stack"><div class="unknown common"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>common</small></div></div></div></div><div class="stack" style="--edgec:#c9a35a"><div class="back2"></div><div class="back1"></div><div class="ab common gold foil card" ><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-person"></i></span></div><div class="banner" style="">Steadfast</div>
+  <div class="body"><div class="who">Madzoog</div><div class="stat">3<small>rounds standing</small></div><div class="flavor">“Still here.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#9</span><span class="rarity" style="z-index:4">Common</span></div><span class=count>×3</span><div class="owners"><span><img alt="" style="background:#26252e"><i>2</i></span><span><img alt="" style="background:#26252e"></span></div></div><div class="stack"><div class="unknown common"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>common</small></div></div></div></div><div class="stack" style="--edgec:#c9a35a"><div class="back2"></div><div class="back1"></div><div class="ab common gold foil card" ><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-wand-sparkles"></i></span></div><div class="banner" style="">Spellslinger</div>
+  <div class="body"><div class="who">Uri</div><div class="stat">3<small>spells cast</small></div><div class="flavor">“Next one&#x27;s bigger.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#31</span><span class="rarity" style="z-index:4">Common</span></div><span class=count>×3</span><div class="owners"><span><img alt="" style="background:#26252e"><i>3</i></span></div></div><div class="stack"><div class="unknown common"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>common</small></div></div></div></div><div class="stack"><div class="unknown common"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>common</small></div></div></div></div><div class="stack"><div class="unknown common"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>common</small></div></div></div></div><div class="stack" style="--edgec:#c9a35a"><div class="back1"></div><div class="ab common gold foil card" ><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-brain"></i></span></div><div class="banner" style="">Iron Will</div>
+  <div class="body"><div class="who">Schmekcho</div><div class="stat">3<small>saves passed</small></div><div class="flavor">“Nice try.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#35</span><span class="rarity" style="z-index:4">Common</span></div><span class=count>×2</span><div class="owners"><span><img alt="" style="background:#26252e"><i>2</i></span></div></div><div class="stack"><div class="unknown common"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>common</small></div></div></div></div><div class="stack"><div class="unknown common"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>common</small></div></div></div></div><div class="stack"><div class="unknown common"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>common</small></div></div></div></div><div class="stack" style="--edgec:#3a7bff"><div class="back1"></div><div class="ab rare gold foil card" ><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-hand-fist"></i></span></div><div class="banner" style="">One Punch</div>
+  <div class="body"><div class="who">Madzoog</div><div class="stat">27<small>in one hit</small></div><div class="flavor">“One was enough.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#11</span><span class="rarity" style="z-index:4">Rare</span></div><span class=count>×2</span><div class="owners"><span><img alt="" style="background:#26252e"><i>2</i></span></div></div><div class="stack" style="--edgec:#3a7bff"><div class="ab rare gold foil card" ><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-star"></i></span></div><div class="banner" style="">Lucky Star</div>
+  <div class="body"><div class="who">Madzoog</div><div class="stat">2<small>crits</small></div><div class="flavor">“The dice love me.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#12</span><span class="rarity" style="z-index:4">Rare</span></div><div class="owners"><span><img alt="" style="background:#26252e"></span></div></div><div class="stack" style="--edgec:#3a7bff"><div class="ab rare gold foil card" ><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-heart-crack"></i></span></div><div class="banner" style="">Close Call</div>
+  <div class="body"><div class="who">Schmekcho</div><div class="stat">3 HP<small>lowest</small></div><div class="flavor">“That was too close.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#13</span><span class="rarity" style="z-index:4">Rare</span></div><div class="owners"><span><img alt="" style="background:#26252e"></span></div></div><div class="stack"><div class="unknown rare"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>rare</small></div></div></div></div><div class="stack"><div class="unknown rare"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>rare</small></div></div></div></div><div class="stack" style="--edgec:#3a7bff"><div class="ab rare gold foil card" ><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-kit-medical"></i></span></div><div class="banner" style="">Field Medic</div>
+  <div class="body"><div class="who">Uri</div><div class="stat">3<small>allies healed</small></div><div class="flavor">“Next!”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#16</span><span class="rarity" style="z-index:4">Rare</span></div><div class="owners"><span><img alt="" style="background:#26252e"></span></div></div><div class="stack"><div class="unknown rare"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>rare</small></div></div></div></div><div class="stack"><div class="unknown rare"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>rare</small></div></div></div></div><div class="stack"><div class="unknown rare"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>rare</small></div></div></div></div><div class="stack"><div class="unknown rare"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>rare</small></div></div></div></div><div class="stack"><div class="unknown rare"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>rare</small></div></div></div></div><div class="stack"><div class="unknown rare"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>rare</small></div></div></div></div><div class="stack"><div class="unknown rare"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>rare</small></div></div></div></div><div class="stack"><div class="unknown rare"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>rare</small></div></div></div></div><div class="stack"><div class="unknown rare"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>rare</small></div></div></div></div><div class="stack"><div class="unknown rare"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>rare</small></div></div></div></div><div class="stack"><div class="unknown rare"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>rare</small></div></div></div></div><div class="stack"><div class="unknown rare"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>rare</small></div></div></div></div><div class="stack" style="--edgec:#b06bff"><div class="ab epic gold foil card" ><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-skull-crossbones"></i></span></div><div class="banner" style="">Executioner</div>
+  <div class="body"><div class="who">Madzoog</div><div class="stat">38<small>in one hit</small></div><div class="flavor">“It never stood a chance.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#21</span><span class="rarity" style="z-index:4">Epic</span></div><div class="owners"><span><img alt="" style="background:#26252e"></span></div></div><div class="stack"><div class="unknown epic"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>epic</small></div></div></div></div><div class="stack" style="--edgec:#b06bff"><div class="ab epic gold foil card" ><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-dove"></i></span></div><div class="banner" style="font-size:16px;padding-top:8px">Guardian Angel</div>
+  <div class="body"><div class="who">Uri</div><div class="stat">Uri<small>saved</small></div><div class="flavor">“Not on my watch.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#23</span><span class="rarity" style="z-index:4">Epic</span></div><div class="owners"><span><img alt="" style="background:#26252e"></span></div></div><div class="stack"><div class="unknown epic"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>epic</small></div></div></div></div><div class="stack"><div class="unknown epic"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>epic</small></div></div></div></div><div class="stack"><div class="unknown epic"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>epic</small></div></div></div></div><div class="stack"><div class="unknown epic"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>epic</small></div></div></div></div><div class="stack"><div class="unknown epic"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>epic</small></div></div></div></div><div class="stack"><div class="unknown epic"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>epic</small></div></div></div></div><div class="stack"><div class="unknown epic"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>epic</small></div></div></div></div><div class="stack" style="--edgec:#f7b733"><div class="ab legendary gold foil card" ><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-chess-king"></i></span></div><div class="banner" style="font-size:16px;padding-top:8px">One-Hero Army</div>
+  <div class="body"><div class="who">Madzoog</div><div class="stat">58%<small>of the party&#x27;s damage</small></div><div class="flavor">“Did you all even show up?”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#26</span><span class="rarity" style="z-index:4">Legendary</span></div><div class="owners"><span><img alt="" style="background:#26252e"></span></div></div><div class="stack"><div class="unknown legendary"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>legendary</small></div></div></div></div><div class="stack"><div class="unknown legendary"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>legendary</small></div></div></div></div><div class="stack"><div class="unknown legendary"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>legendary</small></div></div></div></div><div class="stack"><div class="unknown legendary"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>legendary</small></div></div></div></div><div class="stack"><div class="unknown legendary"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>legendary</small></div></div></div></div><div class="stack"><div class="unknown legendary"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>legendary</small></div></div></div></div><div class="stack"><div class="unknown legendary"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>legendary</small></div></div></div></div><div class="stack"><div class="unknown legendary"><div class="face"><div><i class="fa-solid fa-question"></i><b>???</b><small>legendary</small></div></div></div></div></div>
+</div><div class="side"><div class="big"><div class="ab common gold foil card" ><div class="inner"><div class="fill" style="background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.12), #0f0e13 75%)"><span class="ico"><i class="fa-solid fa-hammer"></i></span></div><div class="banner" style="">The Hammer</div>
+  <div class="body"><div class="who">Madzoog</div><div class="stat">62<small>damage dealt</small></div><div class="flavor">“They felt that one in the next village.”</div></div></div>
+  <div class="sheen2"></div><span class="numeral" style="z-index:4">#1</span><span class="rarity" style="z-index:4">Common</span></div></div>
+      <div class="rule"><b style="color:#f3b469">#1 The Hammer</b> · Common<br>Most damage dealt to enemies.</div>
+      <h4>Earned 4 times</h4><ol>
+      <li><span class="all">M</span><span class="t"><b>Madzoog <span class="foilmark">FOIL</span></b><span>Goblin Warrens · 12 Oct 2026</span></span><span class="n">62</span></li>
+      <li><span class="all">M</span><span class="t"><b>Madzoog</b><span>The Mill · 26 Oct 2026</span></span><span class="n">48</span></li>
+      <li><span class="all">U</span><span class="t"><b>Uri <span class="foilmark">FOIL</span></b><span>Bridge ambush · 2 Nov 2026</span></span><span class="n">55</span></li>
+      <li><span class="all">M</span><span class="t"><b>Madzoog</b><span>Blisterwell · 20 Nov 2026</span></span><span class="n">71</span></li></ol>
+      <div class="gm"><button><i class="fa-solid fa-plus"></i> Grant…</button><button class="danger"><i class="fa-solid fa-trash"></i> Remove…</button></div>
+      <div class="gmnote">GM only</div></div></div></div></body></html>

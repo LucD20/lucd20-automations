@@ -2961,6 +2961,13 @@ Automations menu does nothing"):**
   at the bottom scrolls it down, and again when its pictures load. Test 77:
   the card appears 600 ms later, a picture loads later; scrolled up stays.
 
+**v0.87.7 (owner: "when I click to roll, the window goes down, but when it
+actually shows (after Dice So Nice shows the results) the chat doesn't move
+down"):** Dice So Nice adds the message hidden and shows it when the dice
+stop: no new element, it just grows. Each new message's size is watched
+(ResizeObserver, 60 s); growing while at the bottom scrolls down; also on
+Dice So Nice's `diceSoNiceRollComplete` hook. Test 77 covers it.
+
 ---
 
 ## 23. Adventure conversion tools (owner, 2026-11-19, drafting)

@@ -52,6 +52,15 @@ const assert = require("assert");
     img.dispatchEvent(new Event("load"));
     await settle(80);
     out.bottomAfterImage = atBottom();
+    // Dice So Nice: the message is added hidden, shown after the dice stop (no new element, it just grows).
+    Hooks.callAll("createChatMessage", {}, {}, "x");
+    add(62);
+    log.lastElementChild.style.display = "none";
+    await settle(300);
+    log.lastElementChild.style.display = "";
+    log.lastElementChild.style.height = "180px";
+    await settle(150);
+    out.bottomAfterDice = atBottom();
     // Scrolled up to read: a new message doesn't pull the chat down.
     log.scrollTop = 0;
     await settle(80);
@@ -65,6 +74,7 @@ const assert = require("assert");
   assert.ok(r.bottomAfterNew, "at the bottom after a new message");
   assert.ok(r.rendered <= 31, `trimmed (${r.rendered})`);
   assert.ok(r.bottomAfterImage, "a picture loading later: still at the bottom");
+  assert.ok(r.bottomAfterDice, "a message shown after Dice So Nice's dice: still at the bottom");
   assert.ok(r.stayedUp, "scrolled up: left alone");
   console.log("PHASE 77 CHECKS PASSED");
 })().catch(e => { console.error(e); process.exit(1); });

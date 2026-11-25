@@ -192,17 +192,26 @@ function watchBottom(log) {
   const toBottom = () => { if (w.atBottom && log.isConnected) scroller.scrollTop = scroller.scrollHeight; };
   const onScroll = () => { w.atBottom = isNearBottom(log); };
   scroller.addEventListener("scroll", onScroll, { passive: true });
+  // A new message can grow after it is added: Dice So Nice keeps it hidden until the 3D dice stop (v0.87.7;
+  // owner: "when it actually shows, after the dice, the chat doesn't move down"), pictures load later. Its size
+  // is watched for a while; growing while at the bottom scrolls down.
+  const sizes = typeof ResizeObserver === "function" ? new ResizeObserver(() => { if (activeFeature && w.atBottom) toBottom(); }) : null;
   w.observer = new MutationObserver(records => {
-    if (!activeFeature || !w.atBottom) return;
+    if (!activeFeature) return;
     const added = records.flatMap(r => [...r.addedNodes]).filter(n => n instanceof HTMLElement && n.dataset?.messageId && n === log.lastElementChild);
     if (!added.length) return;
+    for (const n of added) {
+      if (sizes) { sizes.observe(n); setTimeout(() => sizes.unobserve(n), 60000); }
+      for (const img of n.querySelectorAll("img, video")) img.addEventListener(img.tagName === "VIDEO" ? "loadeddata" : "load", toBottom, { once: true });
+    }
+    if (!w.atBottom) return;
     toBottom();
     requestAnimationFrame(toBottom);
-    for (const img of added.flatMap(n => [...n.querySelectorAll("img, video")])) img.addEventListener(img.tagName === "VIDEO" ? "loadeddata" : "load", toBottom, { once: true });
   });
   w.observer.observe(log, { childList: true });
+  w.toBottom = toBottom;
   watched.set(log, w);
-  activeFeature?.onCleanup?.(() => { w.observer.disconnect(); scroller.removeEventListener("scroll", onScroll); watched.delete(log); });
+  activeFeature?.onCleanup?.(() => { w.observer.disconnect(); sizes?.disconnect(); scroller.removeEventListener("scroll", onScroll); watched.delete(log); });
 }
 
 function trimAll() {
@@ -232,6 +241,10 @@ defineFeature({
     feature.on("renderChatMessageHTML", scheduleTrim);
     if ((game.release?.generation ?? 13) < 13) feature.on("renderChatMessage", scheduleTrim); // deprecated since V13
     feature.on("createChatMessage", scheduleTrim);
+    // Dice So Nice shows the message once its dice stop.
+    feature.on("diceSoNiceRollComplete", () => requestAnimationFrame(() => {
+      for (const log of document.querySelectorAll(".chat-log")) { const w = watched.get(log); if (w?.atBottom) w.toBottom(); }
+    }));
     feature.on("deleteChatMessage", scheduleTrim);
     feature.on("renderChatLog", scheduleTrim);
     scheduleTrim();

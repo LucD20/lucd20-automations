@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Strike options in the roll window: mockups</title>
+<link rel="stylesheet" href="../../tools/harness/node_modules/@fortawesome/fontawesome-free/css/all.min.css">
+<style>
+  body { margin: 0; padding: 18px; background: #3a3a3f; font-family: Signika, "Segoe UI", sans-serif; display: flex; gap: 22px; align-items: flex-start; flex-wrap: wrap; }
+  .col { width: 410px; }
+  .col > h2 { margin: 0 0 8px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: #f3b469; }
+  .col > p.why { margin: 8px 2px 0; font-size: 12px; color: #cfc6b8; line-height: 1.35; }
+  /* PF2e's roll window, roughly. */
+  .win { border: 1px solid #000; border-radius: 4px; overflow: hidden; background: #e9e3d4; color: #191813; font-size: 14px; box-shadow: 0 6px 18px rgba(0,0,0,.5); }
+  .win > header { padding: 5px 10px; background: #2a1f6b; color: #fff; font-weight: 700; font-size: 14px; }
+  .win .body { padding: 8px 12px 10px; }
+  .mods { display: grid; grid-template-columns: 1fr 120px 40px 52px; align-items: center; row-gap: 8px; margin-bottom: 8px; }
+  .mods .h { font-weight: 700; font-size: 13px; }
+  .badge { justify-self: start; padding: 3px 7px; border-radius: 3px; background: #5e554a; color: #fff; font-size: 10px; font-weight: 700; letter-spacing: .05em; }
+  .num { text-align: right; padding-right: 8px; }
+  .sw { position: relative; width: 44px; height: 22px; border-radius: 11px; background: #1f2a5c; }
+  .sw::after { content: "ON"; position: absolute; left: 5px; top: 4px; color: #fff; font-size: 10px; font-weight: 700; }
+  .sw::before { content: ""; position: absolute; right: 3px; top: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; }
+  .sw.off { background: #9a9386; } .sw.off::after { content: ""; } .sw.off::before { right: auto; left: 3px; }
+  .rest { margin: 6px 0; height: 104px; border-top: 1px solid #c9bfa8; border-bottom: 1px solid #c9bfa8; display: grid; place-items: center; color: #8a8070; font-size: 12px; font-style: italic; }
+  .cover { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 8px 0 6px; }
+  .cover span { padding: 5px 0; border: 1px solid #7a705f; border-radius: 3px; background: #a89f8e; color: #fff; text-align: center; font-size: 11px; }
+  .cover span:first-child { background: #6e6153; outline: 2px solid #ee9b3a; }
+  .chance { display: flex; height: 12px; border-radius: 2px; overflow: hidden; font-size: 8px; color: #fff; }
+  .roll { margin-top: 8px; padding: 8px; border-radius: 3px; background: #1f2a5c; color: #fff; text-align: center; font-weight: 700; }
+  .ico { width: 20px; height: 20px; border-radius: 3px; flex: none; display: grid; place-items: center; color: #fff; font-size: 11px; }
+  .i1 { background: #8a2a12; } .i2 { background: #20507a; } .i3 { background: #5a3a7a; } .i4 { background: #2f6b3a; } .i5 { background: #7a5a12; }
+
+  /* A: chips that wrap. */
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 6px 0; }
+  .chip { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px 2px 2px; border: 1px solid #9a8f7c; border-radius: 13px; background: #f3eee2; font-size: 12px; cursor: pointer; }
+  .chip .ico { width: 20px; height: 20px; border-radius: 50%; }
+  .chip.on { border-color: #1f2a5c; background: #1f2a5c; color: #fff; }
+  .chip .x { font-size: 10px; opacity: .7; }
+
+  /* B: rows like PF2e's modifiers. */
+  .optrow { display: grid; grid-template-columns: 1fr 120px 40px 52px; align-items: center; row-gap: 8px; }
+  .optrow .nm { display: flex; align-items: center; gap: 6px; }
+  .optrow .nm a { color: inherit; text-decoration: underline dotted; }
+  .feat { background: #6a2f1f; }
+
+  /* C: a folded section. */
+  .fold { margin: 6px 0; border: 1px solid #b9ad94; border-radius: 4px; background: #f1ebdd; }
+  .fold summary { display: flex; align-items: center; gap: 6px; padding: 5px 8px; font-weight: 700; font-size: 13px; cursor: pointer; list-style: none; }
+  .fold summary .cnt { margin-left: auto; padding: 0 7px; border-radius: 9px; background: #1f2a5c; color: #fff; font-size: 11px; }
+  .fold .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; padding: 4px 8px 8px; }
+  .fold label { display: flex; align-items: center; gap: 6px; font-size: 12.5px; }
+  .fold input { margin: 0; }
+
+  /* D: icon buttons, like the cover row. */
+  .icons { display: flex; gap: 5px; margin: 6px 0; align-items: center; }
+  .icons .lbl { font-size: 12px; font-weight: 700; margin-right: 2px; }
+  .ib { position: relative; width: 34px; height: 30px; border: 1px solid #7a705f; border-radius: 4px; background: #a89f8e; display: grid; place-items: center; }
+  .ib .ico { width: 24px; height: 24px; font-size: 12px; }
+  .ib.on { background: #1f2a5c; border-color: #1f2a5c; box-shadow: 0 0 0 2px #ee9b3a; }
+  .tip { position: absolute; bottom: 36px; left: -6px; white-space: nowrap; padding: 3px 7px; border-radius: 3px; background: #111; color: #fff; font-size: 11px; }
+  .names { font-size: 11.5px; color: #4f473b; margin: -2px 0 4px; }
+</style>
+</head>
+<body>
+
+<div class="col"><h2>A · Chips that wrap</h2>
+<div class="win"><header>Melee Strike: Tricky Pick</header><div class="body">
+  <div class="mods"><span class="h">Modifier</span><span class="h">Type</span><span></span><span></span>
+    <span>Strength</span><span class="badge">ATTRIBUTE</span><span class="num">+3</span><span class="sw"></span></div>
+  <div class="rest">… the other modifiers, roll visibility …</div>
+  <div class="chips">
+    <span class="chip on"><span class="ico i1"><i class="fa-solid fa-magnifying-glass"></i></span>Combat Assessment</span>
+    <span class="chip"><span class="ico i2"><i class="fa-solid fa-anchor"></i></span>Snagging Strike</span>
+    <span class="chip on"><span class="ico i3"><i class="fa-solid fa-crosshairs"></i></span>Exacting Strike</span>
+    <span class="chip"><span class="ico i4"><i class="fa-solid fa-hammer"></i></span>Vicious Swing</span>
+    <span class="chip"><span class="ico i5"><i class="fa-solid fa-check-double"></i></span>Certain Strike</span>
+  </div>
+  <div class="cover"><span>None</span><span>Lesser</span><span>Standard</span><span>Greater</span></div>
+  <div class="chance"><span style="width:5%;background:#7a1a1a"></span><span style="width:15%;background:#c0562a"></span><span style="width:50%;background:#3a7d3a"></span><span style="width:30%;background:#2a5b9a"></span></div>
+  <div class="roll">Roll (+16)</div></div></div>
+<p class="why">Five options in two short lines. Click a chip: on/off (filled = on). Click its round icon: opens the feat.</p>
+</div>
+
+<div class="col"><h2>B · Rows like PF2e's modifiers</h2>
+<div class="win"><header>Melee Strike: Tricky Pick</header><div class="body">
+  <div class="mods"><span class="h">Modifier</span><span class="h">Type</span><span></span><span></span>
+    <span>Strength</span><span class="badge">ATTRIBUTE</span><span class="num">+3</span><span class="sw"></span></div>
+  <div class="rest">… the other modifiers, roll visibility …</div>
+  <div class="optrow">
+    <span class="nm"><span class="ico i1"><i class="fa-solid fa-magnifying-glass"></i></span><a>Combat Assessment</a></span><span class="badge feat">FEAT</span><span></span><span class="sw"></span>
+    <span class="nm"><span class="ico i2"><i class="fa-solid fa-anchor"></i></span><a>Snagging Strike</a></span><span class="badge feat">FEAT</span><span></span><span class="sw off"></span>
+    <span class="nm"><span class="ico i3"><i class="fa-solid fa-crosshairs"></i></span><a>Exacting Strike</a></span><span class="badge feat">FEAT</span><span></span><span class="sw"></span>
+    <span class="nm"><span class="ico i4"><i class="fa-solid fa-hammer"></i></span><a>Vicious Swing</a></span><span class="badge feat">FEAT</span><span></span><span class="sw off"></span>
+    <span class="nm"><span class="ico i5"><i class="fa-solid fa-check-double"></i></span><a>Certain Strike</a></span><span class="badge feat">FEAT</span><span></span><span class="sw off"></span>
+  </div>
+  <div class="cover"><span>None</span><span>Lesser</span><span>Standard</span><span>Greater</span></div>
+  <div class="roll">Roll (+16)</div></div></div>
+<p class="why">Looks like it belongs to PF2e's window: one line per option, the same switches. Tallest of the four as options grow.</p>
+</div>
+
+<div class="col"><h2>C · A folded section</h2>
+<div class="win"><header>Melee Strike: Tricky Pick</header><div class="body">
+  <div class="mods"><span class="h">Modifier</span><span class="h">Type</span><span></span><span></span>
+    <span>Strength</span><span class="badge">ATTRIBUTE</span><span class="num">+3</span><span class="sw"></span></div>
+  <div class="rest">… the other modifiers, roll visibility …</div>
+  <details class="fold" open><summary><i class="fa-solid fa-chevron-down"></i> Feats for this Strike <span class="cnt">2 on</span></summary>
+    <div class="grid2">
+      <label><input type="checkbox" checked> <span class="ico i1"><i class="fa-solid fa-magnifying-glass"></i></span>Combat Assessment</label>
+      <label><input type="checkbox"> <span class="ico i2"><i class="fa-solid fa-anchor"></i></span>Snagging Strike</label>
+      <label><input type="checkbox" checked> <span class="ico i3"><i class="fa-solid fa-crosshairs"></i></span>Exacting Strike</label>
+      <label><input type="checkbox"> <span class="ico i4"><i class="fa-solid fa-hammer"></i></span>Vicious Swing</label>
+      <label><input type="checkbox"> <span class="ico i5"><i class="fa-solid fa-check-double"></i></span>Certain Strike</label>
+    </div></details>
+  <div class="cover"><span>None</span><span>Lesser</span><span>Standard</span><span>Greater</span></div>
+  <div class="roll">Roll (+16)</div></div></div>
+<p class="why">Two columns of checkboxes; folds to one line ("Feats for this Strike · 2 on") and remembers if you folded it. The icon opens the feat.</p>
+</div>
+
+<div class="col"><h2>D · Icon buttons</h2>
+<div class="win"><header>Melee Strike: Tricky Pick</header><div class="body">
+  <div class="mods"><span class="h">Modifier</span><span class="h">Type</span><span></span><span></span>
+    <span>Strength</span><span class="badge">ATTRIBUTE</span><span class="num">+3</span><span class="sw"></span></div>
+  <div class="rest">… the other modifiers, roll visibility …</div>
+  <div class="icons"><span class="lbl">Feats</span>
+    <span class="ib on"><span class="ico i1"><i class="fa-solid fa-magnifying-glass"></i></span></span>
+    <span class="ib"><span class="ico i2"><i class="fa-solid fa-anchor"></i></span><span class="tip">Snagging Strike · right-click: open</span></span>
+    <span class="ib on"><span class="ico i3"><i class="fa-solid fa-crosshairs"></i></span></span>
+    <span class="ib"><span class="ico i4"><i class="fa-solid fa-hammer"></i></span></span>
+    <span class="ib"><span class="ico i5"><i class="fa-solid fa-check-double"></i></span></span>
+  </div>
+  <div class="names">On: Combat Assessment, Exacting Strike</div>
+  <div class="cover"><span>None</span><span>Lesser</span><span>Standard</span><span>Greater</span></div>
+  <div class="roll">Roll (+16)</div></div></div>
+<p class="why">Smallest: one line for many feats (their icons). Names on hover and in a line under it; right-click opens the feat.</p>
+</div>
+
+</body>
+</html>

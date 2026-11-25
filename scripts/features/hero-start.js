@@ -33,9 +33,18 @@ const key = (c, r) => `${c},${r}`;
 const parse = k => { const [c, r] = k.split(",").map(Number); return { c, r }; };
 
 /** The encounter not yet started on the viewed scene (the one the area belongs to). */
+/**
+ * An encounter belongs here when it is linked to the viewed scene, or linked to none: since V12 a new
+ * encounter is not linked to a scene unless the GM links it (v0.87.1: "didn't do anything when I created the
+ * encounter"). The area itself remembers its scene.
+ */
+const sceneIdOf = c => c?.scene?.id ?? c?._source?.scene ?? null;
+const onThisScene = c => !sceneIdOf(c) || sceneIdOf(c) === canvas?.scene?.id;
+
 function pendingCombat() {
   const list = typeof game.combats?.filter === "function" ? game.combats.filter(() => true) : [...(game.combats ?? [])];
-  return list.find(c => !c.started && (c.scene?.id ?? c._source?.scene ?? null) === (canvas?.scene?.id ?? null)) ?? null;
+  const open = list.filter(c => !c.started && onThisScene(c));
+  return (open.includes(game.combat) ? game.combat : null) ?? open.find(c => areaOf(c)) ?? open[0] ?? null;
 }
 
 const areaOf = combat => {
@@ -265,6 +274,7 @@ function openPicker(combat) {
     bar.remove();
   };
   picker.combat = combat;
+  picker.scene = scene.id;
   state.picker = picker;
 }
 
@@ -283,13 +293,14 @@ defineFeature({
   defaultEnabled: true,
   enable(feature) {
     feature.on("createCombat", (combat, options, userId) => {
+      if (CONFIG.debug?.lucd20Rules) console.log("lucd20-automations | Hero Start: encounter created", { mine: userId === game.user.id, gm: game.user.isGM, combatScene: sceneIdOf(combat), viewed: canvas?.scene?.id, grid: canvas?.scene?.grid?.type });
       if (userId !== game.user.id || !game.user.isGM) return;
-      if ((combat.scene?.id ?? combat._source?.scene) !== canvas?.scene?.id) return;
+      if (!onThisScene(combat)) return;
       setTimeout(() => openPicker(combat), 50);
     });
     feature.on("updateCombat", onCombatUpdate);
     feature.on("deleteCombat", combat => { if (state.picker?.combat === combat) closePicker(); else redraw(); });
-    feature.on("canvasReady", () => { if (state.picker && state.picker.combat?.scene?.id !== canvas.scene?.id) closePicker(); redraw(); });
+    feature.on("canvasReady", () => { if (state.picker && state.picker.scene !== canvas.scene?.id) closePicker(); redraw(); });
     feature.onCleanup(addChatControl({
       id: "heroStart", icon: "fa-solid fa-flag-checkered", tooltip: t("Control"), order: 43,
       visible: () => game.user.isGM && !!pendingCombat() && squareGrid(canvas?.scene),

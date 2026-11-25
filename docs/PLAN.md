@@ -2903,6 +2903,10 @@ no longer match the module); not touched.
   = { scene, cells: ["col,row"] }). Starting the encounter unsets it;
   deleting the encounter removes it with the combat.
 - Square grids only (gridless / hex: no bar).
+- v0.87.1 (owner: "didn't do anything when I created the encounter"): a new
+  encounter isn't linked to a scene since V12, and the code required a
+  match. Now an unlinked encounter uses the viewed scene (the area keeps
+  its scene id). Debug: `CONFIG.debug.lucd20Rules = true` logs the creation.
 
 ---
 

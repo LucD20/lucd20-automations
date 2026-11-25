@@ -38,7 +38,8 @@ const assert = require("assert");
       async updateEmbeddedDocuments(type, ups, opts) { updates.push({ ups, opts }); for (const u of ups) Object.assign(tokens.find(t => t.id === u._id), u); } };
     canvas.scene = scene;
     const flags = {};
-    const combat = { id: "c1", started: false, scene, combatants: [],
+    // Not linked to a scene (V12+ default for a new encounter): the viewed scene.
+    const combat = { id: "c1", started: false, scene: null, combatants: [],
       getFlag: (ns, k) => flags[ns]?.[k], async setFlag(ns, k, v) { (flags[ns] ??= {})[k] = JSON.parse(JSON.stringify(v)); Hooks.callAll("updateCombat", combat, {}); },
       async unsetFlag(ns, k) { delete flags[ns]?.[k]; } };
     game.combats = [combat];

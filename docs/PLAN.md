@@ -2968,6 +2968,22 @@ stop: no new element, it just grows. Each new message's size is watched
 (ResizeObserver, 60 s); growing while at the bottom scrolls down; also on
 Dice So Nice's `diceSoNiceRollComplete` hook. Test 77 covers it.
 
+**Default card style (v0.88.2; owner on docs/mockups/reaction-cards*.html:
+"A is the best but still isn't great. Remember, condensed. But yes, show
+the 'blocks x takes y'" → A3):** `systems/pf2e/card.js` (`pf2eCard`,
+`compactCard`, `answered`) draws every reaction / prompt card (Shield Block,
+Reactive Strike, Guardian's Deflection, Combat Assessment, Roaring Heart,
+Commander): a coloured left edge by kind (reaction orange, action blue, free
+green; from the glyph or `kind`), a title line (20 px picture, name, glyph
+badge, who, `aside` on the right), the facts in one short line, a row of
+small full-width buttons (the first filled = the main choice; with three,
+it is a bit wider). Answered: one slim line with `result` on the right
+("Blocked 5 · took 6", "Struck", "Deflected", "Rolled"). Shield Block shows
+"N physical (source) · blocks X → takes Y" (secret damage: "blocks up to
+X"), the shield's HP on the right. Same class names as before (tests and
+PF2e's chat-card handling keep working); the styles are scoped under
+`.chat-message .lucd20-pf2e-card`. Tests 41, 42, 66 updated.
+
 ---
 
 ## 23. Adventure conversion tools (owner, 2026-11-19, drafting)

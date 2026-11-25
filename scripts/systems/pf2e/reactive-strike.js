@@ -160,7 +160,7 @@ export async function postCard(reactor, trigger, kind, detail = "") {
 	const item = itemBySlug(reactor.actor, [...SLUGS], NAMES);
 	// v0.47.1 (owner): PF2e's card style, buttons side by side, a click on the card opens the entry.
 	const content = pf2eCard({
-		img: item?.img, title: item?.name ?? L("Name"), who: reactor.name, open: sourceUuid(item), extraClass: "lucd20-rs-card",
+		img: item?.img, title: item?.name ?? L("Name"), glyph: "R", who: reactor.name, open: sourceUuid(item), extraClass: "lucd20-rs-card",
 		body: `<p>${reason}</p>`,
 		buttons: [...strikes.map((s) => ({ data: "lucd20-rs", value: s.index, icon: "fa-hand-fist", label: s.label })), { data: "lucd20-rs", value: "skip", icon: "fa-xmark", label: L("Skip") }]
 	});
@@ -341,7 +341,7 @@ defineFeature({
 			const reactor = fromUuidSync(data.reactor);
 			const reveal = reactor && !reactor.hidden;
 			await message.update({
-				content: compactCard({ img: data.img, title: data.title, who: reveal ? nameForPlayers(reactor, L("ACreature")) : reactor?.name, open: data.open, extraClass: "lucd20-rs-card" }),
+				content: compactCard({ img: data.img, title: data.title, glyph: "R", who: reveal ? nameForPlayers(reactor, L("ACreature")) : reactor?.name, open: data.open, extraClass: "lucd20-rs-card", result: L("Struck") }),
 				...(reveal ? { whisper: [], speaker: { ...(message.speaker ?? {}), alias: nameForPlayers(reactor, L("ACreature")) } } : {})
 			});
 			return true;

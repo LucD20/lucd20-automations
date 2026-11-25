@@ -159,7 +159,7 @@ async function claim({ card }) {
 	const data = m?.getFlag(MODULE_ID, "combatAssessment");
 	if (!data || data.done) return false;
 	await m.update({
-		content: compactCard({ img: data.img, title: data.title, glyph: "1", open: data.open, extraClass: "lucd20-ca-card" }),
+		content: compactCard({ img: data.img, title: data.title, glyph: "1", open: data.open, extraClass: "lucd20-ca-card", result: L("Rolled") }),
 		[`flags.${MODULE_ID}.combatAssessment.done`]: true
 	});
 	return true;

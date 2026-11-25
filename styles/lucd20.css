@@ -3117,3 +3117,33 @@ html.lucd20-chat-trim-active .chat-log > .chat-message { content-visibility: aut
 .lucd20-so-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; text-decoration: underline dotted; }
 .lucd20-so-text small { font-size: 0.8em; font-style: italic; opacity: 0.75; }
 .lucd20-so-opt.is-blocked .lucd20-so-name { opacity: 0.7; }
+
+/* Condensed cards (v0.88.2; owner picked A3 of docs/mockups/reaction-cards-condensed.html): a coloured edge by kind,
+   a title line, the facts in one short line, small full-width buttons (the first filled). Scoped high enough to
+   win over PF2e's own .chat-card styles. */
+.chat-message .lucd20-pf2e-card.chat-card { --lcc-k: #2a5bb5; position: relative; margin: 0; padding: 4px 6px 5px 10px; border: 1px solid #d9ccb2; border-radius: 4px; background: #faf6ee; color: #191813; font-size: 13px; }
+.chat-message .lucd20-pf2e-card.is-reaction { --lcc-k: #c26a00; }
+.chat-message .lucd20-pf2e-card.is-free { --lcc-k: #2e7d32; }
+.chat-message .lucd20-pf2e-card.chat-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 4px 0 0 4px; background: var(--lcc-k); }
+.chat-message .lucd20-pf2e-card .card-header { display: flex; align-items: center; gap: 5px; margin: 0; padding: 0; border: 0; background: none; }
+.chat-message .lucd20-pf2e-card .card-header img { flex: none; width: 20px; height: 20px; margin: 0; border: 0; border-radius: 3px; }
+.chat-message .lucd20-pf2e-card .card-header h3 { display: flex; align-items: center; gap: 5px; flex: 1; min-width: 0; margin: 0; padding: 0; border: 0; font-family: inherit; font-size: 13.5px; font-weight: 700; line-height: 20px; color: inherit; text-shadow: none; }
+.chat-message .lucd20-pf2e-card .lucd20-card-title { white-space: nowrap; }
+.chat-message .lucd20-pf2e-card .lucd20-card-glyph { display: inline-grid; place-items: center; flex: none; min-width: 16px; height: 16px; padding: 0 2px; border-radius: 3px; background: var(--lcc-k); color: #fff; }
+.chat-message .lucd20-pf2e-card .lucd20-card-glyph .action-glyph { font-size: 11px; line-height: 1; color: #fff; }
+.chat-message .lucd20-pf2e-card .card-header h3 .lucd20-card-whom { min-width: 0; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11.5px; font-weight: 400; color: #6b6152; opacity: 1; }
+.chat-message .lucd20-pf2e-card .lucd20-card-aside { margin-left: auto; flex: none; font-size: 11.5px; font-weight: 400; color: #6b6152; white-space: nowrap; }
+.chat-message .lucd20-pf2e-card .card-content { margin: 2px 0 0; padding: 0; font-size: 12.5px; line-height: 1.3; }
+.chat-message .lucd20-pf2e-card .card-content p { margin: 0; }
+.chat-message .lucd20-pf2e-card .card-content p + p { margin-top: 2px; }
+.chat-message .lucd20-pf2e-card .card-buttons.lucd20-card-buttons { gap: 4px; margin: 4px 0 0; padding: 0; }
+.chat-message .lucd20-pf2e-card .card-buttons.lucd20-card-buttons button { height: 22px; line-height: 20px; padding: 0 6px; border: 1px solid #b9ad94; border-radius: 3px; background: transparent; color: #4f473b; font-size: 12px; font-weight: 600; box-shadow: none; }
+.chat-message .lucd20-pf2e-card .card-buttons.lucd20-card-buttons button:hover { background: rgba(0, 0, 0, 0.06); }
+.chat-message .lucd20-pf2e-card .card-buttons.lucd20-card-buttons button.lucd20-card-primary { border-color: var(--lcc-k); background: var(--lcc-k); color: #fff; }
+.chat-message .lucd20-pf2e-card .card-buttons.lucd20-card-buttons button.lucd20-card-primary:hover { filter: brightness(1.1); }
+.chat-message .lucd20-pf2e-card.has-many .card-buttons.lucd20-card-buttons button.lucd20-card-primary { flex: 1.3 1 0; }
+.chat-message .lucd20-pf2e-card .card-buttons.lucd20-card-buttons button:disabled { opacity: 0.5; }
+.chat-message .lucd20-pf2e-card .lucd20-card-result { margin-left: auto; flex: none; font-size: 11.5px; font-weight: 700; color: var(--lcc-k); white-space: nowrap; }
+.chat-message .lucd20-pf2e-card .lucd20-card-result.is-muted { color: #8a8070; }
+.chat-message .lucd20-pf2e-card.lucd20-card-compact { padding-top: 3px; padding-bottom: 3px; }
+.chat-message .lucd20-pf2e-card .lucd20-card-done { margin: 2px 0 0; font-size: 12px; font-style: normal; color: #4f473b; opacity: 1; }

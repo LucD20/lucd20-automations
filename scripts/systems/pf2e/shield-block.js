@@ -65,15 +65,21 @@ export async function onDamage(message) {
 		const actor = doc.actor, shield = actor.attributes?.shield ?? actor.system?.attributes?.shield;
 		const gms = game.users.filter((u) => u.isGM).map((u) => u.id);
 		const owners = actor.hasPlayerOwner ? game.users.filter((u) => !u.isGM && u.active && actor.testUserPermission?.(u, "OWNER")).map((u) => u.id) : [];
-		const line = (withAmount) => L(withAmount ? "Incoming" : "IncomingSecret", { amount: roll.total, source: esc(message.item?.name ?? "") });
+		// v0.88.2 (owner: "show the 'blocks x takes y'"): the hardness blocks up to its value; the rest is taken.
+		const hardness = Number(shield.hardness) || 0, amount = Number(roll.total) || 0;
+		const blocks = Math.min(hardness, amount), takes = Math.max(0, amount - hardness);
+		const line = (withAmount) => withAmount
+			? L("BlocksTakes", { amount, blocks, takes, source: esc(message.item?.name ?? "") })
+			: L("BlocksUpTo", { blocks: hardness });
 		const item = itemBySlug(actor, ["shield-block"], /^shield block$/i);
-		// v0.47.1 (owner): PF2e's card style, buttons side by side, a click on the card opens the entry.
+		// v0.47.1 (owner): a click on the card opens the entry. v0.88.2: the condensed card (card.js).
 		const body = (withAmount) => pf2eCard({
-			img: item?.img, title: item?.name ?? L("Title"), who: doc.name, open: sourceUuid(item), extraClass: "lucd20-sb-card",
-			body: `<p>${line(withAmount)} ${L("Shield", { hardness: shield.hardness, hp: shield.hp?.value ?? 0, max: shield.hp?.max ?? 0 })}</p>`,
+			img: item?.img, title: item?.name ?? L("Title"), glyph: "R", who: doc.name, open: sourceUuid(item), extraClass: "lucd20-sb-card",
+			aside: esc(L("ShieldHP", { hp: shield.hp?.value ?? 0, max: shield.hp?.max ?? 0 })),
+			body: `<p>${line(withAmount)}</p>`,
 			buttons: [{ data: "lucd20-sb", value: "block", icon: "fa-shield", label: L("Block") }, { data: "lucd20-sb", value: "skip", icon: "fa-xmark", label: L("Skip") }]
 		});
-		const flags = { [MODULE_ID]: { shieldBlock: { message: message.id, token: doc.uuid, img: item?.img ?? null, title: item?.name ?? L("Title"), open: sourceUuid(item) } } };
+		const flags = { [MODULE_ID]: { shieldBlock: { message: message.id, token: doc.uuid, img: item?.img ?? null, title: item?.name ?? L("Title"), open: sourceUuid(item), blocks, takes, secret } } };
 		// Q172: the amount is shown, except to a player when the damage roll was secret.
 		if (secret && owners.length) {
 			await ChatMessage.create({ content: body(false), speaker: { alias: doc.name }, whisper: owners, flags });
@@ -117,7 +123,9 @@ async function claim({ card, damage, token, block }, senderId) {
 		if (i > 0) { await m.delete(); continue; }
 		const reveal = doc && !doc.hidden;
 		await m.update({
-			content: compactCard({ img: data.img, title: data.title, who: reveal ? nameForPlayers(doc, doc?.name ?? "") : doc?.name, open: data.open, extraClass: "lucd20-sb-card" }),
+			content: compactCard({ img: data.img, title: data.title, glyph: "R", who: reveal ? nameForPlayers(doc, doc?.name ?? "") : doc?.name, open: data.open, extraClass: "lucd20-sb-card",
+				// A secret damage roll: no numbers for everyone.
+				result: data.secret ? L("BlockedShort") : L("BlockedTook", { blocks: data.blocks ?? 0, takes: data.takes ?? 0 }) }),
 			...(reveal ? { whisper: [], speaker: { ...(m.speaker ?? {}), alias: nameForPlayers(doc, doc?.name ?? "") } } : {})
 		});
 	}

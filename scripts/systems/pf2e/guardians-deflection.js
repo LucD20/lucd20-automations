@@ -152,7 +152,7 @@ async function answer({ card, deflect }, senderId) {
 	if (!deflect) { await m.delete(); return true; }
 	const reveal = doc && !doc.hidden;
 	await m.update({
-		content: compactCard({ img: data.img, title: data.title, glyph: "R", who: reveal ? nameForPlayers(doc, doc?.name ?? "") : doc?.name, open: data.open, extraClass: "lucd20-gd-card" }),
+		content: compactCard({ img: data.img, title: data.title, glyph: "R", who: reveal ? nameForPlayers(doc, doc?.name ?? "") : doc?.name, open: data.open, extraClass: "lucd20-gd-card", result: L("Deflected") }),
 		[`flags.${MODULE_ID}.deflection.done`]: true,
 		...(reveal ? { whisper: [] } : {})
 	});

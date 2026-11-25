@@ -193,14 +193,14 @@ const assert = require("assert");
   assert.deepStrictEqual(r.card.slice(0, 2), [1, ["p1", "u1"]], "a card to Kyra's player and the GM");
   assert.strictEqual(r.card[2], "Guardian's Deflection R Kyra Ogre's Club hits Amiri: +2 AC makes the hit a miss. Deflect Skip");
   assert.strictEqual(r.skip, 0, "Skip: the card goes");
-  assert.deepStrictEqual(r.deflect, [true, "Guardian's Deflection R Kyra", [], "Amiri : Guardian's Deflection, Ogre's Club is a hit.", [], [["Effect: Panache", "turn-end", 1]]],
+  assert.deepStrictEqual(r.deflect, [true, "Guardian's Deflection R Kyra Deflected", [], "Amiri : Guardian's Deflection, Ogre's Club is a hit.", [], [["Effect: Panache", "turn-end", 1]]],
     "Deflect: compact card for everyone, the new result in chat, panache until the end of the next turn");
   assert.strictEqual(r.none, 0, "no card: nothing changes, a miss, out of reach, a shield held, a hidden attacker");
   assert.deepStrictEqual(r.monster, ["Scene.s.Token.guard", ["u1"]], "a monster's card: the GM only");
   assert.strictEqual(r.noAction, 0, "Combat Assessment: a Strike without the action does nothing");
   assert.deepStrictEqual(r.caCard, [1, "Combat Assessment 1 Brannoc Recall Knowledge about Ogre: (+2, critical hit) Nature Arcana", ["p1", "u1"], true, 1000 + 86400], "the card: a button per identifying skill; the target immune for a day");
   assert.deepStrictEqual(r.caRoll, [["arcana", 18, "blindroll", [[2, "circumstance"]], true]], "a secret Recall Knowledge against the identification DC, +2 circumstance on the crit");
-  assert.deepStrictEqual(r.caDone, [true, "Combat Assessment 1"], "answered: only the feat's name");
+  assert.deepStrictEqual(r.caDone, [true, "Combat Assessment 1 Rolled"], "answered: only the feat's name");
   assert.ok(/^Combat Assessment 1 Brannoc Ogre is immune to Combat Assessment \(24 h left\)\.$/.test(r.caImmune), `immune: said, no buttons (${r.caImmune})`);
   assert.deepStrictEqual(r.caMiss, [2, true], "a miss: no card, the immunity starts");
   assert.deepStrictEqual(r.auto, [0, 1, ["u1"], true, true, [

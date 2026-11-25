@@ -17,20 +17,25 @@ export function itemBySlug(actor, slugs, name) {
 }
 
 /**
- * The card's HTML. glyph: PF2e's action font letter ("R" = reaction, "1"–"3", "F" = free).
- * body: HTML paragraphs. buttons: [{ data, value, icon, label }].
+ * The card's HTML (v0.88.2: the owner's condensed style, mockup A3 of docs/mockups/reaction-cards-condensed.html).
+ * A coloured edge by kind (reaction orange, action blue, free green); a title line (picture, name, glyph, who,
+ * `aside` on the right, e.g. a shield's HP); the facts in one short line; a row of small full-width buttons,
+ * the first one the main choice (filled). glyph: PF2e's action font letter ("R" = reaction, "1"–"3", "F" = free).
+ * body: HTML (short). buttons: [{ data, value, icon, label }]. kind: "reaction" | "action" | "free" (default
+ * from the glyph).
  */
-const headerOf = (img, title, glyph, who) => `<header class="card-header flexrow">${img ? `<img src="${esc(img)}" alt="" />` : ""}<h3>${esc(title)}${glyph ? ` <span class="action-glyph">${esc(glyph)}</span>` : ""}${who ? ` <span class="lucd20-card-whom">${esc(who)}</span>` : ""}</h3></header>`;
+const kindOf = (glyph, kind) => kind ?? (glyph === "R" ? "reaction" : glyph === "F" ? "free" : "action");
+const headerOf = (img, title, glyph, who, aside = "") => `<header class="card-header flexrow">${img ? `<img src="${esc(img)}" alt="" />` : ""}<h3><span class="lucd20-card-title">${esc(title)}</span>${glyph ? `<span class="lucd20-card-glyph"><span class="action-glyph">${esc(glyph)}</span></span>` : ""}${who ? `<span class="lucd20-card-whom">${esc(who)}</span>` : ""}${aside ? `<span class="lucd20-card-aside">${aside}</span>` : ""}</h3></header>`;
 
 /**
  * who: the creature's name, small, in the header (v0.50.1: the chat message's own header is hidden on these
  * cards, for the least vertical room).
  */
-export function pf2eCard({ img, title, glyph = "", who = "", open = null, body = "", buttons = [], extraClass = "" }) {
-	return `<div class="pf2e chat-card action-card lucd20-pf2e-card ${extraClass}"${open ? ` data-lucd20-open="${esc(open)}"` : ""}>
-	${headerOf(img, title, glyph, who)}
+export function pf2eCard({ img, title, glyph = "", who = "", aside = "", open = null, body = "", buttons = [], extraClass = "", kind = null }) {
+	return `<div class="pf2e chat-card action-card lucd20-pf2e-card is-${kindOf(glyph, kind)} ${buttons.length > 2 ? "has-many" : ""} ${extraClass}"${open ? ` data-lucd20-open="${esc(open)}"` : ""}>
+	${headerOf(img, title, glyph, who, aside)}
 	<div class="card-content">${body}</div>
-	<div class="card-buttons lucd20-card-buttons">${buttons.map((b) => `<button type="button" data-${b.data}="${esc(b.value)}">${b.icon ? `<i class="fa-solid ${b.icon}"></i> ` : ""}${esc(b.label)}</button>`).join("")}</div>
+	<div class="card-buttons lucd20-card-buttons">${buttons.map((b, i) => `<button type="button" class="${i === 0 ? "lucd20-card-primary" : ""}" data-${b.data}="${esc(b.value)}">${b.icon ? `<i class="fa-solid ${b.icon}"></i> ` : ""}${esc(b.label)}</button>`).join("")}</div>
 </div>`;
 }
 
@@ -52,12 +57,13 @@ export function wireOpen(html) {
 }
 
 /**
- * An answered reaction, as everyone may see it (owner, v0.47.2): only the reaction's image, name and
- * symbol, no text, so it takes little room in the chat.
+ * An answered reaction, as everyone may see it (owner, v0.47.2): one slim line, the picture, name and symbol,
+ * and (v0.88.2) what happened on the right: `result` ("Blocked 5 · took 6", "Struck", "Skipped"); `muted` greys it.
  */
-export function compactCard({ img, title, glyph = "", who = "", open = null, extraClass = "" }) {
-	return `<div class="pf2e chat-card action-card lucd20-pf2e-card lucd20-card-compact ${extraClass}"${open ? ` data-lucd20-open="${esc(open)}"` : ""}>
-	${headerOf(img, title, glyph, who)}
+export function compactCard({ img, title, glyph = "", who = "", open = null, extraClass = "", kind = null, result = "", muted = false }) {
+	const res = result ? `<span class="lucd20-card-result${muted ? " is-muted" : ""}">${esc(result)}</span>` : "";
+	return `<div class="pf2e chat-card action-card lucd20-pf2e-card lucd20-card-compact is-${kindOf(glyph, kind)} ${extraClass}"${open ? ` data-lucd20-open="${esc(open)}"` : ""}>
+	${headerOf(img, title, glyph, who, res)}
 </div>`;
 }
 

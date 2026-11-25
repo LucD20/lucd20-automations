@@ -1994,6 +1994,7 @@
         "NotYet": "No reaction before its first turn (click to give it)"
       },
       "Reactive": {
+        "Struck": "Struck",
         "Title": "Reactive Strike: {name}",
         "Reason": {
           "move": "{name} left your reach (not if a Step).",
@@ -2015,6 +2016,11 @@
         "Incoming": "{amount} physical ({source}).",
         "IncomingSecret": "Physical damage.",
         "Shield": "Hardness {hardness}, HP {hp}/{max}.",
+        "BlocksTakes": "{amount} physical ({source}) · blocks <b>{blocks}</b> → takes <b>{takes}</b>",
+        "BlocksUpTo": "Physical damage · blocks up to <b>{blocks}</b>",
+        "ShieldHP": "HP {hp}/{max}",
+        "BlockedTook": "Blocked {blocks} · took {takes}",
+        "BlockedShort": "Blocked",
         "Block": "Block",
         "Skip": "Skip",
         "Blocked": "Blocked: the damage was applied with Shield Block.",
@@ -2067,6 +2073,7 @@
         "Buckler": "{name} raises a buckler with both hands busy (it needs a free hand or one holding a light item)."
       },
       "CombatAssessment": {
+        "Rolled": "Rolled",
         "ImmuneShort": "Target immune ({left})",
         "Title": "Combat Assessment",
         "Recall": "Recall Knowledge about {name}:",
@@ -2108,6 +2115,7 @@
         "criticalFailure": "Crit fail"
       },
       "Deflection": {
+        "Deflected": "Deflected",
         "Title": "Guardian's Deflection",
         "Line": "{attacker}'s {item} hits {ally}: +2 AC makes the {from} a {to}.",
         "Result": "{ally}: Guardian's Deflection, {attacker}'s {item} is a {to}.",

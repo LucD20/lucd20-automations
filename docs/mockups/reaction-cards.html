@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Reaction / prompt cards: mockups</title>
+<link rel="stylesheet" href="../../tools/harness/node_modules/@fortawesome/fontawesome-free/css/all.min.css">
+<style>
+  body { margin: 0; padding: 18px; background: #3a3a3f; font-family: Signika, "Segoe UI", sans-serif; display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
+  .col { width: 300px; display: flex; flex-direction: column; gap: 8px; }
+  .col > h2 { margin: 0 0 2px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: #f3b469; }
+  .col > p.why { margin: 4px 2px 0; font-size: 12px; color: #cfc6b8; line-height: 1.35; }
+  .lbl { font-size: 10.5px; color: #9d9586; letter-spacing: .06em; text-transform: uppercase; margin: 4px 0 -4px 2px; }
+  /* The chat message around a card (PF2e). */
+  .msg { padding: 5px; border: 1px solid #b9a98f; border-radius: 4px; background: #efe7d6; box-shadow: 0 2px 6px rgba(0,0,0,.4); color: #191813; font-size: 13px; }
+  .art { width: 28px; height: 28px; border-radius: 4px; flex: none; display: grid; place-items: center; color: #fff; font-size: 14px; }
+  .shield { background: radial-gradient(circle at 40% 35%, #c9a66b, #6b4a22); } .rs { background: #2b2b2b; } .rh { background: #8a2a12; }
+  .glyph { display: inline-grid; place-items: center; min-width: 16px; height: 16px; padding: 0 3px; border-radius: 3px; font-size: 10px; font-weight: 700; vertical-align: 1px; }
+  b.n { font-weight: 700; }
+
+  /* ---------- A: a coloured edge, primary / secondary buttons ---------- */
+  .a { position: relative; padding: 7px 8px 8px 12px; border-radius: 5px; background: #faf6ee; border: 1px solid #d9ccb2; }
+  .a::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; border-radius: 5px 0 0 5px; background: var(--k); }
+  .a.reaction { --k: #c26a00; } .a.action { --k: #2a5bb5; }
+  .a .top { display: flex; align-items: center; gap: 7px; }
+  .a .top .t { font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .a .top .glyph { background: var(--k); color: #fff; }
+  .a .top .w { margin-left: auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11.5px; color: #6b6152; }
+  .a .tx { margin: 5px 0 0; line-height: 1.35; }
+  .a .facts { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 5px; }
+  .a .facts span { padding: 1px 6px; border-radius: 9px; background: #ece3d0; font-size: 11.5px; }
+  .a .btns { display: flex; gap: 6px; margin-top: 7px; }
+  .a .btns span { flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px; height: 28px; border-radius: 4px; font-size: 13px; font-weight: 600; }
+  .a .btns .p { background: var(--k); color: #fff; }
+  .a .btns .s { border: 1px solid #b9ad94; color: #4f473b; }
+  .a.done { padding: 5px 8px 5px 12px; }
+  .a.done .top .t { font-size: 13px; }
+  .a.done .res { margin-left: auto; font-size: 11.5px; font-weight: 700; color: var(--k); }
+
+  /* ---------- B: PF2e's own card, tidied ---------- */
+  .b { border: 1px solid #b7a789; border-radius: 4px; overflow: hidden; background: #f3ede0; }
+  .b .hd { display: flex; align-items: center; gap: 7px; padding: 4px 6px; background: linear-gradient(#5b4a35, #3f3224); color: #f3e6cf; }
+  .b .hd .t { font-weight: 700; font-size: 14px; }
+  .b .hd .glyph { background: #f3e6cf; color: #3f3224; }
+  .b .hd .w { margin-left: auto; font-size: 11px; opacity: .8; }
+  .b .bd { padding: 6px 8px 2px; line-height: 1.35; }
+  .b .bd small { display: block; margin-top: 2px; color: #6b6152; }
+  .b .bt { display: flex; justify-content: flex-end; gap: 5px; padding: 6px 8px 7px; }
+  .b .bt span { display: inline-flex; align-items: center; gap: 5px; padding: 3px 12px; border-radius: 12px; font-size: 12.5px; font-weight: 600; }
+  .b .bt .p { background: #3f3224; color: #f3e6cf; }
+  .b .bt .s { border: 1px solid #a99a80; color: #4f473b; }
+  .b.done .hd { background: linear-gradient(#7a6a55, #5f513f); }
+  .b.done .hd .res { margin-left: auto; padding: 0 7px; border-radius: 9px; background: rgba(255,255,255,.18); font-size: 11px; font-weight: 700; }
+
+  /* ---------- C: dark card (the module's windows) ---------- */
+  .c { border-radius: 6px; overflow: hidden; background: #1b1a21; color: #efe6d8; border: 1px solid #3b3945; }
+  .c .hd { display: flex; align-items: center; gap: 7px; padding: 6px 8px; }
+  .c .hd .t { font-weight: 700; font-size: 14px; }
+  .c .hd .glyph { background: #ee9b3a; color: #1b1a21; }
+  .c .hd .w { margin-left: auto; font-size: 11px; color: #b5ab9d; }
+  .c .bd { padding: 0 8px 6px 43px; color: #d8cfc1; line-height: 1.35; font-size: 12.5px; }
+  .c .bd b.n { color: #f3b469; }
+  .c .bt { display: flex; gap: 6px; padding: 6px 8px 8px; border-top: 1px solid #3b3945; background: #121117; }
+  .c .bt span { flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px; height: 28px; border-radius: 4px; font-size: 13px; font-weight: 600; }
+  .c .bt .p { background: #b34a32; color: #fff; border: 1px solid #e07a5f; }
+  .c .bt .s { background: #26252e; border: 1px solid #5c596a; }
+  .c .prog { display: flex; gap: 4px; margin-top: 5px; }
+  .c .prog i { flex: 1; height: 5px; border-radius: 3px; background: #3b3945; font-style: normal; }
+  .c .prog i.on { background: #ee9b3a; }
+  .c.done .hd { padding: 4px 8px; }
+  .c.done .hd .res { margin-left: auto; font-size: 11px; font-weight: 700; color: #7fd18b; }
+  .c.done .hd .res.sk { color: #9d9586; }
+</style>
+</head>
+<body>
+
+<div class="col"><h2>A · Coloured edge</h2>
+  <div class="lbl">Shield Block (asked)</div>
+  <div class="msg"><div class="a reaction"><div class="top"><span class="art shield"></span><span class="t">Shield Block</span><span class="glyph">R</span><span class="w">Madzoog</span></div>
+    <p class="tx">You take <b class="n">11 physical</b> from Pick.</p>
+    <div class="facts"><span>Hardness 5</span><span>Shield HP 20/20</span><span>Blocks 5 → you take 6</span></div>
+    <div class="btns"><span class="p"><i class="fa-solid fa-shield"></i> Block</span><span class="s"><i class="fa-solid fa-xmark"></i> Skip</span></div></div></div>
+  <div class="lbl">Reactive Strike (asked)</div>
+  <div class="msg"><div class="a reaction"><div class="top"><span class="art rs"><i class="fa-solid fa-reply"></i></span><span class="t">Reactive Strike</span><span class="glyph">R</span><span class="w">Blisterwell Warrior</span></div>
+    <p class="tx"><b class="n">Madzoog</b> left your reach (a Step doesn't trigger it).</p>
+    <div class="btns"><span class="p"><i class="fa-solid fa-hand-fist"></i> Strike</span><span class="s"><i class="fa-solid fa-xmark"></i> Skip</span></div></div></div>
+  <div class="lbl">Answered (what everyone sees)</div>
+  <div class="msg"><div class="a reaction done"><div class="top"><span class="art shield"></span><span class="t">Shield Block</span><span class="glyph">R</span><span class="w">Madzoog</span><span class="res">Blocked 5</span></div></div></div>
+  <div class="msg"><div class="a reaction done"><div class="top"><span class="art rs"><i class="fa-solid fa-reply"></i></span><span class="t">Reactive Strike</span><span class="glyph">R</span><span class="res">Used</span></div></div></div>
+  <div class="lbl">Roaring Heart (in progress)</div>
+  <div class="msg"><div class="a action"><div class="top"><span class="art rh"><i class="fa-solid fa-exclamation"></i></span><span class="t">Roaring Heart</span><span class="w">Uri</span></div>
+    <div class="facts"><span>Shoves 1 / 2</span><span>Enemies shoved 0</span></div>
+    <div class="btns"><span class="p"><i class="fa-solid fa-hand"></i> Shove</span><span class="s"><i class="fa-solid fa-check"></i> Done</span><span class="s"><i class="fa-solid fa-xmark"></i> Cancel</span></div></div></div>
+  <p class="why">Light, in the chat's colours. The edge says what it is (orange: reaction, blue: action). The main choice is filled; the rest outlined. The numbers become small tags.</p>
+</div>
+
+<div class="col"><h2>B · PF2e's card, tidied</h2>
+  <div class="lbl">Shield Block (asked)</div>
+  <div class="msg"><div class="b"><div class="hd"><span class="art shield"></span><span class="t">Shield Block</span><span class="glyph">R</span><span class="w">Madzoog</span></div>
+    <div class="bd">You take <b class="n">11 physical</b> from Pick.<small>Hardness 5 · Shield HP 20/20 · you'd take 6</small></div>
+    <div class="bt"><span class="s"><i class="fa-solid fa-xmark"></i> Skip</span><span class="p"><i class="fa-solid fa-shield"></i> Block</span></div></div></div>
+  <div class="lbl">Reactive Strike (asked)</div>
+  <div class="msg"><div class="b"><div class="hd"><span class="art rs"><i class="fa-solid fa-reply"></i></span><span class="t">Reactive Strike</span><span class="glyph">R</span><span class="w">Blisterwell Warrior</span></div>
+    <div class="bd"><b class="n">Madzoog</b> left your reach (a Step doesn't trigger it).</div>
+    <div class="bt"><span class="s"><i class="fa-solid fa-xmark"></i> Skip</span><span class="p"><i class="fa-solid fa-hand-fist"></i> Strike</span></div></div></div>
+  <div class="lbl">Answered (what everyone sees)</div>
+  <div class="msg"><div class="b done"><div class="hd"><span class="art shield"></span><span class="t">Shield Block</span><span class="glyph">R</span><span class="res">Blocked 5</span></div></div></div>
+  <div class="msg"><div class="b done"><div class="hd"><span class="art rs"><i class="fa-solid fa-reply"></i></span><span class="t">Reactive Strike</span><span class="glyph">R</span><span class="res">Used</span></div></div></div>
+  <div class="lbl">Roaring Heart (in progress)</div>
+  <div class="msg"><div class="b"><div class="hd"><span class="art rh"><i class="fa-solid fa-exclamation"></i></span><span class="t">Roaring Heart</span><span class="w">Uri</span></div>
+    <div class="bd">Shoves <b class="n">1 of 2</b> · enemies shoved <b class="n">0</b></div>
+    <div class="bt"><span class="s"><i class="fa-solid fa-xmark"></i> Cancel</span><span class="s"><i class="fa-solid fa-check"></i> Done</span><span class="p"><i class="fa-solid fa-hand"></i> Shove</span></div></div></div>
+  <p class="why">Closest to PF2e's own cards: a dark title band, small pill buttons on the right (main one last, filled). Compact when answered.</p>
+</div>
+
+<div class="col"><h2>C · Dark card</h2>
+  <div class="lbl">Shield Block (asked)</div>
+  <div class="msg"><div class="c"><div class="hd"><span class="art shield"></span><span class="t">Shield Block</span><span class="glyph">R</span><span class="w">Madzoog</span></div>
+    <div class="bd">You take <b class="n">11 physical</b> from Pick. Hardness 5, shield HP 20/20: you'd take 6.</div>
+    <div class="bt"><span class="p"><i class="fa-solid fa-shield"></i> Block</span><span class="s"><i class="fa-solid fa-xmark"></i> Skip</span></div></div></div>
+  <div class="lbl">Reactive Strike (asked)</div>
+  <div class="msg"><div class="c"><div class="hd"><span class="art rs"><i class="fa-solid fa-reply"></i></span><span class="t">Reactive Strike</span><span class="glyph">R</span><span class="w">Blisterwell Warrior</span></div>
+    <div class="bd"><b class="n">Madzoog</b> left your reach (a Step doesn't trigger it).</div>
+    <div class="bt"><span class="p"><i class="fa-solid fa-hand-fist"></i> Strike</span><span class="s"><i class="fa-solid fa-xmark"></i> Skip</span></div></div></div>
+  <div class="lbl">Answered (what everyone sees)</div>
+  <div class="msg"><div class="c done"><div class="hd"><span class="art shield"></span><span class="t">Shield Block</span><span class="glyph">R</span><span class="res">Blocked 5</span></div></div></div>
+  <div class="msg"><div class="c done"><div class="hd"><span class="art rs"><i class="fa-solid fa-reply"></i></span><span class="t">Reactive Strike</span><span class="glyph">R</span><span class="res sk">Skipped</span></div></div></div>
+  <div class="lbl">Roaring Heart (in progress)</div>
+  <div class="msg"><div class="c"><div class="hd"><span class="art rh"><i class="fa-solid fa-exclamation"></i></span><span class="t">Roaring Heart</span><span class="w">Uri</span></div>
+    <div class="bd">Shoves 1 of 2 · enemies shoved 0<div class="prog"><i class="on"></i><i></i></div></div>
+    <div class="bt"><span class="p"><i class="fa-solid fa-hand"></i> Shove</span><span class="s"><i class="fa-solid fa-check"></i> Done</span><span class="s"><i class="fa-solid fa-xmark"></i> Cancel</span></div></div></div>
+  <p class="why">Same look as the module's windows (Loot, Report, Sell): dark, the main button in the accent colour, a small progress bar for multi-step actions. Stands out most in the chat.</p>
+</div>
+
+</body>
+</html>

@@ -17,7 +17,7 @@ import { sysId } from "./sys.js";
  *   (`context.options`) and outcome are passed on, so a signature can match a Strike, not only a spell's slug.
  *   A finisher's damage roll carries the `finisher` option (Precise Strike's toggle) (verify), and the finisher
  *   used, when PF2e says so, as `finisher:<slug>` or the action's `item:slug:<slug>` (verify).
- * - v0.87.0 (Such a Disgrace!, PLAN §28): an item's card posted to chat (no `context`, or a self-effect's) is
+ * - v0.90.0 (Such a Disgrace!, PLAN §28): an item's card posted to chat (no `context`, or a self-effect's) is
  *   read as `roll: "card"`. For Such a Disgrace! it also says who it could be for (`candidates`): the allies
  *   within 30 feet whose latest Will save, in the last minutes of chat, failed. (verify) a save's message:
  *   `context.type === "saving-throw"`, Will by `context.domains` / the option `check:statistic:will`,

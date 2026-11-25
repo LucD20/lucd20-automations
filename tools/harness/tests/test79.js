@@ -4,7 +4,7 @@ const out = __dirname;
 const MOD = "/modules/lucd20-automations/scripts";
 const ID = "lucd20-automations";
 
-/** v0.87.0: Signature Spells — Such a Disgrace! (who it is for, the player's pick, what everyone else gets). */
+/** v0.90.0: Signature Spells — Such a Disgrace! (who it is for, the player's pick, what everyone else gets). */
 
 async function setup(page) {
   await page.evaluate(async (MOD) => {
@@ -195,7 +195,7 @@ async function setup(page) {
   /* ---- what the others get, and the animation ---- */
   const others = await page.evaluate(async (ID) => {
     const res = {}, t = __sig._test, last = () => t.lastRun;
-    const tell = async payload => { const before = last(); t.onUse(payload); await __sleep(60); const ran = last() !== before && __log().some(e => e.name === "disgrace"); for (const r of [...t.runs]) r.dead = true; __fx.clearEffects(); await __settle(); return ran; };
+    const tell = async payload => { const before = last(); t.onUse(payload); t.onUse(payload); await __sleep(60); const ran = last() !== before && __log().some(e => e.name === "disgrace"); for (const r of [...t.runs]) r.dead = true; __fx.clearEffects(); await __settle(); return ran; };
     res.told = await tell({ spell: "suchADisgrace", scene: "s1", caster: "dandy", targets: ["valeros"] });
     res.notForMe = await tell({ spell: "suchADisgrace", scene: "s1", caster: "dandy", targets: ["valeros"], to: ["gm"] });
     res.otherScene = await tell({ spell: "suchADisgrace", scene: "s2", caster: "dandy", targets: ["valeros"] });
@@ -215,15 +215,33 @@ async function setup(page) {
   assert.deepStrictEqual(others.offUse, { played: null, sent: [] }, "switched off by the GM: nothing");
   assert.deepStrictEqual([others.hiddenForMe.played, others.hiddenForMe.sent.length], [null, 1], "off for me only: sent, not played here");
 
+  /* ---- started by other code (a rules automation that knows who failed the save) ---- */
+  const api = await page.evaluate(async () => {
+    const res = {}, t = __sig._test;
+    const call = async (...args) => { __emits.length = 0; const before = t.lastRun; const ok = __sig.useSignature(...args); await __sleep(60);
+      const again = __sig.useSignature(...args), runs = t.runs.size;
+      const out = { ok, again, runs, played: t.lastRun !== before ? __log().find(e => e.name === "disgrace")?.ally ?? null : null, sent: __emits.filter(e => e.type === "signatureUse").map(e => e.payload) };
+      for (const r of [...t.runs]) r.dead = true; __fx.clearEffects(); await __settle(); return out; };
+    res.docs = await call("suchADisgrace", { caster: __tok("dandy").document, targets: ["Scene.s1.Token.valeros"] });
+    res.whisper = await call("suchADisgrace", { caster: "dandy", targets: ["valeros"], to: ["gm"] });
+    res.nobody = await call("suchADisgrace", { caster: "dandy", targets: ["nope"] });
+    res.unknown = await call("nope", { targets: ["valeros"] });
+    return res;
+  });
+  assert.deepStrictEqual([api.docs.ok, api.docs.played, api.docs.sent], [true, "valeros", [{ spell: "suchADisgrace", scene: "s1", caster: "dandy", targets: ["valeros"] }]], "useSignature: by document or uuid, played here and sent");
+  assert.deepStrictEqual([api.docs.again, api.docs.runs, api.docs.sent.length], [false, 1, 1], "the same one twice while it plays: once");
+  assert.deepStrictEqual([api.whisper.ok, api.whisper.played, api.whisper.sent[0].to], [true, null, ["gm"]], "only for some users: not played for the others");
+  assert.deepStrictEqual([api.nobody.ok, api.unknown.ok, api.nobody.sent.length], [false, false, 0], "no token, or no such signature: nothing");
+
   // The whole thing once, with pictures.
   await page.evaluate(() => { __clear(); __save("valeros"); Hooks.callAll("createChatMessage", __card(), {}, "u1"); });
   const sinceStart = ms => page.waitForFunction(ms => __sig._test.lastRun && performance.now() - __sig._test.lastRun.t0 > ms, ms);
   const pixel = (x, y) => page.evaluate(([x, y]) => { const el = document.getElementById("lucd20-signature-overlay"); return el ? [...el.getContext("2d").getImageData(x, y, 1, 1).data] : null; }, [x, y]);
   await sinceStart(1340);
-  await page.screenshot({ path: `${out}/p75-wag.png` });
+  await page.screenshot({ path: `${out}/p79-wag.png` });
   const mid = { corner: await pixel(20, 480), ally: await pixel(550, 250), overlay: await page.evaluate(() => getComputedStyle(document.getElementById("lucd20-signature-overlay")).pointerEvents) };
   await sinceStart(2420);
-  await page.screenshot({ path: `${out}/p75-shape-up.png` });
+  await page.screenshot({ path: `${out}/p79-shape-up.png` });
   const end = await page.evaluate(async () => { await __settle(); return { log: __log().map(e => [e.name, e.t]), idle: __idle() }; });
   assert.ok(mid.corner[3] > 150 && mid.corner[0] < 30, `the window is dark away from the ally (${mid.corner})`);
   assert.ok(mid.ally[3] < 120, `and lit on the ally (${mid.ally})`);
@@ -236,7 +254,7 @@ async function setup(page) {
   await page.evaluate(ID => game.settings.set(ID, "tokenReactions_lessMotion", true), ID);
   await page.evaluate(() => { __clear(); __save("valeros"); Hooks.callAll("createChatMessage", __card(), {}, "u1"); });
   await sinceStart(700);
-  await page.screenshot({ path: `${out}/p75-less.png` });
+  await page.screenshot({ path: `${out}/p79-less.png` });
   const lessMid = await pixel(20, 480);
   const less = await page.evaluate(async () => { const t0 = __sig._test.lastRun.t0; await __settle(); return { took: performance.now() - t0, less: __log().find(e => e.name === "disgrace")?.less, idle: __idle() }; });
   assert.ok(lessMid[3] === 0, `Less motion: the window is not darkened (${lessMid})`);
@@ -249,6 +267,6 @@ async function setup(page) {
   assert.ok(/<option value="suchADisgrace">Such a Disgrace!<\/option>/.test(panel), "in the GM's preview list");
 
   assert.deepStrictEqual(errors, [], "no page errors");
-  console.log("PHASE 75 CHECKS PASSED");
+  console.log("PHASE 79 CHECKS PASSED");
   await browser.close();
 })().catch(err => { console.error(err); process.exit(1); });

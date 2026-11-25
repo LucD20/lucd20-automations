@@ -3834,7 +3834,7 @@ has the Loot Pile look: select-all box (some/all), item rows with icons,
 how many (changing it picks the row), the price and price each, Total,
 Cancel and "Sell N". Test 70.
 
-## 28. Such a Disgrace! — a signature animation (owner, 2026-11-25; built v0.87.0)
+## 28. Such a Disgrace! — a signature animation (owner, 2026-11-25; built for v0.90.0)
 
 Owner: "I want Such a Disgrace Feat from the Dandy archetype to have a cool
 funny animation. Give me a few simple different mockups of the animation after
@@ -3851,9 +3851,11 @@ but I like it. The reaction already has to proc when someone fails a save, so
 you can likely get the target from it; if more than one, then a selection
 should appear for the player."
 
-**Built v0.87.0**: the third signature of Signature Spells (§20),
-`suchADisgrace`; `scripts/features/signature-spells/spells/such-a-disgrace.js`;
-test `test75.js`.
+**Built** (branch `claude/nifty-bohr-24hfbn`, no version of its own: it is
+released with the branch that has rule 28, v0.89.0 → 0.90.0): the third
+signature of Signature Spells (§20), `suchADisgrace`;
+`scripts/features/signature-spells/spells/such-a-disgrace.js`; test
+`test79.js`.
 
 - **The look** (variant C): the window dims (0.74) with a hole of light on the
   ally and a beam from above; the ally blushes and sweats; a gloved hand comes
@@ -3889,6 +3891,16 @@ test `test75.js`.
     the dandy's and the ally's token ids, never a hidden token's; for a
     whispered card, only its recipients play it). With "Show them to me" off
     for the one who used it, the others still get it.
+- **From the rule's own card** (rule 28, `systems/pf2e/such-a-disgrace.js`, on
+  the other branch: the GM's client offers React to the dandy's players when
+  an ally fails a mental Will save, so it knows who failed):
+  `useSignature("suchADisgrace", { caster, targets, to })`, exported by
+  `signature-spells.js`, plays it on that client and tells the others (tokens,
+  token documents, ids or uuids; `to`: user ids when not everyone may know).
+  To be called when React is answered:
+  `useSignature("suchADisgrace", { caster: doc, targets: [saver], to: reveal ? null : m.whisper })`.
+  The card-in-chat way above stays for a feat posted by hand. The same
+  signature on the same token is not started twice while it plays.
 - **Who sees what**: only users who see the ally's token; the bubble only when
   they also see the dandy's. An ally the user can't see is never offered.
 - **Less motion**: no dark, no hand; the bubble, the blush, a still ring and

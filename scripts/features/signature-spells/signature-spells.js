@@ -204,14 +204,33 @@ async function useChosen(sig, info, message) {
   } catch (err) {
     return error(`Signature Spells: ${sig.id} could not find its target.`, err);
   }
-  targets = [...new Set((targets ?? []).filter(Boolean))];
-  if (!targets.length || !feature?.active || !feature.get(sig.id)) return;
-  const caster = tokenById(info.caster);
-  // A whispered card: only for those it was whispered to. Nothing about a hidden token leaves this client.
-  const to = (message.whisper ?? []).map(u => u?.id ?? u).filter(Boolean);
-  broadcast(USE_TYPE, { spell: sig.id, scene: canvas.scene?.id ?? null, caster: caster && !caster.document?.hidden ? caster.id : null,
-    targets: targets.filter(x => !x.document?.hidden).map(x => x.id), ...(to.length ? { to } : {}) });
-  if (wanted(sig)) await play(sig, { ...info, targets, ordered: true }, { claim: true });
+  // A whispered card: only for those it was whispered to.
+  useSignature(sig.id, { caster: info.caster, targets, to: message.whisper, info });
+}
+
+/** A token, a token document, a token id or a token uuid → the token on the scene in view. */
+const anyToken = t => (!t ? null : typeof t === "string" ? tokenOf(t) ?? tokenById(t) : t.document ? t : t.object ?? tokenById(t.id));
+const playing = (sig, token) => [...runs].some(run => !run.dead && run.sig === sig && run.info?.targets?.[0] === token);
+
+/**
+ * Start a signature from other code that knows who it is for (a rules automation, e.g. the React button of
+ * Such a Disgrace!): it plays on this client and the others are told.
+ * @param {string} id       the signature's id ("suchADisgrace")
+ * @param {object} o        caster, targets: tokens, token documents, ids or uuids; to: user ids when only
+ *                          some users may know of it (a whispered card), else everyone
+ * @returns {boolean} whether it was started
+ */
+export function useSignature(id, { caster = null, targets = [], to = null, info = {} } = {}) {
+  const sig = signatureById(id);
+  if (!sig || !feature?.active || !feature.get(sig.id) || !canvas?.ready) return false;
+  const list = [...new Set((targets ?? []).map(anyToken).filter(Boolean))];
+  if (!list.length || playing(sig, list[0])) return false;
+  const from = anyToken(caster), users = (to ?? []).map(u => u?.id ?? u).filter(Boolean);
+  // Nothing about a hidden token leaves this client.
+  broadcast(USE_TYPE, { spell: sig.id, scene: canvas.scene?.id ?? null, caster: from && !from.document?.hidden ? from.id : null,
+    targets: list.filter(x => !x.document?.hidden).map(x => x.id), ...(users.length ? { to: users } : {}) });
+  if (wanted(sig) && (!users.length || users.includes(game.user.id))) play(sig, { roll: "card", ...info, caster: from?.id ?? null, targets: list, ordered: true }, { claim: true });
+  return true;
 }
 
 function onUse(payload) {
@@ -219,7 +238,9 @@ function onUse(payload) {
   if (!sig?.choose || !wanted(sig)) return;
   if (Array.isArray(payload.to) && !payload.to.includes(game.user.id)) return;
   if (payload.scene && canvas.scene?.id && payload.scene !== canvas.scene.id) return;
-  play(sig, { roll: "card", caster: payload.caster ?? null, targets: (payload.targets ?? []).map(tokenById).filter(Boolean), ordered: true }, { claim: true });
+  const targets = (payload.targets ?? []).map(tokenById).filter(Boolean);
+  if (!targets.length || playing(sig, targets[0])) return;
+  play(sig, { roll: "card", caster: payload.caster ?? null, targets, ordered: true }, { claim: true });
 }
 
 /* -------------------------------------------- */

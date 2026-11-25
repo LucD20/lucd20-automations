@@ -76,11 +76,13 @@ async function setup(page, userId) {
   const set = (page, k, v) => page.evaluate(([k, v]) => game.settings.set("lucd20-automations", k, v), [k, v]);
   const entries = page => page.evaluate(() => game.settings.get("lucd20-automations", "damageLog_entries").entries);
 
+  // v0.87.2: the Damage Log is in the Automations menu (one chat button).
+  const menuItem = (page, name) => page.evaluate(n => { document.querySelector('[data-lucd20-control="lucd20-automations"]').click(); const b = [...document.querySelectorAll(".lucd20-chat-menu ul button")].find(x => x.textContent.includes(n)); const ok = !!b; if (b) b.click(); else document.querySelector('[data-lucd20-control="lucd20-automations"]').click(); return ok; }, name);
   // ================= GM =================
   let page = await open("gm=1", "u1");
   await set(page, "damageLog_enabled", true);
   await page.waitForTimeout(150);
-  assert.strictEqual(await page.$$eval(".lucd20-damage-log-button", e => e.length), 1, "toggle button next to export");
+  assert.strictEqual(await page.$$eval('[data-lucd20-control="lucd20-automations"]', e => e.length), 1, "the Automations button next to export");
 
   await page.evaluate(async () => {
     await __A.amiri.update({ "system.attributes.hp.value": 28 });                       // 12 damage
@@ -105,11 +107,11 @@ async function setup(page, userId) {
   assert.strictEqual(e[5].round, 2);
 
   // open the log window
-  await page.click(".lucd20-damage-log-button");
+  assert.ok(await menuItem(page, "Damage Log"), "Damage Log in the Automations menu");
   await page.waitForTimeout(200);
   assert.ok(await page.isVisible(".lucd20-damage-log-window .lucd20-dl-list"));
   assert.ok(await page.isVisible(".chat-log"), "chat stays as it is");
-  assert.ok(await page.evaluate(() => document.querySelector(".lucd20-damage-log-button").classList.contains("active")));
+  assert.ok(await page.evaluate(() => document.querySelector('[data-lucd20-control="lucd20-automations"]').classList.contains("active")));
   const summaries = await page.$$eval(".lucd20-dl-entry", els => els.map(e => e.className.split(" ")[1] + ": " + e.querySelector(".lucd20-dl-summary").textContent));
   console.log("GM sees:", summaries);
   assert.deepStrictEqual(summaries.slice(0, 5), ["damage: took 12 damage", "temp: +5 temp HP", "damage: took 8 damage", "healing: healed 8", "max: max HP 40 → 45"]);
@@ -150,7 +152,7 @@ async function setup(page, userId) {
   };
   page = await open("gm=0", "p1", preset);
   await page.waitForTimeout(150);
-  await page.click(".lucd20-damage-log-button");
+  assert.ok(await menuItem(page, "Damage Log"), "Damage Log in the Automations menu");
   await page.waitForTimeout(200);
   const playerSees = await page.$$eval(".lucd20-dl-entry", els => els.map(e => e.querySelector(".lucd20-dl-name").textContent + ": " + e.querySelector(".lucd20-dl-summary").textContent));
   console.log("Player sees:", playerSees);
@@ -163,7 +165,7 @@ async function setup(page, userId) {
   assert.strictEqual(await page.$$eval('.lucd20-damage-log-window [data-action="undo"], .lucd20-damage-log-window [data-action="clear"]', e => e.length), 0, "no undo/clear for players");
   await page.screenshot({ path: `${out}/p8-player-log.png` });
   // toggle closes it again
-  await page.click(".lucd20-damage-log-button");
+  assert.ok(await menuItem(page, "Damage Log"), "Damage Log in the Automations menu");
   await page.waitForTimeout(150);
   assert.strictEqual(await page.$$eval(".lucd20-damage-log-window", e => e.length), 0);
 

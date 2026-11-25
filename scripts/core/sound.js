@@ -6,12 +6,13 @@ export const audio = { ctx: null, played: 0 };
 
 export function shing() {
 	try {
+		const shared = game?.audio?.interface;
 		const Ctx = window.AudioContext ?? window.webkitAudioContext;
-		if (!Ctx) return;
-		const ctx = (audio.ctx ??= new Ctx());
-		if (ctx.state === "suspended") ctx.resume();
+		const ctx = shared?.createGain ? shared : (audio.ctx ??= Ctx ? new Ctx() : null);
+		if (!ctx) return false;
+		if (ctx.state === "suspended") ctx.resume?.().catch?.(() => {});
 		const volume = Math.min(1, Math.max(0, Number(game.settings.get("core", "globalInterfaceVolume") ?? 0.5)));
-		if (!volume) return;
+		if (!volume) return false;
 		const now = ctx.currentTime;
 		const out = ctx.createGain();
 		out.gain.value = volume * 0.5;
@@ -35,6 +36,7 @@ export function shing() {
 		noise.connect(band).connect(noiseGain).connect(out);
 		noise.start(now);
 		// The ring: two high partials that fade.
+		let lastOsc = null;
 		for (const [frequency, level] of [[3520, 0.22], [5280, 0.14]]) {
 			const osc = ctx.createOscillator();
 			osc.type = "sine";
@@ -47,7 +49,11 @@ export function shing() {
 			osc.connect(gain).connect(out);
 			osc.start(now + 0.02);
 			osc.stop(now + 0.6);
+			lastOsc = osc;
 		}
+		const cleanup = () => { try { out.disconnect(); } catch {} };
+		if (lastOsc) lastOsc.onended = cleanup;
+		else setTimeout(cleanup, 650);
 		audio.played++;
 		return true;
 	} catch (err) {

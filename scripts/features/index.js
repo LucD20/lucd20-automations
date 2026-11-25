@@ -50,3 +50,5 @@ import "./signature-spells/signature-spells.js";
 import "./party-load.js";
 import "./encounter-report.js";
 import "./combat-cards/combat-cards.js";
+import "./audio-reliability.js";
+import "./chat-trim.js";

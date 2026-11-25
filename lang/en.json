@@ -337,6 +337,13 @@
           "show": { "Name": "Show", "Hint": "What your own damage windows show." }
         }
       },
+      "chatTrim": {
+        "Name": "Chat Log Trim",
+        "Hint": "Keeps only the newest messages rendered in the chat sidebar so long sessions with many rolls stay fast. Nothing is deleted from chat history — a button at the top loads older messages back on demand.",
+        "Setting": {
+          "maxMessages": { "Name": "Messages kept in view", "Hint": "How many recent messages stay rendered in the chat log before older ones collapse behind the \"Show older\" button." }
+        }
+      },
       "diceStats": {
         "Name": "Dice Stats",
         "Hint": "Roll statistics for everyone, for this session and all time, opened from the bottom of the Actors tab. PF2e checks are split by type and degree of success. Blind and secret rolls only count in the GM's view.",
@@ -575,6 +582,13 @@
       "hiddenTrackNames": {
         "Name": "Hidden Track Names",
         "Hint": "Players see \"Unknown track\" instead of track names in the Playlists sidebar. An eye icon on each track lets the GM reveal its name. Playlist names stay visible."
+      },
+      "audioReliability": {
+        "Name": "Reliable Music & Audio",
+        "Hint": "Streams longer music tracks instead of buffering them in memory, auto-retries failed audio loads after clearing stale cache, resumes suspended audio contexts, and adds a Reset Audio button to the Playlists tab.",
+        "Setting": {
+          "streamThreshold": { "Name": "Stream tracks longer than (seconds)", "Hint": "Tracks longer than this stream directly instead of downloading into RAM (Foundry default is 600 s; 20 s keeps short SFX buffered while streaming music)." }
+        }
       },
       "riding": {
         "Name": "Riding",
@@ -2939,6 +2953,14 @@
       },
       "RechargeYes": "{name} recharges.",
       "RechargeNo": "{name} does not recharge."
+    },
+    "AudioReliability": {
+      "Reset": "Reset audio",
+      "ResetHint": "Resume audio contexts, clear stale audio cache, and restart playing tracks without reloading.",
+      "ResetDone": "Audio reset ({n} track(s) restarted)."
+    },
+    "ChatTrim": {
+      "ShowOlder": "Show older messages ({n} hidden)"
     }
   },
   "DND4EAUTO": {

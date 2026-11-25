@@ -3063,3 +3063,10 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-party-deck .lpd-gm { margin-top: 12px; }
 .lucd20-party-deck .lpd-grant { width: 100%; padding: 6px; border: 1px solid #5c596a; border-radius: 4px; background: #26252e; color: #efe6d8; font: 600 12px Signika, sans-serif; cursor: pointer; }
 .lucd20-party-deck-app .window-content { padding: 0; }
+
+/* Chat Log Trim (long-session performance) */
+html.lucd20-chat-trim-active .chat-log > .chat-message { content-visibility: auto; contain-intrinsic-size: auto 120px; }
+.lucd20-chat-older { list-style: none; margin: 4px 6px 8px; padding: 0; }
+.lucd20-chat-older-btn { width: 100%; padding: 5px 10px; border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 4px; background: rgba(25, 24, 31, 0.75); color: #d8d0c4; font-size: 12px; cursor: pointer; }
+.lucd20-chat-older-btn:hover { background: rgba(45, 43, 56, 0.9); color: #fff; }
+.lucd20-audio-reset { flex: 0 0 auto; }

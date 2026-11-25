@@ -1,6 +1,6 @@
 import { localize } from "../core/constants.js";
 import { defineFeature } from "../core/registry.js";
-import { doorControlClass, doorControls, doorControlOf } from "../core/doors.js";
+import { doorControlClass, doorControls, doorControlOf, doorIconBox } from "../core/doors.js";
 
 /**
  * Secret Door Highlight (replaces Smart Doors' secret door tint). GM only.
@@ -15,7 +15,7 @@ import { doorControlClass, doorControls, doorControlOf } from "../core/doors.js"
  */
 
 const COLOR = 0xa612d4; // PF2e / Foundry "secret" disposition color
-const SIZE = 40; // icon size inside the (possibly scaled) container
+const SIZE = 40; // fallback icon size inside the (possibly scaled) container
 
 function isSecret(control) {
   return control.wall?.document?.door === CONST.WALL_DOOR_TYPES?.SECRET;
@@ -31,10 +31,11 @@ function removeMark(control) {
 
 function addMark(control) {
   if (control.lucd20SecretMark || !control.addChild) return;
+  const box = doorIconBox(control, SIZE);
   const mark = new PIXI.Container();
   mark.eventMode = "none";
   const ring = new PIXI.Graphics();
-  ring.lineStyle(2, COLOR, 0.85).drawRoundedRect(-2, -2, SIZE + 4, SIZE + 4, 6);
+  ring.lineStyle(2, COLOR, 0.85).drawRoundedRect(box.x - 2, box.y - 2, box.w + 4, box.h + 4, 6);
   mark.addChild(ring);
 
   // Small eye-slash badge, bottom-right.
@@ -49,7 +50,7 @@ function addMark(control) {
   });
   eye.anchor.set(0.5);
   badge.addChild(disc, eye);
-  badge.position.set(SIZE - 1, SIZE - 1);
+  badge.position.set(box.x + box.w - 1, box.y + box.h - 1);
   mark.addChild(badge);
 
   control.addChild(mark);

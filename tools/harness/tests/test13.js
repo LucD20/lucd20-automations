@@ -38,7 +38,8 @@ async function setupMocks(page) {
     window.__combat = {
       id: "c1", round: 0, turn: null, started: false, previous: { round: 0, turn: null },
       turns: [c("valeros", "Valeros", ["p1"]), c("goblin", "Goblin")],
-      get combatant() { return this.turn === null ? null : this.turns[this.turn]; }
+      get combatant() { return this.turn === null ? null : this.turns[this.turn]; },
+      get combatants() { return new Map(this.turns.map(t => [t.id, t])); }
     };
     window.__go = (round, turn) => {
       const changed = {};

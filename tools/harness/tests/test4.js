@@ -92,7 +92,8 @@ async function setupMocks(page) {
         c("ezren", "Ezren", { owners: ["p2", "u1"] }),
         c("boss", "Secret Boss", { nameHidden: true, src: "icons/boss.webm" })
       ],
-      get combatant() { return this.turns[this.turn]; }
+      get combatant() { return this.turns[this.turn]; },
+      get combatants() { return new Map(this.turns.map(t => [t.id, t])); }
     };
     window.__setTurn = (turn, round = __combat.round) => {
       const changed = { turn }; if (round !== __combat.round) changed.round = round;
@@ -135,9 +136,12 @@ async function setupMocks(page) {
   await page.evaluate(() => { const box = document.querySelector("#moved .control-buttons"); document.getElementById("chat").append(box); box.querySelector('[data-action="flush"]').addEventListener("click", () => game.messages.flush()); });
   await page.waitForTimeout(100);
 
-  // pin button placed right before Export
-  const before = await page.evaluate(() => document.querySelector('#chat [data-action="export"]').previousElementSibling);
-  assert.ok(await page.evaluate(() => document.querySelector('#chat [data-action="export"]').previousElementSibling.classList.contains("lucd20-pins-button")));
+  // pin button placed before Export, in the run of module buttons there (others, e.g. PF2e Multiple Checks, may sit between)
+  assert.ok(await page.evaluate(() => {
+    let el = document.querySelector('#chat [data-action="export"]').previousElementSibling;
+    while (el?.dataset.lucd20Control && !el.classList.contains("lucd20-pins-button")) el = el.previousElementSibling;
+    return !!el?.classList.contains("lucd20-pins-button");
+  }), "pin button sits before Export");
   assert.ok(await page.evaluate(() => document.querySelector(".lucd20-pins-button").className.includes("fa-thumbtack") && !document.querySelector(".lucd20-pins-button").className.includes("floppy")));
   // re-render doesn't duplicate
   await page.evaluate(() => __renderChatLog());

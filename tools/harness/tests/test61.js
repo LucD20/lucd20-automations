@@ -212,7 +212,12 @@ async function setup(page) {
     const ok = show({ scene: "s1", token: "ogre", type: "fire", crit: true, kill: false, share: 0.4, amount: 40, attacker: "valeros" });
     const o = __tok("ogre"), v = __tok("valeros");
     const immediately = { ok, running: eng.isRunning(), coins: [...eng.engineState.coins.keys()], ogreMesh: o.mesh.renderable, valerosMesh: v.mesh.renderable, bars: o.bars.renderable };
-    await __sleep(650);
+    // Under software WebGL, engine dt is capped at 0.034 s per frame so simulation time lags wall clock.
+    for (let i = 0; i < 120; i++) {
+      const k = eng.engineState.coins.get("ogre");
+      if (k && k.S.z > 20 && k.c.sort >= 1e6 && eng.engineState.parts.length > 10 && eng.engineState.marks.length >= 1 && eng.engineState.nums.length >= 1) break;
+      await __sleep(50);
+    }
     return { immediately, mid: {
       ogreMesh: o.mesh.renderable, bars: o.bars.renderable, effects: o.effects.renderable, name: o.nameplate.renderable,
       docXY: [o.document.x, o.document.y], meshXY: [o.mesh.position.x, o.mesh.position.y],
@@ -241,7 +246,7 @@ async function setup(page) {
   const refreshed = await page.evaluate(() => { const o = __tok("ogre"); o.mesh.renderable = true; Hooks.callAll("refreshToken", o, {}); return o.mesh.renderable; });
   assert.strictEqual(refreshed, false);
 
-  await page.waitForFunction(() => !window.__eng.isRunning(), null, { timeout: 20000 });
+  await page.waitForFunction(() => !window.__eng.isRunning(), null, { timeout: 60000 });
   const after = await page.evaluate(() => ({
     meshes: canvas.tokens.placeables.map(t => t.mesh.renderable), parts: canvas.tokens.placeables.flatMap(t => [t.bars.renderable, t.effects.renderable, t.nameplate.renderable, t.tooltip.renderable]),
     ours: __ours().length, interface: canvas.interface.children.filter(c => c.zIndex === 1e6).length + (__eng.engineState.numsLayer ? 1 : 0), coins: __eng.engineState.coins.size,
@@ -267,7 +272,7 @@ async function setup(page) {
   assert.strictEqual(all.types.length, 12);
   assert.ok(all.parts <= 601, `particles capped: ${all.parts}`);
   await page.screenshot({ path: `${out}/p63-many.png` });
-  await page.waitForFunction(() => !window.__eng.isRunning(), null, { timeout: 30000 });
+  await page.waitForFunction(() => !window.__eng.isRunning(), null, { timeout: 90000 });
   const allAfter = await page.evaluate(() => ({ ok: canvas.tokens.placeables.every(t => t.mesh.renderable && t.bars.renderable), ours: __ours().length, listeners: canvas.app.ticker.count }));
   assert.deepStrictEqual(allAfter, { ok: true, ours: 0, listeners: idleListeners }, "all twelve looks ended and cleaned up; off the ticker");
 
@@ -279,7 +284,7 @@ async function setup(page) {
     const o = __tok("ogre"), coin = __eng.engineState.coins.get("ogre");
     const r = { coins: [...__eng.engineState.coins.keys()], parts: __eng.engineState.parts.length, marks: __eng.engineState.marks.length, bars: o.bars.renderable, mesh: o.mesh.renderable,
       still: [coin.S.x, coin.S.y, coin.S.z, coin.S.theta], flash: coin.S.flash > 0, shake: __eng.engineState.shk };
-    await __sleep(600);
+    for (let i = 0; i < 80 && (__eng.engineState.coins.size || !o.mesh.renderable); i++) await __sleep(50);
     r.endedSoon = !__eng.engineState.coins.size && o.mesh.renderable;
     return r;
   });

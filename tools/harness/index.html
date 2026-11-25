@@ -83,7 +83,7 @@ window.CONFIG.Canvas = { darknessColor: 0x242448, polygonBackends: {}, dispositi
 window.CONFIG.Token = { objectClass: class MockToken { _isVisionSource() { return true; } _onClickLeft2() { window.__sheetOpened = true; } } };
 window.__keybindings = {};
 window.CONST = { USER_ROLES: { PLAYER: 1, TRUSTED: 2, ASSISTANT: 3, GAMEMASTER: 4 }, TOKEN_DISPOSITIONS: { SECRET: -2, HOSTILE: -1, NEUTRAL: 0, FRIENDLY: 1 } };
-window.ui = { notifications: { error: m => console.error("NOTIFY", m), info: m => (window.__infos ??= []).push(m) } };
+window.ui = { notifications: { error: m => console.error("NOTIFY", m), warn: m => console.warn("NOTIFY", m), info: m => (window.__infos ??= []).push(m) } };
 const settingsAPI = {
   settings: registered,
   registerMenu() {},
@@ -185,6 +185,7 @@ window.foundry = {
   },
   utils: { debouncedReload() { window.__reloaded = true; }, deepClone: v => (v === undefined ? v : structuredClone(v)),
     getProperty: (o, p) => p.split(".").reduce((x, k) => x?.[k], o),
+    hasProperty: (o, p) => p.split(".").reduce((x, k) => x?.[k], o) !== undefined,
     setProperty: (o, p, v) => { const parts = p.split("."); let x = o; for (const k of parts.slice(0, -1)) x = x[k] ??= {}; x[parts.at(-1)] = v; return true; } }
 };
 

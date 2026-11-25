@@ -124,28 +124,27 @@ async function setupMocks(page) {
   });
   await set(page, "chatPins_enabled", true);
   await page.waitForTimeout(100);
-  assert.strictEqual(await page.$$eval(".lucd20-pins-button", e => e.length), 1, "pin button present without a chat re-render");
+  assert.strictEqual(await page.$$eval('[data-lucd20-control="lucd20-automations"]', e => e.length), 1, "pin button present without a chat re-render");
   // Foundry re-draws the control buttons → pin button comes back
   await page.evaluate(() => { const box = document.querySelector("#chat .control-buttons"); box.innerHTML = box.innerHTML.replace(/<button[^>]*lucd20[^>]*>.*?<\/button>/g, ""); });
   await page.waitForTimeout(100);
-  assert.strictEqual(await page.$$eval(".lucd20-pins-button", e => e.length), 1, "pin button re-added after re-draw");
+  assert.strictEqual(await page.$$eval('[data-lucd20-control="lucd20-automations"]', e => e.length), 1, "pin button re-added after re-draw");
   // controls moved elsewhere (another sidebar tab open)
-  await page.evaluate(() => { const holder = document.createElement("div"); holder.id = "moved"; document.body.append(holder); const box = document.querySelector("#chat .control-buttons"); holder.append(box.cloneNode(true)); box.remove(); document.querySelector("#moved .lucd20-pins-button")?.remove(); });
+  await page.evaluate(() => { const holder = document.createElement("div"); holder.id = "moved"; document.body.append(holder); const box = document.querySelector("#chat .control-buttons"); holder.append(box.cloneNode(true)); box.remove(); document.querySelector('#moved [data-lucd20-control="lucd20-automations"]')?.remove(); });
   await page.waitForTimeout(100);
-  assert.strictEqual(await page.$$eval("#moved .lucd20-pins-button", e => e.length), 1, "pin button follows moved controls");
+  assert.strictEqual(await page.$$eval('#moved [data-lucd20-control="lucd20-automations"]', e => e.length), 1, "pin button follows moved controls");
   await page.evaluate(() => { const box = document.querySelector("#moved .control-buttons"); document.getElementById("chat").append(box); box.querySelector('[data-action="flush"]').addEventListener("click", () => game.messages.flush()); });
   await page.waitForTimeout(100);
 
   // pin button placed before Export, in the run of module buttons there (others, e.g. PF2e Multiple Checks, may sit between)
   assert.ok(await page.evaluate(() => {
     let el = document.querySelector('#chat [data-action="export"]').previousElementSibling;
-    while (el?.dataset.lucd20Control && !el.classList.contains("lucd20-pins-button")) el = el.previousElementSibling;
-    return !!el?.classList.contains("lucd20-pins-button");
+    return el?.dataset.lucd20Control === "lucd20-automations";
   }), "pin button sits before Export");
-  assert.ok(await page.evaluate(() => document.querySelector(".lucd20-pins-button").className.includes("fa-thumbtack") && !document.querySelector(".lucd20-pins-button").className.includes("floppy")));
+  assert.ok(await page.evaluate(() => { const b = document.querySelector('[data-lucd20-control="lucd20-automations"]'); return b.outerHTML.includes("fa-wand-magic-sparkles") && !b.outerHTML.includes("floppy"); }));
   // re-render doesn't duplicate
   await page.evaluate(() => __renderChatLog());
-  assert.strictEqual(await page.$$eval(".lucd20-pins-button", e => e.length), 1);
+  assert.strictEqual(await page.$$eval('[data-lucd20-control="lucd20-automations"]', e => e.length), 1);
 
   // context menu options
   const ctx = await page.evaluate(() => {
@@ -166,7 +165,10 @@ async function setupMocks(page) {
   await page.screenshot({ path: `${out}/p4-chat-pinned.png`, clip: { x: 640, y: 10, width: 360, height: 590 } });
 
   // pins window lists newest first
-  await page.click(".lucd20-pins-button");
+  // v0.87.2: the Pins window is in the Automations menu.
+  await page.click('[data-lucd20-control="lucd20-automations"]');
+  await page.waitForTimeout(100);
+  await page.evaluate(() => [...document.querySelectorAll(".lucd20-chat-menu ul button")].find(b => b.textContent.includes("Pinned")).click());
   await page.waitForTimeout(100);
   await page.evaluate(() => { const w = document.querySelector(".lucd20-pins"); w.style.width = "360px"; w.style.height = "560px"; w.style.left = "260px"; });
   await page.waitForTimeout(200);
@@ -214,7 +216,7 @@ async function setupMocks(page) {
   // feature off → button removed, flush restored
   await set(page, "chatPins_enabled", false);
   await page.waitForTimeout(50);
-  assert.strictEqual(await page.$$eval(".lucd20-pins-button", e => e.length), 0);
+  assert.ok(await page.evaluate(() => { const b = document.querySelector('[data-lucd20-control="lucd20-automations"]'); if (!b) return true; b.click(); const m = document.querySelector(".lucd20-chat-menu"); const has = !!m && [...m.querySelectorAll("ul button")].some(x => x.textContent.includes("Pinned")); b.click(); return !has; }), "Pinned Messages gone from the menu");
   assert.ok(!(await page.isVisible(".lucd20-pinned")));
 
   // ================= GM: Turn Announcer =================

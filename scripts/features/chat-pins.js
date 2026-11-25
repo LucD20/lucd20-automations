@@ -1,3 +1,4 @@
+import { contextEntry } from "../core/context-entry.js";
 import { MODULE_ID, TEMPLATE_PATH, error, localize } from "../core/constants.js";
 import { defineFeature } from "../core/registry.js";
 import { addChatControl } from "../core/chat-controls.js";
@@ -50,18 +51,18 @@ function addContextOptions(app, options) {
   const list = Array.isArray(options) ? options : Array.isArray(app) ? app : null;
   if (!list) return;
   list.push(
-    {
-      name: "LUCD20.ChatPins.Pin",
+    contextEntry({
+      label: "LUCD20.ChatPins.Pin",
       icon: '<i class="fa-solid fa-thumbtack"></i>',
-      condition: li => game.user.isGM && !isPinned(messageFromLi(li)),
-      callback: li => setPinned(messageFromLi(li), true)
-    },
-    {
-      name: "LUCD20.ChatPins.Unpin",
+      when: li => game.user.isGM && !!messageFromLi(li) && !isPinned(messageFromLi(li)),
+      run: li => setPinned(messageFromLi(li), true)
+    }),
+    contextEntry({
+      label: "LUCD20.ChatPins.Unpin",
       icon: '<i class="fa-solid fa-xmark"></i>',
-      condition: li => game.user.isGM && isPinned(messageFromLi(li)),
-      callback: li => setPinned(messageFromLi(li), false)
-    }
+      when: li => game.user.isGM && isPinned(messageFromLi(li)),
+      run: li => setPinned(messageFromLi(li), false)
+    })
   );
 }
 

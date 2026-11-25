@@ -1,3 +1,4 @@
+import { contextEntry } from "../core/context-entry.js";
 import { error, localize } from "../core/constants.js";
 import { defineFeature } from "../core/registry.js";
 import { broadcast, onBroadcast } from "../core/socket.js";
@@ -259,12 +260,12 @@ defineFeature({
     feature.on("chatMessage", onChatMessage);
     feature.on("getChatMessageContextOptions", (app, options) => {
       if (!game.user.isGM) return;
-      options.push({
-        name: "LUCD20.Describe.Menu",
+      options.push(contextEntry({
+        label: "LUCD20.Describe.Menu",
         icon: '<i class="fa-solid fa-scroll"></i>',
-        condition: () => !!state.selection,
-        callback: () => describeAndPost(state.selection).catch(err => error("Describe failed.", err))
-      });
+        when: () => !!state.selection,
+        run: () => describeAndPost(state.selection).catch(err => error("Describe failed.", err))
+      }));
     });
     document.addEventListener("contextmenu", onContextMenu, true);
     document.addEventListener("pointerdown", onOutside, true);

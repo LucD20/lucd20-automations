@@ -2917,6 +2917,15 @@ tool (icon, name, a dot when on), and "LucD20 Automations settings" at the
 bottom. Escape / a click outside close it; no tools visible → no button.
 Test 76.
 
+**v0.87.3 (owner: "The right-click pin message option isn't showing up"):**
+V14's ContextMenuEntry is { label, icon, visible(target), onClick(event,
+target) } (V13: name, condition(li), callback(li)). `core/context-entry.js`
+`contextEntry({ label, icon, when, run, group })` gives both sets; Chat Pins
+(Pin / Unpin) and Describe's chat entry use it. Hook still
+`getChatMessageContextOptions` (+ `getChatLogEntryContext` for Pins)
+((verify) in V14 that this is the hook; the API docs don't name it).
+Test 4 updated for the Automations menu (passes again).
+
 ---
 
 ## 23. Adventure conversion tools (owner, 2026-11-19, drafting)

@@ -148,7 +148,7 @@ async function askRecall(message, { striker, target, critical, label }) {
 	const sDoc = striker ? fromUuidSync(striker) : null, tDoc = target ? fromUuidSync(target) : null;
 	if (!sDoc?.actor || !tDoc?.object) return false;
 	try {
-		await recallKnowledge({ actor: sDoc.actor, token: sDoc.object ?? null, targets: [tDoc.object], label, modifiers: critical ? [{ label: L("CriticalBonus"), value: 2 }] : [] });
+		await recallKnowledge({ actor: sDoc.actor, token: sDoc.object ?? null, targets: [tDoc.object], label, modifiers: critical ? [{ label: L("CriticalBonus"), value: 2 }] : [], ignoreMaybe: SLUGS });
 		return true;
 	} catch (err) {
 		error("Combat Assessment: Recall Knowledge failed.", err);

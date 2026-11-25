@@ -2715,6 +2715,24 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-rk-criticalSuccess { color: #2e7d32; font-weight: 700; } .lucd20-rk-success { color: #2a5bb5; }
 .lucd20-rk-failure { color: #c26a00; } .lucd20-rk-criticalFailure { color: #b71c1c; font-weight: 700; }
 .lucd20-rk-card .lucd20-rk-maybe, .lucd20-rk-card .lucd20-rk-note { margin: 2px 0; font-size: .8em; opacity: .85; }
+/* The grid (v0.88.0, mockup B): fixed columns, symbols, DCs as headings. */
+.lucd20-rk-grid { table-layout: fixed; }
+.lucd20-rk-grid col.lucd20-rk-c-name { width: 38%; } .lucd20-rk-grid col.lucd20-rk-c-total { width: 19%; }
+.lucd20-rk-plain col.lucd20-rk-c-name { width: 70%; }
+.lucd20-rk-grid th, .lucd20-rk-grid td { padding: 3px 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lucd20-rk-grid th { font-size: .85em; opacity: .75; }
+.lucd20-rk-grid tr > th:first-child, .lucd20-rk-grid td.lucd20-rk-name { text-align: left; }
+.lucd20-rk-grid tr.lucd20-rk-lorehead th { padding-top: 7px; }
+.lucd20-rk-grid td.lucd20-rk-total small { font-size: .8em; }
+.lucd20-rk-sym { display: inline-grid; place-items: center; min-width: 20px; height: 18px; padding: 0 2px; border: 1px solid; border-radius: 3px; font-size: 11px; font-weight: 700; line-height: 1; }
+.lucd20-rk-sym.lucd20-rk-criticalSuccess { background: #d6ecd7; color: #1f6b24; border-color: #8fc493; }
+.lucd20-rk-sym.lucd20-rk-success { background: #d9e4f7; color: #1f4a99; border-color: #9fb6e0; }
+.lucd20-rk-sym.lucd20-rk-failure { background: #f6e3cc; color: #9a5300; border-color: #e0b98a; }
+.lucd20-rk-sym.lucd20-rk-criticalFailure { background: #f5d0d0; color: #9a1414; border-color: #e09a9a; }
+.lucd20-rk-sym.is-adjusted { box-shadow: 0 0 0 1px currentColor inset; }
+.lucd20-rk-legend { display: flex; flex-wrap: wrap; gap: 8px; margin: 3px 0 2px; font-size: .78em; opacity: .85; }
+.lucd20-rk-legend > span { display: inline-flex; align-items: center; gap: 3px; }
+.lucd20-rk-legend .lucd20-rk-sym { min-width: 16px; height: 14px; font-size: 9px; }
 .lucd20-fc-card .lucd20-fc-line { display: flex; align-items: center; gap: 6px; margin: 1px 0; padding: 1px 6px 1px 2px; border-radius: 3px; color: #fff; line-height: 20px; }
 .lucd20-fc-card .lucd20-fc-ok { background: #2e7d32; }
 .lucd20-fc-card .lucd20-fc-fail { background: #b71c1c; }

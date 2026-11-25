@@ -861,7 +861,15 @@ one that leaves fewer squares next to enemies (see PLAN).
 - Recall Knowledge card: owner: "not well formatted, make a mockup or two":
   `docs/mockups/recall-knowledge.html/.png` (A: a row per skill with outcome
   chips; B: one grid with symbols, DCs in the header; C: the answer first,
-  "2 facts", a segment bar). Waiting for the owner's pick.
+  "2 facts", a segment bar). Owner: "B for sure".
+- v0.88.0: the card is mockup B: one fixed-column grid for skills and Lores,
+  DCs as headings (Lore row: "Unspec. 17" / "Spec. 14" spanning the
+  columns), each result a coloured symbol (★ ✓ ✗ ✗✗; word, DC and any
+  degree adjustment on hover; adjusted ones outlined), a legend; long names
+  cut with "…" (full on hover); totals "22 +16". "Might apply" leaves out
+  what is already added: the passed modifiers' labels, the card's label, and
+  `ignoreMaybe` (Combat Assessment passes its slug; the owner's card listed
+  "Combat Assessment +2" though the +2 was in the totals). Test 66.
 
 ## 22. Swashbuckler: Guardian's Deflection
 

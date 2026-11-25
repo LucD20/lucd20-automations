@@ -119,7 +119,8 @@ const assert = require("assert");
     // v0.78.0: a hit rolls our Recall Knowledge at once on the GM's client (+2 on a crit), GM-only; no card.
     game.time.worldTime += 86401;
     window.Roll = class { constructor(f) { this.formula = f; } async evaluate() { this.total = window.__d20 ?? 12; return this; } };
-    const skill = (slug, label, mod, rank, lore = false) => ({ slug, label, rank, lore, check: { mod }, modifiers: slug === "nature" ? [{ slug: "fey-bonus", label: "Fey Lore bonus", modifier: 1, predicate: Object.assign(["action:recall-knowledge", "target:trait:fey"], { test: o => o.includes("target:trait:fey") }) }] : [],
+    const skill = (slug, label, mod, rank, lore = false) => ({ slug, label, rank, lore, check: { mod }, modifiers: slug === "nature" ? [{ slug: "fey-bonus", label: "Fey Lore bonus", modifier: 1, predicate: Object.assign(["action:recall-knowledge", "target:trait:fey"], { test: o => o.includes("target:trait:fey") }) },
+        { slug: "combat-assessment", label: "Combat Assessment", modifier: 2, predicate: Object.assign(["action:recall-knowledge", "combat-assessment"], { test: o => o.includes("combat-assessment") }) }] : [],
       roll: async o => { if (o.createMessage === false) return o.callback({ options: { totalModifier: mod } }, null, { flags: { pf2e: { context: { options: o.extraRollOptions, domains: ["skill-check"] } } } }); rolled.push([slug, o]); } });
     commanderA.skills = { nature: skill("nature", "Nature", 7, 2), arcana: skill("arcana", "Arcana", 5, 1), society: skill("society", "Society", 3, 1), "goblin-lore": skill("goblin-lore", "Goblin Lore", 4, 1, true) };
     commanderA.itemTypes; commanderA.synthetics = { degreeOfSuccessAdjustments: {} };
@@ -134,6 +135,7 @@ const assert = require("assert");
     const rows = rk ? [...new DOMParser().parseFromString(rk.content, "text/html").querySelectorAll("tr")].map(tr => txt(tr.innerHTML)) : [];
     out.auto = [caCards().length - before, rkCards().length, rk?.whisper, rk?.blind, rk?.flags.pf2e.context.options.includes("secret"), rows];
     out.autoHeader = txt(rk?.content.match(/<header>[\s\S]*?<\/header>/)?.[0]);
+    window.__rkCard = rk?.content ?? "";
     out.maybe = txt(rk?.content.match(/<p class="lucd20-rk-maybe">[\s\S]*?<\/p>/)?.[0] ?? "");
     // The module's Recall Knowledge without targets: every RK skill and Lore with its total.
     const rkMod = await import(`/modules/${M}/scripts/systems/pf2e/recall-knowledge.js`);
@@ -195,17 +197,27 @@ const assert = require("assert");
   assert.ok(/^Combat Assessment 1 Brannoc Ogre is immune to Combat Assessment \(24 h left\)\.$/.test(r.caImmune), `immune: said, no buttons (${r.caImmune})`);
   assert.deepStrictEqual(r.caMiss, [2, true], "a miss: no card, the immunity starts");
   assert.deepStrictEqual(r.auto, [0, 1, ["u1"], true, true, [
-    "Skill Total Try 1 DC 18 Try 2 DC 20 Try 3 DC 23 Try 4 DC 28",
-    "Nature E 21 (+9) Success Success Fail Fail",
-    "Arcana T 19 (+7) Success Fail Fail Fail",
-    "Lore Total Unspecific DC 16 Specific DC 13",
-    "Goblin Lore T 18 (+6) Success Success"
+    "Skill Total 18 20 23 28",
+    "Nature E 21 +9 ✓ ✓ ✗ ✗",
+    "Arcana T 19 +7 ✓ ✗ ✗ ✗",
+    "Lore Total Unspec. 16 Spec. 13",
+    "Goblin Lore T 18 +6 ✓ ✓"
   ]], "Combat Assessment's hit: our Recall Knowledge at once, GM-only, +2 on every total; no card");
   assert.strictEqual(r.autoHeader, "Combat Assessment d20 12 Critical hit +2", "the card names the reason and the bonus");
-  assert.strictEqual(r.maybe, "Might apply: Fey Lore bonus +1", "a Recall Knowledge modifier whose condition isn't met is listed");
-  assert.deepStrictEqual(r.plain, ["Skill Total", "Arcana T 25 (+5)", "Nature E 27 (+7)", "Society T 23 (+3)", "Goblin Lore T 24 (+4)"], "no target: every RK skill the actor has and its Lores");
+  assert.strictEqual(r.maybe, "Might apply: Fey Lore bonus +1", "a Recall Knowledge modifier whose condition isn't met is listed; the feat's own +2 (already added) isn't");
+  assert.deepStrictEqual(r.plain, ["Skill Total", "Arcana T 25 +5", "Nature E 27 +7", "Society T 23 +3", "Goblin Lore T 24 +4"], "no target: every RK skill the actor has and its Lores");
   assert.deepStrictEqual(r.fallback, [13, 14, 18, 42, { skills: ["nature", "society"], standard: [25, 30], lore: [[22, 25, 30], [20, 22, 25, 30]] }], "DCs without PF2e's data: level, rarity, lore steps, traits");
   assert.deepStrictEqual(errors, [], "no page errors");
+  if (process.env.SHOT) {
+    await page.evaluate(() => {
+      const box = document.createElement("div");
+      box.id = "rk-shot";
+      Object.assign(box.style, { position: "fixed", left: "10px", top: "10px", width: "290px", zIndex: 99999, padding: "6px 8px", background: "#efe7d6", color: "#191813", border: "1px solid #b9a98f", borderRadius: "4px", font: "13px Signika, sans-serif" });
+      box.innerHTML = window.__rkCard;
+      document.body.append(box);
+    });
+    await page.locator("#rk-shot").screenshot({ path: process.env.SHOT });
+  }
   await browser.close();
   assert.ok(/Combat Assessment.*Target immune/.test(r.dlgImmune) && !r.dlgImmuneSwitch, `immune target: said, no toggle (${r.dlgImmune})`);
   assert.ok(r.dlgPlace, "the row sits above the Roll button");

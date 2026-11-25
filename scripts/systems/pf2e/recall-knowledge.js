@@ -134,26 +134,40 @@ async function skillTotal(actor, slug, d20, target, extra) {
 const signed = (n) => `${n >= 0 ? "+" : ""}${n}`;
 const hasFeat = (actor, slug) => (actor?.itemTypes?.feat ?? []).find((f) => (f.slug ?? f.system?.slug) === slug) ?? null;
 
-function cell(actor, r, dc, natural) {
-	if (!Number.isFinite(dc)) return `<td>–</td>`;
+/*
+ * The card (v0.88.0; owner picked mockup B of docs/mockups/recall-knowledge.html): one grid for skills and
+ * Lores, the DCs as column headings, each result a coloured symbol (★ critical, ✓ success, ✗ failure,
+ * ✗✗ critical failure; the word and DC on hover), a legend below. Fixed columns, so nothing wraps; long names
+ * are cut with "…" (full name on hover).
+ */
+const SYMBOL = { criticalSuccess: "★", success: "✓", failure: "✗", criticalFailure: "✗✗" };
+const symbol = (degree, tip, adjusted = false) => `<span class="lucd20-rk-sym lucd20-rk-${DEGREES[degree]}${adjusted ? " is-adjusted" : ""}" data-tooltip="${esc(tip)}">${SYMBOL[DEGREES[degree]]}</span>`;
+
+function cell(actor, r, dc, natural, span = 1) {
+	const td = (inner) => `<td${span > 1 ? ` colspan="${span}"` : ""}>${inner}</td>`;
+	if (!Number.isFinite(dc)) return td("–");
 	const d = degreeOf(r.total, dc, natural);
 	const adj = adjusted(actor, d, { total: r.total, natural, dc, domains: r.domains, options: r.rollOptions });
-	if (!adj) return `<td class="lucd20-rk-${DEGREES[d]}">${L(DEGREES[d])}</td>`;
-	return `<td class="lucd20-rk-${DEGREES[adj.degree]}" data-tooltip="${esc(adj.label)}"><s>${L(DEGREES[d])}</s> ${L(DEGREES[adj.degree])}</td>`;
+	if (!adj) return td(symbol(d, `${L(DEGREES[d])} · ${L("DC", { dc })}`));
+	return td(symbol(adj.degree, `${L(DEGREES[d])} → ${L(DEGREES[adj.degree])} · ${L("DC", { dc })} · ${adj.label}`, true));
 }
 
-const skillHead = (r, name = r.label) => `<th>${esc(name)} <span class="lucd20-rk-rank lucd20-rk-rank${r.rank}">${RANKS[r.rank] ?? "?"}</span></th><td class="lucd20-rk-total">${r.total} <small>(${signed(r.modifier)})</small></td>`;
+const nameCell = (r, name = r.label) => `<td class="lucd20-rk-name" data-tooltip="${esc(name)}"><b>${esc(name)}</b> <span class="lucd20-rk-rank lucd20-rk-rank${r.rank}">${RANKS[r.rank] ?? "?"}</span></td>`;
+const totalCell = (r) => `<td class="lucd20-rk-total">${r.total} <small>${signed(r.modifier)}</small></td>`;
+const skillHead = (r, name = r.label) => nameCell(r, name) + totalCell(r);
 
-function maybeList(results) {
+function maybeList(results, ignore = []) {
 	const applied = new Set(results.flatMap((r) => r.applied));
 	const seen = new Map();
-	for (const r of results) for (const m of r.maybe) if (!applied.has(m.slug)) seen.set(m.slug, m);
+	for (const r of results) for (const m of r.maybe) if (!applied.has(m.slug) && !ignore.some((x) => x === m.slug || x === m.label)) seen.set(m.slug, m);
 	if (!seen.size) return "";
 	return `<p class="lucd20-rk-maybe">${L("Maybe")} ${[...seen.values()].map((m) => `${esc(m.label)} ${signed(Number(m.modifier) || 0)}`).join(", ")}</p>`;
 }
 
+const legend = () => `<div class="lucd20-rk-legend">${["criticalSuccess", "success", "failure", "criticalFailure"].map((k) => `<span><span class="lucd20-rk-sym lucd20-rk-${k}">${SYMBOL[k]}</span>${esc(L(`Legend.${k}`))}</span>`).join("")}</div>`;
+
 /** The card for one target. */
-async function targetSection(actor, targetToken, d20, extra) {
+async function targetSection(actor, targetToken, d20, extra, ignore = []) {
 	const target = targetToken.actor;
 	const id = identification(target);
 	let skills = id.skills;
@@ -164,21 +178,26 @@ async function targetSection(actor, targetToken, d20, extra) {
 	const loreSlugs = Object.values(actor.skills ?? {}).filter((s) => s.lore).map((s) => s.slug);
 	const lores = (await Promise.all(loreSlugs.map((s) => skillTotal(actor, s, d20, target, extra)))).filter(Boolean);
 	const [unspecific = [], specific = []] = id.lore;
+	// At least two DC columns, so the Lore row can split them (unspecific | specific).
+	const dcs = [...id.standard];
+	while (dcs.length < 2) dcs.push(NaN);
+	const n = dcs.length, a = Math.ceil(n / 2), b = n - a;
 	let html = `<h4>${L("Versus", { name: esc(targetToken.name ?? target.name) })}</h4>`;
-	html += `<table class="lucd20-rk-table"><tr><th>${L("Skill")}</th><th>${L("Total")}</th>${id.standard.map((dc, i) => `<th>${L("Attempt", { n: i + 1 })}<br><small>${L("DC", { dc })}</small></th>`).join("")}</tr>`;
-	if (!results.length) html += `<tr><td colspan="${2 + id.standard.length}" class="lucd20-rk-none">${L("NoSkill")}</td></tr>`;
+	html += `<table class="lucd20-rk-table lucd20-rk-grid"><colgroup><col class="lucd20-rk-c-name"><col class="lucd20-rk-c-total">${dcs.map(() => "<col>").join("")}</colgroup>`;
+	html += `<tr><th>${L("Skill")}</th><th>${L("Total")}</th>${dcs.map((dc) => `<th>${Number.isFinite(dc) ? dc : ""}</th>`).join("")}</tr>`;
+	if (!results.length) html += `<tr><td colspan="${2 + n}" class="lucd20-rk-none">${L("NoSkill")}</td></tr>`;
 	for (const r of results) {
 		const name = r.slug === "arcana" && viaUnified ? `${r.label} (${unified.name})` : r.label;
-		html += `<tr>${skillHead(r, name)}${id.standard.map((dc) => cell(actor, r, dc, d20)).join("")}</tr>`;
+		html += `<tr>${skillHead(r, name)}${dcs.map((dc) => cell(actor, r, dc, d20)).join("")}</tr>`;
+	}
+	if (lores.length || unspecific.length) {
+		html += `<tr class="lucd20-rk-lorehead"><th>${L("Lore")}</th><th>${L("Total")}</th><th colspan="${a}">${L("UnspecificShort", { dc: unspecific[0] ?? "–" })}</th><th colspan="${b}">${L("SpecificShort", { dc: specific[0] ?? "–" })}</th></tr>`;
+		for (const r of lores) html += `<tr>${skillHead(r)}${cell(actor, r, unspecific[0], d20, a)}${cell(actor, r, specific[0], d20, b)}</tr>`;
+		if (!lores.length) html += `<tr><td colspan="${2 + n}" class="lucd20-rk-none">${L("NoLore")}</td></tr>`;
 	}
 	html += `</table>`;
-	if (lores.length || unspecific.length) {
-		html += `<table class="lucd20-rk-table"><tr><th>${L("Lore")}</th><th>${L("Total")}</th><th>${L("Unspecific")}<br><small>${L("DC", { dc: unspecific[0] ?? "–" })}</small></th><th>${L("Specific")}<br><small>${L("DC", { dc: specific[0] ?? "–" })}</small></th></tr>`;
-		for (const r of lores) html += `<tr>${skillHead(r)}${cell(actor, r, unspecific[0], d20)}${cell(actor, r, specific[0], d20)}</tr>`;
-		if (!lores.length) html += `<tr><td colspan="4" class="lucd20-rk-none">${L("NoLore")}</td></tr>`;
-		html += `</table>`;
-	}
-	html += maybeList([...results, ...lores]);
+	html += legend();
+	html += maybeList([...results, ...lores], ignore);
 	for (const slug of ["dubious-knowledge", "unmistakable-lore"]) {
 		const feat = hasFeat(actor, slug);
 		if (feat) html += `<p class="lucd20-rk-note">${L("HasFeat", { name: esc(actor.name), feat: `@UUID[${feat.uuid}]{${esc(feat.name)}}` })}</p>`;
@@ -190,7 +209,7 @@ async function targetSection(actor, targetToken, d20, extra) {
  * Roll Recall Knowledge for `actor` (default: the selected token's, else your character) against `targets`
  * (default: your targets). `modifiers`: [{ label, value }] added to every total. Posts one card to the GMs.
  */
-export async function recallKnowledge({ actor = null, token = null, targets = null, modifiers = [], label = "" } = {}) {
+export async function recallKnowledge({ actor = null, token = null, targets = null, modifiers = [], label = "", ignoreMaybe = [] } = {}) {
 	token ??= canvas?.tokens?.controlled?.[0] ?? null;
 	actor ??= token?.actor ?? game.user.character ?? null;
 	if (!actor?.skills) return void ui.notifications.warn(L("NoActor"));
@@ -204,12 +223,14 @@ export async function recallKnowledge({ actor = null, token = null, targets = nu
 	if (modifiers.length) html += ` <small>${modifiers.map((m) => `${esc(m.label)} ${signed(Number(m.value) || 0)}`).join(", ")}</small>`;
 	html += `</header>`;
 	if (list.length) {
-		for (const t of list) html += await targetSection(actor, t, d20, extra);
+		// "Might apply" never lists what is already added (e.g. Combat Assessment's +2 on a critical hit).
+		const ignore = [...ignoreMaybe, ...modifiers.map((m) => m.label), ...(label ? [label] : [])];
+		for (const t of list) html += await targetSection(actor, t, d20, extra, ignore);
 	} else {
 		const loreSlugs = Object.values(actor.skills ?? {}).filter((s) => s.lore).map((s) => s.slug);
 		const results = (await Promise.all([...RK_SKILLS, ...loreSlugs].map((s) => skillTotal(actor, s, d20, null, extra)))).filter(Boolean);
-		html += `<table class="lucd20-rk-table"><tr><th>${L("Skill")}</th><th>${L("Total")}</th></tr>${results.map((r) => `<tr>${skillHead(r)}</tr>`).join("")}</table>`;
-		html += maybeList(results);
+		html += `<table class="lucd20-rk-table lucd20-rk-grid lucd20-rk-plain"><colgroup><col class="lucd20-rk-c-name"><col class="lucd20-rk-c-total"></colgroup><tr><th>${L("Skill")}</th><th>${L("Total")}</th></tr>${results.map((r) => `<tr>${skillHead(r)}</tr>`).join("")}</table>`;
+		html += maybeList(results, ignoreMaybe);
 	}
 	html += `</div>`;
 	const one = list.length === 1 ? list[0] : null;

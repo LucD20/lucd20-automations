@@ -2938,6 +2938,16 @@ listened to on V13+ (Chat Pins, Turn Announcer, Chat Log Trim): the owner's
 console showed its deprecation warning. Harness: a stand-in V14 ChatLog
 class; test 76 checks the entries.
 
+**v0.87.5 (owner: "the chat isn't scrolling down when a new message is
+sent"):** Chat Log Trim (0.86.0, on by default, per player) removes the
+oldest rendered messages while Foundry adds the new one; Foundry's own
+"at the bottom" scroll could then be skipped. Now each chat log's "at the
+bottom" is noted when a message is created (pre/create hooks, before it's
+added); after the draw and the trim it is scrolled to the bottom (next frame
+and again after 250 ms, for pictures). Scrolled up to read: untouched.
+Test 77 (fails without the fix). (verify) in Foundry; if it persists with
+Chat Log Trim off, the cause is elsewhere.
+
 ---
 
 ## 23. Adventure conversion tools (owner, 2026-11-19, drafting)

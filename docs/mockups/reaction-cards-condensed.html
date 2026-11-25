@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Reaction cards, condensed: mockups</title>
+<link rel="stylesheet" href="../../tools/harness/node_modules/@fortawesome/fontawesome-free/css/all.min.css">
+<style>
+  body { margin: 0; padding: 18px; background: #3a3a3f; font-family: Signika, "Segoe UI", sans-serif; display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
+  .col { width: 300px; display: flex; flex-direction: column; gap: 6px; }
+  .col > h2 { margin: 0 0 2px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: #f3b469; }
+  .col > p.why { margin: 4px 2px 0; font-size: 12px; color: #cfc6b8; line-height: 1.35; }
+  .lbl { font-size: 10.5px; color: #9d9586; letter-spacing: .06em; text-transform: uppercase; margin: 4px 0 -2px 2px; }
+  .msg { padding: 4px; border: 1px solid #b9a98f; border-radius: 4px; background: #efe7d6; box-shadow: 0 2px 6px rgba(0,0,0,.4); color: #191813; font-size: 13px; }
+  .art { width: 20px; height: 20px; border-radius: 3px; flex: none; display: grid; place-items: center; color: #fff; font-size: 11px; }
+  .shield { background: radial-gradient(circle at 40% 35%, #c9a66b, #6b4a22); } .rs { background: #2b2b2b; } .rh { background: #8a2a12; }
+  .g { display: inline-grid; place-items: center; min-width: 14px; height: 14px; padding: 0 2px; border-radius: 3px; font-size: 9px; font-weight: 700; background: var(--k); color: #fff; flex: none; }
+  .card { position: relative; padding: 4px 6px 5px 10px; border-radius: 4px; background: #faf6ee; border: 1px solid #d9ccb2; }
+  .card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 4px 0 0 4px; background: var(--k); }
+  .reaction { --k: #c26a00; } .action { --k: #2a5bb5; }
+  .row { display: flex; align-items: center; gap: 5px; min-width: 0; }
+  .t { font-weight: 700; white-space: nowrap; }
+  .w { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11.5px; color: #6b6152; }
+  .sp { flex: 1; }
+  .tx { margin-top: 2px; font-size: 12.5px; line-height: 1.3; }
+  .tx b { font-weight: 700; }
+  .tx .d { color: #6b6152; }
+  .res { font-size: 11.5px; font-weight: 700; color: var(--k); white-space: nowrap; }
+  .res.sk { color: #8a8070; }
+  /* buttons */
+  .bt { display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 22px; padding: 0 9px; border-radius: 3px; font-size: 12px; font-weight: 600; white-space: nowrap; flex: none; }
+  .bt.p { background: var(--k); color: #fff; }
+  .bt.s { border: 1px solid #b9ad94; color: #4f473b; padding: 0 7px; }
+  .bt.i { width: 24px; padding: 0; }
+  .btns { display: flex; gap: 4px; }
+</style>
+</head>
+<body>
+
+<div class="col"><h2>A1 · Two lines, buttons on the right</h2>
+  <div class="lbl">Shield Block</div>
+  <div class="msg"><div class="card reaction"><div class="row"><span class="art shield"></span><span class="t">Shield Block</span><span class="g">R</span><span class="w">Madzoog</span></div>
+    <div class="row tx"><span><b>11</b> physical · blocks <b>5</b> → takes <b>6</b> <span class="d">(HP 20/20)</span></span><span class="sp"></span><span class="btns"><span class="bt p"><i class="fa-solid fa-shield"></i> Block</span><span class="bt s i"><i class="fa-solid fa-xmark"></i></span></span></div></div></div>
+  <div class="lbl">Reactive Strike</div>
+  <div class="msg"><div class="card reaction"><div class="row"><span class="art rs"><i class="fa-solid fa-reply"></i></span><span class="t">Reactive Strike</span><span class="g">R</span><span class="w">Blisterwell Warrior</span></div>
+    <div class="row tx"><span><b>Madzoog</b> left your reach</span><span class="sp"></span><span class="btns"><span class="bt p"><i class="fa-solid fa-hand-fist"></i> Strike</span><span class="bt s i"><i class="fa-solid fa-xmark"></i></span></span></div></div></div>
+  <div class="lbl">Answered</div>
+  <div class="msg"><div class="card reaction"><div class="row"><span class="art shield"></span><span class="t">Shield Block</span><span class="g">R</span><span class="w">Madzoog</span><span class="sp"></span><span class="res">Blocked 5 · took 6</span></div></div></div>
+  <div class="msg"><div class="card reaction"><div class="row"><span class="art rs"><i class="fa-solid fa-reply"></i></span><span class="t">Reactive Strike</span><span class="g">R</span><span class="sp"></span><span class="res sk">Skipped</span></div></div></div>
+  <div class="lbl">Roaring Heart</div>
+  <div class="msg"><div class="card action"><div class="row"><span class="art rh"><i class="fa-solid fa-exclamation"></i></span><span class="t">Roaring Heart</span><span class="w">Uri</span></div>
+    <div class="row tx"><span>Shoves <b>1/2</b> · shoved <b>0</b></span><span class="sp"></span><span class="btns"><span class="bt p"><i class="fa-solid fa-hand"></i> Shove</span><span class="bt s i"><i class="fa-solid fa-check"></i></span><span class="bt s i"><i class="fa-solid fa-xmark"></i></span></span></div></div></div>
+  <p class="why">Title line, then one line with the facts and the buttons at its end. Skip / Done / Cancel are icon-only (named on hover).</p>
+</div>
+
+<div class="col"><h2>A2 · One line when it fits</h2>
+  <div class="lbl">Shield Block</div>
+  <div class="msg"><div class="card reaction"><div class="row"><span class="art shield"></span><span class="t">Shield Block</span><span class="g">R</span><span class="sp"></span><span class="btns"><span class="bt p"><i class="fa-solid fa-shield"></i> Block</span><span class="bt s i"><i class="fa-solid fa-xmark"></i></span></span></div>
+    <div class="tx"><b>Madzoog</b>: 11 physical · blocks <b>5</b> → takes <b>6</b> <span class="d">· HP 20/20</span></div></div></div>
+  <div class="lbl">Reactive Strike</div>
+  <div class="msg"><div class="card reaction"><div class="row"><span class="art rs"><i class="fa-solid fa-reply"></i></span><span class="t">Reactive Strike</span><span class="g">R</span><span class="sp"></span><span class="btns"><span class="bt p"><i class="fa-solid fa-hand-fist"></i> Strike</span><span class="bt s i"><i class="fa-solid fa-xmark"></i></span></span></div>
+    <div class="tx"><span class="d">Blisterwell Warrior:</span> <b>Madzoog</b> left your reach</div></div></div>
+  <div class="lbl">Answered</div>
+  <div class="msg"><div class="card reaction"><div class="row"><span class="art shield"></span><span class="t">Shield Block</span><span class="g">R</span><span class="sp"></span><span class="res">Blocked 5 · took 6</span></div></div></div>
+  <div class="msg"><div class="card reaction"><div class="row"><span class="art rs"><i class="fa-solid fa-reply"></i></span><span class="t">Reactive Strike</span><span class="g">R</span><span class="sp"></span><span class="res">Struck</span></div></div></div>
+  <div class="lbl">Roaring Heart</div>
+  <div class="msg"><div class="card action"><div class="row"><span class="art rh"><i class="fa-solid fa-exclamation"></i></span><span class="t">Roaring Heart</span><span class="sp"></span><span class="btns"><span class="bt p"><i class="fa-solid fa-hand"></i> Shove</span><span class="bt s i"><i class="fa-solid fa-check"></i></span><span class="bt s i"><i class="fa-solid fa-xmark"></i></span></span></div>
+    <div class="tx"><b>Uri</b>: shoves 1/2 · shoved 0</div></div></div>
+  <p class="why">Buttons in the title line; the second line is the facts, starting with who. The tightest; the creature's name moves into the text.</p>
+</div>
+
+<div class="col"><h2>A3 · Buttons under, full width, small</h2>
+  <div class="lbl">Shield Block</div>
+  <div class="msg"><div class="card reaction"><div class="row"><span class="art shield"></span><span class="t">Shield Block</span><span class="g">R</span><span class="w">Madzoog</span><span class="sp"></span><span class="w">HP 20/20</span></div>
+    <div class="tx">11 physical · blocks <b>5</b> → takes <b>6</b></div>
+    <div class="row" style="margin-top:4px"><span class="bt p" style="flex:1"><i class="fa-solid fa-shield"></i> Block</span><span class="bt s" style="flex:1"><i class="fa-solid fa-xmark"></i> Skip</span></div></div></div>
+  <div class="lbl">Reactive Strike</div>
+  <div class="msg"><div class="card reaction"><div class="row"><span class="art rs"><i class="fa-solid fa-reply"></i></span><span class="t">Reactive Strike</span><span class="g">R</span><span class="w">Blisterwell Warrior</span></div>
+    <div class="tx"><b>Madzoog</b> left your reach</div>
+    <div class="row" style="margin-top:4px"><span class="bt p" style="flex:1"><i class="fa-solid fa-hand-fist"></i> Strike</span><span class="bt s" style="flex:1"><i class="fa-solid fa-xmark"></i> Skip</span></div></div></div>
+  <div class="lbl">Answered</div>
+  <div class="msg"><div class="card reaction"><div class="row"><span class="art shield"></span><span class="t">Shield Block</span><span class="g">R</span><span class="w">Madzoog</span><span class="sp"></span><span class="res">Blocked 5 · took 6</span></div></div></div>
+  <div class="msg"><div class="card reaction"><div class="row"><span class="art rs"><i class="fa-solid fa-reply"></i></span><span class="t">Reactive Strike</span><span class="g">R</span><span class="sp"></span><span class="res sk">Skipped</span></div></div></div>
+  <div class="lbl">Roaring Heart</div>
+  <div class="msg"><div class="card action"><div class="row"><span class="art rh"><i class="fa-solid fa-exclamation"></i></span><span class="t">Roaring Heart</span><span class="w">Uri</span><span class="sp"></span><span class="w">shoves 1/2 · shoved 0</span></div>
+    <div class="row" style="margin-top:4px"><span class="bt p" style="flex:2"><i class="fa-solid fa-hand"></i> Shove</span><span class="bt s" style="flex:1"><i class="fa-solid fa-check"></i> Done</span><span class="bt s" style="flex:1"><i class="fa-solid fa-xmark"></i> Cancel</span></div></div></div>
+  <p class="why">Three short lines; the buttons keep their words and are easiest to hit. Still about half of today's height.</p>
+</div>
+
+</body>
+</html>

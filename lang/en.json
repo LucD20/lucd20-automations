@@ -44,6 +44,7 @@
       "scenesWindows": { "Label": "Scenes & Windows", "Hint": "Scene navigation, colors, sound; sheets and window title bars." },
       "pf2eCore": { "Label": "Core Rules", "Hint": "The game's own rules, done for you." },
       "pf2eClasses": { "Label": "Classes", "Hint": "Class feats and features, class by class." },
+      "pf2eAncestries": { "Label": "Ancestries", "Hint": "Ancestry feats, ancestry by ancestry." },
       "pf2eExploration": { "Label": "Exploration", "Hint": "Search and hazard detection." },
       "pf2eChat": { "Label": "Chat helpers", "Hint": "Chances, the modifiers that mattered, damage estimates." },
       "dnd4eCore": { "Label": "Core Rules", "Hint": "Cover, opportunity attacks, triggered powers, actions and damage." },
@@ -55,7 +56,8 @@
     },
     "Section": {
       "conditions": "Conditions", "actions": "Actions & Checks", "reactions": "Reactions", "battlefield": "Battlefield & Spells", "tools": "Tools",
-      "animist": "Animist", "commander": "Commander", "guardian": "Guardian", "oracle": "Oracle", "swashbuckler": "Swashbuckler"
+      "animist": "Animist", "commander": "Commander", "guardian": "Guardian", "oracle": "Oracle", "swashbuckler": "Swashbuckler", "dandy": "Dandy (archetype)",
+      "kobold": "Kobold", "orc": "Orc"
     },
     "Category": {
       "combat": {
@@ -901,6 +903,26 @@
       "heroStart": {
         "Name": "Hero Start Area",
         "Hint": "When you create an encounter, click on the map to mark where the heroes start: a click marks a square, a drag marks an area (only the squares reachable from where the drag started without crossing a wall); Shift removes squares. The first area teleports every player character's token into it. Everyone sees the area until the encounter starts. Reopen it from the chat buttons. Square grids only."
+      },
+      "pf2eCringe": {
+        "Name": "Cringe",
+        "Hint": "When a Strike critically hits a creature with Cringe, its player gets a card: Cringe turns on PF2e's own Cringe for the attacker's damage roll (−level − 2), spends the reaction, and the attacker is immune for a day. If the damage was already rolled, a line says how much less to apply."
+      },
+      "pf2eSetUpStrike": {
+        "Name": "Set-Up Strike",
+        "Hint": "A Set-Up Strike checkbox in \"Feats for this Strike\". A hit makes the target off-guard until one of the commander's allies attacks it, or the commander's next turn starts."
+      },
+      "pf2eSuchADisgrace": {
+        "Name": "Such a Disgrace!",
+        "Hint": "An ally within 30 ft fails a Will save against a mental effect: the Dandy gets a card. React spends the reaction and sends the ally a Reroll button (+1, keeps the higher). The ally is then immune for 10 minutes."
+      },
+      "pf2eOrcFerocity": {
+        "Name": "Orc Ferocity",
+        "Hint": "A creature with Orc Ferocity (PC or NPC) that would drop to 0 HP stays at 1 HP instead, before the damage is saved: no dying, no initiative change. Wounded +1, the daily use and the reaction are spent, and a chat line says so. Massive damage that kills outright isn't detected: the GM decides."
+      },
+      "pf2eOrcSuperstition": {
+        "Name": "Orc Superstition",
+        "Hint": "Saving against a spell or magical effect: an Orc Superstition checkbox in the roll window's \"Feats for this save\" (+1 circumstance, spends the reaction)."
       },
       "pf2eMultiCheck": {
         "Name": "Multiple Checks",
@@ -2085,8 +2107,46 @@
         "NotYours": "That card is for someone else.",
         "NoSkill": "That skill isn't on the sheet."
       },
+      "Cringe": {
+        "Line": "{attacker} critically hit you: damage −{n}.",
+        "Cringe": "Cringe",
+        "Skip": "Skip",
+        "Result": "−{n} damage",
+        "AlreadyRolled": "Cringe: the damage was already rolled; apply {n} less to {name}.",
+        "ACreature": "A creature",
+        "NotYours": "That is not your creature."
+      },
+      "SetUpStrike": {
+        "Line": "{target} is off-guard against the next attack by one of {name}'s allies (until {name}'s next turn).",
+        "ACreature": "A creature"
+      },
+      "Disgrace": {
+        "Line": "{ally} failed a Will save against a mental effect ({degree}).",
+        "React": "React",
+        "Skip": "Skip",
+        "Used": "Used",
+        "RerollLine": "{name} gives you a second chance: reroll the Will save, +1, keep the higher.",
+        "Reroll": "Reroll (+1)",
+        "Rerolled": "{name} rerolls (Such a Disgrace!): {d20} {mod} = {total}; first roll {old}; keeps {kept}.",
+        "Now": "Now: {degree}.",
+        "Kept": "Kept {total}",
+        "failure": "failure",
+        "criticalFailure": "critical failure",
+        "success": "success",
+        "criticalSuccess": "critical success",
+        "ACreature": "A creature",
+        "NotYours": "That is not your creature."
+      },
+      "OrcFerocity": {
+        "Line": "Orc Ferocity: {name} stays at 1 HP (wounded +1)."
+      },
+      "OrcSuperstition": {
+        "Name": "Orc Superstition",
+        "NoReaction": "Reaction spent"
+      },
       "StrikeOptions": {
         "Title": "Feats for this Strike",
+        "TitleSave": "Feats for this save",
         "On": "{n} on",
         "Open": "Open the feat"
       },

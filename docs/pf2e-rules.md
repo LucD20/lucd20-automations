@@ -34,6 +34,11 @@ Status: **planned** (noted, not built) · **built** (released, version given) ·
 | 23 | Battle Medicine: who used it on whom, on the Token HUD | built v0.81.0 | `pf2eBattleMedicine` |
 | 24 | Flanking overlay | built v0.81.0 | `pf2eFlanking` |
 | 25 | Recall Knowledge (replaces PF2e Workbench's macro) | built v0.78.0 | `pf2eRecallKnowledge` |
+| 26 | Kobold: Cringe | built v0.89.0 | `pf2eCringe` |
+| 27 | Commander: Set-Up Strike | built v0.89.0 | `pf2eSetUpStrike` |
+| 28 | Dandy: Such a Disgrace! | built v0.89.0 | `pf2eSuchADisgrace` |
+| 29 | Orc: Orc Ferocity | built v0.89.0 | `pf2eOrcFerocity` |
+| 30 | Orc: Orc Superstition | built v0.89.0 | `pf2eOrcSuperstition` |
 
 Commander (Battlecry!): research notes in `docs/pf2e-commander.md`; rules to
 automate come from the owner, one at a time.
@@ -1094,3 +1099,87 @@ one that leaves fewer squares next to enemies (see PLAN).
   true, callback })` calls back with the roll and an unsaved message;
   `roll.options.totalModifier`; `actor.getSelfRollOptions("target")`;
   `actor.synthetics.degreeOfSuccessAdjustments`.
+
+## 26–30. Five feats (owner, 2026-11-25; built v0.89.0, test 78)
+
+Rules text read from the PF2e system's own data (foundryvtt/pf2e packs:
+`feats/ancestry/kobold/level-1/cringe.json`, `feats/class/commander/level-2/
+set-up-strike.json`, `feats/archetype/dandy/level-4/such-a-disgrace.json`,
+`feats/ancestry/orc/level-1/orc-ferocity.json`, `.../orc-superstition.json`;
+Archives of Nethys didn't load for the tools). Settings: a new PF2e page
+"Ancestries" (Kobold, Orc); Dandy is a section of Classes.
+
+### 26. Cringe (kobold 1; reaction)
+- Owner: "A reaction that needs to trigger on a critical, reducing the damage
+  by 2 + level." Rules: trigger, a creature you're aware of critically
+  succeeds on a Strike against you and would deal damage; the attacker takes
+  a circumstance penalty to that Strike's damage equal to your level + 2
+  (after doubling); then immune to your Cringe for 24 hours.
+- Built (`cringe.js`): GM's client, after Dice So Nice: a critical Strike on a
+  creature with the feat (reaction left, not down, attacker not hidden, not
+  immune) → card to its players + GM: Cringe / Skip. Cringe: reaction spent,
+  the attacker immune (our tracker, kind `cringe`, by the kobold, 1 day), and
+  PF2e's own toggle (`toggleRollOption("strike-damage", "cringe", featId,
+  true)`: the feat's EphemeralEffect gives the attacker's strike damage
+  −(2 + level)) until that attacker's next damage roll against it (or 2 min),
+  then off. Damage already rolled: a line "apply N less". (verify) the
+  toggle call in PF2e 8.7.
+
+### 27. Set-Up Strike (commander 2; 1 action, flourish)
+- Owner: "A toggle just like Combat Assessment, granting off-guard on a hit;
+  off-guard goes away after someone hits the target; lasts 1 round." Rules:
+  "off-guard against the next attack that one of your allies attempts against
+  it before the start of your next turn" — built as written (an ally's
+  attempt, hit or miss).
+- Built (`set-up-strike.js`): a checkbox in "Feats for this Strike"; a
+  success/crit with it makes the target off-guard (PF2e's condition, unless
+  already), a public line (GM-only if a token is hidden); removed after the
+  next attack roll against it by a creature on the commander's side (not the
+  commander) or at the start of the commander's next turn. Known limit:
+  PF2e's off-guard counts for everyone, so the commander's own second Strike
+  also benefits.
+
+### 28. Such a Disgrace! (dandy archetype 4; reaction, fortune)
+- Owner: "30 feet, need to see who fails on a mental save, reroll can be done
+  manually in Foundry or the owner of the PC affected by it gets a
+  notification to reroll, keep higher result." Rules: trigger, an ally within
+  30 ft fails a Will save against a mental effect; the ally rerolls with +1
+  circumstance and uses the higher; ally immune 10 minutes.
+- Built (`such-a-disgrace.js`): GM's client: a Will save (options: will +
+  mental), failure / crit failure, not secret → each creature with the feat
+  on the saver's side within 30 ft (footprint gap × scene distance), reaction
+  left, not down, saver not immune → card (React / Skip). React: reaction,
+  saver immune 600 s, a card to the saver's players + GM with "Reroll (+1)":
+  d20 + (first total − first d20) + 1, the higher total kept, its degree
+  against the save's DC (natural 20 / 1 counted); the line shows no DC. The
+  first save's message is not changed. (verify) PF2e 8.7 puts "will" and
+  "mental" in a Will save's roll options against a mental spell.
+
+### 29. Orc Ferocity (orc 1; reaction, 1/day)
+- Owner: "it needs to prevent a token to actually die; it triggers before
+  damage is actually applied to the token so it doesn't trigger dying,
+  change initiative etc., and leave the creature at 1 HP. For NPCs and PCs
+  alike." Rules: would be reduced to 0 HP but not immediately killed; stay at
+  1 HP, wounded +1.
+- Built (`orc-ferocity.js`): `preUpdateActor` / `preUpdateActorDelta` on the
+  client saving the change: HP from >0 to ≤0 on a creature with the feat, the
+  feat's frequency left, reaction left (in combat), not dead → the change is
+  rewritten to 1 HP. GM: wounded +1, frequency −1, reaction spent, a line;
+  dying / unconscious removed if PF2e still adds them within ~1 s. The same
+  hit seen twice (actor + delta) within 1.5 s counts once. Not detected:
+  "immediately killed" (massive damage). (verify) PF2e 8.7 adds no dying when
+  the saved HP is 1; the delta hook's change paths.
+
+### 30. Orc Superstition (orc 1; reaction, concentrate)
+- Owner: "appears before rolling the spell or magical effect." Rules:
+  trigger, you attempt a save against a spell or magical effect and haven't
+  rolled; +1 circumstance to it.
+- Built (`orc-superstition.js`): the shared section (`strike-options.js`, now
+  for saves too: "Feats for this save") offers it when the save's options
+  have arcane / divine / occult / primal / magical (PF2e's own predicate),
+  not with Pervasive Superstition, not when PF2e's own toggle already added
+  it; blocked (reaction spent) shows why. Checked: a +1 circumstance Modifier
+  is added to the roll at once (`check.push`, `calculateTotal`, re-render),
+  and the roll is tagged; the GM spends the reaction when that save is
+  posted. No roll window (skip dialog): no chance to use it here.
+

@@ -7,8 +7,11 @@ import { localize } from "../../core/constants.js";
  * (this browser). A feat's icon and name open the feat. Checked, the roll's options get the feat's tag (so the
  * GM's client knows, e.g. Combat Assessment).
  *
- * registerStrikeOption({ id, tag, active() → bool, item(actor) → Item | null, applies(context, item) → bool,
- *   blocked(context, item) → string | null })   (blocked: shown instead of a usable checkbox, e.g. "immune")
+ * registerStrikeOption({ id, tag, types = ["attack-roll"], active() → bool, item(actor) → Item | null,
+ *   applies(context, item, roll) → bool, blocked(context, item) → string | null, toggle(app, on) })
+ *   blocked: shown instead of a usable checkbox (e.g. "immune"); toggle: also change the roll itself (e.g. add a
+ *   modifier: Orc Superstition, v0.89.0). types: "attack-roll" ("Feats for this Strike") and/or "saving-throw"
+ *   ("Feats for this save").
  */
 
 const L = (key, data) => localize(`LUCD20.PF2eRules.StrikeOptions.${key}`, data);
@@ -25,14 +28,16 @@ export function registerStrikeOption(def) {
 	}
 }
 
-/** The attacker, the Strike's item, and whether it is melee. */
+const TYPES = ["attack-roll", "saving-throw"];
+
+/** The roller, the roll's item, whether a Strike is melee, the roll's options. */
 export function strikeOf(context) {
-	if (!context || context.type !== "attack-roll" || context.isReroll) return null;
+	if (!context || !TYPES.includes(context.type) || context.isReroll) return null;
 	const actor = context.origin?.token?.actor ?? context.origin?.actor ?? context.actor ?? context.token?.actor ?? null;
 	const item = context.origin?.item ?? context.item ?? null;
 	const opts = context.options instanceof Set ? context.options : new Set(context.options ?? []);
 	const melee = item?.isMelee ?? !(opts.has("ranged") || opts.has("item:ranged"));
-	return actor ? { actor, item, melee } : null;
+	return actor ? { actor, item, melee, type: context.type, options: opts } : null;
 }
 
 const optionSet = (context) => (context?.options instanceof Set ? context.options : null);
@@ -60,8 +65,9 @@ export function onDialog(app, html) {
 	const rows = [];
 	for (const def of defs) {
 		if (def.active && !def.active()) continue;
+		if (!(def.types ?? ["attack-roll"]).includes(strike.type)) continue;
 		const item = def.item?.(strike.actor);
-		if (!item || (def.applies && !def.applies(context, item, strike))) continue;
+		if (!item || (def.applies && !def.applies(context, item, strike, app))) continue;
 		const blocked = def.blocked?.(context, item) ?? null;
 		if (blocked && hasTag(context, def.tag)) setTag(context, def.tag, false);
 		rows.push({ def, item, blocked, on: !blocked && hasTag(context, def.tag) });
@@ -69,7 +75,7 @@ export function onDialog(app, html) {
 	if (!rows.length) return;
 	const count = () => rows.filter((r) => r.on).length;
 	const html2 = `<details class="lucd20-so" ${folded() ? "" : "open"}>
-		<summary><i class="fa-solid fa-chevron-down lucd20-so-chev"></i> ${esc(L("Title"))} <span class="lucd20-so-count">${esc(L("On", { n: count() }))}</span></summary>
+		<summary><i class="fa-solid fa-chevron-down lucd20-so-chev"></i> ${esc(L(strike.type === "saving-throw" ? "TitleSave" : "Title"))} <span class="lucd20-so-count">${esc(L("On", { n: count() }))}</span></summary>
 		<div class="lucd20-so-grid">${rows.map((r, i) => `<div class="lucd20-so-opt ${r.blocked ? "is-blocked" : ""}" data-i="${i}">
 			<input type="checkbox" ${r.on ? "checked" : ""} ${r.blocked ? "disabled" : ""} aria-label="${esc(r.item.name)}">
 			<img src="${esc(r.item.img)}" alt="" class="lucd20-so-open" data-tooltip="${esc(L("Open"))}">
@@ -87,6 +93,7 @@ export function onDialog(app, html) {
 		el.querySelector("input").addEventListener("change", (event) => {
 			r.on = event.target.checked;
 			setTag(context, r.def.tag, r.on);
+			r.def.toggle?.(app, r.on);
 			section.querySelector(".lucd20-so-count").textContent = L("On", { n: count() });
 		});
 	}

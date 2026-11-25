@@ -7,6 +7,7 @@ import { addImmunity, immunitiesOf } from "./immunity.js";
 import { pf2eCard, wireOpen, sourceUuid, itemBySlug, compactCard, nameForPlayers } from "./card.js";
 import { degree } from "./guardians-deflection.js";
 import { sysId } from "./sys.js";
+import { useSignature } from "../../features/signature-spells/signature-spells.js";
 
 /**
  * Rule 28 (docs/pf2e-rules.md): Such a Disgrace! (Dandy archetype feat 4; reaction; fortune). Owner, v0.89.0:
@@ -130,6 +131,9 @@ async function answer({ card, value }, senderId) {
 			[`flags.${MODULE_ID}.disgrace.done`]: true,
 			...(reveal ? { whisper: [] } : {})
 		});
+		// The signature animation, "the spotlight of shame" (PLAN §28): on this client and the others (only the
+		// card's recipients when the dandy's token is hidden). Does nothing when Signature Spells or its switch is off.
+		useSignature("suchADisgrace", { caster: doc, targets: [saver], to: reveal ? null : m.whisper });
 		const c = combatantOf(doc);
 		if (c && getFeature("pf2eReactions")?.isEnabled) await spendReaction(c, { source: data.title });
 		if (saver?.actor) await addImmunity(saver.actor, { kind: KIND, by: doc.actor.uuid, name: doc.name, seconds: 600 });

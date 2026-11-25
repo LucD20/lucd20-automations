@@ -4000,6 +4000,9 @@ signature of Signature Spells (§20), `suchADisgrace`;
   token documents, ids or uuids; `to`: user ids when not everyone may know).
   To be called when React is answered:
   `useSignature("suchADisgrace", { caster: doc, targets: [saver], to: reveal ? null : m.whisper })`.
+  **Done (v0.90.0, merged into the rule's branch):** `such-a-disgrace.js`
+  `answer()` calls it in the React branch after the card is updated; test 78
+  checks the broadcast (caster "dandy", targets ["ally"]).
   The card-in-chat way above stays for a feat posted by hand. The same
   signature on the same token is not started twice while it plays.
 - **Who sees what**: only users who see the ally's token; the bubble only when

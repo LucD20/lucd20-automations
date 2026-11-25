@@ -50,7 +50,7 @@ const assert = require("assert");
       return a;
     };
     const scene = { id: "s", grid: { distance: 5 } };
-    const tok = (id, a, col, row, disposition) => { const d = { id, uuid: `Scene.s.Token.${id}`, name: a.name, actor: a, x: col * 100, y: row * 100, width: 1, height: 1, disposition, hidden: false, parent: scene }; registry[d.uuid] = d; registry[a.uuid] = a; return { document: d }; };
+    const tok = (id, a, col, row, disposition) => { const d = { id, uuid: `Scene.s.Token.${id}`, name: a.name, actor: a, x: col * 100, y: row * 100, width: 1, height: 1, disposition, hidden: false, parent: scene }; registry[d.uuid] = d; registry[a.uuid] = a; return { id, document: d }; };
     const kobA = actor("kob", "Kobby", { owner: "p1", level: 4, feats: [{ name: "Cringe", slug: "cringe" }] });
     const ogreA = actor("ogre", "Ogre", { level: 6 });
     const cmdA = actor("cmd", "Brannoc", { owner: "p1", feats: [{ name: "Set-Up Strike", slug: "set-up-strike" }] });
@@ -96,6 +96,13 @@ const assert = require("assert");
     out.susTurn = conds.ogre?.["off-guard"];
 
     // ---------- Such a Disgrace! ----------
+    // React starts the signature animation (PLAN §28): useSignature("suchADisgrace", dandy → saver). Playback is off
+    // here (test 79 covers it); what is broadcast to the other clients is checked.
+    await game.settings.set(M, "signatureSpells_enabled", true);
+    await game.settings.set(M, "signatureSpells_suchADisgrace", true);
+    await game.settings.set(M, "signatureSpells_show", false);
+    await settle(150);
+    const emits = []; game.socket.emit = (name, data) => emits.push(data);
     window.Roll = class { constructor(f) { this.formula = f; } async evaluate() { const mod = Number(this.formula.split("+")[1]); this.dice = [{ faces: 20, total: 15 }]; this.total = 15 + mod; return this; } };
     const save = (who, outcome, options) => post({ token: who.document, actor: who.document.actor, rolls: [{ total: 14, dice: [{ faces: 20, total: 6 }] }], flags: { pf2e: { context: { type: "saving-throw", outcome, options, dc: { value: 20 } } } } });
     save(tAlly, "failure", ["will", "mental", "saving-throw"]); await settle(150);
@@ -104,6 +111,7 @@ const assert = require("assert");
     await click(sd, '[data-lucd20-sd="react"]');
     const rr = flagged("disgrace").at(-1);
     out.sdReroll = [txt(sd.content), txt(rr.content), imm.immunitiesOf(allyA, { kind: "suchADisgrace" }).length];
+    out.sdSignature = emits.filter(e => e?.type === "signatureUse").map(e => e.payload);
     await click(rr, '[data-lucd20-sd="reroll"]');
     out.sdResult = [txt(game.messages.filter(m => (m.content ?? "").includes("fa-dice-d20") && !m.flags[M]).at(-1)?.content), txt(rr.content)];
     // Not mental, a success, out of range, or immune: no card.
@@ -159,6 +167,7 @@ const assert = require("assert");
   assert.strictEqual(r.susTurn, 0, "the commander's next turn ends it");
   assert.deepStrictEqual(r.sdCard, [1, "Such a Disgrace! R Lord Fop Amiri failed a Will save against a mental effect (failure). React Skip", ["p1", "u1"]]);
   assert.deepStrictEqual(r.sdReroll, ["Such a Disgrace! R Lord Fop Used", "Such a Disgrace! Amiri Lord Fop gives you a second chance: reroll the Will save, +1, keep the higher. Reroll (+1)", 1]);
+  assert.deepStrictEqual(r.sdSignature, [{ spell: "suchADisgrace", scene: "s", caster: "dandy", targets: ["ally"] }], "React starts the signature: the dandy on the saver");
   assert.deepStrictEqual(r.sdResult, ["Amiri rerolls (Such a Disgrace!): 15 + 9 = 24; first roll 14; keeps 24. Now: success.", "Such a Disgrace! Amiri Kept 24"], "the reroll: +1, the higher kept, its degree");
   assert.strictEqual(r.sdOthers, 1, "not mental / a success / out of range: nothing; another ally in range: a card");
   assert.deepStrictEqual(r.of, [1, 1, 0, "Orc Ferocity: Grok stays at 1 HP (wounded +1)."], "0 HP rewritten to 1 before saving; wounded +1; the daily use spent");

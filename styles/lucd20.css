@@ -3082,3 +3082,18 @@ html.lucd20-chat-trim-active .chat-log > .chat-message { content-visibility: aut
 .lucd20-chat-menu button i:first-child { color: #f3b469; }
 .lucd20-chat-menu button span { flex: 1; }
 .lucd20-chat-menu .lucd20-menu-on { font-size: 7px; color: #ee9b3a; }
+
+/* Combat Assessment in PF2e's Strike roll window (v0.87.8). */
+.lucd20-ca-toggle { display: flex; align-items: center; gap: 8px; margin: 6px 0; padding: 5px 8px; border: 1px solid rgba(0, 0, 0, 0.2); border-radius: 4px; background: rgba(0, 0, 0, 0.04); }
+.lucd20-ca-toggle.is-on { border-color: #4a6fb5; background: rgba(74, 111, 181, 0.12); }
+.lucd20-ca-toggle img { width: 24px; height: 24px; border: 0; border-radius: 3px; flex: none; }
+.lucd20-ca-toggle .lucd20-ca-name { font-weight: 700; cursor: pointer; text-decoration: underline dotted; }
+.lucd20-ca-toggle .lucd20-ca-hint { flex: 1; font-size: 0.85em; opacity: 0.7; }
+.lucd20-ca-toggle .lucd20-ca-immune { font-size: 0.85em; font-style: italic; opacity: 0.8; }
+.lucd20-ca-switch { position: relative; display: inline-block; flex: none; width: 40px; height: 20px; margin: 0; }
+.lucd20-ca-switch input { position: absolute; opacity: 0; width: 0; height: 0; margin: 0; }
+.lucd20-ca-switch span { position: absolute; inset: 0; border-radius: 10px; background: #9a9386; cursor: pointer; transition: background 0.15s; }
+.lucd20-ca-switch span::before { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform 0.15s; }
+.lucd20-ca-switch input:checked + span { background: #1f3f8f; }
+.lucd20-ca-switch input:checked + span::before { transform: translateX(20px); }
+.lucd20-ca-switch input:focus-visible + span { outline: 2px solid #ee9b3a; outline-offset: 2px; }

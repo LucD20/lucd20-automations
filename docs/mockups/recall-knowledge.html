@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Recall Knowledge card: mockups</title>
+<link rel="stylesheet" href="../../tools/harness/node_modules/@fortawesome/fontawesome-free/css/all.min.css">
+<style>
+  body { margin: 0; padding: 20px; background: #3a3a3f; font-family: Signika, "Segoe UI", sans-serif; display: flex; gap: 26px; align-items: flex-start; flex-wrap: wrap; }
+  .col { width: 300px; }
+  .col > h2 { margin: 0 0 8px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: #f3b469; }
+  .col > p.why { margin: 8px 2px 0; font-size: 12px; color: #cfc6b8; line-height: 1.35; }
+  /* A PF2e chat message. */
+  .msg { padding: 6px 8px 8px; border: 1px solid #b9a98f; border-radius: 4px; background: #efe7d6 url(); color: #191813; font-size: 13px; box-shadow: 0 2px 6px rgba(0,0,0,.4); }
+  .msg .who { display: flex; align-items: center; gap: 6px; padding-bottom: 4px; margin-bottom: 6px; border-bottom: 1px solid #c9b99c; }
+  .msg .who .pic { width: 30px; height: 30px; border-radius: 3px; background: #6a4b2e; }
+  .msg .who b { display: block; font-size: 14px; } .msg .who small { color: #6b6152; }
+  .msg .who .ago { margin-left: auto; font-size: 11px; color: #6b6152; }
+  .hdr { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .hdr strong { font-size: 14px; }
+  .d20 { padding: 0 6px; border-radius: 3px; color: #fff; font-weight: 700; background: #3b5aa8; font-size: 12px; line-height: 18px; }
+  .tag { padding: 0 6px; border-radius: 9px; background: #2e7d32; color: #fff; font-size: 11px; font-weight: 700; line-height: 17px; }
+  .vs { margin: 6px 0 4px; font-weight: 700; font-size: 13px; }
+  .vs span { font-weight: 400; color: #6b6152; }
+  .rank { display: inline-block; min-width: 14px; padding: 0 2px; border-radius: 2px; color: #fff; font-size: 10px; font-weight: 700; line-height: 14px; text-align: center; vertical-align: 1px; }
+  .r1 { background: #171f69; } .r2 { background: #3c005e; } .r3 { background: #5e4000; }
+  .S { color: #2a5bb5; } .C { color: #2e7d32; } .F { color: #c26a00; } .X { color: #b71c1c; }
+  .bgS { background: #d9e4f7; color: #1f4a99; border-color: #9fb6e0; } .bgC { background: #d6ecd7; color: #1f6b24; border-color: #8fc493; }
+  .bgF { background: #f6e3cc; color: #9a5300; border-color: #e0b98a; } .bgX { background: #f5d0d0; color: #9a1414; border-color: #e09a9a; }
+  .foot { margin-top: 6px; padding-top: 4px; border-top: 1px dashed #c9b99c; font-size: 11.5px; color: #4f473b; }
+  .foot p { margin: 2px 0; }
+  .feat { display: inline-block; padding: 0 4px; border: 1px solid #a99a80; border-radius: 3px; background: #ddd3bf; font-size: 11px; }
+  .sec { margin: 8px 0 3px; font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #6b6152; }
+
+  /* A: a card per skill, outcome chips under it. */
+  .a-row { padding: 5px 6px; margin-bottom: 4px; border: 1px solid #d4c6aa; border-radius: 4px; background: #f7f1e4; }
+  .a-top { display: flex; align-items: baseline; gap: 5px; }
+  .a-top .nm { font-weight: 700; }
+  .a-top .tot { margin-left: auto; font-size: 16px; font-weight: 700; }
+  .a-top .tot small { font-size: 11px; font-weight: 400; color: #6b6152; }
+  .chips { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; margin-top: 4px; }
+  .chips.two { grid-template-columns: repeat(2, 1fr); }
+  .chip { padding: 2px 0 1px; border: 1px solid; border-radius: 3px; text-align: center; font-size: 11px; font-weight: 700; line-height: 1.15; }
+  .chip small { display: block; font-size: 9.5px; font-weight: 400; opacity: .85; }
+
+  /* B: one grid, symbols, DCs in the header. */
+  table.b { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
+  table.b col.n { width: 37%; } table.b col.t { width: 19%; }
+  table.b th, table.b td { overflow: hidden; text-overflow: ellipsis; padding: 3px 1px; border-bottom: 1px solid #d4c6aa; text-align: center; white-space: nowrap; }
+  table.b th { font-size: 10px; font-weight: 700; color: #6b6152; }
+  table.b th:first-child, table.b td:first-child { text-align: left; }
+  table.b td.tot { font-weight: 700; }
+  table.b td.tot small { font-weight: 400; color: #6b6152; font-size: 10px; }
+  table.b .sym { display: inline-grid; place-items: center; width: 20px; height: 18px; border: 1px solid; border-radius: 3px; font-size: 11px; }
+  table.b tr.lore-head th { padding-top: 7px; }
+  .legend { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; font-size: 10.5px; color: #4f473b; }
+  .legend span { display: inline-flex; align-items: center; gap: 3px; }
+  .legend .sym { display: inline-grid; place-items: center; width: 16px; height: 14px; border: 1px solid; border-radius: 3px; font-size: 9px; }
+
+  /* C: answer first. */
+  .c-row { display: grid; grid-template-columns: 1fr auto; gap: 0 6px; align-items: center; padding: 5px 0; border-bottom: 1px solid #d4c6aa; }
+  .c-row .nm { font-weight: 700; }
+  .c-row .tot { font-size: 15px; font-weight: 700; text-align: right; }
+  .c-row .tot small { font-size: 10px; font-weight: 400; color: #6b6152; }
+  .c-row .ans { grid-column: 1 / -1; font-size: 12px; margin-top: 1px; }
+  .c-row .ans b { font-weight: 700; }
+  .seg { grid-column: 1 / -1; display: flex; gap: 2px; margin-top: 3px; }
+  .seg span { flex: 1; height: 6px; border-radius: 2px; }
+  .seg .s { background: #4a78c8; } .seg .c { background: #3a9a40; } .seg .f { background: #e0a24f; } .seg .x { background: #c94a4a; }
+</style>
+</head>
+<body>
+
+<div class="col"><h2>Now (for reference)</h2>
+<div class="msg"><div class="who"><span class="pic"></span><span><b>Madzoog</b><small>Luc</small></span><span class="ago">now</span></div>
+<p style="margin:0;color:#6b6152;font-size:12px">The current card: columns too narrow, "Success" splits into two lines, two tables with different columns.</p></div>
+</div>
+
+<div class="col"><h2>A · A row per skill, outcome chips</h2>
+<div class="msg">
+  <div class="who"><span class="pic"></span><span><b>Madzoog</b><small>Luc</small></span><span class="ago">now</span></div>
+  <div class="hdr"><strong>Combat Assessment</strong><span class="d20">d20 6</span><span class="tag">Critical hit +2</span></div>
+  <div class="vs">vs. Blisterwell Warrior</div>
+  <div class="a-row"><div class="a-top"><span class="nm">Society</span><span class="rank r1">T</span><span class="tot">22 <small>(+16)</small></span></div>
+    <div class="chips"><span class="chip bgS">Success<small>DC 19</small></span><span class="chip bgS">Success<small>DC 21</small></span><span class="chip bgF">Fail<small>DC 24</small></span><span class="chip bgF">Fail<small>DC 29</small></span></div></div>
+  <div class="sec">Lore · unspecific DC 17 · specific DC 14</div>
+  <div class="a-row"><div class="a-top"><span class="nm">Warfare</span><span class="rank r2">E</span><span class="tot">24 <small>(+18)</small></span></div>
+    <div class="chips two"><span class="chip bgS">Success<small>unspecific</small></span><span class="chip bgC">Critical<small>specific</small></span></div></div>
+  <div class="a-row"><div class="a-top"><span class="nm">Urgir</span><span class="rank r1">T</span><span class="tot">22 <small>(+16)</small></span></div>
+    <div class="chips two"><span class="chip bgS">Success<small>unspecific</small></span><span class="chip bgS">Success<small>specific</small></span></div></div>
+  <div class="a-row"><div class="a-top"><span class="nm">GM Investigation Type</span><span class="rank r1">T</span><span class="tot">22 <small>(+16)</small></span></div>
+    <div class="chips two"><span class="chip bgS">Success<small>unspecific</small></span><span class="chip bgS">Success<small>specific</small></span></div></div>
+  <div class="foot"><p>Madzoog has <span class="feat"><i class="fa-solid fa-book"></i> Unmistakable Lore</span></p></div>
+</div>
+<p class="why">Nothing wraps; each try's DC sits under its result. Longest card of the three.</p>
+</div>
+
+<div class="col"><h2>B · One grid, symbols, DCs on top</h2>
+<div class="msg">
+  <div class="who"><span class="pic"></span><span><b>Madzoog</b><small>Luc</small></span><span class="ago">now</span></div>
+  <div class="hdr"><strong>Combat Assessment</strong><span class="d20">d20 6</span><span class="tag">Critical hit +2</span></div>
+  <div class="vs">vs. Blisterwell Warrior <span>· DCs in the header</span></div>
+  <table class="b"><colgroup><col class="n"><col class="t"><col><col><col><col></colgroup>
+    <tr><th>Skill</th><th>Total</th><th>19</th><th>21</th><th>24</th><th>29</th></tr>
+    <tr><td><b>Society</b> <span class="rank r1">T</span></td><td class="tot">22 <small>+16</small></td><td><span class="sym bgS">✓</span></td><td><span class="sym bgS">✓</span></td><td><span class="sym bgF">✗</span></td><td><span class="sym bgF">✗</span></td></tr>
+    <tr class="lore-head"><th>Lore</th><th>Total</th><th colspan="2">Unspec. 17</th><th colspan="2">Spec. 14</th></tr>
+    <tr><td><b>Warfare</b> <span class="rank r2">E</span></td><td class="tot">24 <small>+18</small></td><td colspan="2"><span class="sym bgS">✓</span></td><td colspan="2"><span class="sym bgC">★</span></td></tr>
+    <tr><td><b>Urgir</b> <span class="rank r1">T</span></td><td class="tot">22 <small>+16</small></td><td colspan="2"><span class="sym bgS">✓</span></td><td colspan="2"><span class="sym bgS">✓</span></td></tr>
+    <tr><td><b>GM Investig…</b> <span class="rank r1">T</span></td><td class="tot">22 <small>+16</small></td><td colspan="2"><span class="sym bgS">✓</span></td><td colspan="2"><span class="sym bgS">✓</span></td></tr>
+  </table>
+  <div class="legend"><span><span class="sym bgC">★</span>Critical</span><span><span class="sym bgS">✓</span>Success</span><span><span class="sym bgF">✗</span>Fail</span><span><span class="sym bgX">✗✗</span>Crit fail</span></div>
+  <div class="foot"><p>Madzoog has <span class="feat"><i class="fa-solid fa-book"></i> Unmistakable Lore</span></p></div>
+</div>
+<p class="why">Most compact; the same columns for skills and lores. Long lore names are shortened (full name on hover).</p>
+</div>
+
+<div class="col"><h2>C · The answer first</h2>
+<div class="msg">
+  <div class="who"><span class="pic"></span><span><b>Madzoog</b><small>Luc</small></span><span class="ago">now</span></div>
+  <div class="hdr"><strong>Combat Assessment</strong><span class="d20">d20 6</span><span class="tag">Critical hit +2</span></div>
+  <div class="vs">vs. Blisterwell Warrior <span>· DCs 19 / 21 / 24 / 29</span></div>
+  <div class="c-row"><span class="nm">Society <span class="rank r1">T</span></span><span class="tot">22 <small>+16</small></span>
+    <span class="ans"><b class="S">2 facts</b> · succeeds up to DC 21</span>
+    <span class="seg"><span class="s"></span><span class="s"></span><span class="f"></span><span class="f"></span></span></div>
+  <div class="sec">Lore · unspecific DC 17 · specific DC 14</div>
+  <div class="c-row"><span class="nm">Warfare <span class="rank r2">E</span></span><span class="tot">24 <small>+18</small></span>
+    <span class="ans">unspecific <b class="S">success</b> · specific <b class="C">critical</b></span></div>
+  <div class="c-row"><span class="nm">Urgir <span class="rank r1">T</span></span><span class="tot">22 <small>+16</small></span>
+    <span class="ans">unspecific <b class="S">success</b> · specific <b class="S">success</b></span></div>
+  <div class="c-row"><span class="nm">GM Investigation Type <span class="rank r1">T</span></span><span class="tot">22 <small>+16</small></span>
+    <span class="ans">unspecific <b class="S">success</b> · specific <b class="S">success</b></span></div>
+  <div class="foot"><p>Madzoog has <span class="feat"><i class="fa-solid fa-book"></i> Unmistakable Lore</span></p></div>
+</div>
+<p class="why">Reads like a sentence: how many tries succeed. The bar shows the tries at a glance.</p>
+</div>
+
+</body>
+</html>

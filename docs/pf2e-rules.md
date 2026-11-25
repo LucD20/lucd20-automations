@@ -850,6 +850,18 @@ one that leaves fewer squares next to enemies (see PLAN).
 - v0.78.0: replaced by our own Recall Knowledge (rule 25), run on the GM's
   client with +2 passed as a modifier on a critical hit (no effect, no
   Workbench, no query to the player's client).
+- v0.87.8 (owner: "Click to attack, on the roll dialog it shows a 'Combat
+  Assessment' toggle, where you can click on the name to open the feat"):
+  PF2e's roll window for a melee Strike of a creature with the feat gets a
+  row (feat icon, its name: opens the feat; a switch). On, the roll's
+  options get `lucd20-combat-assessment` (context.options), and the GM's
+  client treats that Strike as the assessment (the action's card still
+  works too). A target already immune: "Target immune (time left)", no
+  switch. Not for ranged Strikes or other rolls. Test 66.
+- Recall Knowledge card: owner: "not well formatted, make a mockup or two":
+  `docs/mockups/recall-knowledge.html/.png` (A: a row per skill with outcome
+  chips; B: one grid with symbols, DCs in the header; C: the answer first,
+  "2 facts", a segment bar). Waiting for the owner's pick.
 
 ## 22. Swashbuckler: Guardian's Deflection
 

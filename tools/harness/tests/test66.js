@@ -15,7 +15,7 @@ const assert = require("assert");
     const settle = (ms = 40) => new Promise(res => setTimeout(res, ms));
     const out = {};
     const gd = await import(`/modules/${M}/scripts/systems/pf2e/guardians-deflection.js`);
-    const ca = await import(`/modules/${M}/scripts/systems/pf2e/combat-assessment.js`);
+    const caMod = await import(`/modules/${M}/scripts/systems/pf2e/combat-assessment.js`);
     const imm = await import(`/modules/${M}/scripts/systems/pf2e/immunity.js`);
     for (const f of ["pf2eCombatAssessment", "pf2eGuardiansDeflection"]) await game.settings.set(M, `${f}_enabled`, true);
     await game.settings.set(M, "pf2eReactions_enabled", false);
@@ -144,6 +144,38 @@ const assert = require("assert");
     // PF2e gives no identification data: worked out the same way (level, rarity, traits).
     out.fallback = [rkMod._test.levelDC(-1), rkMod._test.levelDC(0), rkMod._test.levelDC(3), rkMod._test.levelDC(21),
       rkMod._test.identification({ level: 5, rarity: "rare", system: { traits: { value: ["fey", "humanoid"] } } })];
+    // v0.87.8: a Combat Assessment toggle in PF2e's Strike roll window (melee, with the feat); the name opens it.
+    let opened = 0;
+    commanderA.items[0].sheet = { render: () => { opened++; } };
+    const dialog = (extra = {}) => {
+      const root = document.createElement("div");
+      root.innerHTML = `<div class="window-content"><ul class="mods"></ul><button class="roll">Roll</button></div>`;
+      document.body.append(root);
+      const app = { context: { type: "attack-roll", origin: { actor: commanderA, item: { isMelee: true } }, target: { actor: ogreA }, options: new Set(["item:melee"]), ...extra }, element: root };
+      Hooks.callAll("renderCheckModifiersDialog", app, root);
+      return { app, root };
+    };
+    const immuneDlg = dialog();   // the ogre is immune (assessed above)
+    out.dlgImmune = txt(immuneDlg.root.querySelector(".lucd20-ca-toggle")?.innerHTML ?? "");
+    out.dlgImmuneSwitch = !!immuneDlg.root.querySelector(".lucd20-ca-toggle input");
+    game.time.worldTime += 86401;
+    const d = dialog();
+    const row = d.root.querySelector(".lucd20-ca-toggle");
+    out.dlgPlace = row?.nextElementSibling?.matches("button.roll");
+    row.querySelector(".lucd20-ca-name").click();
+    out.dlgOpened = opened;
+    const box = row.querySelector("input");
+    box.checked = true; box.dispatchEvent(new Event("change"));
+    out.dlgTagged = d.app.context.options.has(caMod.TAG);
+    box.checked = false; box.dispatchEvent(new Event("change"));
+    out.dlgUntagged = !d.app.context.options.has(caMod.TAG);
+    out.dlgRanged = !!dialog({ origin: { actor: commanderA, item: { isMelee: false } } }).root.querySelector(".lucd20-ca-toggle");
+    out.dlgSave = !!dialog({ type: "saving-throw" }).root.querySelector(".lucd20-ca-toggle");
+    // A Strike rolled with the toggle on is the assessment, without the action first.
+    const n2 = rkCards().length;
+    strike("success", { flags: { pf2e: { context: { type: "attack-roll", outcome: "success", options: ["item:melee", caMod.TAG], target: { token: tOgre.document.uuid } } } } });
+    await settle(200);
+    out.dlgStrike = rkCards().length - n2;
     return out;
   });
   console.log(JSON.stringify(r, null, 1));
@@ -175,6 +207,12 @@ const assert = require("assert");
   assert.deepStrictEqual(r.fallback, [13, 14, 18, 42, { skills: ["nature", "society"], standard: [25, 30], lore: [[22, 25, 30], [20, 22, 25, 30]] }], "DCs without PF2e's data: level, rarity, lore steps, traits");
   assert.deepStrictEqual(errors, [], "no page errors");
   await browser.close();
+  assert.ok(/Combat Assessment.*Target immune/.test(r.dlgImmune) && !r.dlgImmuneSwitch, `immune target: said, no toggle (${r.dlgImmune})`);
+  assert.ok(r.dlgPlace, "the row sits above the Roll button");
+  assert.strictEqual(r.dlgOpened, 1, "the name opens the feat");
+  assert.ok(r.dlgTagged && r.dlgUntagged, "the toggle adds / removes the roll option");
+  assert.ok(!r.dlgRanged && !r.dlgSave, "not for ranged Strikes or other rolls");
+  assert.strictEqual(r.dlgStrike, 1, "a Strike with the toggle on rolls Recall Knowledge (no action needed)");
   console.log("PHASE 67 CHECKS PASSED");
 })().catch(err => {
   console.error(err);

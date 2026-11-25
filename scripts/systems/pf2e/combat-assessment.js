@@ -54,15 +54,67 @@ function meleeStrike(message) {
 	return message.item?.isMelee !== false;
 }
 
-/** Active GM's client: the action card arms it; the next melee Strike is the assessment. */
+/**
+ * v0.87.8 (owner: "Click to attack, on the roll dialog it shows a 'Combat Assessment' toggle, where you can
+ * click on the name to open the feat"): melee Strikes of a creature with the feat get a row in PF2e's roll
+ * window; on, the roll carries the option `lucd20-combat-assessment` and that Strike is the assessment. The
+ * name opens the feat. A target already immune: the row says so (no toggle).
+ */
+export const TAG = "lucd20-combat-assessment";
+const optionsOf = (context) => (context?.options instanceof Set ? context.options : null);
+
+function dialogParts(app) {
+	const context = app?.context;
+	if (!context || context.type !== "attack-roll" || context.isReroll) return null;
+	const actor = context.origin?.token?.actor ?? context.origin?.actor ?? context.actor ?? context.token?.actor ?? null;
+	const feat = actor ? itemBySlug(actor, SLUGS, NAME) : null;
+	if (!feat) return null;
+	const item = context.origin?.item ?? context.item ?? null;
+	const opts = optionsOf(context) ?? new Set(context.options ?? []);
+	if (item?.isMelee === false || (item?.isMelee === undefined && (opts.has("ranged") || opts.has("item:ranged")))) return null;
+	const targetActor = context.target?.actor ?? context.target?.token?.actor ?? null;
+	return { context, feat, targetActor };
+}
+
+export function onDialog(app, html) {
+	const parts = dialogParts(app);
+	const root = html instanceof HTMLElement ? html : (html?.[0] ?? app?.element);
+	if (!parts || !root) return;
+	root.querySelector(".lucd20-ca-toggle")?.remove();
+	const { context, feat, targetActor } = parts;
+	const immune = targetActor ? immunitiesOf(targetActor, { kind: KIND }) : [];
+	const opts = optionsOf(context);
+	const on = !immune.length && !!opts?.has(TAG);
+	const name = `<a class="lucd20-ca-name" data-tooltip="${Handlebars.escapeExpression(L("OpenFeat"))}">${Handlebars.escapeExpression(feat.name)}</a>`;
+	const right = immune.length
+		? `<span class="lucd20-ca-immune">${Handlebars.escapeExpression(L("ImmuneShort", { left: timeLeft(immune[0]) }))}</span>`
+		: `<label class="lucd20-ca-switch"><input type="checkbox" ${on ? "checked" : ""} aria-label="${Handlebars.escapeExpression(feat.name)}"><span></span></label>`;
+	const row = `<div class="lucd20-ca-toggle ${on ? "is-on" : ""}"><img src="${Handlebars.escapeExpression(feat.img)}" alt="">${name}<span class="lucd20-ca-hint">${immune.length ? "" : Handlebars.escapeExpression(L("ToggleHint"))}</span>${right}</div>`;
+	// Above our cover buttons / chance bar, else above the Roll button.
+	const anchor = root.querySelector(".lucd20-cover-pick") ?? root.querySelector(".lucd20-ch-dialog") ?? root.querySelector("button.roll, button[type='submit'], [data-action='roll']");
+	if (anchor) anchor.insertAdjacentHTML("beforebegin", row);
+	else root.querySelector(".window-content")?.insertAdjacentHTML("beforeend", row);
+	const el = root.querySelector(".lucd20-ca-toggle");
+	el.querySelector(".lucd20-ca-name").addEventListener("click", (event) => { event.preventDefault(); feat.sheet?.render(true); });
+	el.querySelector("input")?.addEventListener("change", (event) => {
+		const set = optionsOf(context);
+		if (set) { if (event.target.checked) set.add(TAG); else set.delete(TAG); }
+		else context.options = event.target.checked ? [...(context.options ?? []), TAG] : (context.options ?? []).filter((o) => o !== TAG);
+		el.classList.toggle("is-on", event.target.checked);
+	});
+	requestAnimationFrame(() => { try { app?.setPosition?.({ height: "auto" }); } catch { /* not positionable */ } });
+}
+
+/** Active GM's client: the action card arms it (or the roll window's toggle); the next melee Strike is the assessment. */
 export async function onMessage(message) {
 	if (!game.user.isActiveGM) return;
 	const actor = message?.actor;
 	if (!actor) return;
 	if (isAssessment(message.item) && !message.flags?.[sysId()]?.context) return void pending.set(actor.id, Date.now());
 	if (!meleeStrike(message) || seen.has(message.id)) return;
+	const tagged = (message.flags?.[sysId()]?.context?.options ?? []).includes(TAG);
 	const armed = pending.get(actor.id);
-	if (!armed || Date.now() - armed > WINDOW_MS) return;
+	if (!tagged && (!armed || Date.now() - armed > WINDOW_MS)) return;
 	pending.delete(actor.id);
 	seen.add(message.id);
 	const context = message.flags[sysId()].context;
@@ -154,6 +206,7 @@ defineFeature({
 
 	enable(feature) {
 		feature.on("createChatMessage", (message) => { onMessage(message).catch((err) => error("Combat Assessment failed.", err)); });
+		feature.on("renderCheckModifiersDialog", (app, html) => onDialog(app, html));
 		feature.on("renderChatMessageHTML", (message, html) => {
 			const data = message.getFlag?.(MODULE_ID, "combatAssessment");
 			if (!data) return;

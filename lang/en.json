@@ -2067,6 +2067,9 @@
         "Buckler": "{name} raises a buckler with both hands busy (it needs a free hand or one holding a light item)."
       },
       "CombatAssessment": {
+        "OpenFeat": "Open the feat",
+        "ToggleHint": "this Strike",
+        "ImmuneShort": "Target immune ({left})",
         "Title": "Combat Assessment",
         "Recall": "Recall Knowledge about {name}:",
         "Critical": "(+2, critical hit)",

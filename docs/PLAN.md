@@ -3833,3 +3833,30 @@ a single item), with Sell N for {price} and Cancel. The Sell items window
 has the Loot Pile look: select-all box (some/all), item rows with icons,
 how many (changing it picks the row), the price and price each, Total,
 Cancel and "Sell N". Test 70.
+
+## 28. Such a Disgrace! — a signature animation (owner, 2026-11-25; mockups, awaiting a choice)
+
+Owner: "I want Such a Disgrace Feat from the Dandy archetype to have a cool
+funny animation. Give me a few simple different mockups of the animation after
+using it." The feat (Dandy archetype, level 4, reaction): an ally within 30
+feet fails a Will save against a mental effect; the ally rerolls with +1 and
+keeps the higher result.
+
+Mockups: `docs/mockups/such-a-disgrace.html` (plain 2D canvas, each frame a
+function of the time). Five variants, all ending with the ally pulling
+themselves together (gold ring, "+1"):
+
+- **A glove slap**: a white glove flies from the dandy, slaps the ally, whose
+  art spins like a coin; a red handprint fades.
+- **B monocle pop**: the dandy's monocle pops out and swings on its chain; the
+  ally shrinks and blushes, then springs back.
+- **C spotlight of shame**: the scene dims, a spotlight on the ally, a giant
+  gloved finger wags "tut, tut, tut"; the light turns gold.
+- **D cut-in strip**: the finisher's strip in rose, with the portrait, a fan
+  snapping open and "SUCH A DISGRACE!"; petals over the ally.
+- **E stamp**: a rubber stamp thumps "DISGRACE" in red over the ally; the mark
+  flakes off.
+
+Nothing is built. Open questions for the build: what starts it (the feat's
+card posted to chat) and how the ally is found (the dandy's target, or the
+failed save's message).

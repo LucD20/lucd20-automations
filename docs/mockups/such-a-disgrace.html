@@ -1,0 +1,380 @@
+<title>Such a Disgrace</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Kaushan+Script&display=swap">
+<style>
+  /* Layout: one 16:9 stage, the five variants as a row of buttons under it. Same look as swashbuckler-finisher.html. */
+  :root {
+    color-scheme: dark;
+    --bg: #14110e; --panel: #1c1814; --line: #332b23; --ink: #e9e0d0; --dim: #9c8f7a;
+    --gold: #d79a35; --rose: #e0668c; --plum: #5b2a55;
+    --display: "Anton", Impact, "Arial Narrow", sans-serif;
+    --script: "Kaushan Script", "Brush Script MT", cursive;
+    --body: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.45; overflow-x: hidden; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding-block: 20px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  h1 { font-family: Georgia, "Times New Roman", serif; font-size: 26px; margin: 0 0 6px; color: #f3e6c8; text-wrap: balance; }
+  .note { margin: 0 0 14px; color: #b9ad98; max-width: 78ch; }
+  .note b { color: var(--ink); font-weight: 600; }
+  .stage { width: 100%; max-width: 100%; aspect-ratio: 16 / 9; background: #0e0c0a; border: 1px solid #3a3128; border-radius: 8px; overflow: hidden; box-shadow: 0 8px 30px #0009; }
+  .stage canvas { display: block; width: 100%; height: 100%; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; margin-top: 12px; }
+  .panel h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .09em; color: var(--dim); margin: 0 0 10px; font-weight: 600; }
+  .types { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+  button { font: inherit; color: #efe6d6; background: #2a241d; border: 1px solid #4a3f33; border-radius: 6px; padding: 9px 10px; cursor: pointer; text-align: left; min-height: 40px; }
+  button:hover { background: #352d24; border-color: #6a5a47; }
+  button:active { transform: translateY(1px); }
+  button:focus-visible, input:focus-visible { outline: 2px solid #f0c060; outline-offset: 2px; }
+  button[aria-pressed="true"] { background: #3d3020; border-color: var(--gold); color: #ffe9bd; }
+  button b { display: block; font-weight: 600; }
+  button small { display: block; color: var(--dim); font-size: 12.5px; line-height: 1.35; margin-top: 2px; }
+  .key { display: inline-block; min-width: 1.5em; text-align: center; margin-right: 6px; padding: 0 4px; border-radius: 4px; background: #5a3d17; color: #ffe2a6; font-size: 12px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 12px; align-items: center; }
+  button.primary { background: #5a3d17; border-color: #a9772a; color: #ffe9bd; font-weight: 600; text-align: center; flex: 0 1 180px; }
+  button.primary:hover { background: #6c4a1b; }
+  label.chk { display: flex; align-items: center; gap: 9px; cursor: pointer; min-height: 32px; }
+  label.chk input { width: 18px; height: 18px; accent-color: var(--gold); flex: none; }
+</style>
+
+<main class="wrap">
+  <h1>Such a Disgrace!</h1>
+  <p class="note">
+    Five studies for the Dandy's reaction: an ally fails a Will save against a mental effect, the dandy lets them know
+    exactly what they think of that, and the ally <b>rolls again with +1</b>. Each one plays when the feat is used and ends
+    as the ally pulls themselves together. Pick one, or mix parts ("the monocle from B with the strip from D").
+  </p>
+  <div class="stage"><canvas id="cv" role="img" aria-label="Animation preview: the dandy scolds an ally who failed a Will save"></canvas></div>
+
+  <section class="panel" aria-label="Variants">
+    <h2>Variant</h2>
+    <div class="types" id="vars"></div>
+    <div class="row">
+      <button class="primary" id="btnPlay" type="button">Play again</button>
+      <label class="chk"><input type="checkbox" id="optLoop" checked> Loop</label>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+'use strict';
+/* Such a Disgrace!: mockups of a signature animation. Plain 2D canvas; every frame is a pure function of the time. */
+const W = 1280, H = 720, G = 90, R = 40, TAU = Math.PI * 2, PI = Math.PI;
+const cv = document.getElementById('cv'), c = cv.getContext('2d');
+const SS = Math.min(2, window.devicePixelRatio || 1);
+cv.width = W * SS; cv.height = H * SS;
+
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const lerp = (a, b, p) => a + (b - a) * p;
+const eOut = p => 1 - Math.pow(1 - p, 3);
+const eIn = p => p * p * p;
+const eBack = p => { const k = 1.9; return 1 + (k + 1) * Math.pow(p - 1, 3) + k * Math.pow(p - 1, 2); };
+const rr = i => { const x = Math.sin(i * 127.1 + 11.7) * 43758.5453; return x - Math.floor(x); };
+const pop = (t, a, len, inn = .16, out = .14) => eBack(seg(t, a, a + inn)) * (1 - seg(t, a + len - out, a + len));
+const shake = (t, t0, dur, amp) => { const p = seg(t, t0, t0 + dur); return (t < t0 || p >= 1) ? [0, 0] : [Math.sin(t * 90) * amp * (1 - p), Math.cos(t * 71) * amp * (1 - p)]; };
+
+const cell = (col, row) => ({ x: 10 + G * (col + .5), y: G * (row + .5) });
+const DANDY = cell(3, 4), ALLY = cell(8, 4), FOE = { x: 925, y: 210 };
+const ZOOM = 1.45, CX = 550, CY = 392;   // the camera: the part of the scene that is shown
+const DISPLAY = '"Anton", Impact, "Arial Narrow", sans-serif', SCRIPT = '"Kaushan Script", "Brush Script MT", cursive';
+const GOLD = '#ffd24a', CREAM = '#fbf3e2', INK = '#2a1a26', ROSE = '#e0668c';
+
+/* ------------------------------------------------------------------ scene */
+const floor = document.createElement('canvas'); floor.width = W * 2; floor.height = H * 2;
+(() => {
+  const f = floor.getContext('2d'); f.scale(2, 2);
+  for (let r = 0; r < 8; r++) for (let q = -1; q < 15; q++) {
+    f.fillStyle = (q + r) % 2 ? '#241b27' : '#1e1721'; f.fillRect(10 + q * G, r * G, G, G);
+    f.fillStyle = `rgba(255,255,255,${.012 + rr(q * 31 + r) * .02})`; f.fillRect(10 + q * G, r * G, G, G);
+  }
+  f.strokeStyle = 'rgba(255,230,200,.07)'; f.lineWidth = 1; f.beginPath();
+  for (let q = 0; q <= 15; q++) { f.moveTo(10 + q * G + .5, 0); f.lineTo(10 + q * G + .5, H); }
+  for (let r = 0; r <= 8; r++) { f.moveTo(0, r * G + .5); f.lineTo(W, r * G + .5); }
+  f.stroke();
+})();
+
+function txt(s, x, y, o = {}) {
+  c.save(); c.translate(x, y); if (o.rot) c.rotate(o.rot); if (o.s != null) c.scale(o.s, o.s);
+  c.globalAlpha *= o.a ?? 1; c.font = o.font; c.textAlign = o.align || 'center'; c.textBaseline = 'middle'; c.lineJoin = 'round';
+  if (o.stroke) { c.strokeStyle = o.stroke; c.lineWidth = o.lw || 6; c.strokeText(s, 0, 0); }
+  c.fillStyle = o.fill || CREAM; c.fillText(s, 0, 0); c.restore();
+}
+
+function token(kind, x, y, o = {}) {
+  const s = o.s ?? 1, lift = o.lift || 0;
+  c.save(); c.translate(x, y);
+  if (!o.flat) { c.fillStyle = 'rgba(0,0,0,.4)'; c.beginPath(); c.ellipse(5, 7, R * s * Math.abs(o.sx ?? 1), R * s, 0, 0, TAU); c.fill(); }
+  c.translate(0, -lift); c.rotate(o.rot || 0); c.scale(s * (o.sx ?? 1), s * (o.sy ?? 1));
+  c.fillStyle = kind === 'foe' ? '#a8433c' : '#d9b45a'; c.beginPath(); c.arc(0, 0, R, 0, TAU); c.fill();
+  c.beginPath(); c.arc(0, 0, R - 5, 0, TAU); c.clip();
+  const bg = { dandy: ['#7a3a70', '#3d1b3a'], ally: ['#3f6488', '#1c2e44'], foe: ['#3a2757', '#150d22'] }[kind];
+  const g = c.createRadialGradient(-8, -12, 4, 0, 0, R); g.addColorStop(0, bg[0]); g.addColorStop(1, bg[1]);
+  c.fillStyle = g; c.fillRect(-R, -R, 2 * R, 2 * R);
+  if (kind === 'dandy') {
+    c.fillStyle = '#f0c9a4'; c.beginPath(); c.arc(0, 8, 19, 0, TAU); c.fill();
+    c.fillStyle = '#15101a'; c.fillRect(-14, -34, 28, 24); c.fillRect(-23, -12, 46, 6);
+    c.fillStyle = ROSE; c.fillRect(-14, -17, 28, 5);
+    c.fillStyle = '#2a1a26'; c.beginPath(); c.arc(-7, 5, 2.2, 0, TAU); c.arc(8, 5, 2.2, 0, TAU); c.fill();
+    c.strokeStyle = '#2a1a26'; c.lineWidth = 2.6; c.lineCap = 'round'; c.beginPath();
+    c.moveTo(0, 15); c.quadraticCurveTo(-8, 20, -14, 12); c.moveTo(0, 15); c.quadraticCurveTo(8, 20, 14, 12); c.stroke();
+    if (!o.noMonocle) { c.strokeStyle = GOLD; c.lineWidth = 2; c.beginPath(); c.arc(8, 5, 6.5, 0, TAU); c.stroke(); }
+  } else if (kind === 'ally') {
+    c.fillStyle = '#c0392b'; c.beginPath(); c.ellipse(0, -22, 6, 13, 0, 0, TAU); c.fill();
+    c.fillStyle = '#aab4c0'; c.beginPath(); c.arc(0, 5, 21, 0, TAU); c.fill();
+    c.fillStyle = '#8894a2'; c.fillRect(-2.5, -16, 5, 42);
+    c.fillStyle = '#1b222c'; c.beginPath(); c.roundRect(-15, -2, 30, 9, 3); c.fill();
+    c.fillStyle = '#fff'; c.beginPath(); c.arc(-7, 2.5, 2.2, 0, TAU); c.arc(7, 2.5, 2.2, 0, TAU); c.fill();
+    if (o.blush) { c.fillStyle = `rgba(255,95,130,${.75 * o.blush})`; c.beginPath(); c.ellipse(-11, 13, 6, 3.5, 0, 0, TAU); c.ellipse(11, 13, 6, 3.5, 0, 0, TAU); c.fill(); }
+  } else {
+    c.fillStyle = '#120b1c'; c.beginPath(); c.moveTo(0, -30); c.quadraticCurveTo(30, -10, 24, 34); c.lineTo(-24, 34); c.quadraticCurveTo(-30, -10, 0, -30); c.fill();
+    c.fillStyle = '#e45cff'; c.shadowColor = '#e45cff'; c.shadowBlur = 8; c.beginPath(); c.ellipse(-8, 2, 4, 2.4, .3, 0, TAU); c.ellipse(8, 2, 4, 2.4, -.3, 0, TAU); c.fill(); c.shadowBlur = 0;
+  }
+  if (o.blush) { c.fillStyle = `rgba(255,80,120,${.28 * o.blush})`; c.fillRect(-R, -R, 2 * R, 2 * R); }
+  if (o.inner) o.inner();
+  if (o.flash) { c.fillStyle = `rgba(255,255,255,${o.flash})`; c.fillRect(-R, -R, 2 * R, 2 * R); }
+  c.restore();
+}
+
+function glove(x, y, rot, s, fill = CREAM, a = 1, line = INK) {
+  c.save(); c.translate(x, y); c.rotate(rot); c.scale(s, s); c.globalAlpha *= a;
+  const p = new Path2D();
+  [[-20, -31], [-9.5, -37], [1, -36], [11.5, -30]].forEach(([fx, fy]) => p.roundRect(fx, fy, 9, 30, 4.5));
+  p.roundRect(-21, -10, 42, 30, 9); p.roundRect(-17, 19, 34, 11, 3);
+  const th = new Path2D(); th.roundRect(-33, -6, 9, 24, 4.5);
+  c.lineJoin = 'round'; c.lineWidth = 5; c.strokeStyle = line; c.fillStyle = fill;
+  if (line) { c.stroke(p); c.save(); c.rotate(-.5); c.stroke(th); c.restore(); }
+  c.fill(p); c.save(); c.rotate(-.5); c.fill(th); c.restore();
+  c.restore();
+}
+
+function bubble(t, a, len) {
+  const p = pop(t, a, len); if (p <= 0) return;
+  c.save(); c.translate(DANDY.x + 34, DANDY.y - 46); c.scale(p, p); c.rotate(-.05);
+  c.fillStyle = CREAM; c.strokeStyle = INK; c.lineWidth = 3; c.lineJoin = 'round';
+  c.beginPath(); c.roundRect(-6, -74, 258, 60, 22); c.moveTo(18, -16); c.lineTo(0, 4); c.lineTo(46, -16); c.stroke(); c.fill();
+  txt('Such a disgrace!', 123, -43, { font: `31px ${SCRIPT}`, fill: '#5b2a55' });
+  c.restore();
+}
+
+function sweat(t, a, b) {
+  const al = seg(t, a, a + .15) * (1 - seg(t, b - .2, b)); if (al <= 0) return;
+  const y = ALLY.y - 34 + 26 * seg(t, a, b);
+  c.save(); c.globalAlpha = al; c.fillStyle = '#9fd8ff'; c.strokeStyle = '#3d6f96'; c.lineWidth = 2;
+  c.beginPath(); c.moveTo(ALLY.x + 40, y - 16); c.quadraticCurveTo(ALLY.x + 52, y + 4, ALLY.x + 40, y + 6); c.quadraticCurveTo(ALLY.x + 28, y + 4, ALLY.x + 40, y - 16); c.fill(); c.stroke(); c.restore();
+}
+
+function sparkle(x, y, r, a) {
+  c.save(); c.translate(x, y); c.globalAlpha *= a; c.fillStyle = GOLD; c.beginPath();
+  for (let i = 0; i < 8; i++) { const rad = i % 2 ? r * .28 : r, an = i * PI / 4; c.lineTo(Math.cos(an) * rad, Math.sin(an) * rad); }
+  c.fill(); c.restore();
+}
+
+/* What every variant shares: the mental effect on the ally, the failed save, and the "pull yourself together" at the end. */
+function mental(t, tr) {
+  const a = .5 - .25 * seg(t, tr, tr + .4);
+  c.save(); c.strokeStyle = `rgba(214,92,255,${a})`; c.lineWidth = 3; c.setLineDash([10, 9]); c.lineDashOffset = -t * 40;
+  c.beginPath(); c.moveTo(FOE.x - 26, FOE.y + 26); c.quadraticCurveTo(ALLY.x + 150 + Math.sin(t * 3) * 14, ALLY.y - 190, ALLY.x + 22, ALLY.y - 34); c.stroke(); c.restore();
+}
+function swirl(t, tr, s) {
+  for (let i = 0; i < 3; i++) {
+    const an = t * 4 + i * TAU / 3, x = ALLY.x + Math.cos(an) * 28 * s, y = ALLY.y - 46 * s + Math.sin(an) * 9;
+    c.save(); c.translate(x, y); c.rotate(t * 5); c.globalAlpha = .9 - .35 * seg(t, tr, tr + .4); c.strokeStyle = '#e07bff'; c.lineWidth = 2.6; c.lineCap = 'round';
+    c.beginPath(); for (let k = 0; k <= 14; k++) { const q = k / 14 * 9; c.lineTo(Math.cos(q) * q * .9, Math.sin(q) * q * .9); } c.stroke(); c.restore();
+  }
+}
+function chip(t, tr) {
+  const flip = seg(t, tr, tr + .3), after = flip > .5, sy = Math.abs(Math.cos(flip * PI)) || .001;
+  c.save(); c.translate(ALLY.x, ALLY.y + 74); c.scale(1 + .25 * Math.sin(flip * PI), sy);
+  c.fillStyle = after ? '#4a3510' : '#3a1717'; c.strokeStyle = after ? GOLD : '#c0503f'; c.lineWidth = 2;
+  c.beginPath(); c.roundRect(-92, -17, 184, 34, 17); c.fill(); c.stroke();
+  txt(after ? 'Roll again  +1' : 'Will save 7 · Failure', 0, 1, { font: `600 16px "Segoe UI", system-ui, sans-serif`, fill: after ? '#ffe9a8' : '#ffb3a6' });
+  c.restore();
+}
+function shapeUp(t, tr) {
+  const p = seg(t, tr, tr + .7); if (t < tr || p >= 1) return;
+  c.save(); c.strokeStyle = GOLD; c.globalAlpha = 1 - p; c.lineWidth = 6 * (1 - p) + 1;
+  c.beginPath(); c.arc(ALLY.x, ALLY.y, R + 70 * eOut(p), 0, TAU); c.stroke(); c.restore();
+  for (let i = 0; i < 8; i++) { const an = i * TAU / 8 + .3, d = R + 10 + 70 * eOut(p); sparkle(ALLY.x + Math.cos(an) * d, ALLY.y + Math.sin(an) * d, 11 * (1 - p * .5), 1 - p); }
+  txt('+1', ALLY.x + 4, ALLY.y - 58 - 46 * eOut(p), { font: `44px ${DISPLAY}`, fill: GOLD, stroke: INK, lw: 7, a: 1 - eIn(p), s: .6 + .4 * eBack(seg(t, tr, tr + .2)) });
+}
+const brace = (t, tr) => 1 + .14 * Math.sin(PI * seg(t, tr, tr + .3));   // the ally's little "stand up straight" bounce
+
+/* ------------------------------------------------------------------ variants */
+const V = [
+  { key: 'A', name: 'The glove slap', desc: 'A white glove sails across the room and slaps the ally, who spins like a coin.', D: 3.1, tr: 1.8, poster: 1.16,
+    frame(t) {
+      const hit = 1.05, sp = eOut(seg(t, hit, hit + .7));
+      return { shake: shake(t, hit, .28, 10), dandy: { lift: 10 * Math.sin(PI * seg(t, .42, .62)) },
+        ally: { dx: 28 * Math.sin(PI * seg(t, hit, hit + .55)), sx: t > hit ? Math.cos(TAU * 2 * sp) : 1, flash: t >= hit ? .8 * (1 - seg(t, hit, hit + .18)) : 0, s: brace(t, this.tr),
+          inner: () => { const a = (t > hit ? .6 : 0) * (1 - seg(t, hit + 1, hit + 1.9)); if (a > 0) glove(2, 6, .45, .62, '#e8324a', a, null); } } };
+    },
+    over(t) {
+      const hit = 1.05; bubble(t, .25, 2.2);
+      if (t >= .5 && t < hit) { const p = seg(t, .5, hit); glove(lerp(DANDY.x + 36, ALLY.x - 16, p), lerp(DANDY.y - 6, ALLY.y, p) - 130 * Math.sin(PI * p), p * TAU * 2 - 1.3, 1 + .5 * p); }
+      if (t >= hit) {
+        const p = seg(t, hit, hit + .9);
+        glove(ALLY.x - 16 + 96 * eOut(p), ALLY.y + 78 * eIn(p) - 64 * Math.sin(PI * p), 2.1 + 3 * eOut(p), 1.5 - .5 * p, CREAM, 1 - seg(t, 2.5, 2.9));
+        const b = seg(t, hit, hit + .32);
+        if (b < 1) { c.save(); c.translate(ALLY.x - 10, ALLY.y); c.strokeStyle = '#fff'; c.globalAlpha = 1 - b; c.lineWidth = 5; c.lineCap = 'round'; c.beginPath();
+          for (let i = 0; i < 12; i++) { const an = i * TAU / 12 + .2, r0 = 48 + 40 * eOut(b), r1 = r0 + (i % 2 ? 26 : 44); c.moveTo(Math.cos(an) * r0, Math.sin(an) * r0); c.lineTo(Math.cos(an) * r1, Math.sin(an) * r1); } c.stroke(); c.restore(); }
+        txt('SLAP!', ALLY.x + 96, ALLY.y - 84, { font: `58px ${DISPLAY}`, fill: '#fff', stroke: '#e8324a', lw: 10, rot: .18, s: pop(t, hit, .75) });
+      }
+    } },
+
+  { key: 'B', name: 'The monocle pop', desc: 'The dandy is so appalled the monocle pops out; the ally shrinks, blushing, then stands tall.', D: 3.2, tr: 1.95, poster: 1.5,
+    frame(t) {
+      const down = eOut(seg(t, .9, 1.3)), up = eBack(seg(t, this.tr, this.tr + .32));
+      return { dandy: { lift: 16 * Math.sin(PI * seg(t, .3, .55)), noMonocle: t > .4 },
+        ally: { s: lerp(lerp(1, .68, down), 1, up), blush: seg(t, .9, 1.2) * (1 - seg(t, 2.1, 2.7)) } };
+    },
+    over(t) {
+      txt('!', DANDY.x - 30, DANDY.y - 70, { font: `64px ${DISPLAY}`, fill: '#ff5c7a', stroke: INK, lw: 8, rot: -.15, s: pop(t, .22, .7) });
+      if (t > .4) {
+        const tau = t - .4, th = 2.6 * Math.exp(-1.7 * tau) * Math.cos(7.5 * tau), L = 66, px = DANDY.x + 15, py = DANDY.y + 16 - 16 * Math.sin(PI * seg(t, .3, .55));
+        const mx = px + L * Math.sin(th), my = py + L * Math.cos(th);
+        c.save(); c.strokeStyle = GOLD; c.lineWidth = 1.8; c.beginPath(); c.moveTo(px, py); c.quadraticCurveTo((px + mx) / 2, (py + my) / 2 + 12, mx, my - 11); c.stroke();
+        c.fillStyle = 'rgba(190,230,255,.35)'; c.lineWidth = 3.4; c.beginPath(); c.arc(mx, my, 11, 0, TAU); c.fill(); c.stroke();
+        c.strokeStyle = '#fff'; c.lineWidth = 2; c.beginPath(); c.arc(mx, my, 6.5, 3.6, 4.6); c.stroke(); c.restore();
+        txt('pop!', DANDY.x + 70, DANDY.y - 22, { font: `30px ${SCRIPT}`, fill: GOLD, stroke: INK, lw: 5, rot: .2, s: pop(t, .4, .6) });
+      }
+      bubble(t, .7, 1.9); sweat(t, 1.0, 1.95);
+    } },
+
+  { key: 'C', name: 'The spotlight of shame', desc: 'The room goes dark, a spotlight finds the ally and a giant gloved finger wags: tut, tut, tut.', D: 3.6, tr: 2.2, poster: 1.34,
+    frame(t) {
+      return { ally: { s: lerp(1, .84, eOut(seg(t, .6, .9))) + .16 * eBack(seg(t, this.tr, this.tr + .3)), blush: seg(t, .7, 1) * (1 - seg(t, 2.3, 2.9)) } };
+    },
+    over(t) {
+      const tr = this.tr, dim = .74 * eOut(seg(t, .2, .55)) * (1 - seg(t, 2.35, 2.95));
+      if (dim > 0) {
+        const warm = seg(t, tr, tr + .25), g = c.createRadialGradient(ALLY.x, ALLY.y, 62 + 40 * warm, ALLY.x, ALLY.y, 150 + 60 * warm);
+        g.addColorStop(0, 'rgba(8,4,10,0)'); g.addColorStop(1, `rgba(8,4,10,${dim})`); c.fillStyle = g; c.fillRect(-W, -H, 3 * W, 3 * H);
+        c.save(); c.globalAlpha = dim * .2; c.fillStyle = warm > .5 ? GOLD : '#fff'; c.beginPath();
+        c.moveTo(ALLY.x - 40, -200); c.lineTo(ALLY.x + 40, -200); c.lineTo(ALLY.x + 100 + 30 * warm, ALLY.y); c.lineTo(ALLY.x - 100 - 30 * warm, ALLY.y); c.fill(); c.restore();
+      }
+      sweat(t, .9, 2.1);
+      const inn = eBack(seg(t, .55, .82)), out = eIn(seg(t, 2.05, 2.4)), py = lerp(-330, ALLY.y - 262, inn) - 420 * out;
+      if (t > .55 && out < 1) {
+        const wag = (t > .82 && t < 2.02) ? .34 * Math.sin((t - .82) * TAU / .4) : 0;
+        c.save(); c.translate(ALLY.x, py); c.rotate(wag); c.lineJoin = 'round'; c.strokeStyle = INK; c.fillStyle = CREAM; c.lineWidth = 5;
+        const h = new Path2D(); h.roundRect(-34, 60, 68, 62, 20); h.roundRect(-10, 108, 22, 84, 11); h.roundRect(-40, 22, 80, 44, 8);
+        c.stroke(h); c.fill(h); c.fillStyle = '#5b2a55'; c.fillRect(-40, -140, 80, 166); c.strokeRect(-40, -140, 80, 166);
+        c.fillStyle = GOLD; c.beginPath(); c.arc(0, 44, 6, 0, TAU); c.fill(); c.restore();
+      }
+      [.9, 1.3, 1.7].forEach((t0, i) => { const p = seg(t, t0, t0 + .6); if (t >= t0 && p < 1) txt('tut', ALLY.x + (i % 2 ? 132 : -132), ALLY.y - 120 - 34 * eOut(p) - i * 8, { font: `46px ${SCRIPT}`, fill: CREAM, stroke: INK, lw: 6, rot: i % 2 ? .16 : -.16, a: 1 - eIn(p), s: .7 + .3 * eBack(seg(t, t0, t0 + .15)) }); });
+      bubble(t, .3, 2);
+    } },
+
+  { key: 'D', name: 'The cut-in strip', desc: 'A rose strip slams across the screen, a fan snaps open, then petals burst over the ally. Family of the finisher.', D: 3.3, tr: 1.85, poster: 1.0,
+    frame(t) { return { shake: shake(t, .38, .2, 6), ally: { lift: 14 * Math.sin(PI * seg(t, this.tr, this.tr + .3)), s: brace(t, this.tr) } }; },
+    over(t) {
+      const tr = this.tr;
+      for (let i = 0; i < 30; i++) {
+        const p = seg(t, tr, tr + 1 + rr(i) * .4); if (t < tr || p >= 1) continue;
+        const an = rr(i + 40) * TAU, d = (60 + 150 * rr(i + 80)) * eOut(p);
+        c.save(); c.translate(ALLY.x + Math.cos(an) * d, ALLY.y + Math.sin(an) * d * .8 + 60 * p * p - 30 * Math.sin(PI * p)); c.rotate(an + p * 6); c.globalAlpha = 1 - eIn(p);
+        c.fillStyle = i % 3 ? ROSE : '#ffc2d4'; c.beginPath(); c.ellipse(0, 0, 11, 6 * Math.abs(Math.cos(p * 9 + i)) + 1.5, 0, 0, TAU); c.fill(); c.restore();
+      }
+    },
+    screen(t) {
+      const pin = eOut(seg(t, .15, .38)), pout = eIn(seg(t, 1.5, 1.74));
+      if (pin <= 0 || pout >= 1) return;
+      c.fillStyle = `rgba(6,3,8,${.5 * pin * (1 - pout)})`; c.fillRect(0, 0, W, H);
+      c.save(); c.translate(W / 2, H / 2 - 10); c.rotate(-.07);
+      const x0 = -820 + 1640 * pout, x1 = -820 + 1640 * pin;
+      c.beginPath(); c.rect(x0, -122, x1 - x0, 244); c.clip();
+      const g = c.createLinearGradient(-700, 0, 700, 0); g.addColorStop(0, '#3d1b3a'); g.addColorStop(.5, '#a13a6a'); g.addColorStop(1, '#e0668c');
+      c.fillStyle = g; c.fillRect(-820, -122, 1640, 244);
+      c.fillStyle = 'rgba(255,255,255,.07)';
+      for (let i = -2; i < 16; i++) { const sx = -820 + ((i * 130 + t * 900) % 1900); c.beginPath(); c.moveTo(sx, -122); c.lineTo(sx + 46, -122); c.lineTo(sx - 60, 122); c.lineTo(sx - 106, 122); c.fill(); }
+      c.fillStyle = GOLD; c.fillRect(-820, -122, 1640, 7); c.fillRect(-820, 115, 1640, 7);
+      token('dandy', -478, 4, { s: 2.75, flat: true });
+      const open = eBack(seg(t, .42, .62));                                   // the fan
+      c.save(); c.translate(-372, 98); c.rotate(-.2);
+      for (let i = 0; i < 9; i++) { const a0 = -PI + (i / 9) * 2.5 * open, a1 = -PI + ((i + 1) / 9) * 2.5 * open + .01;
+        c.fillStyle = i % 2 ? '#fbe3ea' : '#f08aa8'; c.strokeStyle = INK; c.lineWidth = 2; c.beginPath(); c.moveTo(0, 0); c.arc(0, 0, 118, a0, a1); c.closePath(); c.fill(); c.stroke(); }
+      c.fillStyle = GOLD; c.beginPath(); c.arc(0, 0, 8, 0, TAU); c.fill(); c.restore();
+      const slam = seg(t, .34, .5);
+      if (slam > 0) txt('SUCH A DISGRACE!', -190, -18, { font: `100px ${DISPLAY}`, align: 'left', fill: CREAM, stroke: INK, lw: 12, s: lerp(1.7, 1, eOut(slam)), a: slam });
+      txt('tut-tut, darling.', 140, 76, { font: `42px ${SCRIPT}`, fill: GOLD, stroke: INK, lw: 6, a: seg(t, .6, .75), rot: -.03 });
+      if (pin < 1) { c.fillStyle = '#fff'; c.fillRect(x1 - 26, -122, 26, 244); }
+      c.restore();
+      const fl = t >= .38 ? .5 * (1 - seg(t, .38, .56)) : 0; if (fl > 0) { c.fillStyle = `rgba(255,255,255,${fl})`; c.fillRect(0, 0, W, H); }
+    } },
+
+  { key: 'E', name: 'The stamp', desc: 'A huge rubber stamp thumps DISGRACE in red ink across the ally; it flakes off as they recover.', D: 3.2, tr: 1.95, poster: 1.5,
+    frame(t) {
+      const hit = .85;
+      return { shake: shake(t, hit, .3, 12), dandy: { lift: 8 * Math.sin(PI * seg(t, .4, .6)) },
+        ally: { sy: 1 - .28 * Math.sin(PI * seg(t, hit, hit + .28)), flash: t >= hit ? .5 * (1 - seg(t, hit, hit + .15)) : 0, s: brace(t, this.tr) } };
+    },
+    mark(a) {
+      c.save(); c.globalAlpha *= a; c.strokeStyle = '#e02b3c'; c.fillStyle = 'rgba(40,8,14,.45)'; c.lineWidth = 5; c.beginPath(); c.roundRect(-96, -30, 192, 60, 8); c.fill(); c.stroke();
+      c.lineWidth = 1.5; c.beginPath(); c.roundRect(-88, -23, 176, 46, 5); c.stroke();
+      txt('DISGRACE', 0, 2, { font: `42px ${DISPLAY}`, fill: '#ff4055' }); c.restore();
+    },
+    over(t) {
+      const hit = .85, tr = this.tr; bubble(t, .25, 2.2);
+      if (t >= hit && t < tr) { c.save(); c.translate(ALLY.x, ALLY.y); c.rotate(-.2); this.mark(.92); c.restore(); }
+      if (t >= tr && t < tr + .7) for (let i = 0; i < 6; i++) {
+        const p = seg(t, tr, tr + .5 + rr(i) * .2), dir = i - 2.5;
+        c.save(); c.translate(ALLY.x, ALLY.y); c.rotate(-.2); c.translate(dir * 46 * eOut(p), (-50 - 40 * rr(i + 9)) * Math.sin(PI * p * .9) + 110 * p * p); c.rotate(dir * .5 * p);
+        c.beginPath(); c.rect(-96 + i * 32, -34, 32, 68); c.clip(); this.mark(1 - eIn(p)); c.restore();
+      }
+      if (t >= hit) for (let i = 0; i < 12; i++) { const p = seg(t, hit, hit + .45); if (p >= 1) break; const an = rr(i) * TAU, d = 70 + 90 * rr(i + 5) * eOut(p);
+        c.fillStyle = `rgba(224,43,60,${1 - p})`; c.beginPath(); c.arc(ALLY.x + Math.cos(an) * d * 1.3, ALLY.y + Math.sin(an) * d * .6, 3 + 5 * rr(i + 3), 0, TAU); c.fill(); }
+      const y = t < hit ? lerp(-430, 0, eIn(seg(t, .5, hit))) : -480 * eIn(seg(t, hit + .12, hit + .5));
+      if (t > .5 && t < hit + .5) { const sc = t < hit ? lerp(1.9, 1, seg(t, .5, hit)) : 1 + .5 * seg(t, hit + .12, hit + .5);
+        c.save(); c.translate(ALLY.x, ALLY.y + y); c.rotate(-.2); c.scale(sc, sc); c.lineJoin = 'round'; c.strokeStyle = INK; c.lineWidth = 5;
+        c.fillStyle = '#8a5a2b'; c.beginPath(); c.roundRect(-18, -150, 36, 100, 8); c.stroke(); c.fill();
+        c.fillStyle = '#a8703a'; c.beginPath(); c.arc(0, -160, 32, 0, TAU); c.stroke(); c.fill();
+        c.fillStyle = '#6e4420'; c.beginPath(); c.roundRect(-108, -62, 216, 40, 8); c.stroke(); c.fill();
+        c.fillStyle = '#b3202e'; c.beginPath(); c.roundRect(-102, -24, 204, 18, 4); c.stroke(); c.fill(); c.restore(); }
+    } },
+];
+
+/* ------------------------------------------------------------------ player */
+let cur = 0, t0 = performance.now(), playing = true, raf = 0;
+const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function draw(v, t) {
+  const st = v.frame(t), sh = st.shake || [0, 0], al = st.ally || {};
+  c.setTransform(SS, 0, 0, SS, 0, 0); c.clearRect(0, 0, W, H);
+  c.save(); c.translate(W / 2 + sh[0], H / 2 + sh[1]); c.scale(ZOOM, ZOOM); c.translate(-CX, -CY); c.drawImage(floor, 0, 0, W, H);
+  mental(t, v.tr);
+  token('foe', FOE.x, FOE.y); token('dandy', DANDY.x, DANDY.y, st.dandy || {});
+  token('ally', ALLY.x + (al.dx || 0), ALLY.y, al);
+  swirl(t, v.tr, al.s ?? 1); chip(t, v.tr);
+  v.over(t); shapeUp(t, v.tr);
+  c.restore();
+  const vg = c.createRadialGradient(W / 2, H / 2, 300, W / 2, H / 2, 800);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.55)'); c.fillStyle = vg; c.fillRect(0, 0, W, H);
+  if (v.screen) v.screen(t);
+}
+function tick(now) {
+  const v = V[cur]; let t = (now - t0) / 1000;
+  if (t > v.D + .9) { if (document.getElementById('optLoop').checked) { t0 = now; t = 0; } else { playing = false; t = v.D; } }
+  draw(v, Math.min(t, v.D));
+  if (playing) raf = requestAnimationFrame(tick);
+}
+function play(i) {
+  cur = i ?? cur; cancelAnimationFrame(raf); t0 = performance.now(); playing = true;
+  document.querySelectorAll('#vars button').forEach((b, k) => b.setAttribute('aria-pressed', String(k === cur)));
+  raf = requestAnimationFrame(tick);
+}
+const host = document.getElementById('vars');
+V.forEach((v, i) => {
+  const b = document.createElement('button'); b.type = 'button'; b.id = 'var' + v.key;
+  b.innerHTML = `<b><span class="key">${v.key}</span>${v.name}</b><small>${v.desc}</small>`;
+  b.addEventListener('click', () => play(i)); host.appendChild(b);
+});
+document.getElementById('btnPlay').addEventListener('click', () => play());
+window.__seek = (i, t) => { cancelAnimationFrame(raf); playing = false; cur = i; draw(V[i], t); };
+
+const start = () => { if (still) { play(0); cancelAnimationFrame(raf); playing = false; draw(V[0], V[0].poster); } else play(0); };
+draw(V[0], V[0].poster);
+(document.fonts ? Promise.all([document.fonts.load(`40px "Anton"`), document.fonts.load(`40px "Kaushan Script"`)]).catch(() => {}) : Promise.resolve()).then(start);
+})();
+</script>

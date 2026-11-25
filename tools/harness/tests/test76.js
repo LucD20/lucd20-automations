@@ -46,10 +46,22 @@ const assert = require("assert");
     document.body.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
     await settle();
     out.outsideClosed = !document.querySelector(".lucd20-chat-menu");
+    // V14's chat right-click menu: entries come from ChatLog#_getEntryContextOptions (no hook); Pin is added
+    // there (registered at init), shown only while Chat Pins is on and the message isn't pinned.
+    const msg = { id: "m1", getFlag: () => false };
+    game.messages = { get: id => (id === "m1" ? msg : null) };
+    const li = document.createElement("li");
+    li.dataset.messageId = "m1";
+    const entries = new foundry.applications.sidebar.tabs.ChatLog()._getEntryContextOptions();
+    out.v14Entries = entries.map(e => e.label);
+    const pin = entries.find(e => e.label === "LUCD20.ChatPins.Pin");
+    out.pinVisible = pin?.visible(li);
+    out.pinHasOnClick = typeof pin?.onClick === "function";
     // Every tool off: no button at all.
     for (const id of ["combatCards", "chatPins", "damageLog", "encounterReport", "heroStart", "pf2eMultiCheck"]) await game.settings.set(M, `${id}_enabled`, false);
     await settle(400);
     out.noneLeft = row.querySelectorAll("[data-lucd20-control]").length;
+    out.pinVisibleOff = new foundry.applications.sidebar.tabs.ChatLog()._getEntryContextOptions().find(e => e.label === "LUCD20.ChatPins.Pin")?.visible(li);
     return out;
   });
   await browser.close();
@@ -63,5 +75,8 @@ const assert = require("assert");
   assert.ok(r.deckOpen && r.menuClosed, "an item runs and the menu closes");
   assert.ok(r.escClosed && r.outsideClosed, "Escape / a click outside close it");
   assert.strictEqual(r.noneLeft, 0, "no tools, no button");
+  assert.ok(r.v14Entries.includes("CHAT.Delete") && r.v14Entries.includes("LUCD20.ChatPins.Pin") && r.v14Entries.includes("LUCD20.ChatPins.Unpin"), `V14 entries: ${r.v14Entries}`);
+  assert.ok(r.pinVisible === true && r.pinHasOnClick, "Pin shown (V14: visible / onClick)");
+  assert.strictEqual(r.pinVisibleOff, false, "Chat Pins off: Pin hidden");
   console.log("PHASE 76 CHECKS PASSED");
 })().catch(e => { console.error(e); process.exit(1); });

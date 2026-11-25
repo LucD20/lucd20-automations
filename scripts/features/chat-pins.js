@@ -1,4 +1,4 @@
-import { contextEntry } from "../core/context-entry.js";
+import { contextEntry, registerChatEntries } from "../core/context-entry.js";
 import { MODULE_ID, TEMPLATE_PATH, error, localize } from "../core/constants.js";
 import { defineFeature } from "../core/registry.js";
 import { addChatControl } from "../core/chat-controls.js";
@@ -46,24 +46,23 @@ function messageFromLi(li) {
   return game.messages.get(id);
 }
 
-function addContextOptions(app, options) {
-  // Older Foundry passes (html, options); newer passes (app, options).
-  const list = Array.isArray(options) ? options : Array.isArray(app) ? app : null;
-  if (!list) return;
-  list.push(
+/** Pin / Unpin in the chat's right-click menu (registered at init: core/context-entry.js). */
+function pinEntries() {
+  const on = () => !!state.feature?.active && game.user.isGM;
+  return [
     contextEntry({
       label: "LUCD20.ChatPins.Pin",
       icon: '<i class="fa-solid fa-thumbtack"></i>',
-      when: li => game.user.isGM && !!messageFromLi(li) && !isPinned(messageFromLi(li)),
+      when: li => on() && !!messageFromLi(li) && !isPinned(messageFromLi(li)),
       run: li => setPinned(messageFromLi(li), true)
     }),
     contextEntry({
       label: "LUCD20.ChatPins.Unpin",
       icon: '<i class="fa-solid fa-xmark"></i>',
-      when: li => game.user.isGM && isPinned(messageFromLi(li)),
+      when: li => on() && isPinned(messageFromLi(li)),
       run: li => setPinned(messageFromLi(li), false)
     })
-  );
+  ];
 }
 
 /* -------------------------------------------- */
@@ -203,12 +202,14 @@ defineFeature({
     showToPlayers: { kind: "boolean", default: false }
   },
 
+  init() {
+    registerChatEntries(pinEntries, () => !!state.feature?.active);
+  },
+
   enable(feature) {
     state.feature = feature;
-    feature.on("getChatMessageContextOptions", addContextOptions);
-    feature.on("getChatLogEntryContext", addContextOptions);
     feature.on("renderChatMessageHTML", decorateMessage);
-    feature.on("renderChatMessage", decorateMessage);
+    if ((game.release?.generation ?? 13) < 13) feature.on("renderChatMessage", decorateMessage); // deprecated since V13
     for (const hook of ["createChatMessage", "updateChatMessage", "deleteChatMessage"]) feature.on(hook, refreshPinsWindow);
     feature.onCleanup(addFlushContributor("chatPins", flushContributor));
     feature.onCleanup(addChatControl({

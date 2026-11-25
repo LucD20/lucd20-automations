@@ -181,7 +181,9 @@ window.foundry = {
         window.__dialogPrep?.(form);
         const button = opts.buttons.find(b => b.default) ?? opts.buttons[0];
         return button.callback ? button.callback(new Event("click"), { form }) : button.action;
-      } } }
+      } } },
+    // V14's chat log: its right-click entries come from this method (no hook).
+    sidebar: { tabs: { ChatLog: class ChatLog { _getEntryContextOptions() { return [{ label: "CHAT.PopoutMessage" }, { label: "CHAT.Delete" }]; } } } }
   },
   utils: { debouncedReload() { window.__reloaded = true; }, deepClone: v => (v === undefined ? v : structuredClone(v)),
     getProperty: (o, p) => p.split(".").reduce((x, k) => x?.[k], o),

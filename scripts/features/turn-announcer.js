@@ -181,7 +181,7 @@ defineFeature({
       if (message.getFlag?.(MODULE_ID, "roundCard")) el.classList.add("lucd20-turn-message", "lucd20-round-message");
     };
     feature.on("renderChatMessageHTML", markCard);
-    feature.on("renderChatMessage", markCard);
+    if ((game.release?.generation ?? 13) < 13) feature.on("renderChatMessage", markCard); // deprecated since V13
     feature.onCleanup(() => document.querySelectorAll(".lucd20-turn-message").forEach(el => el.classList.remove("lucd20-turn-message", "lucd20-round-message")));
 
     feature.on("updateCombat", (combat, changed) => {

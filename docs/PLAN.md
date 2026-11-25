@@ -2926,6 +2926,18 @@ target) } (V13: name, condition(li), callback(li)). `core/context-entry.js`
 ((verify) in V14 that this is the hook; the API docs don't name it).
 Test 4 updated for the Automations menu (passes again).
 
+**v0.87.4 (owner's console check: a listener on `getChatMessageContextOptions`
+printed nothing on right-click):** V14 calls no hook for the chat menu.
+`registerChatEntries(build, active)` (core/context-entry.js), called at a
+feature's `init`, extends `ChatLog.prototype._getEntryContextOptions` once
+(the entries are read when the chat is first drawn, before features start),
+and keeps the old hooks as a fallback (only features that are on; no
+duplicates). Entries' `when` checks the feature is on. Chat Pins and
+Describe use it. The deprecated `renderChatMessage` hook is no longer
+listened to on V13+ (Chat Pins, Turn Announcer, Chat Log Trim): the owner's
+console showed its deprecation warning. Harness: a stand-in V14 ChatLog
+class; test 76 checks the entries.
+
 ---
 
 ## 23. Adventure conversion tools (owner, 2026-11-19, drafting)

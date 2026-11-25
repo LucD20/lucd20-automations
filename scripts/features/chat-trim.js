@@ -201,7 +201,7 @@ defineFeature({
     activeFeature = feature;
     document.documentElement.classList.add("lucd20-chat-trim-active");
     feature.on("renderChatMessageHTML", scheduleTrim);
-    feature.on("renderChatMessage", scheduleTrim);
+    if ((game.release?.generation ?? 13) < 13) feature.on("renderChatMessage", scheduleTrim); // deprecated since V13
     feature.on("createChatMessage", scheduleTrim);
     feature.on("deleteChatMessage", scheduleTrim);
     feature.on("renderChatLog", scheduleTrim);

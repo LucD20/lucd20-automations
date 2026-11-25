@@ -1,4 +1,4 @@
-import { contextEntry } from "../core/context-entry.js";
+import { contextEntry, registerChatEntries } from "../core/context-entry.js";
 import { error, localize } from "../core/constants.js";
 import { defineFeature } from "../core/registry.js";
 import { broadcast, onBroadcast } from "../core/socket.js";
@@ -255,18 +255,19 @@ defineFeature({
     postToChat: { kind: "boolean", default: true }
   },
 
+  init() {
+    // The chat's right-click menu (registered at init: core/context-entry.js).
+    registerChatEntries(() => [contextEntry({
+      label: "LUCD20.Describe.Menu",
+      icon: '<i class="fa-solid fa-scroll"></i>',
+      when: () => !!state.feature?.active && game.user.isGM && !!state.selection,
+      run: () => describeAndPost(state.selection).catch(err => error("Describe failed.", err))
+    })], () => !!state.feature?.active && game.user.isGM);
+  },
+
   enable(feature) {
     state.feature = feature;
     feature.on("chatMessage", onChatMessage);
-    feature.on("getChatMessageContextOptions", (app, options) => {
-      if (!game.user.isGM) return;
-      options.push(contextEntry({
-        label: "LUCD20.Describe.Menu",
-        icon: '<i class="fa-solid fa-scroll"></i>',
-        when: () => !!state.selection,
-        run: () => describeAndPost(state.selection).catch(err => error("Describe failed.", err))
-      }));
-    });
     document.addEventListener("contextmenu", onContextMenu, true);
     document.addEventListener("pointerdown", onOutside, true);
     document.addEventListener("keydown", onKey, true);

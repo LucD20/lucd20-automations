@@ -2739,6 +2739,10 @@
         }
       }
     },
+    "ChatMenu": {
+      "Title": "Automations",
+      "Settings": "LucD20 Automations settings"
+    },
     "HeroStart": {
       "Prompt": "Click on the map to create the start area (drag for an area; Shift removes)",
       "Adding": "Click or drag to add squares (Shift removes)",

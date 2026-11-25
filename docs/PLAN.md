@@ -2908,6 +2908,15 @@ no longer match the module); not touched.
   match. Now an unlinked encounter uses the viewed scene (the area keeps
   its scene id). Debug: `CONFIG.debug.lucd20Rules = true` logs the creation.
 
+**Chat buttons → one "Automations" menu (v0.87.2; owner, 2026-11-25: "so many
+buttons on the chat that the delete chat button is gone ... a button called
+'Automations', you click and it shows all this module's options"):**
+`core/chat-controls.js` keeps the same `addChatControl` API, but draws a
+single button (magic wand) before Export; it opens a menu of every visible
+tool (icon, name, a dot when on), and "LucD20 Automations settings" at the
+bottom. Escape / a click outside close it; no tools visible → no button.
+Test 76.
+
 ---
 
 ## 23. Adventure conversion tools (owner, 2026-11-19, drafting)

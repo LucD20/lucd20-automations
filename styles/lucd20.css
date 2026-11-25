@@ -3070,3 +3070,15 @@ html.lucd20-chat-trim-active .chat-log > .chat-message { content-visibility: aut
 .lucd20-chat-older-btn { width: 100%; padding: 5px 10px; border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 4px; background: rgba(25, 24, 31, 0.75); color: #d8d0c4; font-size: 12px; cursor: pointer; }
 .lucd20-chat-older-btn:hover { background: rgba(45, 43, 56, 0.9); color: #fff; }
 .lucd20-audio-reset { flex: 0 0 auto; }
+
+/* The Automations menu (v0.87.2): every chat tool of the module behind one chat button. */
+.lucd20-chat-menu { position: fixed; z-index: 1100; min-width: 220px; max-width: 300px; overflow: hidden; border: 1px solid #5c596a; border-radius: 6px;
+  background: #1b1a21; color: #efe6d8; font: 13px Signika, sans-serif; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6); animation: lcc-fade 0.12s ease-out both; }
+.lucd20-chat-menu header { padding: 7px 12px; border-bottom: 1px solid #3b3945; background: #121117; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #b5ab9d; }
+.lucd20-chat-menu ul { margin: 0; padding: 4px; list-style: none; }
+.lucd20-chat-menu footer { padding: 4px; border-top: 1px solid #3b3945; }
+.lucd20-chat-menu button { display: flex; align-items: center; gap: 10px; width: 100%; height: auto; margin: 0; padding: 7px 10px; border: 0; border-radius: 4px; background: none; color: inherit; font: inherit; line-height: 1.2; text-align: left; cursor: pointer; }
+.lucd20-chat-menu button:hover, .lucd20-chat-menu button:focus-visible { background: #2d2b36; outline: none; }
+.lucd20-chat-menu button i:first-child { color: #f3b469; }
+.lucd20-chat-menu button span { flex: 1; }
+.lucd20-chat-menu .lucd20-menu-on { font-size: 7px; color: #ee9b3a; }

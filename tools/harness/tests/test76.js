@@ -30,6 +30,10 @@ const assert = require("assert");
     const menu = document.querySelector(".lucd20-chat-menu");
     out.items = [...(menu?.querySelectorAll("ul button span") ?? [])].map(s => s.textContent);
     out.settings = menu?.querySelector("footer button span")?.textContent;
+    // Foundry changes the page all the time: the menu's items must stay the same elements (a click needs it).
+    const firstItem = menu.querySelector("ul button");
+    for (let i = 0; i < 5; i++) { document.body.append(document.createElement("span")); await settle(40); }
+    out.itemsKept = menu.querySelector("ul button") === firstItem;
     // Choosing an item runs it and closes the menu.
     [...menu.querySelectorAll("ul button")].find(b => b.textContent.includes("Party Deck")).click();
     await settle(200);
@@ -72,6 +76,7 @@ const assert = require("assert");
   assert.strictEqual(r.tooltip, "Automations");
   assert.ok(r.items.includes("Party Deck") && r.items.length >= 3, `the tools listed: ${r.items}`);
   assert.strictEqual(r.settings, "LucD20 Automations settings");
+  assert.ok(r.itemsKept, "the menu isn't redrawn by unrelated page changes (clicks would be lost)");
   assert.ok(r.deckOpen && r.menuClosed, "an item runs and the menu closes");
   assert.ok(r.escClosed && r.outsideClosed, "Escape / a click outside close it");
   assert.strictEqual(r.noneLeft, 0, "no tools, no button");

@@ -84,9 +84,17 @@ function onEscape(event) {
   if (event.key === "Escape" && menu) { event.stopPropagation(); closeMenu(); }
 }
 
+/**
+ * Draws the menu's items, only when they changed (v0.87.6: the page's DOM watcher re-applies on every change,
+ * and redrawing each time replaced the item under the pointer between press and release, so clicks were lost
+ * and the redraw fed the watcher again).
+ */
 function fillMenu() {
   const esc = v => Handlebars.escapeExpression(String(v ?? ""));
   const defs = visibleDefs();
+  const sig = defs.map(d => `${d.id}:${d.active?.() ? 1 : 0}`).join("|");
+  if (menu.dataset.sig === sig) return;
+  menu.dataset.sig = sig;
   menu.innerHTML = `<header>${esc(game.i18n.localize("LUCD20.ChatMenu.Title"))}</header>
     <ul>${defs.map(d => `<li><button type="button" data-id="${esc(d.id)}" class="${d.active?.() ? "is-active" : ""}"><i class="${esc(d.icon)} fa-fw"></i><span>${esc(d.tooltip)}</span>${d.active?.() ? '<i class="fa-solid fa-circle lucd20-menu-on"></i>' : ""}</button></li>`).join("")}</ul>
     <footer><button type="button" data-id="__settings"><i class="fa-solid fa-gear fa-fw"></i><span>${esc(game.i18n.localize("LUCD20.ChatMenu.Settings"))}</span></button></footer>`;

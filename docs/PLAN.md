@@ -2948,6 +2948,19 @@ and again after 250 ms, for pictures). Scrolled up to read: untouched.
 Test 77 (fails without the fix). (verify) in Foundry; if it persists with
 Chat Log Trim off, the cause is elsewhere.
 
+**v0.87.6 (owner: still not scrolling; "clicking on the options in the
+Automations menu does nothing"):**
+- Menu: the page-wide DOM watcher re-applied the chat controls on every
+  change, and each pass redrew the open menu (which itself changed the
+  page): the item under the pointer was replaced between press and release,
+  so the click was lost. The menu now redraws only when its items or their
+  on/off state change (test 76 checks the items survive page changes).
+- Chat scroll: instead of timed re-scrolls after the create hooks (too short
+  for slow PF2e cards; no pre-create hook on other clients), each chat log is
+  watched: "at the bottom" kept on scroll; a message added at the end while
+  at the bottom scrolls it down, and again when its pictures load. Test 77:
+  the card appears 600 ms later, a picture loads later; scrolled up stays.
+
 ---
 
 ## 23. Adventure conversion tools (owner, 2026-11-19, drafting)

@@ -29,18 +29,29 @@ const assert = require("assert");
     log.scrollTop = log.scrollHeight;
     await settle(50);
     const atBottom = () => log.scrollHeight - log.scrollTop - log.clientHeight <= 2;
-    // A new message, as Foundry does it: created (hook), drawn and added a moment later; Foundry doesn't scroll here.
-    const send = async i => {
-      Hooks.callAll("preCreateChatMessage", {}, {}, {});
-      Hooks.callAll("createChatMessage", {}, {}, game.user.id);
-      await settle(20);
+    // As Foundry does it on any client: the hook, then the card drawn and added later (PF2e cards can be slow;
+    // other clients get no pre-create hook). Foundry doesn't scroll here.
+    const send = async (i, delay = 600) => {
+      Hooks.callAll("createChatMessage", {}, {}, "someone-else");
+      await settle(delay);
       add(i);
       Hooks.callAll("renderChatMessageHTML", {}, log.lastElementChild);
-      await settle(400);
+      await settle(200);
     };
     await send(60);
     out.bottomAfterNew = atBottom();
     out.rendered = log.querySelectorAll("[data-message-id]").length;
+    // A picture that loads later makes the message taller: still at the bottom.
+    const tall = 61.5;
+    Hooks.callAll("createChatMessage", {}, {}, "x");
+    add(tall);
+    const img = document.createElement("img");
+    log.lastElementChild.append(img);
+    await settle(50);
+    log.lastElementChild.style.height = "260px";
+    img.dispatchEvent(new Event("load"));
+    await settle(80);
+    out.bottomAfterImage = atBottom();
     // Scrolled up to read: a new message doesn't pull the chat down.
     log.scrollTop = 0;
     await settle(80);
@@ -53,6 +64,7 @@ const assert = require("assert");
   assert.deepStrictEqual(errors, [], "page errors");
   assert.ok(r.bottomAfterNew, "at the bottom after a new message");
   assert.ok(r.rendered <= 31, `trimmed (${r.rendered})`);
+  assert.ok(r.bottomAfterImage, "a picture loading later: still at the bottom");
   assert.ok(r.stayedUp, "scrolled up: left alone");
   console.log("PHASE 77 CHECKS PASSED");
 })().catch(e => { console.error(e); process.exit(1); });

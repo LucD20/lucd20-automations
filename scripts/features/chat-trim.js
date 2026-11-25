@@ -177,34 +177,39 @@ export function trimLog(log, limit) {
 }
 
 /**
- * Keep the chat at the bottom (v0.87.5; owner: "the chat isn't scrolling down when a new message is sent").
- * Trimming removes messages above while Foundry adds the new one below, and Foundry's own "was at the bottom"
- * check could then fail. Whether each log was at the bottom is taken when a message is created (before it
- * is added); after it is drawn and the trim is done, those logs scroll to the bottom again. Scrolled up to
- * read: left alone.
+ * Keep the chat at the bottom (v0.87.5–0.87.6; owner: "the chat isn't scrolling down when a new message is
+ * sent"). Trimming removes messages above while Foundry adds the new one below, and Foundry's own "at the
+ * bottom" scroll could then be skipped. Each chat log is watched: whether it is at the bottom is kept up to
+ * date on scroll; when a message is added at the end while it was, it is scrolled to the bottom (and again
+ * when the message's pictures load). Scrolled up to read: left alone. No timing guesses (a PF2e card can take
+ * longer to draw than any fixed delay, and other players' clients get no "pre-create" hook).
  */
-const stuck = new Set();
-function noteBottom() {
-  for (const log of document.querySelectorAll(".chat-log")) if (isNearBottom(log)) stuck.add(log);
-}
-function stickToBottom() {
-  for (const log of stuck) {
-    const scroller = scrollContainerFor(log);
-    if (scroller && log.isConnected) scroller.scrollTop = scroller.scrollHeight;
-  }
-}
-function settleBottom() {
-  if (!stuck.size) return;
-  // After Foundry draws the message (and its pictures), twice: now and a little later.
-  requestAnimationFrame(() => { stickToBottom(); setTimeout(() => { stickToBottom(); stuck.clear(); }, 250); });
+const watched = new WeakMap(); // log → { observer, atBottom }
+function watchBottom(log) {
+  if (watched.has(log)) return;
+  const scroller = scrollContainerFor(log);
+  const w = { atBottom: isNearBottom(log), observer: null };
+  const toBottom = () => { if (w.atBottom && log.isConnected) scroller.scrollTop = scroller.scrollHeight; };
+  const onScroll = () => { w.atBottom = isNearBottom(log); };
+  scroller.addEventListener("scroll", onScroll, { passive: true });
+  w.observer = new MutationObserver(records => {
+    if (!activeFeature || !w.atBottom) return;
+    const added = records.flatMap(r => [...r.addedNodes]).filter(n => n instanceof HTMLElement && n.dataset?.messageId && n === log.lastElementChild);
+    if (!added.length) return;
+    toBottom();
+    requestAnimationFrame(toBottom);
+    for (const img of added.flatMap(n => [...n.querySelectorAll("img, video")])) img.addEventListener(img.tagName === "VIDEO" ? "loadeddata" : "load", toBottom, { once: true });
+  });
+  w.observer.observe(log, { childList: true });
+  watched.set(log, w);
+  activeFeature?.onCleanup?.(() => { w.observer.disconnect(); scroller.removeEventListener("scroll", onScroll); watched.delete(log); });
 }
 
 function trimAll() {
   raf = null;
   if (!activeFeature) return;
   const limit = Math.max(10, Number(activeFeature.get("maxMessages")) || 80);
-  for (const log of document.querySelectorAll(".chat-log")) trimLog(log, limit);
-  settleBottom();
+  for (const log of document.querySelectorAll(".chat-log")) { watchBottom(log); trimLog(log, limit); }
 }
 
 function scheduleTrim() {
@@ -226,8 +231,7 @@ defineFeature({
     document.documentElement.classList.add("lucd20-chat-trim-active");
     feature.on("renderChatMessageHTML", scheduleTrim);
     if ((game.release?.generation ?? 13) < 13) feature.on("renderChatMessage", scheduleTrim); // deprecated since V13
-    feature.on("preCreateChatMessage", noteBottom);
-    feature.on("createChatMessage", () => { noteBottom(); scheduleTrim(); });
+    feature.on("createChatMessage", scheduleTrim);
     feature.on("deleteChatMessage", scheduleTrim);
     feature.on("renderChatLog", scheduleTrim);
     scheduleTrim();

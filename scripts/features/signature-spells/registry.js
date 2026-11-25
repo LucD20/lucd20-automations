@@ -11,13 +11,19 @@ import { systemFamily } from "../../core/constants.js";
  *   match: { pf2e: { slug: "chain-lightning", roll: "damage" } },
  *                                         // per system: the item's slug and which roll starts it; or a
  *                                         // function (info, message) → boolean. `info` is what the system's
- *                                         // reader found: { slug, name, roll, caster, scene, targets, ordered }
+ *                                         // reader found: { slug, name, roll, caster, scene, targets, ordered };
+ *                                         // roll is "damage", or "card" for an item's card posted to chat
  *   look: "electricity",                  // the Token Reactions look its targets play
  *   preview: "8d12",                      // dice thrown by the GM's preview
  *   rolling(fx, dice, dt) {},             // every frame while Dice So Nice rolls: dice = [{ x, y, r, at() }]
  *   async result(fx, dice) {},            // the dice have landed (dice may be empty: skipped then)
  *   async toTargets(fx, ctx) {},          // ctx = { from: { x, y, screen: true } | Token | null, caster, targets,
  *                                         //         casterOwned, info }
+ *   // A signature that starts on a card and whose target only the one who used it can say:
+ *   async choose(info, { token, canSee }) {},
+ *                                         // → the tokens it plays on ([] = it doesn't play). Asked on the
+ *                                         // client of the message's author only; everyone who may see the
+ *                                         // message is then told (`signatureUse` over the module socket).
  *   // Optional (the Swashbuckler finisher uses them all):
  *   settings: { finisherStrip: { kind: "boolean", default: true, dependsOn: "finisher" } },
  *                                         // more GM options of the feature, read with fx.get(key); texts under

@@ -65,12 +65,12 @@ function state(fx) {
 /*  Fonts and the portrait                      */
 /* -------------------------------------------- */
 
-const F_DISPLAY = '"LucD20 Anton", Impact, Haettenschweiler, "Arial Narrow", sans-serif';
-const F_SCRIPT = '"LucD20 Kaushan Script", "Brush Script MT", "Segoe Script", cursive';
+export const F_DISPLAY = '"LucD20 Anton", Impact, Haettenschweiler, "Arial Narrow", sans-serif';
+export const F_SCRIPT = '"LucD20 Kaushan Script", "Brush Script MT", "Segoe Script", cursive';
 let fontsAsked = false;
 
 /** The mockup's two faces (Anton, Kaushan Script; SIL OFL, in assets/fonts), asked for once; until they are in, the fallbacks draw. */
-function loadFonts() {
+export function loadFonts() {
   if (fontsAsked) return;
   fontsAsked = true;
   try {

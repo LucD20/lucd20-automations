@@ -31,6 +31,8 @@ import "./spells/index.js";
  */
 
 const SOCKET_TYPE = "signaturePreview";
+/** A signature whose target was chosen by the one who used it (`choose`): told to the other clients. */
+const USE_TYPE = "signatureUse";
 let lastRun = null;
 /** If the dice have not landed by then, go on without them. */
 const DICE_TIMEOUT = 15000;
@@ -167,10 +169,11 @@ function stopAll() {
 const wanted = sig => !!sig && !!feature?.active && !!feature.get("show") && !!feature.get(sig.id) && !!canvas?.ready && document.visibilityState !== "hidden";
 
 async function onChatMessage(message) {
-  if (!feature?.active || !feature.get("show") || !canvas?.ready) return;
+  if (!feature?.active || !canvas?.ready) return;
   if (message?.visible === false || message?.isContentVisible === false) return; // not this user's to see
   const info = read(message);
   const sig = signatureFor(info, message);
+  if (sig?.choose) return useChosen(sig, info, message);
   if (!wanted(sig)) return;
   if (info.scene && canvas.scene?.id && info.scene !== canvas.scene.id) return;
   // Dice So Nice decides in its own createChatMessage handler: ask once every handler has run.
@@ -179,6 +182,44 @@ async function onChatMessage(message) {
   const dice = willAnimate(message) ? diceLanded(message.id, DICE_TIMEOUT) : null;
   const total = Number(message.rolls?.[0]?.total);
   await play(sig, info, { dice, claim: true, total: Number.isFinite(total) ? total : null });
+}
+
+/* -------------------------------------------- */
+/*  A target said by the one who used it        */
+/* -------------------------------------------- */
+
+const isAuthor = message => message?.isAuthor ?? (message?.author?.id ?? message?.user?.id) === game.user.id;
+
+/**
+ * A signature with `choose` (Such a Disgrace!): the message doesn't say on whom. The client of the one who
+ * posted it works that out (asking them when it must), plays it, and tells the others. With "Show them to me"
+ * off for that user the others still get it.
+ */
+async function useChosen(sig, info, message) {
+  if (!isAuthor(message) || !feature.get(sig.id)) return;
+  if (info.scene && canvas.scene?.id && info.scene !== canvas.scene.id) return;
+  let targets = [];
+  try {
+    targets = await sig.choose(info, { token: t => (typeof t === "string" ? tokenOf(t) ?? tokenById(t) : t ?? null), canSee });
+  } catch (err) {
+    return error(`Signature Spells: ${sig.id} could not find its target.`, err);
+  }
+  targets = [...new Set((targets ?? []).filter(Boolean))];
+  if (!targets.length || !feature?.active || !feature.get(sig.id)) return;
+  const caster = tokenById(info.caster);
+  // A whispered card: only for those it was whispered to. Nothing about a hidden token leaves this client.
+  const to = (message.whisper ?? []).map(u => u?.id ?? u).filter(Boolean);
+  broadcast(USE_TYPE, { spell: sig.id, scene: canvas.scene?.id ?? null, caster: caster && !caster.document?.hidden ? caster.id : null,
+    targets: targets.filter(x => !x.document?.hidden).map(x => x.id), ...(to.length ? { to } : {}) });
+  if (wanted(sig)) await play(sig, { ...info, targets, ordered: true }, { claim: true });
+}
+
+function onUse(payload) {
+  const sig = signatureById(payload?.spell);
+  if (!sig?.choose || !wanted(sig)) return;
+  if (Array.isArray(payload.to) && !payload.to.includes(game.user.id)) return;
+  if (payload.scene && canvas.scene?.id && payload.scene !== canvas.scene.id) return;
+  play(sig, { roll: "card", caster: payload.caster ?? null, targets: (payload.targets ?? []).map(tokenById).filter(Boolean), ordered: true }, { claim: true });
 }
 
 /* -------------------------------------------- */
@@ -241,7 +282,7 @@ function onPreview(payload) {
 /*  Feature                                     */
 /* -------------------------------------------- */
 
-export const _test = { runs, readers, onChatMessage, onPreview, contextOf, get lastRun() { return lastRun; } };
+export const _test = { runs, readers, onChatMessage, onPreview, onUse, contextOf, get lastRun() { return lastRun; } };
 
 defineFeature({
   id: "signatureSpells",
@@ -256,6 +297,7 @@ defineFeature({
 
   init() {
     onBroadcast(SOCKET_TYPE, onPreview);
+    onBroadcast(USE_TYPE, onUse);
   },
 
   enable(f) {

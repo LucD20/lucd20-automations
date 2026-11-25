@@ -158,21 +158,28 @@ const assert = require("assert");
       return { app, root };
     };
     const immuneDlg = dialog();   // the ogre is immune (assessed above)
-    out.dlgImmune = txt(immuneDlg.root.querySelector(".lucd20-ca-toggle")?.innerHTML ?? "");
-    out.dlgImmuneSwitch = !!immuneDlg.root.querySelector(".lucd20-ca-toggle input");
+    out.dlgImmune = txt(immuneDlg.root.querySelector(".lucd20-so")?.innerHTML ?? "");
+    out.dlgImmuneSwitch = !immuneDlg.root.querySelector(".lucd20-so input")?.disabled;
     game.time.worldTime += 86401;
     const d = dialog();
-    const row = d.root.querySelector(".lucd20-ca-toggle");
+    const row = d.root.querySelector(".lucd20-so");
     out.dlgPlace = row?.nextElementSibling?.matches("button.roll");
-    row.querySelector(".lucd20-ca-name").click();
+    row.querySelector(".lucd20-so-name").click();
+    row.querySelector("img.lucd20-so-open").click();
     out.dlgOpened = opened;
+    out.dlgCount0 = row.querySelector(".lucd20-so-count").textContent;
     const box = row.querySelector("input");
     box.checked = true; box.dispatchEvent(new Event("change"));
     out.dlgTagged = d.app.context.options.has(caMod.TAG);
+    out.dlgCount1 = row.querySelector(".lucd20-so-count").textContent;
+    // Folding is remembered for the next roll window.
+    row.open = false; row.dispatchEvent(new Event("toggle"));
+    out.dlgFoldKept = !dialog().root.querySelector(".lucd20-so").open;
+    try { localStorage.removeItem("lucd20-automations.strikeOptionsFolded"); } catch {}
     box.checked = false; box.dispatchEvent(new Event("change"));
     out.dlgUntagged = !d.app.context.options.has(caMod.TAG);
-    out.dlgRanged = !!dialog({ origin: { actor: commanderA, item: { isMelee: false } } }).root.querySelector(".lucd20-ca-toggle");
-    out.dlgSave = !!dialog({ type: "saving-throw" }).root.querySelector(".lucd20-ca-toggle");
+    out.dlgRanged = !!dialog({ origin: { actor: commanderA, item: { isMelee: false } } }).root.querySelector(".lucd20-so");
+    out.dlgSave = !!dialog({ type: "saving-throw" }).root.querySelector(".lucd20-so");
     // A Strike rolled with the toggle on is the assessment, without the action first.
     const n2 = rkCards().length;
     strike("success", { flags: { pf2e: { context: { type: "attack-roll", outcome: "success", options: ["item:melee", caMod.TAG], target: { token: tOgre.document.uuid } } } } });
@@ -219,9 +226,11 @@ const assert = require("assert");
     await page.locator("#rk-shot").screenshot({ path: process.env.SHOT });
   }
   await browser.close();
-  assert.ok(/Combat Assessment.*Target immune/.test(r.dlgImmune) && !r.dlgImmuneSwitch, `immune target: said, no toggle (${r.dlgImmune})`);
-  assert.ok(r.dlgPlace, "the row sits above the Roll button");
-  assert.strictEqual(r.dlgOpened, 1, "the name opens the feat");
+  assert.ok(/Feats for this Strike.*Combat Assessment.*Target immune/.test(r.dlgImmune) && !r.dlgImmuneSwitch, `immune target: said, the checkbox off (${r.dlgImmune})`);
+  assert.ok(r.dlgPlace, "the section sits above the Roll button");
+  assert.strictEqual(r.dlgOpened, 2, "the name and the icon open the feat");
+  assert.ok(r.dlgCount0 === "0 on" && r.dlgCount1 === "1 on", "the heading counts what is on");
+  assert.ok(r.dlgFoldKept, "folded stays folded in the next window");
   assert.ok(r.dlgTagged && r.dlgUntagged, "the toggle adds / removes the roll option");
   assert.ok(!r.dlgRanged && !r.dlgSave, "not for ranged Strikes or other rolls");
   assert.strictEqual(r.dlgStrike, 1, "a Strike with the toggle on rolls Recall Knowledge (no action needed)");

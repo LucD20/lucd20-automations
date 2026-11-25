@@ -870,6 +870,15 @@ one that leaves fewer squares next to enemies (see PLAN).
   what is already added: the passed modifiers' labels, the card's label, and
   `ignoreMaybe` (Combat Assessment passes its slug; the owner's card listed
   "Combat Assessment +2" though the +2 was in the totals). Test 66.
+- v0.88.1 (owner, on mockups docs/mockups/strike-options.html: "C is good.
+  Remember to make the names clickable. I also liked the condensed cover
+  buttons"): `systems/pf2e/strike-options.js`, a shared "Feats for this
+  Strike" section in PF2e's roll window: folding (remembered in this
+  browser), "N on" in its heading, a checkbox per feat in two columns, the
+  feat's icon and name open it, a blocked entry (e.g. target immune) shows
+  why with its checkbox off. `registerStrikeOption({ id, tag, active, item,
+  applies, blocked })`; Combat Assessment is the first. Cover buttons: one
+  row of four short word buttons (icons hidden). Test 66.
 
 ## 22. Swashbuckler: Guardian's Deflection
 

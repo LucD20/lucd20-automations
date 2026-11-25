@@ -2760,9 +2760,10 @@ li:has(> .lucd20-scene-nav) {
 .lucd20-de-line { display: flex; flex-wrap: wrap; gap: 4px 10px; justify-content: center; font-size: .85em; opacity: .85; margin: 4px 0; }
 
 /* PF2e cover (v0.58.0) */
-.lucd20-cover-pick { display: flex; gap: 3px; margin: 6px 0 4px; }
-.lucd20-cover-pick button { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 1px; height: auto; padding: 3px 2px; line-height: 1.1; font-size: .78em; opacity: .65; }
-.lucd20-cover-pick button i { font-size: 1.25em; }
+/* v0.88.1 (owner: "I also liked the condensed cover buttons"): one short row of words, as in the mockup. */
+.lucd20-cover-pick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 6px 0 4px; }
+.lucd20-cover-pick button { min-width: 0; height: 24px; margin: 0; padding: 0 2px; line-height: 22px; font-size: .78em; opacity: .65; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lucd20-cover-pick button i { display: none; }
 .lucd20-cover-pick button.active { opacity: 1; outline: 2px solid var(--color-border-highlight, #ff6400); }
 .lucd20-cover-note { font-size: .82em; margin: 2px 0; opacity: .9; }
 
@@ -3101,17 +3102,18 @@ html.lucd20-chat-trim-active .chat-log > .chat-message { content-visibility: aut
 .lucd20-chat-menu button span { flex: 1; }
 .lucd20-chat-menu .lucd20-menu-on { font-size: 7px; color: #ee9b3a; }
 
-/* Combat Assessment in PF2e's Strike roll window (v0.87.8). */
-.lucd20-ca-toggle { display: flex; align-items: center; gap: 8px; margin: 6px 0; padding: 5px 8px; border: 1px solid rgba(0, 0, 0, 0.2); border-radius: 4px; background: rgba(0, 0, 0, 0.04); }
-.lucd20-ca-toggle.is-on { border-color: #4a6fb5; background: rgba(74, 111, 181, 0.12); }
-.lucd20-ca-toggle img { width: 24px; height: 24px; border: 0; border-radius: 3px; flex: none; }
-.lucd20-ca-toggle .lucd20-ca-name { font-weight: 700; cursor: pointer; text-decoration: underline dotted; }
-.lucd20-ca-toggle .lucd20-ca-hint { flex: 1; font-size: 0.85em; opacity: 0.7; }
-.lucd20-ca-toggle .lucd20-ca-immune { font-size: 0.85em; font-style: italic; opacity: 0.8; }
-.lucd20-ca-switch { position: relative; display: inline-block; flex: none; width: 40px; height: 20px; margin: 0; }
-.lucd20-ca-switch input { position: absolute; opacity: 0; width: 0; height: 0; margin: 0; }
-.lucd20-ca-switch span { position: absolute; inset: 0; border-radius: 10px; background: #9a9386; cursor: pointer; transition: background 0.15s; }
-.lucd20-ca-switch span::before { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform 0.15s; }
-.lucd20-ca-switch input:checked + span { background: #1f3f8f; }
-.lucd20-ca-switch input:checked + span::before { transform: translateX(20px); }
-.lucd20-ca-switch input:focus-visible + span { outline: 2px solid #ee9b3a; outline-offset: 2px; }
+/* "Feats for this Strike" in PF2e's roll window (v0.88.1, mockup C). */
+.lucd20-so { margin: 6px 0; border: 1px solid rgba(0, 0, 0, 0.25); border-radius: 4px; background: rgba(255, 255, 255, 0.35); }
+.lucd20-so > summary { display: flex; align-items: center; gap: 6px; padding: 4px 8px; font-weight: 700; font-size: 0.92em; cursor: pointer; list-style: none; }
+.lucd20-so > summary::-webkit-details-marker { display: none; }
+.lucd20-so .lucd20-so-chev { font-size: 0.8em; transition: transform 0.15s; transform: rotate(-90deg); }
+.lucd20-so[open] .lucd20-so-chev { transform: none; }
+.lucd20-so .lucd20-so-count { margin-left: auto; padding: 0 7px; border-radius: 9px; background: #1f2a5c; color: #fff; font-size: 0.8em; line-height: 1.5; }
+.lucd20-so-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; padding: 2px 8px 7px; }
+.lucd20-so-opt { display: flex; align-items: center; gap: 5px; min-width: 0; font-size: 0.9em; }
+.lucd20-so-opt input { flex: none; margin: 0; }
+.lucd20-so-opt img { flex: none; width: 20px; height: 20px; border: 0; border-radius: 3px; cursor: pointer; }
+.lucd20-so-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
+.lucd20-so-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; text-decoration: underline dotted; }
+.lucd20-so-text small { font-size: 0.8em; font-style: italic; opacity: 0.75; }
+.lucd20-so-opt.is-blocked .lucd20-so-name { opacity: 0.7; }

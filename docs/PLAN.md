@@ -4019,3 +4019,41 @@ signature of Signature Spells (§20), `suchADisgrace`;
   option `check:statistic:will`), `context.outcome`, `context.isReroll` on a
   reroll; `message.isAuthor`; the dim over the whole window (sidebar included)
   reads well.
+
+## 29. Playtest feedback (owner, 2026-11-26) — sorted, not started
+
+The owner's list, organised before any change ("organize it before any
+changes"). Code locations checked; open questions per item.
+
+### 29.1 Urgent
+| # | Item | Where | Finding / question |
+|---|---|---|---|
+| P1 | Screen went black for everyone (Sequencer 4.3.1: `AnimatedSpriteMesh.updateUvs`, `uvsFloat32` of null, under `PersistentCanvasEffect`) | not ours so far | The module never uses Sequencer and makes no persistent effects; its own videos (JB2A clips) use their own texture per play. The error is a Sequencer persistent effect whose texture was destroyed; two traces are during scene changes (Foundry's texture cache is cleared then). Once it throws inside the render loop the canvas stops drawing. **Ask:** which module makes persistent Sequencer effects (PF2e Graphics, Automated Animations, auras…), what was playing / happening when it went black, does it happen with LucD20 Automations off. |
+
+### 29.2 Bugs
+| # | Item | Where | Finding / question |
+|---|---|---|---|
+| B1 | Ranged attack didn't trigger Reactive Strike | `reactive-strike.js` (rule 7) | Ranged attacks in reach are handled (test 41). **Ask:** what attacked (a Strike, a spell attack, a thrown weapon?), was the reactor's reaction left, the attack targeted? Debug: `CONFIG.debug.lucd20Rules = true`. |
+| B2 | Players can't cancel a Shove (only the GM sees the button) | Shove picker (`rules.js` + `core/square-picker.js` / shared picks) | Cancel must show for the player who shoves too. |
+| B3 | Right-click skips the card after combat | **Ask:** which card (the Combat Cards overlay, the "Loot the fallen" window, a reaction card)? The Combat Cards overlay closes on left-click only. |
+| B4 | Persistent damage wrong in Damage Estimate's chat line | `damage-estimate` (rule 18) | **Ask:** an example (the damage formula and what it showed). |
+
+### 29.3 Changes to what exists
+| # | Item | Where | Finding / question |
+|---|---|---|---|
+| C1 | Status icons above the token (large tokens cover them) | `effects-halo.js` | Drawn under every token by design (v0.70.1, so tokens cover the icons); change the sort to above the tokens (the Turn Markers' order follows it). |
+| C2 | Areas light up too much on hover | `area.js` (rule 20) | Lower the hover highlight's opacity. |
+| C3 | Concealment attached to the message that triggered it | `flat-check.js` | The flat check is its own message now; put it into the attack's card. |
+| C4 | Automation concealment-aware: wait for the flat check | the hit-triggered rules (Shield Block, Guardian's Deflection, Combat Assessment, Cringe, Set-Up Strike, Damage Estimate…) | Wait for the flat check; a failed one = no hit → nothing triggers. |
+| C5 | Area effects window: how many rounds it lasts; conditions (one or more) while inside | `area.js` targeting window | **Ask:** conditions applied on entering / at the start of a turn inside, removed on leaving? The area removed after its rounds. |
+| C6 | Demoralizing Charge: "a party sometimes has 'default' selections, so it…" | `commander.js` | **The sentence was cut off.** |
+
+### 29.4 New automations
+| # | Item | Question |
+|---|---|---|
+| N1 | Shoving Sweep | Rules to read from PF2e's data (as rules 26–30). |
+| N2 | Aid | Remaster Aid: prepare (1 action), reaction check DC 15, +1 / +2 (master +3, legendary +4) on a crit, −1 on a crit fail, to the ally's next check. Card + a button for the ally. |
+| N3 | Albatross curse | **Ask:** where it is from (an adventure's curse? a link or the text). |
+| N4 | Battle Medicine: notification when it wears off | `battle-medicine.js` (immunity tracker, world time). **Ask:** who is told (the healer, the patient, the GM) and how (chat line or a pop-up). |
+
+Proposed order: P1 (with the owner's answers), B1–B4, C1–C4 (quick), C5–C6, then N1–N4.

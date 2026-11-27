@@ -46,6 +46,21 @@ const assert = require("assert");
     out.none = await run(strike(valeros, plain));
     out.reroll = await run(strike(valeros, fog, { isReroll: true }));
     out.invisible = await run(strike(valeros, ghost));
+    // v0.90.1: attached to the triggering card (its flag; the flat check's own message hidden), and the result
+    // known to other automations (flatCheckFailed waits for it).
+    const fcMod = await import("/modules/lucd20-automations/scripts/systems/pf2e/flat-check.js");
+    const store = {};
+    const attackMsg = strike(valeros, fog, {});
+    Object.assign(attackMsg, { setFlag: async (ns, k, v) => { (store[ns] ??= {})[k] = v; }, getFlag: (ns, k) => store[ns]?.[k] ?? null });
+    d20 = 3; posted.length = 0; Hooks.callAll("createChatMessage", attackMsg);
+    const failedP = fcMod.flatCheckFailed(attackMsg, fog.uuid);
+    await settle(150); d20 = 10;
+    out.attached = [!!store["lucd20-automations"]?.flatCheckLines, posted[0]?.flags?.["lucd20-automations"]?.flatCheck?.attached, await failedP, await fcMod.flatCheckFailed({ id: "nothing" })];
+    const li = document.createElement("li"); li.className = "chat-message"; li.innerHTML = `<div class="message-content"><div class="dice-roll">25</div></div>`;
+    Hooks.callAll("renderChatMessageHTML", attackMsg, li);
+    const fcLi = document.createElement("li"); fcLi.className = "chat-message";
+    Hooks.callAll("renderChatMessageHTML", { getFlag: (ns, k) => (k === "flatCheck" ? { attached: true } : null) }, fcLi);
+    out.drawn = [li.querySelector(".lucd20-fc-inline .lucd20-fc-fail") ? "fail line in the card" : "missing", fcLi.classList.contains("lucd20-fc-attached-source")];
     // Dazzled: only with a target; a hidden token: GM only, its real name.
     const dazzled = make("daz", "Kyra", 0, { conds: { dazzled: 1 } });
     out.dazzledNoTarget = await run(strike(dazzled, null));
@@ -117,6 +132,8 @@ const assert = require("assert");
   assert.deepStrictEqual(r.hideValue, [["Flat check DC 5 (concealed)", [], 1]], "Hide the number");
   assert.deepStrictEqual(r.off, [], "off without a reload");
   assert.deepStrictEqual(errors, []);
+  assert.deepStrictEqual(r.attached, [true, true, true, false], "v0.90.1: the lines on the attack's card; its own message marked attached; flatCheckFailed true for the failed target, false with no flat check");
+  assert.deepStrictEqual(r.drawn, ["fail line in the card", true], "drawn inside the attack's card; the flat check's own message hidden");
   console.log("PHASE 47 CHECKS PASSED");
   await browser.close();
 })().catch(e => { console.error(e); process.exit(1); });

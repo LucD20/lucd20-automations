@@ -5,6 +5,7 @@ import { waitForDice } from "../../core/dice.js";
 import { hasReaction, spendReaction } from "./reactions.js";
 import { addImmunity, immunitiesOf } from "./immunity.js";
 import { pf2eCard, wireOpen, sourceUuid, itemBySlug, compactCard, nameForPlayers } from "./card.js";
+import { flatCheckFailed } from "./flat-check.js";
 import { sysId } from "./sys.js";
 
 /**
@@ -58,6 +59,7 @@ export async function onAttack(message) {
 	if (immunitiesOf(attacker.actor, { kind: KIND, by: actor.uuid }).length) return;
 	seen.add(message.id);
 	await waitForDice(message.id);
+	if (await flatCheckFailed(message, target.uuid)) return; // v0.90.1: the flat check failed: a miss
 	const n = penaltyFor(actor);
 	await ChatMessage.create({
 		content: pf2eCard({

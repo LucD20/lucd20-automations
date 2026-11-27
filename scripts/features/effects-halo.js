@@ -5,8 +5,8 @@ import { defineFeature } from "../core/registry.js";
  * Effects Halo (replaces PF2e Effects Halo; owner, Q266–Q267, as recommended), every system, per player.
  * - A token's effect icons sit in rings just outside its footprint (an ellipse for non-square tokens; a second
  *   ring when the first is full), as round badges with a background and a border colour.
- * - Drawn **under every token**: on the canvas layer of token art, at the token's elevation, below the tokens
- *   there, so token art (its own, with padding, and its neighbours') covers the icons, never the reverse.
+ * - Drawn **above the tokens** at the token's elevation (v0.90.1, owner: "Put status icons above the token,
+ *   otherwise large tokens cover it"; until then under every token).
  * - Only the icons Foundry already drew for this user on that token (they're copied from the token's own
  *   effects, which are then hidden); the overlay icon (dead) stays on the token. Nothing for a token the user
  *   can't see; hidden tokens (GM) at half opacity.
@@ -16,8 +16,10 @@ import { defineFeature } from "../core/registry.js";
  */
 
 let feature = null;
-/** The badges' sort: under every token at their elevation. The Turn Markers go just under this (owner, v0.70.1). */
-export const HALO_SORT = -1e6;
+/** The badges' sort: above every token at their elevation (v0.90.1). */
+export const HALO_SORT = 1e6;
+/** Under every token at its elevation: the Turn Markers and Token Reactions' ground effects sort here. */
+export const UNDER_TOKENS_SORT = -1e6;
 /** Whether this user's halo is on (the Turn Markers then sort under it). */
 export const haloActive = () => !!feature?.active;
 /** token id → { token, sprites: PIXI sprites, key } */
@@ -199,7 +201,7 @@ function place(entry) {
     s.alpha = alpha;
     if ("elevation" in s && s.elevation !== elevation) s.elevation = elevation;
     if ("sortLayer" in s) s.sortLayer = mesh?.sortLayer ?? TOKENS_LAYER();
-    // Below every token at this elevation (they all sort above this).
+    // Above every token at this elevation.
     if ("sort" in s && s.sort !== HALO_SORT) s.sort = HALO_SORT;
   });
 }

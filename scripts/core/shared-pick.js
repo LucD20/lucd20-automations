@@ -85,6 +85,7 @@ function quietSession() {
 function startSharing({ tokens = [], hint = "", takeover = null } = {}) {
   const session = {
     id: `${game.user.id}.${Date.now().toString(36)}.${++idSeq}`,
+    tokens,
     taken: false,
     ended: false,
     onTaken: null,
@@ -136,6 +137,7 @@ async function onQuery(payload) {
     case "state": return void setState(payload.id, payload.state);
     case "close": return void close(payload.id);
     case "takeover": return takenHere(payload.id, sender);
+    case "cancel": return cancelHere(payload.id, sender);
     case "result": return resultHere(payload.id, payload.value, sender);
   }
   return false;
@@ -198,21 +200,39 @@ function render(id) {
   const g = new PIXI.Graphics();
   w.layer.addChild(g);
   drawShapes(g, w.state, { watching: true });
-  if (game.user.isGM && w.takeover && !w.bar) w.bar = watchBar(w);
+  if (!w.bar && game.user.isGM && w.takeover) w.bar = watchBar(w);
+  // v0.90.1 (owner: "Add button to cancel shove for players (currently only GM sees it)"): the player who owns
+  // the acting creature (the first token shared) can cancel a pick someone else is making for it.
+  else if (!w.bar && !game.user.isGM && ownsActor(w)) w.bar = watchBar(w, { cancelOnly: true });
 }
 
-/** The GM's bar: who is choosing what, and Take over. */
-function watchBar(w) {
+/** Does this user own the creature the pick is for (the first token shared)? */
+function ownsActor(w) {
+  const doc = docOf(w.tokens?.[0]);
+  return !!(doc?.isOwner || doc?.actor?.isOwner);
+}
+
+/** The watcher's bar: who is choosing what; Take over (GM) and Cancel (GM, the creature's owner). */
+function watchBar(w, { cancelOnly = false } = {}) {
   const bar = document.createElement("div");
   bar.className = "lucd20-pick-bar lucd20-pick-watch";
   const text = document.createElement("span");
   text.textContent = localize("LUCD20.SharedPicks.Watching", { user: game.users.get(w.user)?.name ?? "?", hint: w.hint });
-  const button = document.createElement("button");
-  button.type = "button";
-  button.innerHTML = '<i class="fa-solid fa-hand"></i> ';
-  button.append(localize("LUCD20.SharedPicks.TakeOver"));
-  button.addEventListener("click", () => takeOver(w.id).catch(err => error("Take over failed.", err)));
-  bar.append(text, button);
+  bar.append(text);
+  if (!cancelOnly) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.innerHTML = '<i class="fa-solid fa-hand"></i> ';
+    button.append(localize("LUCD20.SharedPicks.TakeOver"));
+    button.addEventListener("click", () => takeOver(w.id).catch(err => error("Take over failed.", err)));
+    bar.append(button);
+  }
+  const stop = document.createElement("button");
+  stop.type = "button";
+  stop.innerHTML = '<i class="fa-solid fa-xmark"></i> ';
+  stop.append(localize("LUCD20.SharedPicks.Cancel"));
+  stop.addEventListener("click", () => cancelPick(w.id).catch(err => error("Cancel failed.", err)));
+  bar.append(stop);
   const hotbar = (document.getElementById("lucd20-hud4e") ?? document.getElementById("hotbar"))?.getBoundingClientRect();
   bar.style.bottom = `${hotbar?.height ? Math.max(8, window.innerHeight - hotbar.top + 12) : 100}px`;
   document.body.append(bar);
@@ -240,6 +260,30 @@ export async function takeOver(id) {
     error("Take over: the picker failed.", err);
   }
   await chooser.query(QUERY, { op: "result", id, value: value ?? null, from: game.user.id }, { timeout: 30_000 }).catch(err => error("Take over: the choice could not be sent.", err));
+  return true;
+}
+
+/** Watcher (the GM, or the creature's owner): ask the chooser to cancel the pick. */
+export async function cancelPick(id) {
+  const w = watched.get(id);
+  const chooser = w ? game.users.get(w.user) : null;
+  if (!w || !chooser?.active || !(game.user.isGM || ownsActor(w))) return false;
+  const ok = await chooser.query(QUERY, { op: "cancel", id, from: game.user.id }, { timeout: 10_000 }).catch(() => false);
+  if (ok) close(id);
+  return !!ok;
+}
+
+/** Chooser: cancelled by the GM or the creature's owner: the picker closes with nothing chosen. */
+function cancelHere(id, sender) {
+  const session = own.get(id);
+  if (!session || session.ended || !sender) return false;
+  const doc = docOf(session.tokens?.[0]);
+  const allowed = sender.isGM || !!doc?.testUserPermission?.(sender, "OWNER") || !!doc?.actor?.testUserPermission?.(sender, "OWNER");
+  if (!allowed) return false;
+  session.end();
+  try { session.onTaken?.(); } catch (err) { error("Cancel: closing the picker failed.", err); }
+  try { session.onResult?.(null); } catch (err) { error("Cancel: resolving the picker failed.", err); }
+  ui.notifications?.info(localize("LUCD20.SharedPicks.Cancelled", { user: sender.name }));
   return true;
 }
 

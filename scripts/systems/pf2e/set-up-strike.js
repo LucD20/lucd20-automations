@@ -3,6 +3,7 @@ import { defineFeature } from "../../core/registry.js";
 import { waitForDice } from "../../core/dice.js";
 import { itemBySlug, nameForPlayers } from "./card.js";
 import { registerStrikeOption } from "./strike-options.js";
+import { flatCheckFailed } from "./flat-check.js";
 import { sysId } from "./sys.js";
 
 /**
@@ -74,6 +75,7 @@ export async function onMessage(message) {
 	if (!(context.options ?? []).includes(TAG) || !["success", "criticalSuccess"].includes(context.outcome)) return;
 	seen.add(message.id);
 	await waitForDice(message.id);
+	if (await flatCheckFailed(message, target.uuid)) return; // v0.90.1: the flat check failed: a miss
 	const already = isOffGuard(target.actor);
 	if (!already) await setOffGuard(target.actor, true);
 	marks.set(target.uuid, { by: attacker.uuid, side: attacker.disposition, added: !already });

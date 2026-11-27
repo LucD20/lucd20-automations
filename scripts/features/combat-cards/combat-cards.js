@@ -2,7 +2,8 @@ import { MODULE_ID, localize, systemMatches } from "../../core/constants.js";
 import { defineFeature } from "../../core/registry.js";
 import { broadcast, onBroadcast } from "../../core/socket.js";
 import { addChatControl } from "../../core/chat-controls.js";
-import { onEncounterEnd, ReportWindow, reportVisible } from "../encounter-report.js";
+import { holdGate } from "../../core/overlay-gate.js";
+import { onEncounterEnd, ReportWindow, reportVisible, willReport } from "../encounter-report.js";
 import { CARDS, RARITIES, cardById, cardNumber, computeStats, dealCards } from "./catalog.js";
 
 /**
@@ -101,9 +102,9 @@ function markLight(root) {
 /* -------------------------------------------- */
 
 async function onEnd(data, entry) {
-  if (!state.feature?.active) return false;
+  if (!state.feature?.active) return releaseEnding();
   const dealt = dealCards(data);
-  if (!dealt.length) return false;
+  if (!dealt.length) return releaseEnding();
   const p = Object.fromEntries((data.participants ?? []).map(x => [x.uuid, x]));
   const cards = [];
   for (const d of dealt) {
@@ -122,7 +123,26 @@ async function onEnd(data, entry) {
   const payload = { cards, scene: entry.scene ?? "", rounds: entry.rounds ?? null, won: entry.won };
   broadcast("combatCards.show", payload);
   show(payload);
+  releaseEnding(); // the overlay holds the gate now
   return true;
+}
+
+/**
+ * The combat ended with a recording: cards are on their way, so "Loot the fallen" waits (v0.90.1). Released when
+ * no cards are dealt, when the overlay takes over, or after 8 s at worst.
+ */
+function holdEnding(combat) {
+  if (!game.user.isActiveGM || !state.feature?.active || !willReport(combat)) return;
+  state.endingRelease = holdGate();
+  state.endingTimer = setTimeout(() => { if (!state.overlay) releaseEnding(); }, 8000);
+}
+function releaseEnding() {
+  clearTimeout(state.endingTimer);
+  const r = state.endingRelease;
+  state.endingRelease = null;
+  // While the overlay is open, it holds the same gate: only its Close releases it.
+  if (r && !state.overlay) r();
+  return false;
 }
 
 /* -------------------------------------------- */
@@ -132,6 +152,8 @@ async function onEnd(data, entry) {
 function closeOverlay() {
   state.overlay?.remove();
   state.overlay = null;
+  state.releaseGate?.();
+  state.releaseGate = null;
 }
 
 /** The cards on screen, then the report fades in after the delay (if this user sees it). */
@@ -150,9 +172,12 @@ export function show(payload) {
       <div class="lcc-row">${payload.cards.map((c, i) => cardHTML(c, { you: mine(c), extra: "lcc-deal" }).replace('class="lcc-card', `style="--i:${i}" class="lcc-card`)).join("")}</div>
       <button type="button" class="lcc-close"><i class="fa-solid fa-xmark"></i> ${esc(t("Close"))}</button>
     </div>`;
-  el.addEventListener("click", ev => { if (ev.target === el || ev.target.closest(".lcc-close")) closeOverlay(); });
+  // v0.90.1 (owner: "it shouldn't close on a left click"): only the Close button (or Escape) closes it.
+  el.addEventListener("click", ev => { if (ev.target.closest(".lcc-close")) closeOverlay(); });
   document.body.append(el);
   state.overlay = el;
+  // Loot the fallen (Loot Pile) waits until this is closed.
+  state.releaseGate = holdGate();
   markLight(el);
   const delay = Number(state.feature?.get?.("reportDelay") ?? 5);
   if (delay >= 0) state.timers.push(setTimeout(() => {
@@ -385,6 +410,7 @@ defineFeature({
   enable(feature) {
     state.feature = feature;
     feature.onCleanup(onEncounterEnd(onEnd));
+    feature.on("deleteCombat", holdEnding);
     feature.onCleanup(closeOverlay);
     feature.onCleanup(addChatControl({
       id: "combatCardsDeck", icon: "fa-solid fa-layer-group", tooltip: t("DeckTitle"), order: 42,

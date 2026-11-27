@@ -432,6 +432,12 @@ export function onEncounterEnd(fn) {
   return () => { const i = endHandlers.indexOf(fn); if (i >= 0) endHandlers.splice(i, 1); };
 }
 
+/** Whether this combat's end will have a report (it recorded damage or healing): the saved copy or this client's. */
+export function willReport(combat) {
+  const data = state.local.get(combat?.id) ?? combat?.getFlag?.(MODULE_ID, FLAG);
+  return !!data?.events?.some(e => e.kind === "damage" || e.kind === "heal");
+}
+
 /** Whether this user sees the report (the option: everyone, or the GM only). */
 export const reportVisible = () => canSee();
 

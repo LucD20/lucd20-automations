@@ -6,6 +6,7 @@ import { pf2eCard, wireOpen, sourceUuid, itemBySlug, compactCard, nameForPlayers
 import { addImmunity, immunitiesOf, timeLeft } from "./immunity.js";
 import { recallKnowledge } from "./recall-knowledge.js";
 import { registerStrikeOption } from "./strike-options.js";
+import { flatCheckFailed } from "./flat-check.js";
 import { sysId, sysApi, sysConfig } from "./sys.js";
 
 /**
@@ -94,6 +95,7 @@ export async function onMessage(message) {
 	const target = context.target?.token ? fromUuidSync(context.target.token) : null;
 	if (!target?.actor) return;
 	await waitForDice(message.id);
+	if (await flatCheckFailed(message, target.uuid)) return; // v0.90.1: the flat check failed: a miss
 	const striker = message.token ?? actor.getActiveTokens?.()?.[0]?.document ?? null;
 	const immune = immunitiesOf(target.actor, { kind: KIND });
 	if (!immune.length) await addImmunity(target.actor, { kind: KIND, by: actor.uuid, name: striker?.name ?? actor.name });

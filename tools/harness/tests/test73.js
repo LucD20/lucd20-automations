@@ -88,8 +88,16 @@ const assert = require("assert");
     out.statText = ov?.querySelector(".lcc-card .lcc-stat")?.textContent.replace(/\s+/g, " ").trim();
     out.reportOpened = !!foundry.applications.instances.get("lucd20-encounter-report");
     out.saved1 = Object.keys(madz.flags[M]?.cards ?? {}).concat(Object.keys(schm.flags[M]?.cards ?? {}));
+    // v0.90.1: a click on the background doesn't close it; "Loot the fallen" waits (the gate) until Close.
+    const gate = await import(`/modules/${M}/scripts/core/overlay-gate.js`);
+    let gateOpen = false; gate.waitForGate().then(() => { gateOpen = true; });
+    ov?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    await settle(80);
+    out.backdropKept = !!document.getElementById("lucd20-combat-cards") && !gateOpen;
     ov?.querySelector(".lcc-close")?.click();
+    await settle(40);
     out.closed = !document.getElementById("lucd20-combat-cards");
+    out.gateAfterClose = gateOpen;
 
     // Fight 2, the same: the same cards again, now plain (earned before).
     await fight("c2");
@@ -142,6 +150,8 @@ const assert = require("assert");
   assert.ok(r.reportOpened, "the report opens after the delay (0 here)");
   assert.strictEqual(r.saved1.length, 2, "saved on each actor");
   assert.ok(r.closed, "Close removes the cards");
+  assert.ok(r.backdropKept, "v0.90.1: a click outside the cards doesn't close them; the gate holds");
+  assert.ok(r.gateAfterClose, "after Close, the gate opens (Loot the fallen may show)");
   assert.strictEqual(r.recordedNat20, 1, "a public natural 20 counts; a secret one never does");
   assert.ok(r.cards2.every(c => c.endsWith(":plain")), `earned before: no foil ${r.cards2}`);
   assert.strictEqual(r.copies, "Fp", "one foil copy, then a plain one");

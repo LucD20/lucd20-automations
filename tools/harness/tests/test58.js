@@ -143,7 +143,7 @@ const out = __dirname;
     const near = _test.entries.get("valeros").sprites;
     return { count: halo.length, elevations: [...new Set(near.map(s => s.elevation))], sorts: [...new Set(halo.filter(s => s.visible).map(s => s.sort))], layers: [...new Set(near.map(s => s.sortLayer))] };
   });
-  assert.deepStrictEqual(primaryPath, { count: 30, elevations: [30], sorts: [-1e6], layers: [700] });
+  assert.deepStrictEqual(primaryPath, { count: 30, elevations: [30], sorts: [1e6], layers: [700] }, "v0.90.1: above the tokens at their elevation");
 
   // Off: our badges gone, Foundry redraws its own.
   const off = await page.evaluate(async () => {

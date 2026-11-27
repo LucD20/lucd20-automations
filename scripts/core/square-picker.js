@@ -115,7 +115,7 @@ export function pickSquare(squares, { hint = "", cancel = "Cancel", from = null,
  * [{ x, y, width, height, color, value }]; resolves the chosen entries' values, in click order.
  * `preselected`: values chosen to begin with. `auto`: a click that reaches `max` ends the choice at once.
  */
-export function pickSeveral(entries, { max = 2, hint = "", confirm = "OK", cancel = "Cancel", preselected = [], auto = false, share = null } = {}) {
+export function pickSeveral(entries, { max = 2, hint = "", confirm = "OK", cancel = "Cancel", preselected = [], auto = false, share = null, autoConfirmMs = 0, countdown = "" } = {}) {
   return new Promise(resolve => {
     if (!entries.length || !canvas?.ready) return resolve(null);
     const CHOSEN = 0x3b82f6;
@@ -149,8 +149,12 @@ export function pickSeveral(entries, { max = 2, hint = "", confirm = "OK", cance
     no.type = "button";
     no.innerHTML = '<i class="fa-solid fa-xmark"></i> ';
     no.append(cancel);
+    // v0.90.1 (owner, Demoralizing Charge: "gives the choice normally but automatically selects after 3 seconds"):
+    // with something preselected and `autoConfirmMs`, a countdown confirms it; any click or key stops it.
+    let left = autoConfirmMs && chosen.length ? Math.ceil(autoConfirmMs / 1000) : 0, timer = null;
+    const stopCountdown = () => { if (timer) { clearInterval(timer); timer = null; left = 0; label(); } };
     const label = () => {
-      text.textContent = `${hint} (${chosen.length}/${max})`;
+      text.textContent = `${hint} (${chosen.length}/${max})${left > 0 && countdown ? ` · ${countdown.replace("{n}", left)}` : ""}`;
       ok.innerHTML = '<i class="fa-solid fa-flag"></i> ';
       ok.append(confirm);
       ok.disabled = !chosen.length;
@@ -174,6 +178,8 @@ export function pickSeveral(entries, { max = 2, hint = "", confirm = "OK", cance
     const closeUI = () => {
       if (closed) return;
       closed = true;
+      if (timer) clearInterval(timer);
+      window.removeEventListener("pointerdown", stopOnAny, true);
       window.removeEventListener("pointerdown", onDown, true);
       window.removeEventListener("keydown", onKey, true);
       layer.destroy({ children: true });
@@ -214,8 +220,18 @@ export function pickSeveral(entries, { max = 2, hint = "", confirm = "OK", cance
     }
     ok.addEventListener("click", () => done(chosen.map(e => e.value)));
     no.addEventListener("click", () => done(null));
+    function stopOnAny() { stopCountdown(); }
+    window.addEventListener("pointerdown", stopOnAny, true);
     window.addEventListener("pointerdown", onDown, true);
     window.addEventListener("keydown", onKey, true);
+    if (left > 0) {
+      window.addEventListener("keydown", stopOnAny, { capture: true, once: true });
+      timer = setInterval(() => {
+        left -= 1;
+        if (left <= 0) { clearInterval(timer); timer = null; if (chosen.length) return done(chosen.map(e => e.value)); }
+        label();
+      }, 1000);
+    }
   });
 }
 

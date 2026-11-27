@@ -3147,3 +3147,7 @@ html.lucd20-chat-trim-active .chat-log > .chat-message { content-visibility: aut
 .chat-message .lucd20-pf2e-card .lucd20-card-result.is-muted { color: #8a8070; }
 .chat-message .lucd20-pf2e-card.lucd20-card-compact { padding-top: 3px; padding-bottom: 3px; }
 .chat-message .lucd20-pf2e-card .lucd20-card-done { margin: 2px 0 0; font-size: 12px; font-style: normal; color: #4f473b; opacity: 1; }
+
+/* Flat checks attached to the triggering card (v0.90.1): the lines inside it; the flat check's own message hidden. */
+.chat-message.lucd20-fc-attached-source { display: none !important; }
+.lucd20-fc-card.lucd20-fc-inline { margin: 4px 0 2px; padding: 0; border: 0; background: none; }

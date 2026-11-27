@@ -1009,6 +1009,7 @@
         "Name": "Flat Checks",
         "Hint": "After a Strike, a spell attack, a spell cast at targets, or an attack action (Shove, Trip...), the flat check it needs is rolled once per target at the highest DC that applies: Concealed or Dazzled 5, Hidden, Invisible or Undetected 11, Grabbed 5 for manipulate actions, Stupefied 5 + its value for spells; Blind-Fight, Keen Eyes and Sure Strike are counted. Never on a reroll, never for an area. Replaces the PF2e Flat Check module (switch that one off). The card is GM-only when it would reveal a hidden creature.",
         "Setting": {
+          "attach": { "Name": "In the attack's card", "Hint": "The flat check shows inside the card of the attack or spell that triggered it (unless it is secret)." },
           "ignoreConcealed": { "Name": "Ignore Concealed", "Hint": "No flat check for Concealed targets (or Dazzled attackers)." },
           "ignoreGrabbed": { "Name": "Ignore Grabbed", "Hint": "No flat check for manipulate actions while Grabbed." },
           "hideValue": { "Name": "Hide the number", "Hint": "The card says only success or failure, not the d20's number." }
@@ -1469,6 +1470,8 @@
       "Revealed": "Name shown to players (click to hide)"
     },
     "SharedPicks": {
+      "Cancel": "Cancel",
+      "Cancelled": "{user} cancelled the choice.",
       "Watching": "{user}: {hint}",
       "TakeOver": "Take over",
       "Taken": "{user} took over the choice."
@@ -2051,6 +2054,7 @@
         "NotYours": "That is not your creature."
       },
       "Commander": {
+        "AutoIn": "confirms in {n} s (click to change)",
         "Name": "Demoralizing Charge",
         "NotInCombat": "Demoralizing Charge: no encounter running.",
         "NoBanner": "Demoralizing Charge has the brandish trait: your banner should be raised (in hand).",

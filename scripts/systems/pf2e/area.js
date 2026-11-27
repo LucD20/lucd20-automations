@@ -152,13 +152,13 @@ function drawHover(region, hovered) {
 	let poly = null;
 	try { poly = reachPolygon(region); } catch { poly = null; }
 	if (poly?.points?.length) {
-		reach.beginFill(0xffe082, 0.22).lineStyle(3, 0xffc107, 0.95).drawPolygon(poly.points).endFill();
+		reach.beginFill(0xffe082, 0.07).lineStyle(2, 0xffc107, 0.6).drawPolygon(poly.points).endFill(); // v0.90.1: softer (owner: "light up too much")
 	} else {
 		const coverage = region.getCoverage?.();
 		const size = canvas.grid.size;
 		for (const o of coverage?.covered ?? []) {
 			const { x, y } = canvas.grid.getTopLeftPoint(o);
-			reach.beginFill(0xffe082, 0.18).lineStyle(2, 0xffc107, 0.9).drawRect(x, y, size, size).endFill();
+			reach.beginFill(0xffe082, 0.06).lineStyle(1, 0xffc107, 0.45).drawRect(x, y, size, size).endFill();
 		}
 	}
 	hoverLayer.addChild(reach);

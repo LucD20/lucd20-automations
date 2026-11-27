@@ -3,6 +3,7 @@ import { defineFeature } from "../core/registry.js";
 import { findFreeSpot, snapTopLeft } from "../core/placement.js";
 import { broadcast, executeAsGM, onBroadcast, onGMRequest } from "../core/socket.js";
 import { AnswerWindow } from "../core/answer-window.js";
+import { waitForGate } from "../core/overlay-gate.js";
 import { addPurses, cleanPurse, emptyPurse, isEmptyPurse, purseFromValue, purseValue, splitAsIs, splitByValue } from "../core/coins.js";
 
 /**
@@ -1546,7 +1547,8 @@ defineFeature({
     state.feature = feature;
 
     feature.on("deleteCombat", combat => {
-      if (game.user.isActiveGM) reviewLoot(combat);
+      // v0.90.1: after the Combat Cards screen is closed (it opens a moment after the combat ends).
+      if (game.user.isActiveGM) setTimeout(() => waitForGate().then(() => reviewLoot(combat)), 0);
     });
 
     // Double-click a pile token → Loot window (instead of the actor sheet).

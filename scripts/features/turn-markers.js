@@ -1,6 +1,6 @@
 import { MODULE_ID, error } from "../core/constants.js";
 import { defineFeature } from "../core/registry.js";
-import { HALO_SORT, haloActive } from "./effects-halo.js";
+import { UNDER_TOKENS_SORT, haloActive } from "./effects-halo.js";
 
 /**
  * Turn Marker and Next-Turn Marker (replace Combat Booster's markers).
@@ -218,7 +218,7 @@ class MarkerRenderer {
         if (sprite.elevation !== mesh.elevation) sprite.elevation = mesh.elevation;
         if (sprite.sortLayer !== mesh.sortLayer) sprite.sortLayer = mesh.sortLayer;
         // Under its token; with Effects Halo on, under the halo's badges too (owner, v0.70.1).
-        const sort = haloActive() ? HALO_SORT - 1 : (mesh.sort ?? 0) - 0.5;
+        const sort = haloActive() ? UNDER_TOKENS_SORT - 1 : (mesh.sort ?? 0) - 0.5;
         if (sprite.sort !== sort) sprite.sort = sort;
       }
     }

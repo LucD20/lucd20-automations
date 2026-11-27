@@ -25,6 +25,26 @@ const esc = (v) => Handlebars.escapeExpression(String(v ?? ""));
 const FLAG = "flatCheck";
 const SEEN = new Set(); // message ids handled
 const HIDDEN_LIKE = ["hidden", "invisible", "undetected", "unnoticed"];
+const ATTACHED = "flatCheckLines";
+
+/*
+ * v0.90.1 (owner: "Automation needs to be concealment aware, waiting for the flat check"): the flat check of an
+ * attack is known to the other automations. pending: message id → Promise<{ any, failed: Set<target token uuid>,
+ * self }>. Registered at once (before the dice), resolved after the flat check's own dice.
+ */
+const pending = new Map();
+
+/**
+ * Did this message's flat check fail (for this target, or any)? Waits for it; false when there is none
+ * (Flat Checks off, nothing concealed). A failed flat check: the attack / spell / action is lost (a miss).
+ */
+export async function flatCheckFailed(message, targetUuid = null) {
+	const p = pending.get(message?.id ?? message);
+	if (!p) return false;
+	const r = await p.catch(() => null);
+	if (!r) return false;
+	return r.self || (targetUuid ? r.failed.has(targetUuid) : r.any);
+}
 
 const traitsOf = (item) => {
 	const t = item?.system?.traits?.value ?? item?.traits ?? [];
@@ -163,6 +183,11 @@ async function onMessage(feature, message) {
 	}
 	if (!targets.length && own) rows.push({ target: null, ...own });
 	if (!rows.length) return;
+	let settle;
+	pending.set(message.id, new Promise((res) => { settle = res; }));
+	setTimeout(() => pending.delete(message.id), 120000);
+	const outcome = { any: false, failed: new Set(), self: false };
+	try {
 	await waitForDice(message.id);
 	// Who may see it.
 	const secret = !!message.blind || (message.whisper?.length ?? 0) > 0 || !!attackerDoc?.hidden
@@ -174,6 +199,7 @@ async function onMessage(feature, message) {
 		const roll = await new Roll("1d20").evaluate();
 		rolls.push(roll);
 		const ok = roll.total >= r.dc;
+		if (!ok) { outcome.any = true; if (r.target) outcome.failed.add(r.target.uuid); else outcome.self = true; }
 		const whyText = r.why === "stupefied" ? L("Why.stupefied", { value: r.value }) : L(`Why.${r.why}`);
 		// v0.51.1 (owner): one line per target, the die and a green or red background; the target's name only
 		// when there are several.
@@ -182,15 +208,41 @@ async function onMessage(feature, message) {
 		lines.push(`<div class="lucd20-fc-line ${ok ? "lucd20-fc-ok" : "lucd20-fc-fail"}"><span class="lucd20-fc-die">${die}</span><span>${who}${esc(L("Line", { dc: r.dc, why: whyText }))}</span></div>`);
 	}
 	const name = secret ? (attackerDoc?.name ?? actor.name) : nameForPlayers(attackerDoc, actor.name);
-	await ChatMessage.create({
-		content: `<div class="lucd20-pf2e-card lucd20-fc-card">${lines.join("")}</div>`,
+	const html = `<div class="lucd20-pf2e-card lucd20-fc-card">${lines.join("")}</div>`;
+	// v0.90.1 (owner: "Concealment should be attached to the message that triggered them"): when everyone may see
+	// it, the lines go into the triggering message's card (its flag, drawn there); the flat check's own message
+	// (for the 3D dice) is then hidden from the log. Secret: as before, a GM-only message.
+	const attach = !secret && !!message.setFlag && feature.get("attach") !== false;
+	const fc = await ChatMessage.create({
+		content: html,
 		speaker: { alias: name },
 		rolls,
 		sound: null,
 		// GM only: the 3D dice follow the message's whisper, so players see neither.
 		...(secret ? { whisper: gmIds(), blind: true } : {}),
-		flags: { [MODULE_ID]: { [FLAG]: { source: message.id } } }
+		flags: { [MODULE_ID]: { [FLAG]: { source: message.id, attached: attach } } }
 	});
+	if (attach) await message.setFlag(MODULE_ID, ATTACHED, lines.join("")).catch((err) => error("Flat check: attaching failed.", err));
+	if (fc?.id) await waitForDice(fc.id);
+	} finally {
+		settle(outcome);
+	}
+}
+
+/** Every client: the attached lines in the triggering card; the flat check's own message hidden. */
+function onRender(message, html) {
+	const root = html instanceof HTMLElement ? html : html?.[0];
+	if (!root) return;
+	const fc = message.getFlag?.(MODULE_ID, FLAG);
+	if (fc?.attached) { (root.closest?.(".chat-message") ?? root).classList.add("lucd20-fc-attached-source"); return; }
+	const lines = message.getFlag?.(MODULE_ID, ATTACHED);
+	if (!lines || root.querySelector(".lucd20-fc-inline")) return;
+	const box = document.createElement("div");
+	box.className = "lucd20-pf2e-card lucd20-fc-card lucd20-fc-inline";
+	box.innerHTML = lines;
+	const content = root.querySelector(".message-content") ?? root;
+	const anchor = content.querySelector(".card-buttons, .message-buttons");
+	if (anchor) anchor.before(box); else content.append(box);
 }
 
 defineFeature({
@@ -203,14 +255,16 @@ defineFeature({
 	settings: {
 		ignoreConcealed: { kind: "boolean", default: false, scope: "world" },
 		ignoreGrabbed: { kind: "boolean", default: false, scope: "world" },
-		hideValue: { kind: "boolean", default: false, scope: "world" }
+		hideValue: { kind: "boolean", default: false, scope: "world" },
+		attach: { kind: "boolean", default: true, scope: "world" }
 	},
 
 	enable(feature) {
 		feature.on("createChatMessage", (message) => {
 			onMessage(feature, message).catch((err) => error("Flat check failed.", err));
 		});
+		feature.on("renderChatMessageHTML", onRender);
 	}
 });
 
-export const _test = { caseOf, attackerCheck, targetCheck, onMessage, SEEN };
+export const _test = { caseOf, attackerCheck, targetCheck, onMessage, SEEN, pending, onRender };

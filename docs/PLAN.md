@@ -4057,3 +4057,58 @@ changes"). Code locations checked; open questions per item.
 | N4 | Battle Medicine: notification when it wears off | `battle-medicine.js` (immunity tracker, world time). **Ask:** who is told (the healer, the patient, the GM) and how (chat line or a pop-up). |
 
 Proposed order: P1 (with the owner's answers), B1–B4, C1–C4 (quick), C5–C6, then N1–N4.
+
+### 29.5 Owner's answers (2026-11-27)
+- P1: "I had PF2e Graphics, Automated Animations, FXMaster and JB2A … if it's
+  other modules', no need to change anything." → no change.
+- B1: "pretty sure, but can't recall 100%. Leave as is if nothing wrong in the
+  code." → left; the code handles ranged attacks in reach.
+- B3: "The Card screen: it shouldn't close on a left click. And the Loot the
+  fallen window should only show up after the card screen is closed (if it is
+  enabled)."
+- B4: "It shows as maximum damage, like 2d6 piercing + 2d6 bleed shows 4–24.
+  It should just be 2–12 since bleed isn't damage rolled at the moment." →
+  persistent damage left out of the estimate's range.
+- C6: "in a group the player is always doing it to the same characters …
+  Do the first time, keep the default; future uses by that PC always target
+  the same PCs; gives the choice normally but automatically selects after
+  3 seconds."
+Still open: C5 (area conditions: on entering / start of turn; removed on
+leaving?), N3 (Albatross curse: source), N4 (Battle Medicine wear-off: who is
+told, chat or pop-up).
+
+### 29.6 Built v0.90.1
+- B2 (Shove cancel for players): shared picks gained a "cancel" op. The player
+  who owns the acting creature (the first token shared) gets a watching bar
+  with Cancel; the GM's watching bar has Take over and Cancel; the chooser's
+  client checks the sender (GM or owner) and closes the pick with nothing.
+  Test 64 §7.
+- B3 (the Cards screen): closes only with Close or Escape (not a click on the
+  background); "Loot the fallen" waits for it: `core/overlay-gate.js`
+  (holdGate / waitForGate); Combat Cards holds the gate at the combat's end
+  when the report recorded damage (`willReport`), releases it when no cards
+  are dealt (or after 8 s), and the overlay holds it until Close. Test 73.
+- B4 (persistent damage in Damage Estimate): `isPersistent(span)` (an
+  hourglass among its icons, a persistent / bleed class, a tooltip or label
+  saying so); persistent parts nested inside a normal instance are split out
+  ("2d6 + 2d6 bleed" → 2–12, persistent 2–12). Debug: with
+  `CONFIG.debug.lucd20Rules` the Roll button's HTML is logged. Test 52.
+- C1 (status icons): Effects Halo sorts above the tokens at their elevation
+  (`HALO_SORT = 1e6`); Turn Markers / Token Reactions' ground effects use
+  `UNDER_TOKENS_SORT`. Test 58.
+- C2 (areas on hover): the fill 0.22 → 0.07, the outline thinner and fainter.
+- C3 (concealment in the triggering card): when everyone may see it, the flat
+  check's lines are stored on the triggering message (flag `flatCheckLines`)
+  and drawn inside its card on every client; the flat check's own message (for
+  the 3D dice) is hidden from the log. Secret checks: GM-only, as before.
+  Option "In the attack's card" (default on). Test 46.
+- C4 (wait for the flat check): `flatCheckFailed(message, targetUuid)` waits
+  for the flat check (registered before its dice) and says if it failed for
+  that target; Guardian's Deflection, Combat Assessment, Cringe and Set-Up
+  Strike do nothing after a failed one (a miss). Test 46.
+- C6 (Demoralizing Charge defaults): `pickSeveral` `autoConfirmMs` +
+  `countdown`: with the remembered squadmates preselected, "confirms in 3 s
+  (click to change)" then confirms; any click or key stops it. The Drilled
+  Reactions pick remembers its last choice too (`dcDrilledLast`). Test 43.
+- Found while testing: the countdown's clean-up had also been pasted into
+  `pickSquare`, which then never closed (test 64 hung). Fixed.

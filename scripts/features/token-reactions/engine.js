@@ -1,4 +1,4 @@
-import { HALO_SORT } from "../effects-halo.js";
+import { UNDER_TOKENS_SORT } from "../effects-halo.js";
 import { TX, textures, destroyTextures } from "./textures.js";
 
 /**
@@ -103,7 +103,7 @@ function layerSet(elevation) {
   if (set && !set.ground.destroyed && !set.fx.destroyed && set.ground.parent) return set;
   if (!E.sets.size) E.k = (canvas.dimensions?.size ?? canvas.grid?.size ?? 100) / G;
   // Under the Effects Halo's badges, over the Turn Markers (which sit just under the halo).
-  const ground = primaryChild(elevation, HALO_SORT - 0.5);
+  const ground = primaryChild(elevation, UNDER_TOKENS_SORT - 0.5);
   const fx = primaryChild(elevation, FX_SORT);
   set = { elevation, ground, fx };
   for (const name of ["marks", "below", "shadows"]) set[name] = ground.addChild(new PIXI.Container());

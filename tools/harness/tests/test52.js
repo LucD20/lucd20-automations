@@ -24,6 +24,10 @@ const assert = require("assert");
     const dialog = buttonHTML => { const root = document.createElement("div"); root.innerHTML = `<form><button type="submit">${buttonHTML}</button></form>`; Hooks.callAll("renderDamageModifierDialog", {}, root); return root.querySelector(".lucd20-de-line")?.textContent ?? null; };
     out.strike = dialog(`<span class="slashing damage instance color">2d8 + 4</span> + <span class="fire damage instance color">1d6 <i class="fa-fire icon"></i></span>`);
     out.persistent = dialog(`<span class="slashing damage instance color">1d4 - 3</span> + <span class="fire damage instance color">1d6 <i class="fa-duotone fa-hourglass icon"></i></span>`);
+    // v0.90.1 (owner: "2d6 piercing + 2d6 bleed shows 4–24"): bleed apart, also when inside the instance.
+    out.bleedOwn = dialog(`<span class="piercing damage instance color">2d6</span> + <span class="bleed damage instance color persistent">2d6</span>`);
+    out.bleedInside = dialog(`<span class="piercing damage instance color">2d6 + <span class="bleed">2d6 <i class="fa-solid fa-hourglass-half"></i></span></span>`);
+    out.bleedTooltip = dialog(`<span class="piercing damage instance color">2d6</span> + <span class="damage instance color" data-tooltip="Persistent Bleed">2d6</span>`);
     out.crit = dialog(`<span class="piercing damage instance color">2 × (1d8 + 4)</span>`);
     await game.settings.set(M, "damageEstimate_show", "average");
     out.average = dialog(`<span class="slashing damage instance color">2d6 + 4</span>`);
@@ -52,6 +56,7 @@ const assert = require("assert");
   console.log(JSON.stringify(r), JSON.stringify(r4));
   assert.deepStrictEqual(r.math, [[6, 11, 16], [10, 17, 24], [3, 12.5, 22], [0, 1.5, 3], null, [5, 5, 5]], "the estimator");
   assert.strictEqual(r.strike, "Average 16.5 (7–26)", "the instances summed");
+  for (const k of ["bleedOwn", "bleedInside", "bleedTooltip"]) assert.strictEqual(r[k], "Average 7 (2–12)Persistent: Average 7 (2–12)", `${k}: bleed is persistent, not in the range (${r[k]})`);
   assert.strictEqual(r.persistent, "Average 1 (1–1)Persistent: Average 3.5 (1–6)", "persistent apart; at least 1 damage");
   assert.strictEqual(r.crit, "Average 17 (10–24)", "the doubled critical");
   assert.deepStrictEqual([r.average, r.range, r.off], ["Average 11", "6–16", null], "the user's choice; off");

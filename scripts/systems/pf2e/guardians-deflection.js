@@ -6,6 +6,7 @@ import { hasReaction, spendReaction } from "./reactions.js";
 import { reachOf, withinReach } from "./reactive-strike.js";
 import { heldItems } from "./hands.js";
 import { pf2eCard, wireOpen, sourceUuid, itemBySlug, compactCard, nameForPlayers } from "./card.js";
+import { flatCheckFailed } from "./flat-check.js";
 import { sysId, sysPack } from "./sys.js";
 
 /**
@@ -116,6 +117,7 @@ export async function onAttack(message) {
 	if (!who.length) return;
 	seen.add(message.id);
 	await waitForDice(message.id);
+	if (await flatCheckFailed(message, ally.uuid)) return; // v0.90.1: concealed and the flat check failed: a miss
 	for (const doc of who) {
 		const feat = deflectionFeat(doc.actor);
 		const body = `<p>${L("Line", { attacker: esc(nameForPlayers(attacker, L("ACreature"))), item: esc(message.item?.name ?? ""), ally: esc(nameForPlayers(ally, L("ACreature"))), from: L(change.from), to: L(change.to) })}</p>`;

@@ -56,7 +56,7 @@
     },
     "Section": {
       "conditions": "Conditions", "actions": "Actions & Checks", "reactions": "Reactions", "battlefield": "Battlefield & Spells", "tools": "Tools",
-      "animist": "Animist", "commander": "Commander", "guardian": "Guardian", "oracle": "Oracle", "swashbuckler": "Swashbuckler", "dandy": "Dandy (archetype)", "mauler": "Mauler (archetype)",
+      "animist": "Animist", "commander": "Commander", "guardian": "Guardian", "oracle": "Oracle", "swashbuckler": "Swashbuckler", "dandy": "Dandy (archetype)", "mauler": "Mauler (archetype)", "spells": "Spells",
       "kobold": "Kobold", "orc": "Orc"
     },
     "Category": {
@@ -870,6 +870,7 @@
         "Name": "Battle Medicine",
         "Setting": {
           "badgesAll": { "Name": "Badges on immune creatures", "Hint": "A small first-aid badge on creatures immune to someone's Battle Medicine; its red fill is the time left. Everyone sees it (on tokens they can see)." },
+          "wornOff": { "Name": "Chat line when it wears off", "Hint": "When world time passes the end of a Battle Medicine immunity (or Medic Dedication's wait), a line in chat for everyone (the GMs only for a creature players can't see)." },
           "rollOnUse": { "Name": "Roll on use", "Hint": "Using the feat opens the Battle Medicine roll with its DC choices: PF2e Workbench's Treat Wounds and Battle Medicine macro (Battle Medicine chosen) when it is active, else PF2e's Treat Wounds roll. The roll records the use (cancelled: nothing). Off: the card itself records it (with one target)." },
           "badgesHealer": { "Name": "Badges for the selected healer", "Hint": "With your token selected and it has Battle Medicine, your allies get a badge: green, you can treat it; the red fill, immune to you and for how long." }
         },
@@ -908,6 +909,10 @@
       "pf2eCringe": {
         "Name": "Cringe",
         "Hint": "When a Strike critically hits a creature with Cringe, its player gets a card: Cringe turns on PF2e's own Cringe for the attacker's damage roll (−level − 2), spends the reaction, and the attacker is immune for a day. If the damage was already rolled, a line says how much less to apply."
+      },
+      "pf2eAlbatrossCurse": {
+        "Name": "Albatross Curse",
+        "Hint": "Casting it on one creature adds PF2e's spell effect (the +1 to attacks by its enemies within 30 feet) and a \"Strike the albatross\" card. The Strike removes the curse and rolls the Will save: stupefied 1 for a round, or the roll-twice effect, removed after its next Will save."
       },
       "pf2eAid": {
         "Name": "Aid",
@@ -1049,7 +1054,7 @@
       },
       "pf2eAreas": {
         "Name": "Effect Areas",
-        "Hint": "Placing an area opens a small window: Enemies / Allies / All / None, include me, include neutral, remove the area after; the creatures in the area (counting squares partly behind wall ends, see Cover) are targeted and set on the spell's message for Toolbelt's save rows. Hovering an area shows the cover toward each creature in it; a light overlay shows exactly what the area reaches. Replaces Toolbelt's template targeting (switch that option off).",
+        "Hint": "Placing an area opens a small window: Enemies / Allies / All / None, include me, include neutral, remove the area after; the creatures in the area (counting squares partly behind wall ends, see Cover) are targeted and set on the spell's message for Toolbelt's save rows. Hovering an area shows the cover toward each creature in it; a light overlay shows exactly what the area reaches. \"Lasting effect\" (folded) keeps the area for a number of rounds and puts conditions on creatures inside: when placed, on entering, at the start or end of their turns, and optionally removes them on leaving. Replaces Toolbelt's template targeting (switch that option off).",
         "Setting": {
           "targeting": { "Name": "Target window", "Hint": "Ask whom to target when an area is placed." },
           "hover": { "Name": "Cover on hover", "Hint": "While hovering an area, lines to the creatures in it with their cover (only you see them)." },
@@ -2087,6 +2092,19 @@
         "Replaced": "Replaced by a new signal."
       },
       "Area": {
+        "Effect": {
+          "Title": "Lasting effect",
+          "Rounds": "Rounds",
+          "RoundsHint": "0 = until removed",
+          "Condition": "Add a condition…",
+          "placed": "Those inside now",
+          "enter": "On entering",
+          "turnStart": "Start of turn inside",
+          "turnEnd": "End of turn inside",
+          "leave": "Removed on leaving",
+          "AnArea": "The area",
+          "Ended": "{name} ends."
+        },
         "Title": "Area",
         "Targets": { "enemies": "Enemies", "allies": "Allies", "both": "Both", "all": "All", "none": "None" },
         "Target": "Target",
@@ -2128,6 +2146,19 @@
         "AlreadyRolled": "Cringe: the damage was already rolled; apply {n} less to {name}.",
         "ACreature": "A creature",
         "NotYours": "That is not your creature."
+      },
+      "Albatross": {
+        "Line": "An albatross hovers around {target}. It can spend an action to Strike it, then rolls a Will save (DC {dc}).",
+        "Strike": "Strike the albatross",
+        "Struck": "Albatross struck",
+        "Save": "Will save",
+        "ACreature": "A creature",
+        "NotYours": "That is not your creature.",
+        "Unaffected": "{name} is unaffected by killing the albatross.",
+        "Stupefied": "{name} is stupefied 1 for 1 round (Albatross Curse).",
+        "Cursed": "The albatross hangs from {name}'s neck: roll twice and keep the worse on its next Will save (1 minute).",
+        "CursedHour": "The albatross hangs from {name}'s neck: roll twice and keep the worse on its next Will save (1 hour).",
+        "Gone": "The albatross around {name}'s neck disappears."
       },
       "Aid": {
         "WhichAlly": "Who are you helping?",
@@ -2917,6 +2948,9 @@
     "TotalLabel": "Total"
     },
     "BattleMedicine": {
+      "WoreOff": "{name} can receive {healer}'s Battle Medicine again.",
+      "MedicReadyAgain": "{name}'s Medic Dedication is ready again.",
+      "ACreature": "A creature",
       "Name": "Battle Medicine",
       "Title": "Battle Medicine",
       "TreatedBy": "Treated by {name}: again in {time}",

@@ -1,4 +1,4 @@
-import { localize } from "../../core/constants.js";
+import { MODULE_ID, localize } from "../../core/constants.js";
 import { defineFeature } from "../../core/registry.js";
 import { watchDOM } from "../../core/dom-watch.js";
 import { appElement } from "../../core/dom.js";
@@ -446,6 +446,40 @@ function ensureBadgeLayer() {
   return badgeLayer;
 }
 
+/**
+ * v0.92.0 (owner, PLAN §29 N4: "Chat message, everyone"): when world time passes the end of a Battle Medicine
+ * immunity (or a Medic Dedication reuse), a line in chat. Active GM's client; a creature with no token players
+ * can see goes to the GMs only, and a hidden name stays hidden.
+ */
+export function wornOff(actors, from, to) {
+  const out = [];
+  for (const actor of actors) {
+    const list = actor?.getFlag?.(MODULE_ID, "immunities") ?? actor?.flags?.[MODULE_ID]?.immunities ?? [];
+    for (const e of Array.isArray(list) ? list : []) {
+      if ((e.kind === KIND || e.kind === MEDIC) && e.until > from && e.until <= to) out.push({ actor, entry: e });
+    }
+  }
+  return out;
+}
+
+async function onWorldTime(worldTime, delta) {
+  if (!game.user.isActiveGM || !(delta > 0)) return;
+  const tokenActors = (canvas.tokens?.placeables ?? []).filter(t => t.actor && !t.document.actorLink).map(t => t.actor);
+  const actors = [...new Set([...(game.actors?.contents ?? []), ...tokenActors])];
+  for (const { actor, entry } of wornOff(actors, worldTime - delta, worldTime)) {
+    const tokens = actor.getActiveTokens?.(false, true) ?? [];
+    const seen = !tokens.length ? actor.hasPlayerOwner : tokens.some(d => !d.hidden);
+    const shown = d => (d?.playersCanSeeName === false ? t("ACreature") : (d?.name ?? actor.name));
+    const name = `<strong>${esc(shown(tokens[0]))}</strong>`;
+    const text = entry.kind === MEDIC ? t("MedicReadyAgain", { name }) : t("WoreOff", { name, healer: `<strong>${esc(entry.name)}</strong>` });
+    await ChatMessage.create({
+      content: `<p class="lucd20-rule-note"><i class="fa-solid fa-kit-medical"></i> ${text}</p>`,
+      speaker: { alias: localize("LUCD20.PF2eRules.Speaker") },
+      whisper: seen ? [] : game.users.filter(u => u.isGM).map(u => u.id)
+    });
+  }
+}
+
 /** The share of an immunity still to run (1 = just treated). */
 const remaining = e => {
   const total = Math.max(1, e.until - e.at);
@@ -534,7 +568,8 @@ defineFeature({
   settings: {
     badgesAll: { kind: "boolean", default: true, scope: "client" },
     badgesHealer: { kind: "boolean", default: true, scope: "client" },
-    rollOnUse: { kind: "boolean", default: true }
+    rollOnUse: { kind: "boolean", default: true },
+    wornOff: { kind: "boolean", default: true }
   },
   onSettingChange() {
     scheduleBadges();
@@ -545,6 +580,7 @@ defineFeature({
     feature.on("createChatMessage", onCreateMessageAuthor);
     feature.on("preCreateChatMessage", onPreCreateMessage);
     feature.on("createItem", onCreateItem);
+    feature.on("updateWorldTime", (worldTime, delta) => { if (feature.get("wornOff")) onWorldTime(worldTime, delta).catch(err => console.error(err)); });
     feature.on("updateActor", () => BattleMedicineEditor.refresh());
     // Badges on the tokens (owner's pick: mockups C3 + C4, docs/mockups/bm-badge.png).
     for (const hook of ["controlToken", "updateActor", "updateWorldTime", "createToken", "deleteToken", "canvasReady", "updateToken"]) feature.on(hook, scheduleBadges);

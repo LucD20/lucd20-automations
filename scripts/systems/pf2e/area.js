@@ -2,6 +2,7 @@ import { MODULE_ID, error, localize } from "../../core/constants.js";
 import { defineFeature } from "../../core/registry.js";
 import { areaPoint, coverFromPoint, inShape, LEVELS } from "./cover.js";
 import { sysId } from "./sys.js";
+import { conditionList, enableAreaEffects, initAreaEffects, setAreaEffect, VALUED } from "./area-effects.js";
 
 /**
  * Rule 20 (docs/pf2e-rules.md): PF2e effect areas (owner, Q237–Q240, as recommended).
@@ -41,7 +42,7 @@ export function tokensInArea(region) {
 }
 
 /** Who the choice targets. */
-export function chooseTargets(region, { targets = "enemies", self = false, neutral = false } = {}) {
+export function chooseTargets(region, { targets = "enemies", self = false, neutral = false } = {}, { hidden = false } = {}) {
 	if (targets === "none") return [];
 	if (targets === "both") targets = "all";
 	let caster = null;
@@ -50,7 +51,7 @@ export function chooseTargets(region, { targets = "enemies", self = false, neutr
 	const opposition = alliance === "party" ? "opposition" : alliance === "opposition" ? "party" : null;
 	return tokensInArea(region).filter((d) => {
 		const actor = d.actor;
-		if (!actor || d.hidden) return false;
+		if (!actor || (d.hidden && !hidden)) return false;
 		if (actor.isOfType && !actor.isOfType("creature", "hazard", "vehicle")) return false;
 		if (actor.isDead) return false;
 		if (caster && actor === caster) return !!self;
@@ -73,6 +74,60 @@ async function applyTargets(region, docs) {
 	if (message?.isOwner ?? message?.isAuthor) await message.update({ "flags.pf2e-toolbelt.targetHelper.targets": docs.map((d) => d.uuid) }).catch(() => {});
 }
 
+/* -------------------------------------------- */
+/*  v0.92.0 (owner, PLAN §29 C5): a lasting effect, folded under the targeting   */
+/* -------------------------------------------- */
+
+const WHEN = ["placed", "enter", "turnStart", "turnEnd"];
+
+function lastingHTML(open) {
+	const options = conditionList().map((c) => `<option value="${esc(c.slug)}" data-valued="${c.valued ? 1 : 0}">${esc(c.label)}</option>`).join("");
+	const check = (name, on = false) => `<label><input type="checkbox" name="${name}" ${on ? "checked" : ""}> ${esc(L(`Effect.${name}`))}</label>`;
+	return `<details class="lucd20-area-lasting"${open ? " open" : ""}><summary>${esc(L("Effect.Title"))}</summary>
+	<div class="lucd20-area-rounds"><label>${esc(L("Effect.Rounds"))} <input type="number" name="rounds" value="0" min="0" max="100" /></label><span class="lucd20-area-note">${esc(L("Effect.RoundsHint"))}</span></div>
+	<div class="lucd20-area-conds" data-lucd20-conds></div>
+	<div class="lucd20-area-add"><select name="condition"><option value="">${esc(L("Effect.Condition"))}</option>${options}</select><input type="number" name="condValue" value="1" min="1" max="10" /><button type="button" data-lucd20-add-cond><i class="fa-solid fa-plus"></i></button></div>
+	<div class="lucd20-area-when">${WHEN.map((w) => check(w, w === "placed")).join("")}${check("leave")}</div>
+</details>`;
+}
+
+/** The + button: a removable chip per condition (valued ones with their value). */
+export function wireLasting(root) {
+	const host = root?.querySelector?.("[data-lucd20-conds]");
+	const add = root?.querySelector?.("[data-lucd20-add-cond]");
+	if (!host || !add || add.dataset.wired) return;
+	add.dataset.wired = "1";
+	const select = root.querySelector("[name='condition']"), value = root.querySelector("[name='condValue']");
+	const sync = () => { value.hidden = select.selectedOptions[0]?.dataset.valued !== "1"; };
+	select.addEventListener("change", sync);
+	sync();
+	add.addEventListener("click", (event) => {
+		event.preventDefault();
+		const slug = select.value;
+		if (!slug) return;
+		const valued = VALUED.has(slug);
+		const v = valued ? Math.max(1, Number(value.value) || 1) : null;
+		host.querySelector(`[data-slug="${slug}"]`)?.remove();
+		const chip = document.createElement("span");
+		chip.className = "lucd20-area-chip";
+		chip.dataset.slug = slug;
+		if (v) chip.dataset.value = String(v);
+		chip.innerHTML = `${esc(select.selectedOptions[0]?.textContent ?? slug)}${v ? ` ${v}` : ""} <a data-lucd20-del><i class="fa-solid fa-xmark"></i></a>`;
+		chip.querySelector("[data-lucd20-del]").addEventListener("click", () => chip.remove());
+		host.append(chip);
+		select.value = "";
+		sync();
+	});
+	root.querySelector(".lucd20-area-lasting")?.addEventListener("toggle", (event) => remember({ ...remembered(), lastingOpen: event.target.open }));
+}
+
+function readLasting(el) {
+	const conditions = [...(el?.querySelectorAll?.(".lucd20-area-chip") ?? [])].map((c) => ({ slug: c.dataset.slug, value: c.dataset.value ? Number(c.dataset.value) : null }));
+	const rounds = Number(el?.querySelector?.("[name='rounds']")?.value) || 0;
+	const on = (n) => !!el?.querySelector?.(`[name="${n}"]`)?.checked;
+	return { rounds, conditions, when: Object.fromEntries(WHEN.map((w) => [w, on(w)])), leave: on("leave") };
+}
+
 /**
  * The window (owner, v0.61.1: Toolbelt's layout): Enemies / Allies / Both on the left, Include me / Include
  * neutral / Remove the area after on the right, Target and Cancel below. The choices are remembered.
@@ -83,10 +138,10 @@ async function ask(region) {
 	if (last.targets === "all") last.targets = "both";
 	const radio = (v) => `<label><input type="radio" name="targets" value="${v}" ${last.targets === v ? "checked" : ""}> ${esc(L(`Targets.${v}`))}</label>`;
 	const box = (name) => `<label><input type="checkbox" name="${name}" ${last[name] ? "checked" : ""}> ${esc(L(`Choice.${name}`))}</label>`;
-	const content = `<div class="lucd20-area-window"><div class="lucd20-area-col">${["enemies", "allies", "both"].map(radio).join("")}</div><div class="lucd20-area-col">${["self", "neutral", "dismiss"].map(box).join("")}</div></div>`;
+	const content = `<div class="lucd20-area-window"><div class="lucd20-area-col">${["enemies", "allies", "both"].map(radio).join("")}</div><div class="lucd20-area-col">${["self", "neutral", "dismiss"].map(box).join("")}</div></div>${lastingHTML(last.lastingOpen)}`;
 	const read = (dialog) => {
-		const el = dialog.element;
-		return { targets: el?.querySelector("[name='targets']:checked")?.value ?? "enemies", ...Object.fromEntries(["self", "neutral", "dismiss"].map((n) => [n, !!el?.querySelector(`[name="${n}"]`)?.checked])) };
+		const el = dialog.element ?? dialog.form;
+		return { targets: el?.querySelector("[name='targets']:checked")?.value ?? "enemies", ...Object.fromEntries(["self", "neutral", "dismiss"].map((n) => [n, !!el?.querySelector(`[name="${n}"]`)?.checked])), lasting: readLasting(el) };
 	};
 	if (!DialogV2) return { ...last };
 	return DialogV2.wait({
@@ -95,9 +150,10 @@ async function ask(region) {
 		content,
 		classes: ["lucd20-area-dialog"],
 		rejectClose: false,
+		render: (event, dialog) => wireLasting(dialog?.element ?? event?.target?.element ?? document.querySelector(".lucd20-area-dialog")),
 		buttons: [
-			{ action: "target", label: L("Target"), icon: "fa-solid fa-check", default: true, callback: (event, button, dialog) => read(dialog) },
-			{ action: "cancel", label: L("Cancel"), icon: "fa-solid fa-xmark", callback: (event, button, dialog) => ({ ...read(dialog), cancelled: true }) }
+			{ action: "target", label: L("Target"), icon: "fa-solid fa-check", default: true, callback: (event, button, dialog) => read(dialog ?? button) },
+			{ action: "cancel", label: L("Cancel"), icon: "fa-solid fa-xmark", callback: (event, button, dialog) => ({ ...read(dialog ?? button), cancelled: true }) }
 		]
 	});
 }
@@ -108,9 +164,15 @@ async function onCreateRegion(feature, region, options, userId) {
 	await new Promise((r) => setTimeout(r, 50)); // the region's coverage is ready once drawn
 	const choice = await ask(region);
 	if (!choice) return;
-	remember({ targets: choice.targets, self: choice.self, neutral: choice.neutral, dismiss: choice.dismiss });
+	remember({ ...remembered(), targets: choice.targets, self: choice.self, neutral: choice.neutral, dismiss: choice.dismiss });
 	if (choice.cancelled) return;
 	await applyTargets(region, chooseTargets(region, choice));
+	// A lasting effect (rounds or conditions): the area stays, whatever "remove after" says.
+	const lasting = choice.lasting;
+	if (lasting && (lasting.rounds > 0 || lasting.conditions.length)) {
+		await setAreaEffect(region, { ...lasting, filter: { targets: choice.targets, self: choice.self, neutral: choice.neutral } }).catch((err) => ui.notifications.warn(err.message ?? String(err)));
+		return;
+	}
 	if (choice.dismiss) await region.delete().catch(() => {});
 }
 
@@ -236,7 +298,12 @@ defineFeature({
 		reach: { kind: "boolean", default: true, scope: "client" }
 	},
 
+	init(feature) {
+		initAreaEffects(feature);
+	},
+
 	enable(feature) {
+		enableAreaEffects(feature, (region, filter) => chooseTargets(region, filter, { hidden: true }));
 		feature.on("createRegion", (region, options, userId) => onCreateRegion(feature, region, options, userId).catch((err) => error("Area targeting failed.", err)));
 		feature.on("hoverRegion", (region, over) => { if (feature.get("hover")) { hovered = over ? (region.document ?? region) : null; drawHover(hovered, over); } });
 		const move = () => onPointerMove(feature);

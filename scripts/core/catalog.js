@@ -112,6 +112,7 @@ export const FEATURE_ORDER = [
   { id: "pf2eOrcSuperstition", category: "pf2e", phase: 78, systems: ["pf2e"] },
   { id: "pf2eShovingSweep", category: "pf2e", phase: 80, systems: ["pf2e"] },
   { id: "pf2eAid", category: "pf2e", phase: 80, systems: ["pf2e"] },
+  { id: "pf2eAlbatrossCurse", category: "pf2e", phase: 82, systems: ["pf2e"] },
   { id: "dnd4eClassFeatures", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
   { id: "dnd4eCover", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
   { id: "dnd4eActionTracker", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
@@ -156,7 +157,7 @@ export const NAV = [
     { id: "scenesWindows", icon: "fa-solid fa-clapperboard", from: ["scenes", "sheets"] }
   ] },
   { id: "pf2e", systems: ["pf2e"], pages: [
-    { id: "pf2eCore", icon: "fa-solid fa-book", from: ["pf2e"], sections: ["conditions", "actions", "reactions", "battlefield", "tools"] },
+    { id: "pf2eCore", icon: "fa-solid fa-book", from: ["pf2e"], sections: ["conditions", "actions", "reactions", "spells", "battlefield", "tools"] },
     { id: "pf2eClasses", icon: "fa-solid fa-users", sections: ["animist", "commander", "guardian", "oracle", "swashbuckler", "dandy", "mauler"], tree: true },
     { id: "pf2eAncestries", icon: "fa-solid fa-dna", sections: ["kobold", "orc"], tree: true },
     { id: "pf2eExploration", icon: "fa-solid fa-magnifying-glass", from: ["exploration"] },
@@ -202,6 +203,7 @@ export const PLACE = {
   pf2eSetUpStrike: { page: "pf2eClasses", section: "commander" },
   pf2eShovingSweep: { page: "pf2eClasses", section: "mauler" },
   pf2eAid: { page: "pf2eCore", section: "reactions" },
+  pf2eAlbatrossCurse: { page: "pf2eCore", section: "spells" },
   pf2eSuchADisgrace: { page: "pf2eClasses", section: "dandy" },
   pf2eCringe: { page: "pf2eAncestries", section: "kobold" },
   pf2eOrcFerocity: { page: "pf2eAncestries", section: "orc" },

@@ -1217,3 +1217,39 @@ Archives of Nethys didn't load for the tools). Settings: a new PF2e page
   DC. Then PF2e's Effect: Aid on the ally with `aidBonus` preset (no prompt).
   Rank for +3/+4: the skill's, or the weapon category's proficiency (verify).
   The prepare action isn't tracked (it's narrative). Test 81.
+
+### 20b. Lasting area effects (PLAN §29 C5)
+- Owner (2026-11-27): "all should be possible options. Some will do some,
+  others will do others. The functionality needs to be there because then we
+  will automate spells."
+- Built (`area-effects.js`, part of pf2eAreas): the area window has a folded
+  "Lasting effect": rounds (0 = until removed), conditions (chips; valued
+  ones with a value), and when they apply: those inside now, on entering,
+  start of turn inside, end of turn inside; "removed on leaving". Who counts:
+  the window's targeting choice (hidden creatures too, never named in chat).
+  Stored on the region (`flags.lucd20-automations.areaEffect`, with
+  `applied`: what it added to whom). Rounds: the area ends at the start of
+  the turn of whoever was acting when it was placed, after that many rounds;
+  then what it added goes (if "removed on leaving") and a line "X ends."
+  A condition already there is left alone and never removed; a lower valued
+  one is raised. For spells later: `setAreaEffect(region, config)`.
+  Test 82.
+
+### 33. Albatross Curse (spell 2)
+- Rules (PF2e data): +1 circumstance to attacks against the target by you
+  and allies within 30 ft (PF2e's spell effect, predicate target:enemy and
+  distance ≤ 30); the target can spend an action to Strike the albatross,
+  then a Will save: crit success unaffected; success stupefied 1 for 1 round;
+  failure roll twice keep lower on its next Will save (1 min; crit fail 1 h).
+- Built (`albatross-curse.js`): cast on one target → PF2e's "Spell Effect:
+  Albatross Curse" on it (origin the caster) and a card to the target's
+  players and the GM: "Strike the albatross". The button removes the effect
+  and rolls the target's Will save vs the spell DC (tagged). Then stupefied 1
+  (removed at the start of its next turn) or PF2e's Failure / Critical
+  Failure effect, removed after its next Will save. Test 83.
+
+### 23b. Battle Medicine wears off (PLAN §29 N4)
+- Owner: "Chat message, everyone." When world time passes the end of a
+  Battle Medicine immunity (or Medic Dedication's wait): "X can receive Y's
+  Battle Medicine again." for everyone; the GMs only when players can't see
+  the creature. Option "Chat line when it wears off" (on). Test 83.

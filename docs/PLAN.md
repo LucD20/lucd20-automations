@@ -4122,3 +4122,13 @@ told, chat or pop-up).
   Effect: Aid (removed after the ally's next check).
 - Still waiting on the owner: C5 (area window), N3 (Albatross curse source),
   N4 (Battle Medicine wear-off: who is told, chat or pop-up).
+
+### 29.8 Owner's answers and v0.92.0
+- C5: "Area effects window: all should be possible options. Some will do
+  some, others will do others. The functionality needs to be there because
+  then we will automate spells." Built: rule 20b (rounds, conditions, placed /
+  entering / start / end of turn, removed on leaving; `setAreaEffect` for
+  spells).
+- N3: Albatross Curse (AoN spell 1946). Built: rule 33.
+- N4: "Battle Medicine wear-off: Chat message, everyone." Built: rule 23b.
+- §29 is now done except what the owner tests.

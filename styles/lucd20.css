@@ -3158,3 +3158,18 @@ html.lucd20-chat-trim-active .chat-log > .chat-message { content-visibility: aut
 .chat-message .lucd20-aid-card .lucd20-aid-row label { display: flex; align-items: center; gap: 4px; font-size: 12px; white-space: nowrap; }
 .chat-message .lucd20-aid-card .lucd20-aid-row input { width: 42px; height: 24px; text-align: center; }
 .chat-message .lucd20-aid-card .lucd20-aid-hint { margin: 2px 0 0; font-size: 11px; opacity: .7; }
+
+/* v0.92.0: the area window's lasting effect (PLAN §29 C5). */
+.lucd20-area-dialog .lucd20-area-lasting { margin-top: 6px; border-top: 1px solid rgba(127,127,127,.35); padding-top: 4px; }
+.lucd20-area-dialog .lucd20-area-lasting summary { cursor: pointer; font-weight: 600; font-size: 13px; }
+.lucd20-area-dialog .lucd20-area-rounds { display: flex; align-items: center; gap: 6px; margin: 4px 0; font-size: 12px; }
+.lucd20-area-dialog .lucd20-area-rounds input { width: 48px; height: 24px; text-align: center; }
+.lucd20-area-dialog .lucd20-area-note { opacity: .7; font-size: 11px; }
+.lucd20-area-dialog .lucd20-area-conds { display: flex; flex-wrap: wrap; gap: 4px; margin: 2px 0; min-height: 4px; }
+.lucd20-area-dialog .lucd20-area-chip { display: inline-flex; align-items: center; gap: 4px; padding: 1px 6px; border-radius: 10px; background: rgba(229,57,53,.18); border: 1px solid rgba(229,57,53,.5); font-size: 12px; }
+.lucd20-area-dialog .lucd20-area-chip a { cursor: pointer; opacity: .7; }
+.lucd20-area-dialog .lucd20-area-add { display: flex; gap: 4px; align-items: center; }
+.lucd20-area-dialog .lucd20-area-add select { flex: 1; min-width: 0; height: 24px; font-size: 12px; }
+.lucd20-area-dialog .lucd20-area-add input { width: 40px; height: 24px; text-align: center; }
+.lucd20-area-dialog .lucd20-area-add button { flex: 0 0 28px; height: 24px; padding: 0; }
+.lucd20-area-dialog .lucd20-area-when { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 8px; margin-top: 4px; font-size: 12px; }

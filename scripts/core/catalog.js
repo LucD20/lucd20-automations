@@ -110,6 +110,8 @@ export const FEATURE_ORDER = [
   { id: "pf2eSuchADisgrace", category: "pf2e", phase: 78, systems: ["pf2e"] },
   { id: "pf2eOrcFerocity", category: "pf2e", phase: 78, systems: ["pf2e"] },
   { id: "pf2eOrcSuperstition", category: "pf2e", phase: 78, systems: ["pf2e"] },
+  { id: "pf2eShovingSweep", category: "pf2e", phase: 80, systems: ["pf2e"] },
+  { id: "pf2eAid", category: "pf2e", phase: 80, systems: ["pf2e"] },
   { id: "dnd4eClassFeatures", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
   { id: "dnd4eCover", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
   { id: "dnd4eActionTracker", category: "dnd4e", phase: 26, systems: ["dnd4e"] },
@@ -155,7 +157,7 @@ export const NAV = [
   ] },
   { id: "pf2e", systems: ["pf2e"], pages: [
     { id: "pf2eCore", icon: "fa-solid fa-book", from: ["pf2e"], sections: ["conditions", "actions", "reactions", "battlefield", "tools"] },
-    { id: "pf2eClasses", icon: "fa-solid fa-users", sections: ["animist", "commander", "guardian", "oracle", "swashbuckler", "dandy"], tree: true },
+    { id: "pf2eClasses", icon: "fa-solid fa-users", sections: ["animist", "commander", "guardian", "oracle", "swashbuckler", "dandy", "mauler"], tree: true },
     { id: "pf2eAncestries", icon: "fa-solid fa-dna", sections: ["kobold", "orc"], tree: true },
     { id: "pf2eExploration", icon: "fa-solid fa-magnifying-glass", from: ["exploration"] },
     { id: "pf2eChat", icon: "fa-solid fa-dice", features: ["rollChances", "modifiersMatter", "damageEstimate"] }
@@ -198,6 +200,8 @@ export const PLACE = {
   pf2eCombatAssessment: { page: "pf2eClasses", section: "commander" },
   pf2eGuardiansDeflection: { page: "pf2eClasses", section: "swashbuckler" },
   pf2eSetUpStrike: { page: "pf2eClasses", section: "commander" },
+  pf2eShovingSweep: { page: "pf2eClasses", section: "mauler" },
+  pf2eAid: { page: "pf2eCore", section: "reactions" },
   pf2eSuchADisgrace: { page: "pf2eClasses", section: "dandy" },
   pf2eCringe: { page: "pf2eAncestries", section: "kobold" },
   pf2eOrcFerocity: { page: "pf2eAncestries", section: "orc" },

@@ -29,6 +29,8 @@ import "./orc-ferocity.js";
 import "./orc-superstition.js";
 import "./roaring-heart.js";
 import "./punishing-shove.js";
+import "./shoving-sweep.js";
+import "./aid.js";
 import "./flat-check.js";
 import "./ctrl-click.js";
 import "./sustain.js";

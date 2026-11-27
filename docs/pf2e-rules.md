@@ -1183,3 +1183,37 @@ Archives of Nethys didn't load for the tools). Settings: a new PF2e page
   and the roll is tagged; the GM spends the reaction when that save is
   posted. No roll window (skip dialog): no chance to use it here.
 
+
+### 31. Shoving Sweep (Mauler 8; reaction)
+- Rules (PF2e data): trigger, an enemy within your reach leaves a square
+  during a move action it's using; requirement, a melee weapon wielded in two
+  hands. Shove the triggering creature, ignoring the free-hand requirement;
+  unless you critically succeed, it continues its movement after the Shove.
+- Built (`shoving-sweep.js`): Reactive Strike's move detection (rule 7,
+  `leftReach`): a creature with the feat, hostile, able to act, its reaction
+  left, holding a melee weapon in two hands → a card (Shove / Skip) to its
+  players and the GM (a monster's: GM only). Shove: the GM's client spends the
+  reaction and puts the mover back on the square it was leaving (forced
+  movement, so nothing reacts), then the clicking client targets it and runs
+  PF2e's Shove action; rule 3 pushes it. After that Shove's dice: critical
+  success, its movement ends there; success, "continues its movement" (the
+  player moves on); failure, it goes back to where its move ended. A Step
+  can't be told from a 5-ft Stride (the card says so). Test 80.
+
+### 32. Aid (basic reaction)
+- Rules (PF2e data, Remaster): trigger, an ally is about to use an action
+  that requires a skill check or attack roll; requirement, you prepared to
+  help. A check of the GM's choosing, typically DC 15. Critical success +2
+  circumstance (+3 master, +4 legendary), success +1, critical failure −1.
+  PF2e's "Effect: Aid" (other-effects AHMUpMbaVkZ5A1KX): a ChoiceSet
+  `aidBonus`, a circumstance FlatModifier on attack-roll / skill-check,
+  removeAfterRoll, 1 round to turn start.
+- Built (`aid.js`): PF2e's Aid action posted (the reaction tracker spends the
+  reaction) → a card to the aider's players and the GM: the ally (the one
+  targeted ally, else a button per ally on the scene), a skill (best
+  preselected; Perception too), the DC (15, editable), Roll / Cancel. Roll:
+  the skill vs the DC tagged `action:aid`; or any skill check or attack roll
+  the aider makes within 2 minutes counts, its degree worked out against the
+  DC. Then PF2e's Effect: Aid on the ally with `aidBonus` preset (no prompt).
+  Rank for +3/+4: the skill's, or the weapon category's proficiency (verify).
+  The prepare action isn't tracked (it's narrative). Test 81.

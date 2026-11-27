@@ -71,18 +71,18 @@ export function reachOf(actor) {
 	return Math.max(attack, base) || 5;
 }
 
-const enemies = (a, b) => {
+export const enemies = (a, b) => {
 	const da = a.document?.disposition, db = b.document?.disposition;
 	return (da === 1 && db === -1) || (da === -1 && db === 1);
 };
-const down = (actor) => NO_REACT.some((s) => actor?.hasCondition?.(s) || actor?.statuses?.has?.(s)) || (Number(actor?.system?.attributes?.hp?.value) <= 0 && actor?.system?.attributes?.hp?.max > 0);
+export const down = (actor) => NO_REACT.some((s) => actor?.hasCondition?.(s) || actor?.statuses?.has?.(s)) || (Number(actor?.system?.attributes?.hp?.value) <= 0 && actor?.system?.attributes?.hp?.max > 0);
 
 /** Does this creature have Reactive Strike (or the old Attack of Opportunity)? */
 export function hasReactiveStrike(actor) {
 	return (actor?.items ?? []).some((i) => i.type === "action" && (SLUGS.has(i.slug ?? i.system?.slug) || NAMES.test(i.name ?? "")));
 }
 
-function combatantOfToken(token) {
+export function combatantOfToken(token) {
 	const combat = game.combat;
 	if (!combat?.started) return null;
 	const c = token.document?.combatant ?? token.combatant ?? null;

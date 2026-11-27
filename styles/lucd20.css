@@ -3151,3 +3151,10 @@ html.lucd20-chat-trim-active .chat-log > .chat-message { content-visibility: aut
 /* Flat checks attached to the triggering card (v0.90.1): the lines inside it; the flat check's own message hidden. */
 .chat-message.lucd20-fc-attached-source { display: none !important; }
 .lucd20-fc-card.lucd20-fc-inline { margin: 4px 0 2px; padding: 0; border: 0; background: none; }
+
+/* v0.91.0: Aid (rule 32): the skill and DC row. */
+.chat-message .lucd20-aid-card .lucd20-aid-row { display: flex; gap: 6px; align-items: center; margin: 2px 0; }
+.chat-message .lucd20-aid-card .lucd20-aid-row select { flex: 1; min-width: 0; height: 24px; font-size: 12px; }
+.chat-message .lucd20-aid-card .lucd20-aid-row label { display: flex; align-items: center; gap: 4px; font-size: 12px; white-space: nowrap; }
+.chat-message .lucd20-aid-card .lucd20-aid-row input { width: 42px; height: 24px; text-align: center; }
+.chat-message .lucd20-aid-card .lucd20-aid-hint { margin: 2px 0 0; font-size: 11px; opacity: .7; }

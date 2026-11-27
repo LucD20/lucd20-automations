@@ -56,7 +56,7 @@
     },
     "Section": {
       "conditions": "Conditions", "actions": "Actions & Checks", "reactions": "Reactions", "battlefield": "Battlefield & Spells", "tools": "Tools",
-      "animist": "Animist", "commander": "Commander", "guardian": "Guardian", "oracle": "Oracle", "swashbuckler": "Swashbuckler", "dandy": "Dandy (archetype)",
+      "animist": "Animist", "commander": "Commander", "guardian": "Guardian", "oracle": "Oracle", "swashbuckler": "Swashbuckler", "dandy": "Dandy (archetype)", "mauler": "Mauler (archetype)",
       "kobold": "Kobold", "orc": "Orc"
     },
     "Category": {
@@ -908,6 +908,14 @@
       "pf2eCringe": {
         "Name": "Cringe",
         "Hint": "When a Strike critically hits a creature with Cringe, its player gets a card: Cringe turns on PF2e's own Cringe for the attacker's damage roll (−level − 2), spends the reaction, and the attacker is immune for a day. If the damage was already rolled, a line says how much less to apply."
+      },
+      "pf2eAid": {
+        "Name": "Aid",
+        "Hint": "When PF2e's Aid action is posted, a card picks the ally, the skill and the DC (15) and rolls it (or counts the aider's next check or Strike). The result goes on the ally as PF2e's Effect: Aid (+1, +2 to +4 on a critical, −1 on a critical failure), removed after its next check."
+      },
+      "pf2eShovingSweep": {
+        "Name": "Shoving Sweep",
+        "Hint": "When an enemy leaves a square in the reach of a creature with Shoving Sweep (a melee weapon in two hands, reaction left), a card offers the Shove. The move is put back to that square, PF2e's Shove is rolled, and the creature stops (critical success) or continues its movement."
       },
       "pf2eSetUpStrike": {
         "Name": "Set-Up Strike",
@@ -2120,6 +2128,35 @@
         "AlreadyRolled": "Cringe: the damage was already rolled; apply {n} less to {name}.",
         "ACreature": "A creature",
         "NotYours": "That is not your creature."
+      },
+      "Aid": {
+        "WhichAlly": "Who are you helping?",
+        "Line": "Helping {ally}: choose the check.",
+        "DC": "DC",
+        "OrAny": "Or roll any skill check or Strike now; it counts against this DC.",
+        "Roll": "Roll",
+        "Cancel": "Cancel",
+        "Perception": "Perception",
+        "AnAlly": "an ally",
+        "ACreature": "A creature",
+        "NotYours": "That is not your creature.",
+        "NoEffect": "no effect",
+        "EffectName": "Effect: Aid",
+        "Bonus": "{ally} gets +{n} (circumstance) to their next attack roll or skill check (Aid).",
+        "Penalty": "{ally} takes −{n} (circumstance) to their next attack roll or skill check (Aid, critical failure).",
+        "Nothing": "The Aid has no effect on {ally}'s check."
+      },
+      "ShovingSweep": {
+        "Name": "Shoving Sweep",
+        "Line": "{name} left your reach (not if a Step). Shove it?",
+        "Shove": "Shove",
+        "Skip": "Skip",
+        "Result": "Shove",
+        "ACreature": "A creature",
+        "NotYours": "That is not your creature.",
+        "Stops": "{name}'s movement ends where it was shoved (Shoving Sweep, critical success).",
+        "Continues": "{name} is shoved and then continues its movement (Shoving Sweep).",
+        "Resumes": "{name} isn't shoved and continues its movement (Shoving Sweep)."
       },
       "SetUpStrike": {
         "Line": "{target} is off-guard against the next attack by one of {name}'s allies (until {name}'s next turn).",

@@ -4112,3 +4112,13 @@ told, chat or pop-up).
   Reactions pick remembers its last choice too (`dcDrilledLast`). Test 43.
 - Found while testing: the countdown's clean-up had also been pasted into
   `pickSquare`, which then never closed (test 64 hung). Fixed.
+
+### 29.7 Built v0.91.0
+- N1 Shoving Sweep: rule 31 (`docs/pf2e-rules.md`), page Classes, section
+  "Mauler (archetype)". The reaction interrupts the move: the mover is put
+  back on the square it was leaving before the Shove; on a failure it goes
+  back to where its move ended; on a success the player moves it on.
+- N2 Aid: rule 32, page Core rules, section Reactions. Uses PF2e's own
+  Effect: Aid (removed after the ally's next check).
+- Still waiting on the owner: C5 (area window), N3 (Albatross curse source),
+  N4 (Battle Medicine wear-off: who is told, chat or pop-up).
